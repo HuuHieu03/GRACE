@@ -1,0 +1,15 @@
+# GRACE Reproduction Pipeline - Python Dependency Manifest (v1.0.0)
+# Dành cho cài đặt tại Local Workspace và môi trường GPU Notebook (Kaggle/Colab)
+
+numpy>=1.23.0
+scipy>=1.10.0
+scikit-learn>=1.2.0
+pandas>=1.5.0
+torch>=2.0.0
+transformers>=4.36.0
+datasets>=2.14.0
+bitsandbytes>=0.41.0
+accelerate>=0.24.0
+tqdm>=4.65.0
+python-dotenv>=1.0.0
+openai>=1.0.0
