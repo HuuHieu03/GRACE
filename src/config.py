@@ -28,7 +28,7 @@ class ProjectConfig:
     is_kaggle: bool = field(default_factory=is_kaggle_environment)
     
     # Đường dẫn gốc
-    base_dir: Path = field(default_factory=lambda: Path("/kaggle/working") if is_kaggle_environment() else Path(__file__).parent.resolve())
+    base_dir: Path = field(default_factory=lambda: Path("/kaggle/working") if is_kaggle_environment() else (Path(__file__).parent.parent.resolve() if Path(__file__).parent.name == "src" else Path(__file__).parent.resolve()))
     
     # Thư mục dữ liệu & Checkpoints
     data_dir: Path = field(init=False)
