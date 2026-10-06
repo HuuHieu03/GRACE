@@ -18,6 +18,8 @@ ENV/
 
 # Large datasets & heavy artifacts
 data/
+!data/splits/
+!data/splits/**
 checkpoints/
 output/
 log/

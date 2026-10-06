@@ -40,7 +40,9 @@ logger = logging.getLogger("GRACE-Orchestrator")
 
 def run_grace_pipeline(
     dataset_name: str = "DetectVul/devign",
-    sample_ratio: float = 0.05,
+    sample_ratio: Optional[float] = None,
+    train_sample_ratio: float = 1.0,
+    test_sample_ratio: float = 0.05,
     experiment_name: str = "grace_run",
     retrieval_method: str = "contrastive_icl",
     model_name: str = config.default_llm_model,
@@ -49,11 +51,21 @@ def run_grace_pipeline(
     seed: int = 42
 ):
     start_time = time.time()
+    # Hỗ trợ tương thích ngược: nếu truyền sample_ratio thì áp dụng cho test, hoặc nếu chỉ định riêng
+    if sample_ratio is not None:
+        effective_train_ratio = sample_ratio
+        effective_test_ratio = sample_ratio
+    else:
+        effective_train_ratio = train_sample_ratio
+        effective_test_ratio = test_sample_ratio
+
     print("\n" + "#" * 75)
     print("###  GRACE VULNERABILITY DETECTION - END-TO-END ORCHESTRATION PIPELINE  ###")
     print("#" * 75)
     print(f"[*] Experiment Name  : {experiment_name}")
-    print(f"[*] Target Dataset   : {dataset_name} (Sample Ratio: {sample_ratio * 100:.1f}%)")
+    print(f"[*] Target Dataset   : {dataset_name}")
+    print(f"[*] Train Pool Ratio : {effective_train_ratio * 100:.1f}% (Retrieval Bank)")
+    print(f"[*] Test Eval Ratio  : {effective_test_ratio * 100:.1f}% (Inference Target)")
     print(f"[*] Retrieval Method : {retrieval_method}")
     print(f"[*] Execution Mode   : {'Mock/Local Test (CPU/Fast)' if use_mock else f'Full Open-Weights LLM ({model_name} on GPU)'}")
     print(f"[*] Checkpoint Dir   : {config.checkpoint_dir}")
@@ -72,10 +84,10 @@ def run_grace_pipeline(
         test_samples = [standardize_sample(s, idx=i) for i, s in enumerate(raw_test)]
     else:
         logger.info(f"Đang kết nối tải dataset '{dataset_name}'...")
-        train_samples = load_hf_dataset(dataset_name=dataset_name, split="train", sample_ratio=sample_ratio, seed=seed)
-        test_samples = load_hf_dataset(dataset_name=dataset_name, split="test", sample_ratio=sample_ratio, seed=seed)
+        train_samples = load_hf_dataset(dataset_name=dataset_name, split="train", sample_ratio=effective_train_ratio, seed=seed)
+        test_samples = load_hf_dataset(dataset_name=dataset_name, split="test", sample_ratio=effective_test_ratio, seed=seed)
         
-    logger.info(f"Hoàn tất chuẩn bị dữ liệu -> Train index: {len(train_samples)} mẫu | Test eval: {len(test_samples)} mẫu.")
+    logger.info(f"Hoàn tất chuẩn bị dữ liệu -> Train index (Retrieval Pool): {len(train_samples)} mẫu | Test eval: {len(test_samples)} mẫu.")
 
     # -------------------------------------------------------------------------
     # PHASE 2: DEMONSTRATION RETRIEVAL & PROMPT CONFIGURATION
@@ -134,7 +146,8 @@ def run_grace_pipeline(
     report_payload = {
         "experiment_name": experiment_name,
         "dataset": dataset_name,
-        "sample_ratio": sample_ratio,
+        "train_sample_ratio": effective_train_ratio,
+        "test_sample_ratio": effective_test_ratio,
         "retrieval_method": retrieval_method,
         "prompt_mode": prompt_mode,
         "model": model_name if not use_mock else "Intelligent-Mock-Evaluator",
@@ -149,9 +162,9 @@ def run_grace_pipeline(
     # Lưu báo cáo tóm tắt CSV
     csv_path = config.output_dir / f"summary_{experiment_name}.csv"
     with open(csv_path, "w", encoding="utf-8") as f:
-        f.write("id,target,prediction,parse_method\n")
+        f.write("id,target,prediction,parse_method,is_valid\n")
         for r in results:
-            f.write(f"{r['id']},{r['target']},{r['prediction']},\"{r['parse_method']}\"\n")
+            f.write(f"{r['id']},{r['target']},{r['prediction']},\"{r['parse_method']}\",{r.get('is_valid', True)}\n")
     logger.info(f"[✓] Đã xuất báo cáo đối chiếu nhãn CSV tại: {csv_path}")
 
     elapsed_min = (time.time() - start_time) / 60.0
@@ -164,7 +177,9 @@ def run_grace_pipeline(
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="GRACE End-to-End Vulnerability Detection CLI")
     parser.add_argument("--dataset", type=str, default="DetectVul/devign", help="Tên dataset trên Hugging Face (hoặc 'mock')")
-    parser.add_argument("--sample_ratio", type=float, default=0.05, help="Tỷ lệ trích xuất mẫu cân bằng nhãn (ví dụ 0.05 là 5%%)")
+    parser.add_argument("--sample_ratio", type=float, default=None, help="Tỷ lệ trích xuất dùng chung cho cả train và test (nếu muốn giữ kiểu cũ)")
+    parser.add_argument("--train_sample_ratio", type=float, default=1.0, help="Tỷ lệ train pool cho retrieval bank (mặc định 1.0 = Full train)")
+    parser.add_argument("--test_sample_ratio", type=float, default=0.05, help="Tỷ lệ test subset để đánh giá LLM (mặc định 0.05 = 5%%)")
     parser.add_argument("--experiment_name", type=str, default="grace_contrastive_exp", help="Tên mã định danh cho phiên test (Checkpointing)")
     parser.add_argument("--method", type=str, default="contrastive_icl", choices=["zero_shot", "grace_baseline", "security_aware", "contrastive_icl"], help="Phương pháp Retrieval & Prompting")
     parser.add_argument("--model_name", type=str, default=config.default_llm_model, help="Tên mô hình LLM chuyên code cho Kaggle")
@@ -177,6 +192,8 @@ if __name__ == "__main__":
     run_grace_pipeline(
         dataset_name=args.dataset,
         sample_ratio=args.sample_ratio,
+        train_sample_ratio=args.train_sample_ratio,
+        test_sample_ratio=args.test_sample_ratio,
         experiment_name=args.experiment_name,
         retrieval_method=args.method,
         model_name=args.model_name,

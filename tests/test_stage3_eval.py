@@ -60,22 +60,23 @@ def test_prompt_engine_figure6():
 def test_resilient_regex_parser():
     print_header("2. KIỂM TRA ĐỘ BỀN BỘ BÓC TÁCH NHÃN (MULTI-PATTERN REGEX PARSER)")
     test_cases = [
-        ("Case A (Đúng định dạng chuẩn):", "1", 1),
-        ("Case B (Đúng định dạng chuẩn):", "0", 0),
-        ("Case C (Có khoảng trắng thừa):", " 1 ", 1),
-        ("Case D (Dính chữ nhưng chứa 1):", "Prediction is 1", 1),
-        ("Case E (Từ khóa Vulnerable):", "Security analysis: Vulnerable code found.", 1),
-        ("Case F (Lỗi hoàn toàn/Rác):", "completely unknown text without keywords", 0) # Fallback = 0
+        ("Case A (Đúng định dạng chuẩn):", "1", 1, True),
+        ("Case B (Đúng định dạng chuẩn):", "0", 0, True),
+        ("Case C (Có khoảng trắng thừa):", " 1 ", 1, True),
+        ("Case D (Dính chữ nhưng chứa 1):", "Prediction is 1", 1, True),
+        ("Case E (Từ khóa Vulnerable):", "Security analysis: Vulnerable code found.", 1, True),
+        ("Case F (Lỗi hoàn toàn/Rác):", "completely unknown text without keywords", None, False) # Invalid -> None
     ]
     
     print("[*] Thử nghiệm khả năng chống chọi hiện tượng lệch định dạng (Formatting Drift) của LLM:")
-    for desc, raw_text, expected in test_cases:
-        pred, method = parse_llm_prediction(raw_text)
-        status = "✓ OK" if pred == expected else "✗ FAIL"
+    for desc, raw_text, expected, expected_valid in test_cases:
+        pred, method, is_valid = parse_llm_prediction(raw_text)
+        status = "✓ OK" if (pred == expected and is_valid == expected_valid) else "✗ FAIL"
         print(f"\n  + {desc}")
         print(f"    - Raw text snippet: \"{raw_text[:70]}...\"" if len(raw_text)>70 else f"    - Raw text: \"{raw_text}\"")
-        print(f"    - -> Kết quả trích xuất: Pred = {pred} [{status}] | Phương thức bốc tách: {method}")
+        print(f"    - -> Kết quả trích xuất: Pred = {pred} [{status}] | Valid = {is_valid} | Phương thức bốc tách: {method}")
         assert pred == expected
+        assert is_valid == expected_valid
         
     print("\n>>> [PASS] Parser Regex đa tầng bóc tách chuẩn xác 100% các tình huống dị thường!")
 

@@ -21,51 +21,124 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(
 logger = logging.getLogger(__name__)
 
 
-def parse_llm_prediction(response_text: str) -> Tuple[int, str]:
+def parse_llm_prediction(response_text: str) -> Tuple[Optional[int], str, bool]:
     """
     Bóc tách chuỗi dự đoán (Multi-pattern Regex + Strict + Keyword Parsing) cho định dạng 0/1.
-    Returns: (predicted_label_int, extraction_method_description)
+    Được nâng cấp để giải quyết triệt để vấn đề parser theo STEP 2 (Immediate Action Plan):
+    - 'Non-vulnerable (0)', 'Label: Non-vulnerable (0)' -> 0
+    - 'Vulnerable (1)', 'Label: Vulnerable (1)' -> 1
+    - Phản hồi không xác định / rỗng / mâu thuẫn -> (None, desc, False) (KHÔNG ép về 0).
+    
+    Returns:
+        (predicted_label: Optional[int], extraction_method_description: str, is_valid: bool)
     """
     if not response_text or not isinstance(response_text, str):
-        return 0, "Fallback: Empty Response"
+        return None, "Invalid: Empty Response", False
         
     text_clean = response_text.strip()
+    if not text_clean:
+        return None, "Invalid: Blank Whitespace", False
     
-    # 1. Khớp chính xác 1 ký tự
-    if text_clean == "1":
-        return 1, "Strict '1'"
-    elif text_clean == "0":
-        return 0, "Strict '0'"
+    # 1. Khớp chính xác 1 ký tự / token độc lập
+    if text_clean in ["1", "'1'", '"1"', "1."]:
+        return 1, "Strict '1'", True
+    elif text_clean in ["0", "'0'", '"0"', "0."]:
+        return 0, "Strict '0'", True
         
-    # 2. Khớp dòng cuối hoặc từ khóa kết luận
+    # 2. Khớp dòng cuối hoặc dòng kết luận nếu toàn bộ nội dung kết thúc bằng nhãn rõ ràng
     lines = [line.strip() for line in text_clean.split("\n") if line.strip()]
     if lines:
-        last_line = lines[-1]
+        last_line = lines[-1].strip().lower()
         if last_line in ["1", "1.", "'1'", '"1"']:
-            return 1, "Last line '1'"
+            return 1, "Last line '1'", True
         if last_line in ["0", "0.", "'0'", '"0"']:
-            return 0, "Last line '0'"
-            
-    # 3. Regex bóc tách từ khóa kết luận
-    vuln_patterns = [r"\bvulnerable\b", r"\bcontains? (?:a )?vulnerability\b", r"\bsecurity flaw\b", r"\banswer:\s*1\b", r"\boutput:\s*1\b"]
-    safe_patterns = [r"\bsafe\b", r"\bnot vulnerable\b", r"\bno (?:security )?vulnerability\b", r"\banswer:\s*0\b", r"\boutput:\s*0\b"]
+            return 0, "Last line '0'", True
+
+    # 3. Kiểm tra các câu nói mâu thuẫn hoặc không xác định được (Hedging / Contradiction)
+    hedging_patterns = [
+        r"cannot determine",
+        r"can't determine",
+        r"not sure",
+        r"unable to determine",
+        r"both 0 and 1",
+        r"both vulnerable and safe",
+        r"both safe and vulnerable",
+        r"vulnerable\s*\(\s*1\s*\).*safe\s*\(\s*0\s*\)",
+        r"safe\s*\(\s*0\s*\).*vulnerable\s*\(\s*1\s*\)",
+    ]
+    if any(re.search(p, text_clean, re.IGNORECASE) for p in hedging_patterns):
+        return None, "Invalid: Hedging or Contradictory Response", False
+
+    # 4. Khớp tiền tố nhãn rõ ràng (Label: ..., Output: ..., Answer: ...)
+    explicit_safe_patterns = [
+        r"\bnon-vulnerable\s*\(\s*0\s*\)",
+        r"\blabel:\s*non-vulnerable(?:\s*\(\s*0\s*\))?",
+        r"\boutput:\s*non-vulnerable(?:\s*\(\s*0\s*\))?",
+        r"\banswer:\s*non-vulnerable(?:\s*\(\s*0\s*\))?",
+        r"\banswer:\s*0\b",
+        r"\boutput:\s*0\b",
+        r"\blabel:\s*0\b",
+        r"\bprediction:\s*0\b",
+    ]
+    explicit_vuln_patterns = [
+        r"\bvulnerable\s*\(\s*1\s*\)",
+        r"\blabel:\s*vulnerable(?:\s*\(\s*1\s*\))?",
+        r"\boutput:\s*vulnerable(?:\s*\(\s*1\s*\))?",
+        r"\banswer:\s*vulnerable(?:\s*\(\s*1\s*\))?",
+        r"\banswer:\s*1\b",
+        r"\boutput:\s*1\b",
+        r"\blabel:\s*1\b",
+        r"\bprediction:\s*1\b",
+    ]
     
-    is_vuln = any(re.search(p, text_clean, re.IGNORECASE) for p in vuln_patterns)
-    is_safe = any(re.search(p, text_clean, re.IGNORECASE) for p in safe_patterns)
+    has_exp_safe = any(re.search(p, text_clean, re.IGNORECASE) for p in explicit_safe_patterns)
+    has_exp_vuln = any(re.search(p, text_clean, re.IGNORECASE) for p in explicit_vuln_patterns)
+    
+    if has_exp_vuln and not has_exp_safe:
+        return 1, "Explicit Label: Vulnerable/1", True
+    if has_exp_safe and not has_exp_vuln:
+        return 0, "Explicit Label: Safe/0", True
+    if has_exp_vuln and has_exp_safe:
+        return None, "Contradictory: Both Explicit Labels Present", False
+
+    # 5. Regex bóc tách từ khóa ngữ nghĩa tổng quát
+    # CẢNH BÁO: Phải loại trừ 'non-vulnerable' và 'not vulnerable' trước khi tìm 'vulnerable'
+    safe_semantic_patterns = [
+        r"\bnon-vulnerable\b",
+        r"\bnot\s+vulnerable\b",
+        r"\bnot\s+a\s+vulnerability\b",
+        r"\bno\s+(?:security\s+)?vulnerability\b",
+        r"\bfunction\s+is\s+safe\b",
+        r"\bcode\s+is\s+safe\b",
+        r"\bsafe\b",
+    ]
+    vuln_semantic_patterns = [
+        r"(?<!non-)(?<!not\s)(?<!no\s)\bvulnerable\b",
+        r"(?<!no\s)(?<!not\s)vulnerabilit(?:y|ies)\b",
+        r"\bsecurity\s+flaw\b",
+    ]
+    
+    is_safe = any(re.search(p, text_clean, re.IGNORECASE) for p in safe_semantic_patterns)
+    is_vuln = any(re.search(p, text_clean, re.IGNORECASE) for p in vuln_semantic_patterns)
     
     if is_vuln and not is_safe:
-        return 1, "Keyword/Regex: Vulnerable"
+        return 1, "Semantic Regex: Vulnerable", True
     if is_safe and not is_vuln:
-        return 0, "Keyword/Regex: Safe"
+        return 0, "Semantic Regex: Safe", True
+    if is_vuln and is_safe:
+        return None, "Contradictory: Both Vulnerable and Safe Keywords Found", False
+
+    # 6. Fallback Heuristic chỉ khi nội dung chứa duy nhất một chữ số 0 hoặc 1 độc lập
+    has_digit_1 = bool(re.search(r"\b1\b", text_clean))
+    has_digit_0 = bool(re.search(r"\b0\b", text_clean))
+    
+    if has_digit_1 and not has_digit_0:
+        return 1, "Heuristic standalone '1'", True
+    if has_digit_0 and not has_digit_1:
+        return 0, "Heuristic standalone '0'", True
         
-    # 4. Heuristic fallback nếu chỉ chứa 1 trong 2 số
-    if "1" in text_clean and "0" not in text_clean:
-        return 1, "Heuristic contains '1'"
-    if "0" in text_clean and "1" not in text_clean:
-        return 0, "Heuristic contains '0'"
-        
-    logger.warning(f"Không thể bóc tách chuẩn xác từ LLM: '{text_clean[:100]}...'. Áp dụng Default Fallback = 0 (Safe).")
-    return 0, "Fallback: Safe/0 by default"
+    logger.warning(f"Không thể bóc tách chuẩn xác từ phản hồi LLM: '{text_clean[:100]}...'. Đánh dấu Invalid.")
+    return None, "Invalid: Unparseable LLM Response", False
 
 
 class CheckpointManager:
@@ -233,7 +306,7 @@ class LLMEvaluator:
                         if attempt == max_retries:
                             logger.error(f"Thất bại hoàn toàn khi gọi LLM cho ID '{sample_id}'. Bỏ trống kết quả.")
                             
-                pred_int, parse_desc = parse_llm_prediction(llm_response)
+                pred_int, parse_desc, is_valid = parse_llm_prediction(llm_response)
                 ground_truth = sample.get("target", 0)
                 
                 record = {
@@ -241,6 +314,7 @@ class LLMEvaluator:
                     "target": ground_truth,
                     "prediction": pred_int,
                     "parse_method": parse_desc,
+                    "is_valid": is_valid,
                     "func_snippet": sample.get("func", "")[:120],
                     "llm_raw_response": llm_response,
                     "eval_timestamp": time.strftime("%Y-%m-%d %H:%M:%S")
@@ -248,7 +322,7 @@ class LLMEvaluator:
                 
                 ckpt_manager.save_record(record)
                 
-                if ground_truth == pred_int:
+                if is_valid and ground_truth == pred_int:
                     correct_count += 1
                 total_processed += 1
                 
