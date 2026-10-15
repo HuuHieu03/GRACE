@@ -24,14 +24,17 @@ GRACE/
 │   ├── metrics.py                  <- Bộ đo lường học thuật: F1, MCC, Balanced Accuracy, Trivial Baselines
 │   ├── run_pipeline.py             <- Pipeline điều phối (tách riêng train_sample_ratio và test_sample_ratio)
 │   └── security_signature_audit.py <- Công cụ chẩn đoán phân phối chữ ký an ninh và đo lường SecSim ngẫu nhiên
+├── scripts/
+│   └── run_synthetic_ground_truth_eval.py <- Bộ kiểm thử vi mô tổng hợp 10 ca ground-truth an ninh
 ├── project_docs/
 │   ├── plans/
-│   │   ├── GRACE_IMMEDIATE_ACTION_PLAN.md  <- Kế hoạch hành động 3 đợt phản hồi theo ý kiến GVHD
+│   │   ├── PLAN_SUPERVISOR_REQUIREMENTS_EXECUTION_20261014.md <- Kế hoạch hành động 3 đợt phản hồi theo ý kiến GVHD
 │   │   └── GRACE_RESEARCH_ROADMAP.md       <- Lộ trình nghiên cứu tổng thể các pha
 │   └── reports/
 │       └── GRACE_EXPERIMENT_RUN_REGISTRY.md <- Bảng quản lý tập trung toàn bộ các lần chạy thực nghiệm
 └── tests/
-    └── test_parser_audit.py        <- Bộ 35 unit tests kiểm thử các trường hợp biên của parser
+    ├── test_parser_audit.py        <- Bộ 35 unit tests kiểm thử các trường hợp biên của parser
+    └── test_stage5_synthetic_ground_truth.py <- Bộ unit tests kiểm thử Synthetic Ground-Truth Suite
 ```
 
 ---
@@ -67,6 +70,41 @@ Tuyệt đối không kết luận sự cải tiến chỉ dựa trên một ch�
 4. **Tỷ lệ dự đoán nhãn dương (Predicted Vulnerable Rate)**: Đo lường mức độ thiên lệch phán đoán của LLM.
 5. **Tỷ lệ phản hồi không hợp lệ (Invalid Rate)**: Tỷ lệ mẫu lỗi/rỗng/mâu thuẫn (không bị ép về $0$).
 6. **Đường cơ sở tầm thường (Trivial Baselines)**: Đối chứng với bộ phân loại luôn đoán $1$ (*Always-Vulnerable*) và luôn đoán $0$ (*Always-Safe*).
+
+### 2.5. Quy chuẩn Đánh giá 3 Chân Kiềng & Kiểm định Ground-Truth Phụ (Triangulation Protocol)
+Để triệt tiêu hoàn toàn nguy cơ ngụy biện khoa học *"vừa đá bóng vừa thổi còi"* (tối ưu Reranker theo SecSim rồi lại đo bằng SecSim), nghiên cứu thiết lập hệ thống **3 Chân Kiềng Đánh Giá Khách Quan**:
+
+```mermaid
+flowchart TD
+    subgraph Triangulation["HỆ THỐNG ĐÁNH GIÁ 3 CHÂN KIỀNG KHÁCH QUAN (TRIANGULATION)"]
+        P1["1. Thước đo LLM Cuối Cùng\n(Downstream Performance)\n- MCC & Balanced Accuracy\n- Paired Bootstrap 95% CI\n- McNemar Significance Test"]
+        P2["2. Chấm Mù Con Người\n(Blind Human Review)\n- Chấm mù độc lập 100 hàm\n- Rubric bằng chứng code cụ thể\n- Hệ số đồng thuận Cohen's Kappa"]
+        P3["3. Thước đo Ground-Truth Phụ\n(Synthetic Ground-Truth Suite)\n- 10 ca vi mô kiểm soát 100%\n- Guard đúng biến, vị trí trước sink\n- Margin phân biệt định lượng"]
+    end
+    P1 --> Robust["Bằng Chứng Học Thuật Độc Lập & Vững Chắc"]
+    P2 --> Robust
+    P3 --> Robust
+```
+
+1. **Chân kiềng 1: Hiệu năng mô hình cuối (Downstream Task Performance)**:
+   * Đo lường xem ví dụ demo do Reranker chọn có giúp LLM tăng $MCC$ và $Balanced\ Accuracy$ trong bài toán phát hiện lỗ hổng hay không (Ablation B2 vs B3).
+   * Kiểm định ý nghĩa thống kê bằng Paired Bootstrap 95% CI và McNemar Test.
+2. **Chân kiềng 2: Chấm mù chuyên môn con người (Blind Human Review)**:
+   * Hai tác giả (Hiếu & Dũng) chấm mù độc lập 100 hàm (50 Devign + 50 ReVeal) với tên phương pháp bị ẩn.
+   * Chấm điểm dựa trên rubric bằng chứng dòng code cụ thể (Sink, Guard, Data-flow), đo độ đồng thuận bằng Cohen's Kappa ($k \ge 0.60$).
+3. **Chân kiềng 3: Bộ kiểm thử vi mô tổng hợp (Synthetic Ground-Truth Verification)**:
+   * *Điều chỉnh phạm vi thực tế*: Phương pháp CWE-alignment tạm thời chưa kích hoạt vì tập eval Devign/ReVeal hiện tại chưa được gán nhãn CWE chuẩn hóa trên diện rộng. Nhóm tập trung nguồn lực vào bộ kiểm thử vi mô tổng hợp có đáp án an ninh chuẩn 100%.
+   * Bộ Synthetic Ground-Truth Suite gồm 10 ca chuẩn hóa (`scripts/run_synthetic_ground_truth_eval.py`) với các điều kiện ràng buộc:
+     * **Guard Variable Relevance**: $\text{SecSim}(Target, Cand_{CorrectGuard}) - \text{SecSim}(Target, Cand_{IrrelevantGuard}) \ge 0.10$
+     * **Guard Ordering Flow**: $\text{SecSim}(Target, Cand_{GuardBeforeSink}) - \text{SecSim}(Target, Cand_{GuardAfterSink}) \ge 0.10$
+     * **Sink Semantic Matching**: $\text{SecSim}(Target, Cand_{MatchingSink}) - \text{SecSim}(Target, Cand_{UnrelatedSink}) \ge 0.15$
+     * **Pointer Null Binding**: $\text{SecSim}(Target, Cand_{CorrectPointer}) - \text{SecSim}(Target, Cand_{WrongPointer}) \ge 0.10$
+     * **Reranker Demonstration Top-1**: Reranker phải xếp ví dụ có cùng cơ chế an ninh lên Top-1, vượt qua distractor chỉ trùng cú pháp.
+   * Lệnh thực thi:
+     ```powershell
+     python scripts/run_synthetic_ground_truth_eval.py
+     pytest tests/test_stage5_synthetic_ground_truth.py
+     ```
 
 ---
 

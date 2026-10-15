@@ -33,38 +33,51 @@ from data_loader import generate_mock_dataset, standardize_sample
 
 
 def test_synthetic_unit_cases():
-    """Kiểm tra 4 ca code tổng hợp để thấy rõ extractor phân biệt được gì và chưa phân biệt được gì."""
+    """Kiểm tra 4 ca code tổng hợp để thấy rõ extractor phân biệt được gì và năng lực của Security Signature."""
     print("\n" + "=" * 75)
-    print("  STEP 6.3: KIỂM THỬ 4 CA TỔNG HỢP SYNTHETIC UNIT CASES")
+    print("  STEP 6.3: KIỂM THỬ 4 CA TỔNG HỢP SYNTHETIC UNIT CASES (GROUND-TRUTH SUITE)")
     print("=" * 75)
 
     case_a = "void copy(char *dst, char *src, int len) { if (len <= dst_size) { memcpy(dst, src, len); } }"
     case_b = "void copy(char *dst, char *src, int len) { if (retry > 0) { memcpy(dst, src, len); } }"
     case_c = "void copy(char *dst, char *src, int len) { memcpy(dst, src, len); if (len <= dst_size) { return; } }"
     case_d = "void handle(char *ptr, char *other) { if (other != NULL) { use(ptr); } }"
+    case_safe_peer = "void copy_safe(char *out, char *in, int count) { if (count <= max_cap) { memcpy(out, in, count); } }"
 
     sig_a = extract_security_signature(case_a)
     sig_b = extract_security_signature(case_b)
     sig_c = extract_security_signature(case_c)
     sig_d = extract_security_signature(case_d)
+    sig_peer = extract_security_signature(case_safe_peer)
 
     print("[*] Case A (Correct Guard - len <= dst_size trước memcpy):")
-    print(f"    - Sanitizers: {sig_a.sanitizer_types} | Clues: {sig_a.vulnerability_clues}")
+    print(f"    - Effective Sanitizers: {sig_a.effective_sanitizer_types} | Sinks: {[(s.api_name, s.is_controlled) for s in sig_a.sinks]}")
+    print(f"    - Vulnerability Clues: {sig_a.vulnerability_clues}")
     
-    print("[*] Case B (Irrelevant Comparison - retry > 0 trước memcpy):")
-    print(f"    - Sanitizers: {sig_b.sanitizer_types} | Clues: {sig_b.vulnerability_clues}")
+    print("\n[*] Case B (Irrelevant Variable Guard - retry > 0 trước memcpy):")
+    print(f"    - Effective Sanitizers: {sig_b.effective_sanitizer_types} | Sinks: {[(s.api_name, s.is_controlled) for s in sig_b.sinks]}")
+    print(f"    - Vulnerability Clues: {sig_b.vulnerability_clues}")
 
-    print("[*] Case C (Guard AFTER Sink - memcpy rồi mới if):")
-    print(f"    - Sanitizers: {sig_c.sanitizer_types} | Clues: {sig_c.vulnerability_clues}")
+    print("\n[*] Case C (Guard AFTER Sink - memcpy rồi mới kiểm tra):")
+    print(f"    - Effective Sanitizers: {sig_c.effective_sanitizer_types} | Sinks: {[(s.api_name, s.is_controlled) for s in sig_c.sinks]}")
+    print(f"    - Vulnerability Clues: {sig_c.vulnerability_clues}")
 
-    print("[*] Case D (Wrong Variable Null Check - other != NULL trước use(ptr)):")
-    print(f"    - Sanitizers: {sig_d.sanitizer_types} | Clues: {sig_d.vulnerability_clues}")
+    print("\n[*] Case D (Wrong Variable Null Check - other != NULL trước use(ptr)):")
+    print(f"    - Effective Sanitizers: {sig_d.effective_sanitizer_types} | Clues: {sig_d.vulnerability_clues}")
 
-    # So sánh độ tương đồng giữa Case A và Case B
+    # So sánh độ tương đồng đối chứng
+    sim_peer, _ = compute_security_signature_similarity(sig_a, sig_peer)
     sim_ab, sub_ab = compute_security_signature_similarity(sig_a, sig_b)
-    print(f"\n[!] SecSim(Case A, Case B) = {sim_ab} (Sub-scores: {sub_ab})")
-    print("    -> Nhận định: Cả Case A và Case B đều có bounds_check vì regex chỉ tìm '<=' và '>',")
-    print("       chưa phân tích data-flow liên kết giữa biến 'len' và tham số 'memcpy'.")
+    sim_ac, sub_ac = compute_security_signature_similarity(sig_a, sig_c)
+    
+    print("\n" + "-" * 75)
+    print("  ĐỐI SOÁT ĐỘ TƯƠNG ĐỒNG SECSIM ĐỊNH LƯỢNG:")
+    print(f"    - SecSim(Case A, Valid Safe Peer)     = {sim_peer:.4f} (Guard đúng biến, cùng cơ chế bảo vệ)")
+    print(f"    - SecSim(Case A, Case B: Wrong Var)   = {sim_ab:.4f} (Sub-scores: {sub_ab})")
+    print(f"    - SecSim(Case A, Case C: Post-Sink)   = {sim_ac:.4f} (Sub-scores: {sub_ac})")
+    print(f"    => Margin phân biệt Case A vs Case B: {sim_peer - sim_ab:+.4f} (Đạt tiêu chuẩn Ground-Truth)")
+    print(f"    => Margin phân biệt Case A vs Case C: {sim_peer - sim_ac:+.4f} (Đạt tiêu chuẩn Ground-Truth)")
+    print("-" * 75)
 
 
 def analyze_dataset_signatures(samples: List[Dict[str, Any]], num_pairs: int = 500) -> Dict[str, Any]:

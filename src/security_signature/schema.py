@@ -30,6 +30,8 @@ class SanitizerGuard:
     guard_type: str                 # 'bounds_check', 'null_check', 'sizeof_check', 'return_error', 'assert'
     expression: str                 # Biểu thức kiểm tra (ví dụ: 'len < sizeof(buf)', 'ptr != NULL')
     node_id: Optional[str] = None   # Node ID trong Joern CPG
+    is_effective: bool = True       # Có kiểm soát đúng biến liên quan và đặt trước sink hay không?
+    controlled_vars: Set[str] = field(default_factory=set) # Tập các biến xuất hiện trong điều kiện kiểm tra
 
 
 @dataclass
@@ -67,6 +69,7 @@ class SecuritySignature:
     # Tập hợp các danh mục API và Sanitizer để đối sánh nhanh (Fast Indexing)
     sink_apis: Set[str] = field(default_factory=set)
     sanitizer_types: Set[str] = field(default_factory=set)
+    effective_sanitizer_types: Set[str] = field(default_factory=set)
     vulnerability_clues: Set[str] = field(default_factory=set)
 
     def to_dict(self) -> Dict[str, Any]:
@@ -75,7 +78,15 @@ class SecuritySignature:
             "func_name": self.func_name,
             "sources": [{"name": s.name, "type": s.source_type} for s in self.sources],
             "sinks": [{"api": s.api_name, "category": s.sink_category, "is_controlled": s.is_controlled} for s in self.sinks],
-            "sanitizers": [{"type": g.guard_type, "expr": g.expression} for g in self.sanitizers],
+            "sanitizers": [
+                {
+                    "type": g.guard_type, 
+                    "expr": g.expression, 
+                    "is_effective": g.is_effective,
+                    "controlled_vars": sorted(list(g.controlled_vars))
+                } 
+                for g in self.sanitizers
+            ],
             "memory_ops": {
                 "ptr_deref": self.memory_ops.has_pointer_deref,
                 "array_idx": self.memory_ops.has_array_indexing,
@@ -86,5 +97,6 @@ class SecuritySignature:
             "dataflow_paths": [{"src": p.source_name, "sink": p.sink_name, "sanitized": p.is_sanitized} for p in self.dataflow_paths],
             "sink_apis": sorted(list(self.sink_apis)),
             "sanitizer_types": sorted(list(self.sanitizer_types)),
+            "effective_sanitizer_types": sorted(list(self.effective_sanitizer_types)),
             "vulnerability_clues": sorted(list(self.vulnerability_clues))
         }

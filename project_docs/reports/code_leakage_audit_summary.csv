@@ -1,0 +1,3 @@
+dataset,train_samples,test_samples,test_vuln,test_safe,exact_duplicate_count,exact_leakage_pct,exact_consistent_labels,exact_contradictory_labels,norm_duplicate_count,norm_leakage_pct,norm_consistent_labels,norm_contradictory_labels,token_stream_duplicate_count,token_stream_leakage_pct
+Devign,21854,2732,1255,1477,108,3.95,89,19,164,6.0,136,28,182,6.66
+ReVeal,18190,2274,230,2044,52,2.29,45,7,87,3.83,75,12,96,4.22

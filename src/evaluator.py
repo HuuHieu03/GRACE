@@ -146,33 +146,73 @@ class CheckpointManager:
     Trình quản lý lưu vết theo dòng (JSONL Checkpointing) tại `config.checkpoint_dir`.
     Giúp tiến trình chạy dài (Hàng nghìn mẫu trên Kaggle) có thể tự khôi phục sau khi crash/timeout
     mà không bao giờ mất công chạy lại từ đầu.
+    
+    Hỗ trợ Config Integrity Hash (SHA-256) để đảm bảo không khôi phục lẫn lộn giữa các thí nghiệm
+    hoặc khi cấu hình (dataset, split, model, prompt_mode, retrieval_method, seed) bị thay đổi.
     """
-    def __init__(self, experiment_name: str = "default_eval"):
+    def __init__(self, experiment_name: str = "default_eval", run_config: Optional[Dict[str, Any]] = None):
+        import hashlib
         self.experiment_name = experiment_name
-        self.checkpoint_file = config.checkpoint_dir / f"checkpoint_{experiment_name}.jsonl"
+        self.run_config = run_config or {}
+        
+        # Tạo SHA-256 hash từ run_config nếu có
+        if self.run_config:
+            # Sắp xếp key để hash bất biến
+            canonical_cfg = json.dumps(self.run_config, sort_keys=True, ensure_ascii=False)
+            self.config_hash = hashlib.sha256(canonical_cfg.encode("utf-8")).hexdigest()[:12]
+            filename = f"checkpoint_{experiment_name}_{self.config_hash}.jsonl"
+        else:
+            self.config_hash = None
+            filename = f"checkpoint_{experiment_name}.jsonl"
+
+        self.checkpoint_file = config.checkpoint_dir / filename
         self.completed_ids = set()
         self.loaded_results = []
         self._load_existing_checkpoint()
 
     def _load_existing_checkpoint(self):
-        """Đọc và khôi phục trạng thái từ tệp JSONL đã lưu (nếu tồn tại)."""
+        """Đọc và khôi phục trạng thái từ tệp JSONL đã lưu (nếu tồn tại). Kiểm tra config integrity."""
         if self.checkpoint_file.exists():
             logger.info(f"Phát hiện Checkpoint cũ: {self.checkpoint_file}. Đang nạp trạng thái phục hồi...")
             with open(self.checkpoint_file, "r", encoding="utf-8") as f:
-                for line in f:
+                for line_idx, line in enumerate(f):
                     line = line.strip()
-                    if line:
-                        try:
-                            record = json.loads(line)
-                            sample_id = record.get("id")
-                            if sample_id is not None:
-                                self.completed_ids.add(sample_id)
-                                self.loaded_results.append(record)
-                        except json.JSONDecodeError:
-                            logger.warning("Phát hiện 1 dòng JSONL bị hỏng trong checkpoint. Bỏ qua dòng này.")
+                    if not line:
+                        continue
+                    try:
+                        record = json.loads(line)
+                        # Dòng đầu tiên có thể là metadata header kiểm tra toàn vẹn
+                        if line_idx == 0 and record.get("_type") == "checkpoint_metadata":
+                            saved_hash = record.get("config_hash")
+                            if self.config_hash and saved_hash and saved_hash != self.config_hash:
+                                raise RuntimeError(
+                                    f"Config integrity mismatch: Checkpoint được tạo với config_hash={saved_hash}, "
+                                    f"nhưng cấu hình hiện tại có hash={self.config_hash}. "
+                                    f"Từ chối khôi phục để tránh làm nhiễm bẩn dữ liệu!"
+                                )
+                            continue
+
+                        sample_id = record.get("id")
+                        if sample_id is not None:
+                            self.completed_ids.add(sample_id)
+                            self.loaded_results.append(record)
+                    except json.JSONDecodeError:
+                        logger.warning("Phát hiện 1 dòng JSONL bị hỏng trong checkpoint. Bỏ qua dòng này.")
             logger.info(f"Đã phục hồi thành công {len(self.completed_ids)} mẫu đã hoàn thành trước đó!")
         else:
             logger.info(f"Khởi tạo phiên chạy mới. File Checkpoint mới sẽ được lưu tại: {self.checkpoint_file}")
+            # Nếu có config, ghi dòng metadata header đầu tiên
+            if self.run_config and not self.checkpoint_file.exists():
+                meta_header = {
+                    "_type": "checkpoint_metadata",
+                    "experiment_name": self.experiment_name,
+                    "config_hash": self.config_hash,
+                    "run_config": self.run_config,
+                    "created_at": time.strftime("%Y-%m-%d %H:%M:%S")
+                }
+                with open(self.checkpoint_file, "w", encoding="utf-8") as f:
+                    f.write(json.dumps(meta_header, ensure_ascii=False) + "\n")
+                    f.flush()
 
     def is_completed(self, sample_id: Any) -> bool:
         return sample_id in self.completed_ids
@@ -209,8 +249,11 @@ class LLMEvaluator:
             api_key = config.get_api_key("FPT_API_KEY")
             base_url = config.get_base_url("FPT_BASE_URL")
             if not api_key:
-                logger.warning("Không tìm thấy API Key. Chuyển sang Mock Mode.")
-                self.use_mock = True
+                raise RuntimeError(
+                    "Lỗi cấu hình: Không tìm thấy FPT_API_KEY hoặc khóa API bị trống. "
+                    "Vui lòng cấu hình file .env hoặc biến môi trường trước khi chạy thực nghiệm. "
+                    "Nếu chỉ muốn kiểm thử giả lập nhanh mà không gọi API, hãy truyền flag --use_mock."
+                )
             else:
                 import openai
                 logger.info(f"Kết nối tới API: {base_url} với model {self.model_name}...")
@@ -253,18 +296,19 @@ class LLMEvaluator:
         experiment_name: str = "grace_run",
         include_demonstration: bool = True,
         prompt_mode: str = "standard_1shot",
+        run_config: Optional[Dict[str, Any]] = None,
         max_retries: int = 5,
         request_delay: float = 0.05
     ) -> Tuple[List[Dict[str, Any]], Dict[str, Any]]:
         """
         Đánh giá hàng loạt trên danh sách mẫu kiểm thử (Batch Evaluation):
         - Hỗ trợ các chế độ prompt_mode: 'zero_shot', 'standard_1shot', 'contrastive_2shot'.
-        - Có kiểm tra Checkpoint cũ để khôi phục tiến trình lập tức.
+        - Có kiểm tra Checkpoint cũ mang mã băm cấu hình để khôi phục tiến trình an toàn.
         - Có cơ chế cơ cấu lại lời gọi (Exponential Backoff) nếu gặp sự cố Rate Limit (429) hoặc quá tải mạng.
         - Trả về toàn bộ danh sách kết quả và ma trận đánh giá.
         """
         from tqdm import tqdm
-        ckpt_manager = CheckpointManager(experiment_name=experiment_name)
+        ckpt_manager = CheckpointManager(experiment_name=experiment_name, run_config=run_config)
         total = len(test_samples)
         logger.info(f"Bắt đầu quy trình Đánh Giá (Evaluator) cho {total} mẫu [Experiment: {experiment_name}, Mode: {prompt_mode}]...")
         

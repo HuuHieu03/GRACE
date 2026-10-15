@@ -123,6 +123,50 @@ def test_classification_metrics():
     print(">>> [PASS] Hệ thống tính toán chỉ số F1, Precision, Recall hoạt động cực kỳ mượt mà & chính xác!")
 
 
+def test_checkpointing_config_hash_integrity():
+    """Kiểm thử Config Integrity Hash: từ chối nạp checkpoint nếu cấu hình run bị lệch."""
+    print_header("5. KIỂM TRA TOÀN VẸN CẤU HÌNH CHECKPOINT (CONFIG INTEGRITY HASH)")
+    cfg1 = {"dataset": "devign", "split": "test", "model": "gpt-4o", "seed": 42}
+    cfg2 = {"dataset": "reveal", "split": "test", "model": "gpt-4o", "seed": 42}
+    
+    exp_name = "test_config_hash_integrity"
+    ckpt1 = CheckpointManager(experiment_name=exp_name, run_config=cfg1)
+    ckpt1.clear_checkpoint()
+    
+    # Tạo lại ckpt1 và ghi 1 record
+    ckpt1 = CheckpointManager(experiment_name=exp_name, run_config=cfg1)
+    ckpt1.save_record({"id": "sample_101", "target": 1, "prediction": 1})
+    assert ckpt1.is_completed("sample_101")
+    
+    # Giờ cố gắng nạp cùng checkpoint_file với cấu hình cfg2
+    import pytest
+    with pytest.raises(RuntimeError) as exc_info:
+        # Nếu trỏ trực tiếp vào cùng file nhưng cfg khác:
+        ckpt2 = CheckpointManager(experiment_name=exp_name, run_config=cfg2)
+        # Giả lập ghi đè trỏ vào file của cfg1 để test kiểm tra integrity
+        ckpt2.checkpoint_file = ckpt1.checkpoint_file
+        ckpt2._load_existing_checkpoint()
+    assert "Config integrity mismatch" in str(exc_info.value)
+    
+    ckpt1.clear_checkpoint()
+    print(">>> [PASS] CheckpointManager từ chối khôi phục và bảo vệ toàn vẹn dữ liệu khi config bị lệch!")
+
+
+def test_llm_evaluator_strict_mock_exception():
+    """Kiểm thử: Khi use_mock=False và không có API key, bắt buộc phải raise RuntimeError."""
+    print_header("6. KIỂM TRA CHẶN FAIL-TO-MOCK ÂM THẦM (STRICT MOCK MODE)")
+    import pytest
+    from unittest.mock import patch
+    
+    with patch.object(config, "get_api_key", return_value=""):
+        with pytest.raises(RuntimeError) as exc_info:
+            LLMEvaluator(use_mock=False)
+        assert "Lỗi cấu hình: Không tìm thấy FPT_API_KEY" in str(exc_info.value)
+        
+    print(">>> [PASS] Evaluator ném RuntimeError rõ ràng khi thiếu API key thay vì âm thầm chạy mock!")
+
+
+
 if __name__ == "__main__":
     import io
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
@@ -137,6 +181,10 @@ if __name__ == "__main__":
     test_checkpointing_crash_recovery()
     time.sleep(0.5)
     test_classification_metrics()
+    time.sleep(0.5)
+    test_checkpointing_config_hash_integrity()
+    time.sleep(0.5)
+    test_llm_evaluator_strict_mock_exception()
     time.sleep(0.5)
     
     print("\n" + "="*75)

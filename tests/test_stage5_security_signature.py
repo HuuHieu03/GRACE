@@ -135,3 +135,14 @@ def test_contrastive_pair_difference_detection():
     assert "unbounded_buffer_copy" not in sig_safe.vulnerability_clues
     assert "sizeof_check" in sig_safe.sanitizer_types
     assert len(sig_safe.sanitizers) > len(sig_vuln.sanitizers)
+
+
+def test_compute_jaccard_empty_sets():
+    """Kiểm thử: Khi cả hai tập đều rỗng, compute_jaccard_set phải trả về 0.0 (không lạm phát SecSim)."""
+    from security_signature.similarity import compute_jaccard_set
+    assert compute_jaccard_set(set(), set()) == 0.0
+    assert compute_jaccard_set(set(), {"strcpy"}) == 0.0
+    assert compute_jaccard_set({"strcpy"}, set()) == 0.0
+    assert compute_jaccard_set({"strcpy"}, {"strcpy"}) == 1.0
+    assert compute_jaccard_set({"strcpy"}, {"memcpy"}) == 0.0
+

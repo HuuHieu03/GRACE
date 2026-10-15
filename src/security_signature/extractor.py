@@ -76,6 +76,15 @@ SANITIZER_RULES = [
     ("pointer_validation", re.compile(r"\b(IS_ERR|PTR_ERR|ERR_PTR)\b", re.IGNORECASE))
 ]
 
+# Tập các từ khóa C/C++ để lọc biến kiểm soát
+C_KEYWORDS = {
+    "if", "while", "for", "switch", "case", "default", "return", "sizeof",
+    "int", "char", "float", "double", "void", "unsigned", "signed", "short", "long",
+    "struct", "union", "enum", "typedef", "static", "const", "volatile", "extern",
+    "NULL", "null", "nullptr", "true", "false", "TRUE", "FALSE", "size_t", "uint8_t",
+    "uint16_t", "uint32_t", "uint64_t", "int8_t", "int16_t", "int32_t", "int64_t"
+}
+
 
 class SecuritySignatureExtractor:
     """Bộ trích xuất đặc trưng an ninh chuẩn từ mã nguồn và cấu trúc đồ thị Joern CPG."""
@@ -88,6 +97,7 @@ class SecuritySignatureExtractor:
         Trích xuất đầy đủ SecuritySignature:
         1. Phân tích văn bản mã nguồn (Regex/Token parsing)
         2. Phân tích đồ thị CPG (Node types, CONTROLS, REACHES edges) nếu có
+        3. Phân tích tương quan vị trí & biến giữa Guards và Sinks
         """
         nodes = nodes if isinstance(nodes, list) else []
         edges = edges if isinstance(edges, list) else []
@@ -100,28 +110,47 @@ class SecuritySignatureExtractor:
         
         # 2. Trích xuất Sanitizers
         sanitizers = self._extract_sanitizers(code, nodes)
-        sanitizer_types = {s.guard_type for s in sanitizers}
         
-        # 3. Trích xuất Sinks & kiểm tra quan hệ kiểm soát (Control)
+        # 3. Trích xuất Sinks
         sinks = self._extract_sinks(code, nodes, edges)
         sink_apis = {s.api_name for s in sinks}
         
         # 4. Trích xuất Memory Operations
         memory_ops = self._extract_memory_operations(code, nodes)
         
-        # 5. Phân tích luồng Data Flow (REACHES / Source -> Sink)
+        # 5. Phân tích tương quan Guard - Sink (Vị trí đặt & Biến kiểm soát)
+        self._correlate_guards_and_sinks(code, sanitizers, sinks, sources, memory_ops, edges)
+        sanitizer_types = {s.guard_type for s in sanitizers}
+        effective_sanitizer_types = {s.guard_type for s in sanitizers if s.is_effective}
+        
+        # 6. Phân tích luồng Data Flow (REACHES / Source -> Sink)
         dataflow_paths = self._extract_dataflow_paths(sources, sinks, edges, nodes)
         
-        # 6. Tổng hợp các manh mối lỗ hổng (Vulnerability Clues)
+        # 7. Tổng hợp các manh mối lỗ hổng (Vulnerability Clues)
         clues = set()
-        if "buffer_write" in {s.sink_category for s in sinks} and "bounds_check" not in sanitizer_types:
+        uncontrolled_buffer_sinks = [s for s in sinks if s.sink_category == "buffer_write" and not s.is_controlled]
+        if uncontrolled_buffer_sinks:
             clues.add("unbounded_buffer_copy")
+            
         if "pointer_free" in {s.sink_category for s in sinks}:
             clues.add("pointer_deallocation")
-        if memory_ops.has_pointer_deref and "null_check" not in sanitizer_types:
-            clues.add("unchecked_pointer_dereference")
-        if memory_ops.has_array_indexing and "bounds_check" not in sanitizer_types:
-            clues.add("unbounded_array_access")
+            
+        if memory_ops.has_pointer_deref:
+            has_effective_null_check = any(
+                s.guard_type == "null_check" and s.is_effective 
+                for s in sanitizers
+            )
+            if not has_effective_null_check:
+                clues.add("unchecked_pointer_dereference")
+                
+        if memory_ops.has_array_indexing:
+            has_effective_bounds = any(
+                s.guard_type in ["bounds_check", "sizeof_check"] and s.is_effective 
+                for s in sanitizers
+            )
+            if not has_effective_bounds:
+                clues.add("unbounded_array_access")
+                
         if "format_string" in {s.sink_category for s in sinks}:
             clues.add("formatted_io_operation")
             
@@ -134,6 +163,7 @@ class SecuritySignatureExtractor:
             dataflow_paths=dataflow_paths,
             sink_apis=sink_apis,
             sanitizer_types=sanitizer_types,
+            effective_sanitizer_types=effective_sanitizer_types,
             vulnerability_clues=clues
         )
 
@@ -200,25 +230,177 @@ class SecuritySignatureExtractor:
             nid = str(n.get("id", ""))
             
             if ntype in ["Condition", "IfStatement", "RelationalExpression", "EqualityExpression"] and ncode:
+                vars_in_ncode = set(re.findall(r"\b[a-zA-Z_][a-zA-Z0-9_]*\b", ncode)) - C_KEYWORDS
                 for rule_name, pattern in SANITIZER_RULES:
                     if pattern.search(ncode) and ncode not in seen_exprs:
                         seen_exprs.add(ncode)
-                        sanitizers.append(SanitizerGuard(guard_type=rule_name, expression=ncode[:80], node_id=nid))
+                        sanitizers.append(SanitizerGuard(
+                            guard_type=rule_name, 
+                            expression=ncode[:80], 
+                            node_id=nid,
+                            controlled_vars=vars_in_ncode
+                        ))
             elif ntype in ["Sizeof", "SizeofExpression", "SizeofOperand"] and ncode:
                 if ncode not in seen_exprs:
                     seen_exprs.add(ncode)
-                    sanitizers.append(SanitizerGuard(guard_type="sizeof_check", expression=ncode[:80], node_id=nid))
+                    vars_in_ncode = set(re.findall(r"\b[a-zA-Z_][a-zA-Z0-9_]*\b", ncode)) - C_KEYWORDS
+                    sanitizers.append(SanitizerGuard(
+                        guard_type="sizeof_check", 
+                        expression=ncode[:80], 
+                        node_id=nid,
+                        controlled_vars=vars_in_ncode
+                    ))
                     
-        # 2. Phân tích qua mã nguồn văn bản
-        for rule_name, pattern in SANITIZER_RULES:
+        # 2. Phân tích cấu trúc if/while conditions qua mã nguồn văn bản (xử lý đúng ngoặc lồng nhau)
+        for m in re.finditer(r"\b(if|while)\s*\(", code):
+            start_p = m.end() - 1
+            depth = 0
+            end_p = -1
+            for i in range(start_p, len(code)):
+                if code[i] == '(':
+                    depth += 1
+                elif code[i] == ')':
+                    depth -= 1
+                    if depth == 0:
+                        end_p = i
+                        break
+            if end_p != -1:
+                cond_expr = code[start_p + 1:end_p].strip()
+                cond_vars = set(re.findall(r"\b[a-zA-Z_][a-zA-Z0-9_]*\b", cond_expr)) - C_KEYWORDS
+                for rule_name, pattern in SANITIZER_RULES:
+                    if pattern.search(cond_expr) and cond_expr not in seen_exprs:
+                        seen_exprs.add(cond_expr)
+                        sanitizers.append(SanitizerGuard(
+                            guard_type=rule_name, 
+                            expression=cond_expr[:80],
+                            controlled_vars=cond_vars
+                        ))
+
+        # 3. Phân tích các câu lệnh đơn lẻ độc lập (assert, return_error, goto_error, pointer_validation)
+        standalone_rules = [r for r in SANITIZER_RULES if r[0] in ["assertion", "return_error", "goto_error", "pointer_validation"]]
+        for rule_name, pattern in standalone_rules:
             matches = pattern.finditer(code)
             for m in matches:
                 expr = m.group(0).strip()
                 if expr not in seen_exprs:
                     seen_exprs.add(expr)
-                    sanitizers.append(SanitizerGuard(guard_type=rule_name, expression=expr[:80]))
+                    expr_vars = set(re.findall(r"\b[a-zA-Z_][a-zA-Z0-9_]*\b", expr)) - C_KEYWORDS
+                    sanitizers.append(SanitizerGuard(
+                        guard_type=rule_name, 
+                        expression=expr[:80],
+                        controlled_vars=expr_vars
+                    ))
                     
         return sanitizers
+
+    def _correlate_guards_and_sinks(
+        self,
+        code: str,
+        sanitizers: List[SanitizerGuard],
+        sinks: List[TaintSink],
+        sources: List[TaintSource],
+        memory_ops: MemoryOperation,
+        edges: List[Dict[str, Any]]
+    ):
+        """
+        Đối soát chéo quan hệ kiểm soát giữa Sanitizers và Sinks:
+        1. Kiểm tra vị trí: Guard phải xuất hiện TRƯỚC Sink mới có hiệu lực.
+        2. Kiểm tra biến kiểm soát: Biến trong Guard phải liên quan tới tham số Sink hoặc Pointer/Array.
+        3. Cập nhật is_controlled cho Sinks và is_effective cho Sanitizers.
+        """
+        # 1. Tìm vị trí xuất hiện của từng sink và các tham số của nó (xử lý đúng ngoặc lồng nhau)
+        sink_occurrences = []
+        for s in sinks:
+            for m in re.finditer(r"\b" + re.escape(s.api_name) + r"\s*\(", code):
+                start_p = m.end() - 1
+                depth = 0
+                end_p = -1
+                for i in range(start_p, len(code)):
+                    if code[i] == '(':
+                        depth += 1
+                    elif code[i] == ')':
+                        depth -= 1
+                        if depth == 0:
+                            end_p = i
+                            break
+                arg_text = code[start_p + 1:end_p] if end_p != -1 else ""
+                arg_vars = set(re.findall(r"\b[a-zA-Z_][a-zA-Z0-9_]*\b", arg_text)) - C_KEYWORDS
+                sink_occurrences.append({
+                    "sink": s,
+                    "pos": m.start(),
+                    "arg_vars": arg_vars
+                })
+
+        # 2. Tìm vị trí của từng guard trong code
+        guard_occurrences = []
+        for g in sanitizers:
+            pos = code.find(g.expression)
+            if pos == -1:
+                m = re.search(re.escape(g.expression[:30]), code)
+                pos = m.start() if m else 0
+            guard_occurrences.append({
+                "guard": g,
+                "pos": pos,
+                "vars": g.controlled_vars
+            })
+
+        # 3. Đánh giá is_controlled cho từng sink
+        for s_occ in sink_occurrences:
+            s = s_occ["sink"]
+            if s.is_controlled:
+                continue
+            
+            for g_occ in guard_occurrences:
+                g = g_occ["guard"]
+                if g_occ["pos"] < s_occ["pos"]:
+                    shared_vars = g_occ["vars"] & s_occ["arg_vars"]
+                    if shared_vars or g.guard_type in ["assertion"]:
+                        s.is_controlled = True
+                        break
+
+        # 4. Đánh giá is_effective cho từng guard
+        for g_occ in guard_occurrences:
+            g = g_occ["guard"]
+            g_pos = g_occ["pos"]
+            g_vars = g_occ["vars"]
+
+            # Trường hợp 1: Guard cho Buffer Write / Sinks / Array / Arithmetic
+            if g.guard_type in ["bounds_check", "sizeof_check"]:
+                matching_sinks = [
+                    s_occ for s_occ in sink_occurrences 
+                    if (s_occ["arg_vars"] & g_vars)
+                ]
+                if matching_sinks:
+                    # Nếu tất cả các matching sinks đều đứng trước guard -> Guard sau sink (vô hiệu)!
+                    if all(s_occ["pos"] < g_pos for s_occ in matching_sinks):
+                        g.is_effective = False
+                    else:
+                        g.is_effective = True
+                else:
+                    # Không chia sẻ biến với sink nào: kiểm tra xem có bảo vệ mảng hoặc phép toán tràn không
+                    has_relevant_usage = False
+                    sub_code = code[g_pos:]
+                    if memory_ops.has_array_indexing and g_vars:
+                        if any(re.search(r"\[[^\]]*\b" + re.escape(v) + r"\b[^\]]*\]", sub_code) for v in g_vars):
+                            has_relevant_usage = True
+                    if g_vars and any(re.search(r"/\s*" + re.escape(v) + r"\b|\b" + re.escape(v) + r"\s*\*", sub_code) for v in g_vars):
+                        has_relevant_usage = True
+                    
+                    if not has_relevant_usage:
+                        g.is_effective = False
+
+            # Trường hợp 2: Null check guard
+            elif g.guard_type == "null_check":
+                if not g_vars:
+                    g.is_effective = False
+                else:
+                    # Kiểm tra xem biến được null check có được dùng sau guard không
+                    sub_code = code[g_pos:]
+                    has_matching_use = any(
+                        bool(re.search(r"\b" + re.escape(v) + r"\s*->|\*\s*" + re.escape(v) + r"\b|\bfree\s*\(\s*[^)]*\b" + re.escape(v) + r"\b|\b[a-zA-Z_][a-zA-Z0-9_]*\s*\([^)]*\b" + re.escape(v) + r"\b", sub_code))
+                        for v in g_vars
+                    )
+                    g.is_effective = has_matching_use
 
     def _extract_sinks(self, code: str, nodes: List[Dict[str, Any]], edges: List[Dict[str, Any]]) -> List[TaintSink]:
         """Trích xuất các điểm đích nguy hiểm (Taint Sinks) và xác định xem có bị CONTROLS hay không."""

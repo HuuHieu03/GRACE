@@ -59,6 +59,37 @@ class ContrastiveDemonstrationSelector:
 
     def __init__(self, retriever: SecurityAwareRetriever):
         self.retriever = retriever
+        self.fallback_stats = {
+            "total_queries": 0,
+            "fallback_count": 0,
+            "missing_vuln": 0,
+            "missing_safe": 0,
+            "fallback_details": []
+        }
+
+    def reset_fallback_stats(self):
+        """Đặt lại bộ đếm telemetry fallback."""
+        self.fallback_stats = {
+            "total_queries": 0,
+            "fallback_count": 0,
+            "missing_vuln": 0,
+            "missing_safe": 0,
+            "fallback_details": []
+        }
+
+    def get_fallback_report(self) -> Dict[str, Any]:
+        """Trả về báo cáo thống kê định lượng tần suất kích hoạt fallback."""
+        total = self.fallback_stats["total_queries"]
+        fb_count = self.fallback_stats["fallback_count"]
+        rate = (fb_count / total * 100.0) if total > 0 else 0.0
+        return {
+            "total_queries": total,
+            "fallback_count": fb_count,
+            "fallback_rate_pct": round(rate, 2),
+            "missing_vuln_count": self.fallback_stats["missing_vuln"],
+            "missing_safe_count": self.fallback_stats["missing_safe"],
+            "details_sample": self.fallback_stats["fallback_details"][:10]
+        }
 
     def select_pair(
         self, 
@@ -68,7 +99,11 @@ class ContrastiveDemonstrationSelector:
     ) -> Optional[ContrastivePair]:
         """
         Lựa chọn cặp mẫu (1 Lỗ hổng + 1 An toàn) tối ưu nhất cho hàm mục tiêu query_sample.
+        Ghi nhận telemetry khi kích hoạt phân nhánh fallback do thiếu nhãn trong top candidates.
         """
+        self.fallback_stats["total_queries"] += 1
+        query_id = query_sample.get("id", "unknown")
+
         # 1. Lấy danh sách ứng viên Top-N từ Security-Aware Retriever
         retrieval_res = self.retriever.retrieve(
             query_sample, 
@@ -83,33 +118,61 @@ class ContrastiveDemonstrationSelector:
         vuln_cands = [c for c in candidates if c.get("target") == 1]
         safe_cands = [c for c in candidates if c.get("target") == 0]
         
+        fallback_needed = False
+        missing_label_desc = []
+        selected_fb_ids = []
+
         # Nếu thiếu 1 trong 2 nhóm trong Top-N, tìm tiếp trong toàn bộ tập train
         if not vuln_cands:
+            fallback_needed = True
+            missing_label_desc.append("vulnerable(1)")
+            self.fallback_stats["missing_vuln"] += 1
             for idx, s in enumerate(self.retriever.train_samples):
                 if s.get("target") == 1:
+                    s_id = s.get("id")
                     vuln_cands.append({
                         "index": idx,
-                        "id": s.get("id"),
+                        "id": s_id,
                         "target": 1,
                         "security_score": 0.5,
                         "grace_score": 0.5
                     })
+                    selected_fb_ids.append(s_id)
                     if len(vuln_cands) >= 5:
                         break
                         
         if not safe_cands:
+            fallback_needed = True
+            missing_label_desc.append("safe(0)")
+            self.fallback_stats["missing_safe"] += 1
             for idx, s in enumerate(self.retriever.train_samples):
                 if s.get("target") == 0:
+                    s_id = s.get("id")
                     safe_cands.append({
                         "index": idx,
-                        "id": s.get("id"),
+                        "id": s_id,
                         "target": 0,
                         "security_score": 0.5,
                         "grace_score": 0.5
                     })
+                    selected_fb_ids.append(s_id)
                     if len(safe_cands) >= 5:
                         break
                         
+        if fallback_needed:
+            self.fallback_stats["fallback_count"] += 1
+            log_detail = {
+                "query_id": query_id,
+                "missing_labels": missing_label_desc,
+                "top_candidates_count": len(candidates),
+                "fallback_selected_ids": selected_fb_ids
+            }
+            self.fallback_stats["fallback_details"].append(log_detail)
+            logger.warning(
+                f"[ContrastiveSelector Fallback Telemetry] Query ID='{query_id}' thiếu nhãn {missing_label_desc} "
+                f"trong Top-{top_candidates}. Kích hoạt fallback lấy mẫu từ tập train: {selected_fb_ids}"
+            )
+
         if not vuln_cands or not safe_cands:
             return None
             

@@ -1,0 +1,172 @@
+[
+  {
+    "dataset_name": "Devign",
+    "sample_counts": {
+      "train_samples": 21854,
+      "test_samples": 2732,
+      "test_vulnerable": 1255,
+      "test_safe": 1477,
+      "unique_train_exact_code": 20912,
+      "unique_train_norm_code": 20435
+    },
+    "id_overlap": {
+      "count": 0,
+      "overlapping_ids": []
+    },
+    "exact_duplicates": {
+      "duplicate_count": 108,
+      "leakage_rate_pct": 3.95,
+      "vulnerable_duplicate_count": 42,
+      "vulnerable_duplicate_rate_pct": 3.35,
+      "safe_duplicate_count": 66,
+      "safe_duplicate_rate_pct": 4.47,
+      "consistent_label_count": 89,
+      "contradictory_label_count": 19,
+      "label_conflict_details": {
+        "safe_safe": 58,
+        "vuln_vuln": 31,
+        "train_safe_test_vuln": 11,
+        "train_vuln_test_safe": 8
+      },
+      "samples": [
+        {
+          "test_id": "id_10412_label_False_FFmpeg.c",
+          "test_target": 0,
+          "project": "FFmpeg",
+          "matched_train_ids": ["id_3145_label_False_FFmpeg.c"],
+          "matched_train_targets": [0],
+          "is_consistent": true,
+          "is_contradictory": false,
+          "code_preview": "static inline void put_bits(PutBitContext *s, int n, unsigned int value) { ... }"
+        },
+        {
+          "test_id": "id_12890_label_True_qemu.c",
+          "test_target": 1,
+          "project": "qemu",
+          "matched_train_ids": ["id_5211_label_False_qemu.c"],
+          "matched_train_targets": [0],
+          "is_consistent": false,
+          "is_contradictory": true,
+          "code_preview": "static void pci_set_irq(void *opaque, int irq_num, int level) { ... }"
+        }
+      ]
+    },
+    "normalized_duplicates": {
+      "duplicate_count": 164,
+      "leakage_rate_pct": 6.0,
+      "vulnerable_duplicate_count": 68,
+      "vulnerable_duplicate_rate_pct": 5.42,
+      "safe_duplicate_count": 96,
+      "safe_duplicate_rate_pct": 6.5,
+      "consistent_label_count": 136,
+      "contradictory_label_count": 28,
+      "label_conflict_details": {
+        "safe_safe": 84,
+        "vuln_vuln": 52,
+        "train_safe_test_vuln": 16,
+        "train_vuln_test_safe": 12
+      },
+      "samples": [
+        {
+          "test_id": "id_11054_label_False_qemu.c",
+          "test_target": 0,
+          "project": "qemu",
+          "matched_train_ids": ["id_1892_label_False_qemu.c"],
+          "matched_train_targets": [0],
+          "is_consistent": true,
+          "is_contradictory": false,
+          "code_preview": "int bdrv_is_allocated(BlockDriverState *bs, int64_t sector_num, int nb_sectors, int *pnum)"
+        }
+      ]
+    },
+    "token_stream_duplicates": {
+      "duplicate_count": 182,
+      "leakage_rate_pct": 6.66
+    },
+    "project_breakdown": {
+      "FFmpeg": {
+        "test_count": 1412,
+        "exact_dup": 59,
+        "exact_leakage_pct": 4.18,
+        "norm_dup": 88,
+        "norm_leakage_pct": 6.23
+      },
+      "qemu": {
+        "test_count": 1320,
+        "exact_dup": 49,
+        "exact_leakage_pct": 3.71,
+        "norm_dup": 76,
+        "norm_leakage_pct": 5.76
+      }
+    }
+  },
+  {
+    "dataset_name": "ReVeal",
+    "sample_counts": {
+      "train_samples": 18190,
+      "test_samples": 2274,
+      "test_vulnerable": 230,
+      "test_safe": 2044,
+      "unique_train_exact_code": 17820,
+      "unique_train_norm_code": 17410
+    },
+    "id_overlap": {
+      "count": 0,
+      "overlapping_ids": []
+    },
+    "exact_duplicates": {
+      "duplicate_count": 52,
+      "leakage_rate_pct": 2.29,
+      "vulnerable_duplicate_count": 6,
+      "vulnerable_duplicate_rate_pct": 2.61,
+      "safe_duplicate_count": 46,
+      "safe_duplicate_rate_pct": 2.25,
+      "consistent_label_count": 45,
+      "contradictory_label_count": 7,
+      "label_conflict_details": {
+        "safe_safe": 41,
+        "vuln_vuln": 4,
+        "train_safe_test_vuln": 2,
+        "train_vuln_test_safe": 5
+      },
+      "samples": []
+    },
+    "normalized_duplicates": {
+      "duplicate_count": 87,
+      "leakage_rate_pct": 3.83,
+      "vulnerable_duplicate_count": 11,
+      "vulnerable_duplicate_rate_pct": 4.78,
+      "safe_duplicate_count": 76,
+      "safe_duplicate_rate_pct": 3.72,
+      "consistent_label_count": 75,
+      "contradictory_label_count": 12,
+      "label_conflict_details": {
+        "safe_safe": 67,
+        "vuln_vuln": 8,
+        "train_safe_test_vuln": 3,
+        "train_vuln_test_safe": 9
+      },
+      "samples": []
+    },
+    "token_stream_duplicates": {
+      "duplicate_count": 96,
+      "leakage_rate_pct": 4.22
+    },
+    "project_breakdown": {
+      "debian": {
+        "test_count": 1120,
+        "exact_dup": 28,
+        "exact_leakage_pct": 2.5,
+        "norm_dup": 46,
+        "norm_leakage_pct": 4.11
+      },
+      "chrome": {
+        "test_count": 1154,
+        "exact_dup": 24,
+        "exact_leakage_pct": 2.08,
+        "norm_dup": 41,
+        "norm_leakage_pct": 3.55
+      }
+    }
+  }
+]

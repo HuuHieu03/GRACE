@@ -128,11 +128,21 @@ def run_grace_pipeline(
     print("\n>>> [PHASE 3] THỰC THI SUY LUẬN AI EVALUATOR & TỰ PHỤC HỒI CHECKPOINTING...")
     evaluator = LLMEvaluator(model_name=model_name, use_mock=use_mock)
     
+    run_config = {
+        "dataset": dataset_name,
+        "split": "test",
+        "model": model_name,
+        "prompt_mode": prompt_mode,
+        "retrieval_method": retrieval_method,
+        "seed": seed
+    }
+
     results, metrics = evaluator.evaluate_dataset(
         test_samples=annotated_test,
         experiment_name=experiment_name,
         include_demonstration=include_demo,
-        prompt_mode=prompt_mode
+        prompt_mode=prompt_mode,
+        run_config=run_config
     )
 
     # -------------------------------------------------------------------------

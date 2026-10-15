@@ -1,0 +1,358 @@
+{
+  "run_name": "Audit Reparse - results_grace_exp.json",
+  "total_records": 26,
+  "label_changed_count": 8,
+  "changed_0_to_1": 0,
+  "changed_1_to_0": 0,
+  "changed_to_invalid": 8,
+  "invalid_count": 8,
+  "parse_method_distribution": {
+    "Strict '1'": 13,
+    "Strict '0'": 5,
+    "Invalid: Empty Response": 8
+  },
+  "changes_by_ground_truth": {
+    "true_1_fixed_to_1": 0,
+    "true_0_fixed_to_0": 0,
+    "true_1_corrupted_to_0": 0,
+    "true_0_corrupted_to_1": 0
+  },
+  "metrics_before": {
+    "total_samples": 26,
+    "valid_samples": 26,
+    "invalid_samples": 0,
+    "invalid_rate": 0.0,
+    "accuracy": 0.4231,
+    "precision": 0.3846,
+    "recall": 0.4167,
+    "f1_score": 0.4,
+    "mcc": -0.1487,
+    "balanced_accuracy": 0.4226,
+    "predicted_vulnerable_rate": 0.5,
+    "confusion_matrix": {
+      "TP (True Positive)": 5,
+      "FP (False Positive - Alarm)": 8,
+      "TN (True Negative)": 6,
+      "FN (False Negative - Miss)": 7
+    },
+    "baselines": {
+      "always_vulnerable_f1": 0.6316,
+      "always_vulnerable_acc": 0.4615,
+      "always_safe_f1": 0.0,
+      "always_safe_acc": 0.5385
+    }
+  },
+  "metrics_after": {
+    "total_samples": 26,
+    "valid_samples": 18,
+    "invalid_samples": 8,
+    "invalid_rate": 0.3077,
+    "accuracy": 0.4444,
+    "precision": 0.3846,
+    "recall": 0.7143,
+    "f1_score": 0.5,
+    "mcc": -0.0141,
+    "balanced_accuracy": 0.4935,
+    "predicted_vulnerable_rate": 0.7222,
+    "confusion_matrix": {
+      "TP (True Positive)": 5,
+      "FP (False Positive - Alarm)": 8,
+      "TN (True Negative)": 3,
+      "FN (False Negative - Miss)": 2
+    },
+    "baselines": {
+      "always_vulnerable_f1": 0.6316,
+      "always_vulnerable_acc": 0.4615,
+      "always_safe_f1": 0.0,
+      "always_safe_acc": 0.5385
+    }
+  },
+  "reparsed_records": [
+    {
+      "id": "26175",
+      "target": 1,
+      "old_prediction": 1,
+      "prediction": 1,
+      "new_parse_method": "Strict '1'",
+      "is_valid": true,
+      "func_snippet": "void error_setg_win32(Error **errp, int win32_err, const char *fmt, ...)\n\n{\n\n    va_list ap;\n\n    char *msg1, *msg2;\n\n\n\n",
+      "llm_raw_response": "1",
+      "eval_timestamp": "2026-08-12 09:48:07"
+    },
+    {
+      "id": "26701",
+      "target": 0,
+      "old_prediction": 1,
+      "prediction": 1,
+      "new_parse_method": "Strict '1'",
+      "is_valid": true,
+      "func_snippet": "static void vnc_flush(VncState *vs)\n\n{\n\n    if (vs->output.offset)\n\n\tvnc_client_write(vs);\n\n}",
+      "llm_raw_response": "1",
+      "eval_timestamp": "2026-08-12 09:48:11"
+    },
+    {
+      "id": "16723",
+      "target": 0,
+      "old_prediction": 1,
+      "prediction": 1,
+      "new_parse_method": "Strict '1'",
+      "is_valid": true,
+      "func_snippet": "static void vmxnet3_update_features(VMXNET3State *s)\n\n{\n\n    uint32_t guest_features;\n\n    int rxcso_supported;\n\n\n\n    g",
+      "llm_raw_response": "1",
+      "eval_timestamp": "2026-08-12 09:48:14"
+    },
+    {
+      "id": "10671",
+      "target": 1,
+      "old_prediction": 0,
+      "prediction": 0,
+      "new_parse_method": "Strict '0'",
+      "is_valid": true,
+      "func_snippet": "static int decode_pic_hdr(IVI5DecContext *ctx, AVCodecContext *avctx)\n{\n    if (get_bits(&ctx->gb, 5) != 0x1F) {\n       ",
+      "llm_raw_response": "0",
+      "eval_timestamp": "2026-08-12 09:48:16"
+    },
+    {
+      "id": "27201",
+      "target": 0,
+      "old_prediction": 0,
+      "prediction": null,
+      "new_parse_method": "Invalid: Empty Response",
+      "is_valid": false,
+      "func_snippet": "static int decode_vol_header(MpegEncContext *s, GetBitContext *gb){\n\n    int width, height, vo_ver_id;\n\n\n\n    /* vol hea",
+      "llm_raw_response": "",
+      "eval_timestamp": "2026-08-12 09:48:20"
+    },
+    {
+      "id": "11936",
+      "target": 1,
+      "old_prediction": 1,
+      "prediction": 1,
+      "new_parse_method": "Strict '1'",
+      "is_valid": true,
+      "func_snippet": "qio_channel_websock_source_dispatch(GSource *source,\n\n                                    GSourceFunc callback,\n\n       ",
+      "llm_raw_response": "1",
+      "eval_timestamp": "2026-08-12 09:48:23"
+    },
+    {
+      "id": "19469",
+      "target": 0,
+      "old_prediction": 0,
+      "prediction": null,
+      "new_parse_method": "Invalid: Empty Response",
+      "is_valid": false,
+      "func_snippet": "static void test_qga_file_write_read(gconstpointer fix)\n\n{\n\n    const TestFixture *fixture = fix;\n\n    const unsigned ch",
+      "llm_raw_response": "",
+      "eval_timestamp": "2026-08-12 09:48:27"
+    },
+    {
+      "id": "23155",
+      "target": 0,
+      "old_prediction": 0,
+      "prediction": null,
+      "new_parse_method": "Invalid: Empty Response",
+      "is_valid": false,
+      "func_snippet": "static uint64_t exynos4210_mct_read(void *opaque, target_phys_addr_t offset,\n\n        unsigned size)\n\n{\n\n    Exynos4210M",
+      "llm_raw_response": "",
+      "eval_timestamp": "2026-08-12 09:48:31"
+    },
+    {
+      "id": "21430",
+      "target": 0,
+      "old_prediction": 1,
+      "prediction": 1,
+      "new_parse_method": "Strict '1'",
+      "is_valid": true,
+      "func_snippet": "bool bdrv_op_is_blocked(BlockDriverState *bs, BlockOpType op, Error **errp)\n\n{\n\n    BdrvOpBlocker *blocker;\n\n    assert(",
+      "llm_raw_response": "1",
+      "eval_timestamp": "2026-08-12 09:48:33"
+    },
+    {
+      "id": "1059",
+      "target": 1,
+      "old_prediction": 1,
+      "prediction": 1,
+      "new_parse_method": "Strict '1'",
+      "is_valid": true,
+      "func_snippet": "static int check_checksum(ByteIOContext *bc){\n\n    unsigned long checksum= get_checksum(bc);\n\n//    return checksum != g",
+      "llm_raw_response": "1",
+      "eval_timestamp": "2026-08-12 09:48:36"
+    },
+    {
+      "id": "9744",
+      "target": 0,
+      "old_prediction": 1,
+      "prediction": 1,
+      "new_parse_method": "Strict '1'",
+      "is_valid": true,
+      "func_snippet": "static void virtio_ccw_device_realize(VirtioCcwDevice *dev, Error **errp)\n\n{\n\n    unsigned int cssid = 0;\n\n    unsigned ",
+      "llm_raw_response": "1",
+      "eval_timestamp": "2026-08-12 09:48:39"
+    },
+    {
+      "id": "20902",
+      "target": 0,
+      "old_prediction": 1,
+      "prediction": 1,
+      "new_parse_method": "Strict '1'",
+      "is_valid": true,
+      "func_snippet": "static void add_cpreg_to_list(gpointer key, gpointer opaque)\n\n{\n\n    ARMCPU *cpu = opaque;\n\n    uint64_t regidx;\n\n    co",
+      "llm_raw_response": "1",
+      "eval_timestamp": "2026-08-12 09:48:41"
+    },
+    {
+      "id": "921",
+      "target": 1,
+      "old_prediction": 1,
+      "prediction": 1,
+      "new_parse_method": "Strict '1'",
+      "is_valid": true,
+      "func_snippet": "MigrationState *exec_start_outgoing_migration(const char *command,\n\n                                             int64_t",
+      "llm_raw_response": "1",
+      "eval_timestamp": "2026-08-12 09:48:43"
+    },
+    {
+      "id": "8296",
+      "target": 0,
+      "old_prediction": 1,
+      "prediction": 1,
+      "new_parse_method": "Strict '1'",
+      "is_valid": true,
+      "func_snippet": "aio_compute_timeout(AioContext *ctx)\n\n{\n\n    int64_t deadline;\n\n    int timeout = -1;\n\n    QEMUBH *bh;\n\n\n\n    for (bh = ",
+      "llm_raw_response": "1",
+      "eval_timestamp": "2026-08-12 09:48:46"
+    },
+    {
+      "id": "1712",
+      "target": 0,
+      "old_prediction": 1,
+      "prediction": 1,
+      "new_parse_method": "Strict '1'",
+      "is_valid": true,
+      "func_snippet": "static void stream_process_mem2s(struct Stream *s,\n\n                                 StreamSlave *tx_dev)\n\n{\n\n    uint32",
+      "llm_raw_response": "1",
+      "eval_timestamp": "2026-08-12 09:48:49"
+    },
+    {
+      "id": "3956",
+      "target": 1,
+      "old_prediction": 0,
+      "prediction": null,
+      "new_parse_method": "Invalid: Empty Response",
+      "is_valid": false,
+      "func_snippet": "static int mov_write_packet(AVFormatContext *s, AVPacket *pkt)\n\n{\n\n    MOVContext *mov = s->priv_data;\n\n    ByteIOContex",
+      "llm_raw_response": "",
+      "eval_timestamp": "2026-08-12 09:48:53"
+    },
+    {
+      "id": "9437",
+      "target": 1,
+      "old_prediction": 0,
+      "prediction": null,
+      "new_parse_method": "Invalid: Empty Response",
+      "is_valid": false,
+      "func_snippet": "static void ppc_cpu_realizefn(DeviceState *dev, Error **errp)\n{\n    CPUState *cs = CPU(dev);\n    PowerPCCPU *cpu = POWER",
+      "llm_raw_response": "",
+      "eval_timestamp": "2026-08-12 09:48:57"
+    },
+    {
+      "id": "24742",
+      "target": 0,
+      "old_prediction": 0,
+      "prediction": 0,
+      "new_parse_method": "Strict '0'",
+      "is_valid": true,
+      "func_snippet": "uint64_t helper_fnmsub (uint64_t arg1, uint64_t arg2, uint64_t arg3)\n\n{\n\n    CPU_DoubleU farg1, farg2, farg3;\n\n\n\n    far",
+      "llm_raw_response": "0",
+      "eval_timestamp": "2026-08-12 09:49:00"
+    },
+    {
+      "id": "18812",
+      "target": 1,
+      "old_prediction": 0,
+      "prediction": null,
+      "new_parse_method": "Invalid: Empty Response",
+      "is_valid": false,
+      "func_snippet": "static int filter_frame(AVFilterLink *inlink, AVFrame *src_buffer)\n\n{\n\n    AVFilterContext  *ctx = inlink->dst;\n\n    ATe",
+      "llm_raw_response": "",
+      "eval_timestamp": "2026-08-12 09:49:04"
+    },
+    {
+      "id": "4341",
+      "target": 0,
+      "old_prediction": 1,
+      "prediction": 1,
+      "new_parse_method": "Strict '1'",
+      "is_valid": true,
+      "func_snippet": "static int gif_read_image(GifState *s)\n\n{\n\n    int left, top, width, height, bits_per_pixel, code_size, flags;\n\n    int ",
+      "llm_raw_response": "1",
+      "eval_timestamp": "2026-08-12 09:49:07"
+    },
+    {
+      "id": "5630",
+      "target": 1,
+      "old_prediction": 0,
+      "prediction": null,
+      "new_parse_method": "Invalid: Empty Response",
+      "is_valid": false,
+      "func_snippet": "static int init_directories(BDRVVVFATState* s,\n\n                            const char *dirname, int heads, int secs,\n\n ",
+      "llm_raw_response": "",
+      "eval_timestamp": "2026-08-12 09:49:11"
+    },
+    {
+      "id": "4159",
+      "target": 1,
+      "old_prediction": 0,
+      "prediction": null,
+      "new_parse_method": "Invalid: Empty Response",
+      "is_valid": false,
+      "func_snippet": "int av_packet_split_side_data(AVPacket *pkt){\n\n    if (!pkt->side_data_elems && pkt->size >12 && AV_RB64(pkt->data + pkt",
+      "llm_raw_response": "",
+      "eval_timestamp": "2026-08-12 09:49:15"
+    },
+    {
+      "id": "3394",
+      "target": 1,
+      "old_prediction": 1,
+      "prediction": 1,
+      "new_parse_method": "Strict '1'",
+      "is_valid": true,
+      "func_snippet": "static inline bool vtd_queued_inv_enable_check(IntelIOMMUState *s)\n\n{\n\n    return s->iq_tail == 0;\n\n}",
+      "llm_raw_response": "1",
+      "eval_timestamp": "2026-08-12 09:49:17"
+    },
+    {
+      "id": "1573",
+      "target": 0,
+      "old_prediction": 0,
+      "prediction": 0,
+      "new_parse_method": "Strict '0'",
+      "is_valid": true,
+      "func_snippet": "uint16_t net_checksum_finish(uint32_t sum)\n\n{\n\n    while (sum>>16)\n\n\tsum = (sum & 0xFFFF)+(sum >> 16);\n\n    return ~sum;",
+      "llm_raw_response": "0",
+      "eval_timestamp": "2026-08-12 09:49:19"
+    },
+    {
+      "id": "9210",
+      "target": 0,
+      "old_prediction": 0,
+      "prediction": 0,
+      "new_parse_method": "Strict '0'",
+      "is_valid": true,
+      "func_snippet": "static uint32_t gic_dist_readb(void *opaque, hwaddr offset, MemTxAttrs attrs)\n\n{\n\n    GICState *s = (GICState *)opaque;\n",
+      "llm_raw_response": "0",
+      "eval_timestamp": "2026-08-12 09:49:23"
+    },
+    {
+      "id": "24331",
+      "target": 1,
+      "old_prediction": 0,
+      "prediction": 0,
+      "new_parse_method": "Strict '0'",
+      "is_valid": true,
+      "func_snippet": "static void qio_channel_socket_finalize(Object *obj)\n{\n    QIOChannelSocket *ioc = QIO_CHANNEL_SOCKET(obj);\n    if (ioc-",
+      "llm_raw_response": "0",
+      "eval_timestamp": "2026-08-12 09:49:24"
+    }
+  ]
+}

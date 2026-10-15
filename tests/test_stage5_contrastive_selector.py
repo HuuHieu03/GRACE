@@ -99,3 +99,38 @@ def test_unified_build_prompt_dispatcher(retriever_and_dataset):
     assert "DEMONSTRATION" not in p_zero
     assert "DEMONSTRATION EXAMPLE (In-Context Reference)" in p_1shot
     assert "CONTRASTIVE DEMONSTRATION EXAMPLES" in p_2shot
+
+
+def test_contrastive_selector_fallback_telemetry():
+    """Kiểm thử cơ chế Telemetry ghi nhận Fallback khi tập ứng viên thiếu một nhãn."""
+    from unittest.mock import MagicMock
+    
+    # Tạo mock retriever chỉ trả về ứng viên nhãn Safe (target=0)
+    mock_retriever = MagicMock()
+    mock_retriever.retrieve.return_value = {
+        "top_candidates": [
+            {"index": 0, "id": "safe_1", "target": 0, "security_score": 0.9, "grace_score": 0.8}
+        ]
+    }
+    # Tập train có chứa cả safe và vuln
+    mock_retriever.train_samples = [
+        {"id": "train_safe_1", "target": 0, "func": "void f0(){}"},
+        {"id": "train_vuln_1", "target": 1, "func": "void f1(){ char buf[10]; gets(buf); }"}
+    ]
+    
+    selector = ContrastiveDemonstrationSelector(mock_retriever)
+    query = {"id": "query_test", "func": "int main(){}"}
+    
+    pair = selector.select_pair(query, top_candidates=10)
+    assert pair is not None
+    
+    report = selector.get_fallback_report()
+    assert report["total_queries"] == 1
+    assert report["fallback_count"] == 1
+    assert report["fallback_rate_pct"] == 100.0
+    assert report["missing_vuln_count"] == 1
+    assert report["missing_safe_count"] == 0
+    assert len(report["details_sample"]) == 1
+    assert report["details_sample"][0]["query_id"] == "query_test"
+    assert "train_vuln_1" in report["details_sample"][0]["fallback_selected_ids"]
+

@@ -8,12 +8,17 @@ from .schema import SecuritySignature
 
 
 def compute_jaccard_set(set1: set, set2: set) -> float:
-    """Tính chỉ số Jaccard giữa hai tập hợp."""
-    if not set1 and not set2:
-        return 1.0
+    """
+    Tính chỉ số Jaccard giữa hai tập hợp.
+    Nếu cả hai tập hợp đều rỗng, trả về 0.0 thay vì 1.0 vì không có bằng chứng an ninh chung
+    (tránh hiện tượng thổi phồng tương đồng SecSim giả mạo).
+    """
     if not set1 or not set2:
         return 0.0
-    return len(set1.intersection(set2)) / float(len(set1.union(set2)))
+    union_len = len(set1.union(set2))
+    if union_len == 0:
+        return 0.0
+    return len(set1.intersection(set2)) / float(union_len)
 
 
 def compute_security_signature_similarity(
@@ -46,9 +51,14 @@ def compute_security_signature_similarity(
     cat_sim = compute_jaccard_set(cats1, cats2)
     sink_sim = 0.6 * api_sim + 0.4 * cat_sim
     
-    # 2. Sanitizer / Guard Similarity
-    sans1, sans2 = sig1.sanitizer_types, sig2.sanitizer_types
-    sanitizer_sim = compute_jaccard_set(sans1, sans2)
+    # 2. Sanitizer / Guard Similarity (ưu tiên các guard có hiệu lực an ninh thực tế)
+    eff_sans1 = getattr(sig1, "effective_sanitizer_types", None)
+    if eff_sans1 is None:
+        eff_sans1 = sig1.sanitizer_types
+    eff_sans2 = getattr(sig2, "effective_sanitizer_types", None)
+    if eff_sans2 is None:
+        eff_sans2 = sig2.sanitizer_types
+    sanitizer_sim = compute_jaccard_set(eff_sans1, eff_sans2)
     
     # 3. Memory Operations Similarity
     m1, m2 = sig1.memory_ops, sig2.memory_ops
