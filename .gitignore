@@ -2,6 +2,11 @@
 .env
 .env.*
 !.env.example
+*key*.json
+grace-research-*.json
+.gcp_key.json
+gcp_sa_key*.json
+*.sa_key.json
 
 # Python
 __pycache__/

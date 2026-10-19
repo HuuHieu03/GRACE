@@ -238,29 +238,111 @@ class CheckpointManager:
 class LLMEvaluator:
     """
     Trình điều khiển Đánh Giá LLM (LLM Evaluation Engine).
-    Hỗ trợ tích hợp Open-Weights trên Kaggle GPU và Mock Intelligent Generator cho chạy thử cục bộ.
+    Hỗ trợ tích hợp Vertex AI Model-as-a-Service (MaaS) cho Qwen-3 Coder 480B
+    theo evaluation_contract.yaml, OpenAI-compatible API (FPT AI Factory),
+    và Intelligent Mock LLM cho kiểm thử offline tốc độ cao.
     """
-    def __init__(self, model_name: Optional[str] = None, use_mock: bool = False):
-        self.model_name = model_name if model_name else config.default_llm_model
+    def __init__(
+        self,
+        model_name: Optional[str] = None,
+        provider: Optional[str] = None,
+        use_mock: bool = False,
+        project_id: Optional[str] = None,
+        location: Optional[str] = None
+    ):
         self.use_mock = use_mock
         self.client = None
+        self.credentials = None
+        self.project_id = project_id or config.vertex_project_id
+        self.location = location or config.vertex_location
+
+        # Xác định Provider: Ưu tiên tham số provider, nếu không nhận diện theo model_name hoặc env
+        if provider:
+            self.provider = provider
+        elif model_name and ("publishers/" in model_name or "qwen3" in model_name or "vertex" in model_name.lower()):
+            self.provider = "Vertex AI"
+        elif os.getenv("LLM_PROVIDER") == "Vertex AI":
+            self.provider = "Vertex AI"
+        else:
+            self.provider = "FPT"
+
+        # Xác định Model Name
+        if model_name:
+            self.model_name = model_name
+        elif self.provider == "Vertex AI":
+            self.model_name = config.vertex_model
+        else:
+            self.model_name = config.default_llm_model
         
         if not use_mock:
-            api_key = config.get_api_key("FPT_API_KEY")
-            base_url = config.get_base_url("FPT_BASE_URL")
-            if not api_key:
-                raise RuntimeError(
-                    "Lỗi cấu hình: Không tìm thấy FPT_API_KEY hoặc khóa API bị trống. "
-                    "Vui lòng cấu hình file .env hoặc biến môi trường trước khi chạy thực nghiệm. "
-                    "Nếu chỉ muốn kiểm thử giả lập nhanh mà không gọi API, hãy truyền flag --use_mock."
-                )
+            if self.provider == "Vertex AI":
+                self._init_vertex_client()
             else:
-                import openai
-                logger.info(f"Kết nối tới API: {base_url} với model {self.model_name}...")
-                self.client = openai.OpenAI(api_key=api_key, base_url=base_url)
+                self._init_fpt_client()
         
         if self.use_mock:
             logger.info("Môi trường Local/Test: Kích hoạt chế độ Intelligent Mock LLM Evaluator để test tốc độ cao.")
+
+    def _init_fpt_client(self):
+        """Khởi tạo OpenAI-compatible client cho FPT AI Factory."""
+        api_key = config.get_api_key("FPT_API_KEY")
+        base_url = config.get_base_url("FPT_BASE_URL")
+        if not api_key:
+            raise RuntimeError(
+                "Lỗi cấu hình: Không tìm thấy FPT_API_KEY hoặc khóa API bị trống. "
+                "Vui lòng cấu hình file .env hoặc biến môi trường trước khi chạy thực nghiệm. "
+                "Nếu chỉ muốn kiểm thử giả lập nhanh mà không gọi API, hãy truyền flag --use_mock."
+            )
+        import openai
+        logger.info(f"Kết nối tới API FPT: {base_url} với model {self.model_name}...")
+        self.client = openai.OpenAI(api_key=api_key, base_url=base_url)
+
+    def _init_vertex_client(self):
+        """Khởi tạo kết nối tới Vertex AI Model-as-a-Service endpoint với Service Account credentials."""
+        from config import setup_vertex_credentials
+        cred_path = setup_vertex_credentials()
+
+        try:
+            import google.auth
+            from google.auth.transport.requests import Request
+            from google.oauth2 import service_account
+
+            active_cred = os.getenv("GOOGLE_APPLICATION_CREDENTIALS") or cred_path
+            if active_cred and os.path.exists(active_cred):
+                self.credentials = service_account.Credentials.from_service_account_file(
+                    active_cred,
+                    scopes=["https://www.googleapis.com/auth/cloud-platform"]
+                )
+            else:
+                self.credentials, _ = google.auth.default(
+                    scopes=["https://www.googleapis.com/auth/cloud-platform"]
+                )
+
+            self.credentials.refresh(Request())
+        except Exception as e:
+            raise RuntimeError(
+                f"Lỗi cấu hình: Không tìm thấy Service Account Credentials cho Vertex AI hoặc không thể xác thực: {e}. "
+                "Vui lòng đảm bảo đã thiết lập Kaggle Secret 'GCP_SA_KEY' hoặc file 'grace-research-*.json' "
+                "hoặc biến môi trường GOOGLE_APPLICATION_CREDENTIALS. "
+                "Nếu chỉ muốn kiểm thử giả lập nhanh mà không gọi API, hãy truyền flag --use_mock."
+            ) from e
+
+        import openai
+        base_url = f"https://{self.location}-aiplatform.googleapis.com/v1/projects/{self.project_id}/locations/{self.location}/endpoints/openapi"
+        logger.info(f"Kết nối tới Vertex AI MaaS endpoint: {base_url} với model {self.model_name}...")
+        self.client = openai.OpenAI(
+            base_url=base_url,
+            api_key=self.credentials.token
+        )
+
+    def get_access_token(self) -> str:
+        """Lấy hoặc tự động refresh OAuth2 Access Token cho Vertex AI."""
+        if self.credentials is None:
+            self._init_vertex_client()
+        if not self.credentials.valid or self.credentials.expired:
+            from google.auth.transport.requests import Request
+            self.credentials.refresh(Request())
+        return self.credentials.token
 
     def generate_response(self, prompt: str) -> str:
         """Hàm thực thi Suy nghĩ & Trả về phản hồi (Inference / Generation)."""
@@ -270,7 +352,31 @@ class LLMEvaluator:
             pred = 1 if is_risky else 0
             return str(pred)
 
-        # Chạy thực thi Inference trên API
+        if self.provider == "Vertex AI":
+            # Refresh Bearer Token nếu hết hạn (thời hạn 3600s của Google OAuth2)
+            token = self.get_access_token()
+            self.client.api_key = token
+
+            response = self.client.chat.completions.create(
+                model=self.model_name,
+                messages=[{"role": "user", "content": prompt}],
+                temperature=0.0,
+                max_tokens=256,
+                seed=42,
+                stream=False
+            )
+            choice_msg = response.choices[0].message
+            content = choice_msg.content
+            if not content:
+                reasoning = getattr(choice_msg, "reasoning_content", None)
+                if reasoning:
+                    content = reasoning
+                else:
+                    logger.warning("Vertex AI trả về content=None và không có reasoning_content.")
+                    return ""
+            return content.strip()
+
+        # Chạy thực thi Inference trên API FPT / OpenAI-compatible
         response = self.client.chat.completions.create(
             model=self.model_name,
             messages=[{"role": "user", "content": prompt}],
@@ -298,13 +404,16 @@ class LLMEvaluator:
         prompt_mode: str = "standard_1shot",
         run_config: Optional[Dict[str, Any]] = None,
         max_retries: int = 5,
+        min_backoff_sec: float = 5.0,
+        max_backoff_sec: float = 120.0,
         request_delay: float = 0.05
     ) -> Tuple[List[Dict[str, Any]], Dict[str, Any]]:
         """
         Đánh giá hàng loạt trên danh sách mẫu kiểm thử (Batch Evaluation):
         - Hỗ trợ các chế độ prompt_mode: 'zero_shot', 'standard_1shot', 'contrastive_2shot'.
         - Có kiểm tra Checkpoint cũ mang mã băm cấu hình để khôi phục tiến trình an toàn.
-        - Có cơ chế cơ cấu lại lời gọi (Exponential Backoff) nếu gặp sự cố Rate Limit (429) hoặc quá tải mạng.
+        - Tuân thủ nghiêm ngặt retry policy trong evaluation_contract.yaml:
+          max_attempts=5; exponential_backoff=5s..120s; exhausted_request=invalid.
         - Trả về toàn bộ danh sách kết quả và ma trận đánh giá.
         """
         from tqdm import tqdm
@@ -337,18 +446,35 @@ class LLMEvaluator:
                 for attempt in range(1, max_retries + 1):
                     try:
                         llm_response = self.generate_response(prompt)
-                        if request_delay > 0 and not self.use_mock:
-                            time.sleep(request_delay)
-                        break
+                        if llm_response:
+                            if request_delay > 0 and not self.use_mock:
+                                time.sleep(request_delay)
+                            break
+                        # Nếu phản hồi rỗng, chờ rồi thử lại (nếu chưa phải lần thử cuối)
+                        if attempt < max_retries:
+                            time.sleep(min_backoff_sec)
+                        else:
+                            logger.error(
+                                f"Phản hồi LLM rỗng liên tục sau {max_retries} lần thử cho ID '{sample_id}'. "
+                                "Đánh dấu Invalid theo evaluation_contract.yaml."
+                            )
                     except Exception as e:
                         err_str = str(e)
-                        wait_time = min(60, (2 ** attempt) + 1)
+                        wait_time = min(min_backoff_sec * (2 ** (attempt - 1)), max_backoff_sec)
                         if "429" in err_str or "rate" in err_str.lower() or "too many" in err_str.lower():
-                            wait_time = max(wait_time, 20)
-                        logger.warning(f"Lỗi Inference tại ID '{sample_id}' (Lần thử {attempt}/{max_retries}: {e}). Đang đợi {wait_time}s để thử lại...")
-                        time.sleep(wait_time)
-                        if attempt == max_retries:
-                            logger.error(f"Thất bại hoàn toàn khi gọi LLM cho ID '{sample_id}'. Bỏ trống kết quả.")
+                            wait_time = max(wait_time, 20.0)
+                        if attempt < max_retries:
+                            logger.warning(
+                                f"Lỗi Inference tại ID '{sample_id}' (Lần thử {attempt}/{max_retries}: {e}). "
+                                f"Đang đợi {wait_time:.1f}s để thử lại..."
+                            )
+                            time.sleep(wait_time)
+                        else:
+                            logger.error(
+                                f"Thất bại hoàn toàn sau {max_retries} lần thử (Exhausted Request) cho ID '{sample_id}': {e}. "
+                                "Đánh dấu Invalid theo evaluation_contract.yaml."
+                            )
+                            llm_response = ""
                             
                 pred_int, parse_desc, is_valid = parse_llm_prediction(llm_response)
                 ground_truth = sample.get("target", 0)

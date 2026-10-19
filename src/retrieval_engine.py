@@ -50,7 +50,9 @@ def compute_hybrid_score(test_sample: Dict[str, Any], train_sample: Dict[str, An
     Score = 0.7 * Jaccard_Code + 0.3 * Sim_Graph
     Returns: (hybrid_score, jaccard_score, graph_score)
     """
-    j_score = jaccard_similarity(test_sample.get("func", ""), train_sample.get("func", ""))
+    test_code = test_sample.get("func") or test_sample.get("code") or ""
+    train_code = train_sample.get("func") or train_sample.get("code") or ""
+    j_score = jaccard_similarity(test_code, train_code)
     g_score = graph_similarity(
         test_sample.get("nodes", []), test_sample.get("edges", []),
         train_sample.get("nodes", []), train_sample.get("edges", [])
@@ -136,7 +138,10 @@ class CodeT5Embedder:
     def fit(self, texts: List[str]):
         """Căn chỉnh vectorizer nếu ở chế độ fallback."""
         if self.is_fallback and self.tfidf_vectorizer:
-            self.tfidf_vectorizer.fit(texts)
+            valid_texts = [t for t in texts if t and t.strip()]
+            if not valid_texts:
+                valid_texts = ["void fallback_dummy_function() { int x = 0; }"]
+            self.tfidf_vectorizer.fit(valid_texts)
 
     def encode(self, texts: List[str], batch_size: int = 32) -> np.ndarray:
         """Trích xuất ma trận vector đặc trưng cho danh sách chuỗi mã nguồn."""
@@ -180,7 +185,7 @@ class DemonstrationRetriever:
         """Khởi tạo chỉ mục tìm kiếm (Index database) từ tập huấn luyện."""
         logger.info(f"Đang xây dựng Index cho {len(train_samples)} mẫu huấn luyện...")
         self.train_samples = train_samples
-        texts = [s.get("func", "") for s in train_samples]
+        texts = [s.get("func") or s.get("code") or s.get("functionSource") or "" for s in train_samples]
         self.embedder.fit(texts)
         self.train_vecs = self.embedder.encode(texts)
         logger.info(f"Xây dựng xong Index ma trận vector với kích thước: {self.train_vecs.shape}")
@@ -204,7 +209,7 @@ class DemonstrationRetriever:
         3. Tính điểm Hybrid Score (0.7*Jaccard + 0.3*Graph) cho Top-K ứng viên.
         4. Trả về ví dụ mẫu có điểm Hybrid Score cao nhất cùng thông tin chi tiết.
         """
-        query_text = query_sample.get("func", "")
+        query_text = query_sample.get("func") or query_sample.get("code") or ""
         query_vec = self.embedder.encode([query_text])[0]
         
         # Lọc Top K bằng L2
@@ -217,6 +222,7 @@ class DemonstrationRetriever:
         for idx in candidate_indices:
             cand = self.train_samples[idx]
             h_score, j_score, g_score = compute_hybrid_score(query_sample, cand)
+            cand_code = cand.get("func") or cand.get("code") or ""
             candidates_info.append({
                 "index": idx,
                 "id": cand.get("id"),
@@ -224,7 +230,7 @@ class DemonstrationRetriever:
                 "hybrid_score": h_score,
                 "jaccard_score": j_score,
                 "graph_score": g_score,
-                "func_snippet": cand.get("func", "")[:100] + "..."
+                "func_snippet": cand_code[:100] + "..."
             })
             if h_score > max_score:
                 max_score = h_score

@@ -110,21 +110,29 @@ def stream_json_array(file_path: Path, max_items: Optional[int] = None) -> List[
     items = []
     current_obj_lines = []
     in_obj = False
+    current_indent = ""
     
     with open(file_path, "r", encoding="utf-8") as f:
         for line in f:
-            if line.startswith("  {"):
-                in_obj = True
-                current_obj_lines = [line]
-            elif in_obj:
+            stripped = line.strip()
+            if not in_obj:
+                if stripped == "{" or stripped.startswith("{ ") or stripped.startswith("{\n") or line.lstrip().startswith("{"):
+                    in_obj = True
+                    current_indent = line[:line.find("{")]
+                    current_obj_lines = [line]
+            else:
                 current_obj_lines.append(line)
-                if line.startswith("  }") or line.startswith("  },"):
+                line_without_newline = line.rstrip("\r\n")
+                if (line_without_newline.startswith(current_indent + "}") or 
+                    line_without_newline.startswith(current_indent + "},") or 
+                    line_without_newline.startswith(current_indent + "}]")):
                     in_obj = False
-                    raw_str = "".join(current_obj_lines).rstrip().rstrip(",")
+                    raw_str = "".join(current_obj_lines).strip().rstrip(",")
                     try:
                         items.append(json.loads(raw_str))
                     except Exception:
                         pass
+                    current_obj_lines = []
                     if max_items is not None and len(items) >= max_items:
                         break
     return items

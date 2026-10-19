@@ -117,11 +117,11 @@ def build_grace_prompt(sample: Dict[str, Any], include_demonstration: bool = Tru
     if demo_sample is None and sample.get("contrastive_obj"):
         demo_sample = sample["contrastive_obj"].vulnerable_example
         
-    if include_demonstration and demo_sample and isinstance(demo_sample, dict) and "func" in demo_sample:
+    if include_demonstration and demo_sample and isinstance(demo_sample, dict) and ("func" in demo_sample or "code" in demo_sample or "functionSource" in demo_sample):
         demo_label_num = demo_sample.get("target", 0)
         demo_label_str = "Vulnerable (1)" if demo_label_num == 1 else "Non-vulnerable (0)"
         
-        demo_func = demo_sample.get("func", "").strip()
+        demo_func = str(demo_sample.get("func") or demo_sample.get("code") or demo_sample.get("functionSource") or "").strip()
         # Truncate demo code if excessively long
         if len(demo_func) > 1500:
             demo_func = demo_func[:1500] + "\n/* [TRUNCATED TO PRESERVE CONTEXT] */"
@@ -137,7 +137,7 @@ def build_grace_prompt(sample: Dict[str, Any], include_demonstration: bool = Tru
         prompt_parts.append(demo_section)
         
     # 3. TARGET QUERY SECTION (Mã nguồn mục tiêu + Đồ thị CPG Node & Edge)
-    query_code = sample.get("func", "").strip()
+    query_code = str(sample.get("func") or sample.get("code") or sample.get("functionSource") or "").strip()
     if len(query_code) > 3000:
         query_code = query_code[:3000] + "\n/* [TRUNCATED TO PREVENT MEMORY OVERFLOW] */"
         
