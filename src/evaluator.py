@@ -253,8 +253,11 @@ class LLMEvaluator:
         self.use_mock = use_mock
         self.client = None
         self.credentials = None
-        self.project_id = project_id or config.vertex_project_id
-        self.location = location or config.vertex_location
+        self.project_id = project_id or os.getenv("VERTEX_PROJECT_ID") or config.vertex_project_id
+        target_loc = location or os.getenv("VERTEX_LOCATION") or config.vertex_location
+        if (target_loc == "us-central1" or not target_loc) and (model_name and "qwen" in str(model_name).lower()):
+            target_loc = "us-south1"
+        self.location = target_loc
 
         # Xác định Provider: Ưu tiên tham số provider, nếu không nhận diện theo model_name hoặc env
         if provider:

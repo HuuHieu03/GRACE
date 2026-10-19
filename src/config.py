@@ -49,7 +49,7 @@ class ProjectConfig:
 
     # Cấu hình Vertex AI (Google Cloud Platform) tuân thủ evaluation_contract.yaml
     vertex_project_id: str = "grace-research-2903"
-    vertex_location: str = "us-central1"
+    vertex_location: str = "us-south1"
     vertex_model: str = "publishers/qwen/models/qwen3-coder-480b-a35b-instruct-maas"
     
     def __post_init__(self):

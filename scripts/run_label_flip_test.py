@@ -564,6 +564,7 @@ def run_experiment(
     use_mock: bool = False,
     model_name: Optional[str] = None,
     provider: Optional[str] = None,
+    location: Optional[str] = None,
     seed: int = 42,
     train_samples: Optional[List[Dict[str, Any]]] = None
 ) -> Dict[str, Any]:
@@ -633,7 +634,7 @@ def run_experiment(
         effective_model = model_name or config.vertex_model
         effective_provider = provider or ("Vertex AI" if ("publishers/" in effective_model or "qwen" in effective_model.lower()) else "FPT")
         print(f"[*] Khởi tạo LLMEvaluator với model {effective_model} (Provider: {effective_provider})...")
-        engine = LLMEvaluator(model_name=effective_model, provider=effective_provider, use_mock=False)
+        engine = LLMEvaluator(model_name=effective_model, provider=effective_provider, location=location, use_mock=False)
 
     detailed_records = []
     print(f"[*] Bắt đầu suy luận 3 điều kiện cho {len(dev_samples)} mẫu...")
@@ -715,6 +716,7 @@ def main():
     parser.add_argument("--use_mock", action="store_true", help="Chạy chế độ mock offline trên CPU không cần API key")
     parser.add_argument("--model", type=str, default=None, help="Tên mô hình LLM (mặc định lấy theo config.vertex_model)")
     parser.add_argument("--provider", type=str, default=None, help="Provider LLM: 'Vertex AI' hoặc 'FPT'")
+    parser.add_argument("--location", type=str, default=None, help="Google Cloud Region/Location (mặc định 'us-south1' cho Qwen MaaS)")
     parser.add_argument("--seed", type=int, default=42, help="Random seed (mặc định 42)")
     args = parser.parse_args()
 
@@ -730,6 +732,7 @@ def main():
         use_mock=args.use_mock,
         model_name=args.model,
         provider=args.provider,
+        location=args.location,
         seed=args.seed
     )
 

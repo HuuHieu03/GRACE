@@ -31,7 +31,7 @@ def test_vertex_ai_config_attributes():
     assert hasattr(config, "vertex_project_id")
     assert config.vertex_project_id == "grace-research-2903"
     assert hasattr(config, "vertex_location")
-    assert config.vertex_location == "us-central1"
+    assert config.vertex_location == "us-south1"
     assert hasattr(config, "vertex_model")
     assert config.vertex_model == "publishers/qwen/models/qwen3-coder-480b-a35b-instruct-maas"
     assert hasattr(config, "setup_vertex_credentials")
