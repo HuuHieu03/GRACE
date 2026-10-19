@@ -329,11 +329,27 @@ class LLMEvaluator:
 
         import openai
         base_url = f"https://{self.location}-aiplatform.googleapis.com/v1/projects/{self.project_id}/locations/{self.location}/endpoints/openapi"
-        logger.info(f"Kết nối tới Vertex AI MaaS endpoint: {base_url} với model {self.model_name}...")
+        vertex_model = self.format_model_for_vertex(self.model_name)
+        logger.info(f"Kết nối tới Vertex AI MaaS endpoint: {base_url} với model {vertex_model} (gốc: {self.model_name})...")
         self.client = openai.OpenAI(
             base_url=base_url,
             api_key=self.credentials.token
         )
+
+    @staticmethod
+    def format_model_for_vertex(model: str) -> str:
+        """
+        Vertex AI OpenAPI endpoint expects '<publisher>/<model>'.
+        Ví dụ: 'publishers/qwen/models/qwen3-coder-480b-a35b-instruct-maas' -> 'qwen/qwen3-coder-480b-a35b-instruct-maas'.
+        """
+        if not model:
+            return model
+        clean_model = model.strip()
+        if clean_model.startswith("publishers/"):
+            parts = clean_model.split("/")
+            if len(parts) >= 4 and parts[0] == "publishers" and parts[2] == "models":
+                return f"{parts[1]}/{'/'.join(parts[3:])}"
+        return clean_model
 
     def get_access_token(self) -> str:
         """Lấy hoặc tự động refresh OAuth2 Access Token cho Vertex AI."""
@@ -357,8 +373,10 @@ class LLMEvaluator:
             token = self.get_access_token()
             self.client.api_key = token
 
+            req_model = self.format_model_for_vertex(self.model_name)
+
             response = self.client.chat.completions.create(
-                model=self.model_name,
+                model=req_model,
                 messages=[{"role": "user", "content": prompt}],
                 temperature=0.0,
                 max_tokens=256,

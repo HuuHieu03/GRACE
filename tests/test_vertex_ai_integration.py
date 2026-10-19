@@ -151,7 +151,7 @@ def test_llm_evaluator_vertex_ai_generation():
         assert call_kwargs["temperature"] == 0.0
         assert call_kwargs["seed"] == 42
         assert call_kwargs["max_tokens"] == 256
-        assert call_kwargs["model"] == "publishers/qwen/models/qwen3-coder-480b-a35b-instruct-maas"
+        assert call_kwargs["model"] == "qwen/qwen3-coder-480b-a35b-instruct-maas"
 
 
 def test_run_label_flip_metadata_vertex_defaults(tmp_path):
