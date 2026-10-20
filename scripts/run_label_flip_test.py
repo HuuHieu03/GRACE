@@ -610,6 +610,12 @@ def run_experiment(
         dev_samples = dev_samples[:max_samples]
     print(f"[✓] Đã nạp {len(dev_samples)} mẫu mục tiêu từ dev split.")
 
+    # Rào chắn kiểm thử cứng theo hợp đồng: Bảo đảm 100% mẫu có đồ thị CPG
+    for s in dev_samples:
+        assert len(s.get("nodes", [])) > 0, f"Mẫu {s.get('id')} thiếu nodes đồ thị CPG!"
+        assert len(s.get("edges", [])) > 0, f"Mẫu {s.get('id')} thiếu edges đồ thị CPG!"
+    print(f"[✓] Rào chắn kiểm thử đạt chuẩn: 100% ({len(dev_samples)} mẫu) có đầy đủ CPG nodes và edges.")
+
     # 2. Nạp kho tìm kiếm huấn luyện và xây dựng Retriever
     if train_samples is not None:
         raw_train = list(train_samples)
