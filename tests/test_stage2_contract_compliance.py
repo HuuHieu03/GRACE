@@ -225,10 +225,20 @@ def test_canonical_dev_splits_contract_compliance():
         for sid in sample_ids:
             assert str(sid) not in blacklist, f"ID {sid} trong tập {ds_name} bị rò rỉ/nằm trong blacklist kiểm toán!"
 
-        # Kiểm tra nạp dữ liệu thực tế và đảm bảo mã nguồn không rỗng
+        # Kiểm tra nạp dữ liệu thực tế và đảm bảo mã nguồn và đồ thị CPG không rỗng
         loaded_samples = load_canonical_dev_split(split_path)
         assert len(loaded_samples) == 100, f"load_canonical_dev_split phải nạp đủ 100 mẫu cho {ds_name}!"
         for idx, s in enumerate(loaded_samples):
             assert len(s["func"]) > 0, f"Mẫu {s['id']} (chỉ số {idx}) của {ds_name} có mã nguồn bị rỗng!"
             assert s["target"] in (0, 1), f"Target của mẫu {s['id']} phải là 0 hoặc 1!"
+            assert len(s.get("nodes", [])) > 0, f"Mẫu {s['id']} (chỉ số {idx}) của {ds_name} thiếu thông tin nodes đồ thị CPG!"
+            assert len(s.get("edges", [])) > 0, f"Mẫu {s['id']} (chỉ số {idx}) của {ds_name} thiếu thông tin edges đồ thị CPG!"
+
+        # Rào chắn kiểm thử cứng: Xác nhận trực tiếp dữ liệu trên đĩa đã được cập nhật nodes và edges vĩnh viễn
+        with open(split_path, "r", encoding="utf-8") as f_disk:
+            disk_data = json.load(f_disk)
+        for item in disk_data.get("sample_details", []):
+            assert "nodes" in item and len(item["nodes"]) > 0, f"Mẫu {item['id']} ({ds_name}) chưa được lưu nodes trên đĩa!"
+            assert "edges" in item and len(item["edges"]) > 0, f"Mẫu {item['id']} ({ds_name}) chưa được lưu edges trên đĩa!"
+
 

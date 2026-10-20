@@ -105,6 +105,7 @@ def load_canonical_dev_split(split_file: Path) -> List[Dict[str, Any]]:
     if "sample_details" in data and isinstance(data["sample_details"], list):
         ds_name = data.get("dataset", "devign").lower()
         metadata_cache = None
+        dirty = False
         for item in data["sample_details"]:
             func_code = str(item.get("code") or item.get("func") or "")
             c_file_path = str(item.get("c_file_path", "")).replace("\\", "/")
@@ -150,6 +151,29 @@ def load_canonical_dev_split(split_file: Path) -> List[Dict[str, Any]]:
                 item_raw_id = str(item.get("raw_id", ""))
                 func_code = metadata_cache.get(item_id) or metadata_cache.get(item_raw_id) or ""
 
+            nodes = item.get("nodes", [])
+            edges = item.get("edges", [])
+            if (not nodes or not edges) and func_code:
+                try:
+                    from scripts.pull_kaggle_graphs import extract_c_graph_ast_cfg
+                    extracted = extract_c_graph_ast_cfg(func_code)
+                    if not nodes:
+                        nodes = extracted.get("nodes", [])
+                        item["nodes"] = nodes
+                        item["num_nodes"] = len(nodes)
+                        dirty = True
+                    if not edges:
+                        edges = extracted.get("edges", [])
+                        item["edges"] = edges
+                        item["num_edges"] = len(edges)
+                        dirty = True
+                except Exception:
+                    pass
+
+            if func_code and not item.get("func"):
+                item["func"] = func_code
+                dirty = True
+
             samples.append({
                 "id": str(item.get("id")),
                 "raw_id": str(item.get("raw_id", item.get("id"))),
@@ -157,9 +181,17 @@ def load_canonical_dev_split(split_file: Path) -> List[Dict[str, Any]]:
                 "project": str(item.get("project", "unknown")),
                 "c_file_path": c_file_path,
                 "func": func_code,
-                "nodes": item.get("nodes", []),
-                "edges": item.get("edges", []),
+                "nodes": nodes,
+                "edges": edges,
             })
+
+        if dirty:
+            try:
+                with open(split_file, "w", encoding="utf-8") as f_save:
+                    json.dump(data, f_save, indent=2, ensure_ascii=False)
+            except Exception:
+                pass
+
 
         # 3. Fallback nạp mã nguồn từ Hugging Face nếu môi trường chạy không có sẵn raw_c_files
         missing_indices = [idx for idx, s in enumerate(samples) if not s["func"]]

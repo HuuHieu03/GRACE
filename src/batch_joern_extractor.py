@@ -16,7 +16,8 @@ from pathlib import Path
 from typing import List, Dict, Any, Optional
 from tqdm import tqdm
 
-WORKSPACE_ROOT = os.path.dirname(os.path.abspath(__file__))
+# Thư mục gốc repository
+WORKSPACE_ROOT = str(Path(__file__).parent.parent.resolve())
 JOERN_PARSE_BIN = os.path.join(WORKSPACE_ROOT, "data", "preproceed", "joern", "joern", "joern", "joern-parse")
 
 
