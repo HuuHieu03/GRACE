@@ -703,6 +703,16 @@ def run_experiment(
             json.dump(report_data, f, indent=2, ensure_ascii=False)
         print(f"[✓] Đã xuất báo cáo chi tiết JSON tại: {output_path}")
 
+        # Đồng thời lưu bản sao tương thích ngược tại output/label_flip_test_report.json
+        legacy_path = repo_root / "output" / "label_flip_test_report.json"
+        if output_path.resolve() != legacy_path.resolve():
+            try:
+                legacy_path.parent.mkdir(parents=True, exist_ok=True)
+                with open(legacy_path, "w", encoding="utf-8") as f_legacy:
+                    json.dump(report_data, f_legacy, indent=2, ensure_ascii=False)
+            except Exception:
+                pass
+
     return report_data
 
 
@@ -710,7 +720,7 @@ def main():
     parser = argparse.ArgumentParser(description="GRACE Stage 2 Label-Flip Sensitivity Test")
     parser.add_argument("--dev_split", type=str, default="data/splits/devign_dev_clean_100_ids.json", help="Đường dẫn file clean dev split IDs")
     parser.add_argument("--dataset", type=str, default="devign", choices=["devign", "reveal"], help="Tên bộ dữ liệu")
-    parser.add_argument("--output", type=str, default="output/label_flip_test_report.json", help="Đường dẫn lưu file JSON báo cáo")
+    parser.add_argument("--output", type=str, default="output/stage2/label_flip/label_flip_test_report.json", help="Đường dẫn lưu file JSON báo cáo")
     parser.add_argument("--max_samples", type=int, default=None, help="Số lượng mẫu dev cần test (mặc định toàn bộ)")
     parser.add_argument("--max_train_samples", type=int, default=None, help="Giới hạn số mẫu train nạp vào retriever (nếu cần test nhanh)")
     parser.add_argument("--use_mock", action="store_true", help="Chạy chế độ mock offline trên CPU không cần API key")
