@@ -1,0 +1,10 @@
+{
+  "id": "huuhieu3333/grace-stage2-label-flip",
+  "title": "GRACE Stage 2 Label Flip",
+  "code_file": "stage2_label_flip_kaggle.ipynb",
+  "language": "python",
+  "kernel_type": "notebook",
+  "is_private": "true",
+  "enable_gpu": "true",
+  "enable_internet": "true"
+}
