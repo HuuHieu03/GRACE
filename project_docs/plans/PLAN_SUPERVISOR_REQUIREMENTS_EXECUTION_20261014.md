@@ -161,9 +161,11 @@ Khi và chỉ khi Đợt 2 cho thấy tín hiệu cải thiện thực sự ($MC
 | **6** | Đo exact duplicate code giữa Train và Test split | Hiếu | `scripts/audit_code_leakage.py` | 15/10/2026 | 🟢 Hoàn thành |
 | **7** | Điền thông tin các run V1/V2 vào Bảng Quản lý Thực nghiệm | Dũng | `project_docs/reports/GRACE_EXPERIMENT_RUN_REGISTRY.md` | 18/10/2026 | ⚪ Chờ Dũng |
 | **8** | Chạy re-parse trên các raw response mà pipeline Dũng còn lưu | Dũng | `src/common_evaluator.py` | 18/10/2026 | ⚪ Chờ Dũng |
-| **9** | Thiết kế kịch bản Thí nghiệm Đảo Nhãn Demo (Label-Flip Control) | Hiếu & Dũng | `scripts/run_label_flip_test.py` | 19/10/2026 | ⚪ Đợt 2 |
+| **9** | Thiết kế kịch bản Thí nghiệm Đảo Nhãn Demo (Label-Flip Control) | Hiếu & Dũng | `scripts/run_label_flip_test.py` | 19/10/2026 | 🟢 Hoàn thành |
 | **10**| Lập bảng chấm mù 50 Devign + 50 ReVeal và chấm độc lập | Hiếu & Dũng | `project_docs/reports/manual_retrieval_review.csv` | 21/10/2026 | ⚪ Đợt 2 |
-| **11**| Chạy đối chứng B2 vs B3 trên Dev Set 100-200 mẫu | Hiếu & Dũng | `src/run_pipeline.py` | 23/10/2026 | ⚪ Đợt 2 |
+| **11**| Chạy đối chứng B2 vs B3 trên Dev Set 100-200 mẫu | Hiếu & Dũng | `scripts/run_stage3_b3_vs_b2.py` | 23/10/2026 | 🟢 Hoàn thành |
 | **12**| Xây dựng Synthetic Ground-Truth Suite & Script kiểm thử tự động | Hiếu | `scripts/run_synthetic_ground_truth_eval.py` | 15/10/2026 | 🟢 Hoàn thành |
 | **13**| Xây dựng Unit Tests kiểm tra Synthetic Ground-Truth Suite | Hiếu | `tests/test_stage5_synthetic_ground_truth.py` | 15/10/2026 | 🟢 Hoàn thành |
 | **14**| (Tạm hoãn) Trích xuất và đo lường CWE-alignment trên CVE | Nhóm | `scripts/audit_cwe_alignment.py` | — | ⏸️ Tạm hoãn (chờ nhãn CWE) |
+| **15**| Đo khoảng tin cậy 95% Bootstrap & McNemar Test Đợt 3 (B3 vs B2) | Hiếu | `scripts/run_stage3_b3_vs_b2.py` | 21/10/2026 | 🟢 Hoàn thành |
+| **16**| Đóng gói Kaggle Notebook Đợt 3 (B3 vs B2 Contrastive) | Hiếu | `kaggle_notebooks/stage3_b3_vs_b2/` | 21/10/2026 | 🟢 Hoàn thành |

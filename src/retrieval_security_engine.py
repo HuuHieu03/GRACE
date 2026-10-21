@@ -29,30 +29,76 @@ class SecurityAwareRetriever:
     Bộ tìm kiếm và tái xếp hạng mẫu dựa trên cơ chế bảo mật (Security-Aware Retriever).
     Đảm bảo tính chính xác cao về mặt an ninh (Security Relevance) thay vì chỉ nhìn vào bề mặt mã nguồn.
     """
-    def __init__(self, embedder: Optional[CodeT5Embedder] = None, lambda_weight: float = 0.3):
+    def __init__(
+        self, 
+        embedder: Optional[CodeT5Embedder] = None, 
+        lambda_weight: float = 0.3,
+        precomputed_embeddings_path: Optional[Any] = None
+    ):
         """
         Args:
             embedder: Trình trích xuất vector CodeT5 (hoặc TF-IDF fallback).
             lambda_weight: Trọng số cân bằng giữa Code/Graph Similarity (Score_GRACE) 
                            và Security Similarity (Score_security). Mặc định 0.3 (70% ưu tiên an ninh).
+            precomputed_embeddings_path: Đường dẫn tới file .npy chứa vector đặc trưng tiền tính toán.
         """
         self.embedder = embedder if embedder else CodeT5Embedder()
         self.lambda_weight = lambda_weight
+        self.precomputed_embeddings_path = precomputed_embeddings_path
         self.train_samples: List[Dict[str, Any]] = []
         self.train_vecs: Optional[np.ndarray] = None
         self.train_signatures: List[SecuritySignature] = []
+        self._signature_cache: Dict[int, SecuritySignature] = {}
 
-    def fit(self, train_samples: List[Dict[str, Any]], precompute_signatures: bool = True):
+    def fit(
+        self, 
+        train_samples: List[Dict[str, Any]], 
+        precomputed_embeddings: Optional[np.ndarray] = None,
+        precompute_signatures: bool = False
+    ):
         """
         Khởi tạo chỉ mục cơ sở dữ liệu huấn luyện:
-        1. Xây dựng ma trận vector nhúng CodeT5.
-        2. Tiền trích xuất Security Signature cho toàn bộ tập mẫu để tối ưu tốc độ truy xuất.
+        1. Xây dựng hoặc nạp ma trận vector nhúng CodeT5.
+        2. Tùy chọn tiền trích xuất Security Signature (mặc định trích xuất theo nhu cầu cho Top-K ứng viên để tiết kiệm tài nguyên).
         """
+        from pathlib import Path
         logger.info(f"Đang xây dựng Security Index cho {len(train_samples)} mẫu huấn luyện...")
         self.train_samples = train_samples
-        texts = [s.get("func", "") for s in train_samples]
-        self.embedder.fit(texts)
-        self.train_vecs = self.embedder.encode(texts)
+        self._signature_cache.clear()
+        expected_dim = 256 if self.embedder.is_fallback else 768
+
+        # 1. Kiểm tra precomputed_embeddings truyền trực tiếp
+        if precomputed_embeddings is not None:
+            if len(precomputed_embeddings) == len(train_samples) and (precomputed_embeddings.shape[1] == expected_dim or not self.embedder.is_fallback):
+                self.train_vecs = precomputed_embeddings.astype("float32")
+                logger.info(f"✓ Nạp ma trận embeddings truyền vào: {self.train_vecs.shape}")
+
+        # 2. Kiểm tra file precomputed_embeddings_path hoặc các đường dẫn chuẩn
+        if self.train_vecs is None:
+            candidates_to_try = []
+            if self.precomputed_embeddings_path:
+                candidates_to_try.append(Path(str(self.precomputed_embeddings_path)))
+            candidates_to_try.extend([
+                Path("data/processed/devign_train_codet5_embeddings.npy"),
+                Path("/kaggle/input/grace-devign-train-cpg/devign_train_codet5_embeddings.npy"),
+                Path("/kaggle/input/devign-train-codet5-embeddings/devign_train_codet5_embeddings.npy"),
+            ])
+            for p in candidates_to_try:
+                if p.exists() and p.stat().st_size > 1000:
+                    try:
+                        emb = np.load(str(p))
+                        if len(emb) == len(train_samples) and emb.ndim == 2 and (emb.shape[1] == expected_dim or not self.embedder.is_fallback):
+                            self.train_vecs = emb.astype("float32")
+                            logger.info(f"✓ Nạp thành công vector nhúng từ file: {p} ({self.train_vecs.shape})")
+                            break
+                    except Exception as e:
+                        logger.debug(f"Không thể nạp file vector {p}: {e}")
+
+        # 3. Nếu chưa có vector, tính toán trực tiếp qua embedder
+        if self.train_vecs is None:
+            texts = [s.get("func", "") for s in train_samples]
+            self.embedder.fit(texts)
+            self.train_vecs = self.embedder.encode(texts)
         
         if precompute_signatures:
             logger.info("Đang tiền trích xuất Security Signatures cho tập huấn luyện...")
@@ -116,7 +162,9 @@ class SecurityAwareRetriever:
             grace_score, j_score, g_score = compute_hybrid_score(query_sample, cand)
             
             # Lấy hoặc trích xuất Security Signature của ứng viên
-            if idx < len(self.train_signatures):
+            if idx in self._signature_cache:
+                cand_sig = self._signature_cache[idx]
+            elif idx < len(self.train_signatures) and self.train_signatures:
                 cand_sig = self.train_signatures[idx]
             else:
                 cand_sig = extract_security_signature(
@@ -124,6 +172,7 @@ class SecurityAwareRetriever:
                     nodes=cand.get("nodes", cand.get("node", [])),
                     edges=cand.get("edges", cand.get("edge", []))
                 )
+                self._signature_cache[idx] = cand_sig
                 
             # Tính Security Similarity
             sec_score, sub_scores = compute_security_signature_similarity(query_sig, cand_sig)

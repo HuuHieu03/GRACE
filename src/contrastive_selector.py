@@ -34,12 +34,14 @@ class ContrastivePair:
                 "id": self.vulnerable_example.get("id"),
                 "target": 1,
                 "security_score": self.vuln_security_score,
+                "func": self.vulnerable_example.get("func", ""),
                 "func_snippet": self.vulnerable_example.get("func", "")[:120] + "..."
             },
             "safe": {
                 "id": self.safe_example.get("id"),
                 "target": 0,
                 "security_score": self.safe_security_score,
+                "func": self.safe_example.get("func", ""),
                 "func_snippet": self.safe_example.get("func", "")[:120] + "..."
             },
             "pair_code_similarity": round(self.pair_code_similarity, 4),

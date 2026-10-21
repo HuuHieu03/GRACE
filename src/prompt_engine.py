@@ -163,11 +163,12 @@ def build_grace_prompt(sample: Dict[str, Any], include_demonstration: bool = Tru
     return "\n\n".join(prompt_parts)
 
 
-def build_contrastive_prompt(sample: Dict[str, Any]) -> str:
+def build_contrastive_prompt(sample: Dict[str, Any], invert_order: bool = False) -> str:
     """
     Xây dựng Câu Lệnh Tương Phản (Contrastive ICL Prompt - 2-shot) tuân thủ Figure 6:
     Cung cấp đồng thời 1 Cặp ví dụ mẫu (1 Vulnerable + 1 Safe) có cơ chế an ninh tương đồng nhất
     để giúp LLM tự thiết lập ranh giới quyết định (Decision Boundary).
+    Bao gồm phân tích điểm khác biệt an ninh cốt lõi (Security Difference) giữa 2 mẫu.
     """
     prompt_parts = []
     
@@ -185,12 +186,17 @@ def build_contrastive_prompt(sample: Dict[str, Any]) -> str:
     pair = sample.get("contrastive_pair")
     pair_obj = sample.get("contrastive_obj")
     
+    sec_diff = ""
     if pair_obj:
-        v_func = pair_obj.vulnerable_example.get("func", "").strip()
-        s_func = pair_obj.safe_example.get("func", "").strip()
+        v_func = str(pair_obj.vulnerable_example.get("func") or pair_obj.vulnerable_example.get("code") or "").strip()
+        s_func = str(pair_obj.safe_example.get("func") or pair_obj.safe_example.get("code") or "").strip()
+        sec_diff = getattr(pair_obj, "security_critical_difference", "")
     elif pair and isinstance(pair, dict):
-        v_func = pair.get("vulnerable", {}).get("func_snippet", "")
-        s_func = pair.get("safe", {}).get("func_snippet", "")
+        v_dict = pair.get("vulnerable", {})
+        s_dict = pair.get("safe", {})
+        v_func = str(v_dict.get("func") or v_dict.get("code") or v_dict.get("func_snippet") or "").strip()
+        s_func = str(s_dict.get("func") or s_dict.get("code") or s_dict.get("func_snippet") or "").strip()
+        sec_diff = pair.get("security_difference", "")
     else:
         # Fallback to standard demo if contrastive pair is missing
         return build_grace_prompt(sample, include_demonstration=True)
@@ -199,18 +205,33 @@ def build_contrastive_prompt(sample: Dict[str, Any]) -> str:
         v_func = v_func[:1200] + "\n/* [TRUNCATED TO PRESERVE CONTEXT] */"
     if len(s_func) > 1200:
         s_func = s_func[:1200] + "\n/* [TRUNCATED TO PRESERVE CONTEXT] */"
-        
-    contrastive_section = (
-        "### CONTRASTIVE DEMONSTRATION EXAMPLES (In-Context Reference Pair)\n"
-        "Here are two comparative examples (one Vulnerable and one Safe) demonstrating key security conditions:\n\n"
-        "--- EXAMPLE 1 (VULNERABLE REFERENCE) ---\n"
-        f"{v_func}\n"
-        "Label: Vulnerable (1)\n\n"
-        "--- EXAMPLE 2 (SAFE / NON-VULNERABLE REFERENCE) ---\n"
-        f"{s_func}\n"
-        "Label: Non-vulnerable (0)\n"
-        "--------------------------------------------------"
-    )
+
+    diff_section = f"\n\n--- CORE SECURITY DIFFERENCE ---\n{sec_diff}" if sec_diff else ""
+
+    if not invert_order:
+        contrastive_section = (
+            "### CONTRASTIVE DEMONSTRATION EXAMPLES (In-Context Reference Pair)\n"
+            "Here are two comparative examples (one Vulnerable and one Safe) demonstrating key security conditions:\n\n"
+            "--- EXAMPLE 1 (VULNERABLE REFERENCE) ---\n"
+            f"{v_func}\n"
+            "Label: Vulnerable (1)\n\n"
+            "--- EXAMPLE 2 (SAFE / NON-VULNERABLE REFERENCE) ---\n"
+            f"{s_func}\n"
+            f"Label: Non-vulnerable (0){diff_section}\n"
+            "--------------------------------------------------"
+        )
+    else:
+        contrastive_section = (
+            "### CONTRASTIVE DEMONSTRATION EXAMPLES (In-Context Reference Pair)\n"
+            "Here are two comparative examples (one Safe and one Vulnerable) demonstrating key security conditions:\n\n"
+            "--- EXAMPLE 1 (SAFE / NON-VULNERABLE REFERENCE) ---\n"
+            f"{s_func}\n"
+            "Label: Non-vulnerable (0)\n\n"
+            "--- EXAMPLE 2 (VULNERABLE REFERENCE) ---\n"
+            f"{v_func}\n"
+            f"Label: Vulnerable (1){diff_section}\n"
+            "--------------------------------------------------"
+        )
     prompt_parts.append(contrastive_section)
     
     # 3. TARGET QUERY SECTION
