@@ -1,0 +1,11 @@
+{
+  "id": "huuhieu3333/grace-h2-shared-top50-r0-r1",
+  "title": "GRACE H2 Shared Top50 R0 R1",
+  "code_file": "retrieval_h2_kaggle.ipynb",
+  "language": "python",
+  "kernel_type": "notebook",
+  "is_private": "true",
+  "enable_gpu": "true",
+  "enable_internet": "true",
+  "dataset_sources": []
+}
