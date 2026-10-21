@@ -229,3 +229,90 @@ def test_stage3_e2e_mock_experiment(tmp_path):
     assert "mcnemar_test" in report
     assert "paired_bootstrap_95_ci" in report
     assert "label_sensitivity_comparison" in report
+
+
+def test_stage3_e2e_reveal_mock_experiment(tmp_path):
+    """Kiểm tra toàn bộ pipeline đối đầu B3 vs B2 chạy thành công với dataset ReVeal."""
+    reveal_split_file = repo_root / "data" / "splits" / "reveal_dev_clean_100_ids.json"
+    reveal_train_cpg = repo_root / "data" / "processed" / "reveal_train_compact_cpg.json.gz"
+
+    assert reveal_split_file.exists(), "Tập kiểm thử sạch ReVeal phải tồn tại"
+    assert reveal_train_cpg.exists(), "Kho train compact CPG của ReVeal phải tồn tại"
+
+    out_file = tmp_path / "stage3_reveal_report.json"
+
+    # Chạy experiment với use_mock=True, giới hạn 6 mẫu kiểm thử và 20 mẫu train
+    report = run_stage3_experiment(
+        dev_split_file=reveal_split_file,
+        dataset_name="reveal",
+        output_path=out_file,
+        use_mock=True,
+        use_fallback_embedder=True,
+        max_samples=6,
+        max_train_samples=20
+    )
+
+    assert out_file.exists()
+    assert report["metadata"]["dataset"] == "reveal"
+    assert "b2_baseline" in report
+    assert "b3_contrastive" in report
+    assert "head_to_head_delta" in report
+    assert "mcnemar_test" in report
+    assert "paired_bootstrap_95_ci" in report
+
+
+def test_reveal_train_compact_cpg_validity():
+    """Kiểm tra tính hợp lệ và cấu trúc của file kho huấn luyện ReVeal compact CPG."""
+    import gzip
+    import json
+    cpg_gz = repo_root / "data" / "processed" / "reveal_train_compact_cpg.json.gz"
+    assert cpg_gz.exists(), "File reveal_train_compact_cpg.json.gz phải tồn tại"
+    assert cpg_gz.stat().st_size > 1024 * 1024, "File nén compact CPG phải > 1 MB"
+
+    with gzip.open(cpg_gz, "rt", encoding="utf-8") as f:
+        samples = json.load(f)
+
+    assert len(samples) > 1000, f"Kho huấn luyện ReVeal phải có > 1000 mẫu, thực tế: {len(samples)}"
+    for s in samples[:20]:
+        assert "id" in s and s["id"]
+        assert "func" in s and s["func"]
+        assert "target" in s and s["target"] in (0, 1)
+        assert "nodes" in s and isinstance(s["nodes"], list)
+        assert "edges" in s and isinstance(s["edges"], list)
+
+
+def test_reveal_dev_split_validity():
+    """Kiểm tra tập kiểm thử ReVeal 100 mẫu sạch có đầy đủ mã nguồn C và đồ thị CPG."""
+    import json
+    split_p = repo_root / "data" / "splits" / "reveal_dev_clean_100_ids.json"
+    assert split_p.exists()
+    with open(split_p, "r", encoding="utf-8") as f:
+        data = json.load(f)
+    samples = data.get("sample_details", [])
+    assert len(samples) == 100, f"Phải có 100 mẫu kiểm thử, thực tế: {len(samples)}"
+    for idx, s in enumerate(samples):
+        func_code = s.get("func") or s.get("code") or ""
+        assert len(func_code) > 0, f"Mẫu {s.get('id')} ở vị trí {idx} thiếu mã nguồn C!"
+        assert len(s.get("nodes", [])) > 0, f"Mẫu {s.get('id')} thiếu CPG nodes!"
+        assert len(s.get("edges", [])) > 0, f"Mẫu {s.get('id')} thiếu CPG edges!"
+
+
+def test_stage3_kaggle_notebook_supports_reveal():
+    """Kiểm tra Kaggle notebook stage3_b3_vs_b2_kaggle.ipynb cấu hình hỗ trợ ReVeal."""
+    import json
+    nb_path = repo_root / "kaggle_notebooks" / "stage3_b3_vs_b2" / "stage3_b3_vs_b2_kaggle.ipynb"
+    assert nb_path.exists(), f"Notebook {nb_path} phải tồn tại"
+
+    with open(nb_path, "r", encoding="utf-8") as f:
+        nb_data = json.load(f)
+
+    assert "cells" in nb_data and len(nb_data["cells"]) >= 7
+
+    # Tìm các chuỗi khóa trong notebook
+    all_text = " ".join("".join(c.get("source", [])) for c in nb_data["cells"])
+    assert "reveal" in all_text.lower()
+    assert "reveal_dev_clean_100_ids.json" in all_text
+    assert "reveal_train_compact_cpg.json.gz" in all_text
+    assert "--dataset" in all_text
+    assert "--dev_split" in all_text
+

@@ -408,14 +408,25 @@ def run_stage3_experiment(
     if b2_report_path and Path(b2_report_path).exists():
         print(f"[*] Nạp kết quả B2 từ báo cáo Stage 2 đã kiểm toán: {b2_report_path}")
         with open(b2_report_path, "r", encoding="utf-8") as f_b2:
-            b2_report_data = json.load(f_b2)
-        b2_metrics = b2_report_data.get("condition_metrics", {}).get("condition_a_original")
-        # Nạp detailed records nếu có
-        b2_records = b2_report_data.get("detailed_records") or b2_report_data.get("detailed_samples") or []
-    elif (repo_root / "output" / "stage2" / "label_flip" / "label_flip_test_report.json").exists():
+            loaded_data = json.load(f_b2)
+        rep_ds = loaded_data.get("metadata", {}).get("dataset", "").lower()
+        if rep_ds and rep_ds != dataset_name.lower():
+            print(f"[!] Báo cáo B2 tại {b2_report_path} thuộc dataset '{rep_ds}', khác với '{dataset_name}'. Bỏ qua nạp file.")
+        else:
+            b2_report_data = loaded_data
+            b2_metrics = b2_report_data.get("condition_metrics", {}).get("condition_a_original")
+            b2_records = b2_report_data.get("detailed_records") or b2_report_data.get("detailed_samples") or []
+    elif dataset_name.lower() == "devign" and (repo_root / "output" / "stage2" / "label_flip" / "label_flip_test_report.json").exists():
         default_b2_path = repo_root / "output" / "stage2" / "label_flip" / "label_flip_test_report.json"
         print(f"[*] Tự động nạp kết quả B2 từ báo cáo mặc định: {default_b2_path}")
         with open(default_b2_path, "r", encoding="utf-8") as f_b2:
+            b2_report_data = json.load(f_b2)
+        b2_metrics = b2_report_data.get("condition_metrics", {}).get("condition_a_original")
+        b2_records = b2_report_data.get("detailed_records") or b2_report_data.get("detailed_samples") or []
+    elif (repo_root / "output" / "stage2" / "label_flip" / f"{dataset_name.lower()}_label_flip_test_report.json").exists():
+        ds_b2_path = repo_root / "output" / "stage2" / "label_flip" / f"{dataset_name.lower()}_label_flip_test_report.json"
+        print(f"[*] Tự động nạp kết quả B2 cho {dataset_name} từ: {ds_b2_path}")
+        with open(ds_b2_path, "r", encoding="utf-8") as f_b2:
             b2_report_data = json.load(f_b2)
         b2_metrics = b2_report_data.get("condition_metrics", {}).get("condition_a_original")
         b2_records = b2_report_data.get("detailed_records") or b2_report_data.get("detailed_samples") or []
@@ -692,8 +703,15 @@ if __name__ == "__main__":
     parser.add_argument("--output", type=str, default="output/stage3/b3_vs_b2_comparison_report.json", help="Đường dẫn file JSON báo cáo")
 
     args = parser.parse_args()
+    ds_clean = args.dataset.lower().strip()
 
-    split_path = Path(args.dev_split)
+    split_str = args.dev_split
+    if split_str == "data/splits/devign_dev_clean_100_ids.json" and ds_clean != "devign":
+        cand = repo_root / f"data/splits/{ds_clean}_dev_clean_100_ids.json"
+        if cand.exists():
+            split_str = str(cand)
+
+    split_path = Path(split_str)
     if not split_path.is_absolute():
         split_path = repo_root / split_path
 
@@ -701,7 +719,11 @@ if __name__ == "__main__":
     if b2_path and not b2_path.is_absolute():
         b2_path = repo_root / b2_path
 
-    out_path = Path(args.output)
+    out_str = args.output
+    if out_str == "output/stage3/b3_vs_b2_comparison_report.json" and ds_clean != "devign":
+        out_str = f"output/stage3/{ds_clean}_b3_vs_b2_comparison_report.json"
+
+    out_path = Path(out_str)
     if not out_path.is_absolute():
         out_path = repo_root / out_path
 

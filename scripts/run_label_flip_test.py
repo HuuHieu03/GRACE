@@ -270,12 +270,18 @@ def load_train_retrieval_pool(
         # 1. Các file CPG rút gọn (compact CPG) tối ưu cho bộ nhớ và Kaggle
         repo_root / "data" / "processed" / f"{ds_clean}_train_compact_cpg.json.gz",
         repo_root / "data" / "processed" / f"{ds_clean}_train_compact_cpg.json",
+        Path(f"/kaggle/input/grace-{ds_clean}-train-cpg/{ds_clean}_train_compact_cpg.json.gz"),
+        Path(f"/kaggle/input/grace-{ds_clean}-train-cpg/{ds_clean}_train_compact_cpg.json"),
+        Path(f"/kaggle/input/{ds_clean}-train-cpg/{ds_clean}_train_compact_cpg.json.gz"),
+        Path(f"/kaggle/input/{ds_clean}-train-cpg/{ds_clean}_train_compact_cpg.json"),
         Path(f"/kaggle/input/grace-devign-train-cpg/{ds_clean}_train_compact_cpg.json.gz"),
         Path(f"/kaggle/input/grace-devign-train-cpg/{ds_clean}_train_compact_cpg.json"),
         Path(f"/kaggle/input/devign-train-cpg/{ds_clean}_train_compact_cpg.json.gz"),
         Path(f"/kaggle/input/devign-train-cpg/{ds_clean}_train_compact_cpg.json"),
         # 2. File processed gốc chứa đầy đủ 21,854 mẫu Joern CPG
         repo_root / "data" / "processed" / f"{ds_clean}_train_processed.json",
+        Path(f"/kaggle/input/grace-{ds_clean}-train-cpg/{ds_clean}_train_processed.json"),
+        Path(f"/kaggle/input/{ds_clean}-train-cpg/{ds_clean}_train_processed.json"),
         Path(f"/kaggle/input/grace-devign-train-cpg/{ds_clean}_train_processed.json"),
         # 3. File metadata thô
         repo_root / "data" / "raw_c_files" / ds_clean / "train_metadata.json",

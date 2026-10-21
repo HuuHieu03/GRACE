@@ -9,12 +9,24 @@ Chuẩn hóa kho dữ liệu huấn luyện 21,854 mẫu theo nguyên bản B2 b
 
 import os
 import sys
+import io
 import json
 import gzip
 import logging
 import argparse
 from pathlib import Path
 from typing import List, Dict, Any, Optional
+
+if sys.stdout.encoding != "utf-8":
+    try:
+        sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
+    except Exception:
+        pass
+if sys.stderr.encoding != "utf-8":
+    try:
+        sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8", errors="replace")
+    except Exception:
+        pass
 
 repo_root = Path(__file__).parent.parent.resolve()
 src_dir = repo_root / "src"
@@ -25,7 +37,9 @@ for p in [str(repo_root), str(src_dir)]:
 from config import config
 from retrieval_engine import CodeT5Embedder
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+log_handler = logging.StreamHandler(sys.stdout)
+log_handler.setFormatter(logging.Formatter("%(asctime)s - %(levelname)s - %(message)s"))
+logging.basicConfig(level=logging.INFO, handlers=[log_handler])
 logger = logging.getLogger(__name__)
 
 
@@ -103,8 +117,10 @@ def stream_extract_compact_cpg(
             except Exception:
                 pass
 
+        ds_prefix = "reveal" if "reveal" in input_file.name.lower() else "devign"
+        sample_id = item.get("id") or item.get("hash") or item.get("raw_id") or f"{ds_prefix}_train_{idx}"
         compact_samples.append({
-            "id": str(item.get("id", f"devign_train_{idx}")),
+            "id": str(sample_id),
             "func": code,
             "target": target_int,
             "project": str(item.get("project", "unknown")),
@@ -131,7 +147,7 @@ def stream_extract_compact_cpg(
         json.dump(compact_samples, f_gz, ensure_ascii=False)
 
     gz_size_mb = gz_path.stat().st_size / (1024 * 1024)
-    logger.info(f"✓ Hoàn tất trích xuất Compact CPG! File nén: {gz_path} ({gz_size_mb:.2f} MB)")
+    logger.info(f"[OK] Hoan tat trich xuat Compact CPG! File nen: {gz_path} ({gz_size_mb:.2f} MB)")
     return count
 
 
@@ -171,24 +187,30 @@ def precompute_codet5_embeddings(
     np.save(str(output_npy), vecs)
     
     file_size_mb = output_npy.stat().st_size / (1024 * 1024)
-    logger.info(f"✓ Đã lưu thành công ma trận embeddings tại: {output_npy} ({file_size_mb:.2f} MB, shape={vecs.shape})")
+    logger.info(f"[OK] Da luu thanh cong ma tran embeddings tai: {output_npy} ({file_size_mb:.2f} MB, shape={vecs.shape})")
     return len(samples)
 
 
 def main():
     parser = argparse.ArgumentParser(description="GRACE Train Assets Preparation")
-    parser.add_argument("--extract_cpg", action="store_true", help="Trích xuất Compact CPG từ devign_train_processed.json")
+    parser.add_argument("--dataset", type=str, default="devign", help="Tên bộ dữ liệu (devign/reveal)")
+    parser.add_argument("--extract_cpg", action="store_true", help="Trích xuất Compact CPG")
     parser.add_argument("--precompute_embeddings", action="store_true", help="Tiền tính toán ma trận vector CodeT5 768-d")
-    parser.add_argument("--input_processed", type=str, default="data/processed/devign_train_processed.json", help="Đường dẫn file train processed gốc")
-    parser.add_argument("--output_compact", type=str, default="data/processed/devign_train_compact_cpg.json.gz", help="Đường dẫn file compact CPG đầu ra")
-    parser.add_argument("--output_embeddings", type=str, default="data/processed/devign_train_codet5_embeddings.npy", help="Đường dẫn file .npy embeddings đầu ra")
+    parser.add_argument("--input_processed", type=str, default=None, help="Đường dẫn file train processed gốc")
+    parser.add_argument("--output_compact", type=str, default=None, help="Đường dẫn file compact CPG đầu ra")
+    parser.add_argument("--output_embeddings", type=str, default=None, help="Đường dẫn file .npy embeddings đầu ra")
     parser.add_argument("--batch_size", type=int, default=64, help="Batch size khi mã hóa CodeT5")
     parser.add_argument("--use_fallback", action="store_true", help="Dùng TF-IDF fallback khi test nhanh trên CPU")
     args = parser.parse_args()
 
-    input_p = Path(args.input_processed)
-    compact_p = Path(args.output_compact)
-    emb_p = Path(args.output_embeddings)
+    ds = args.dataset.lower() if args.dataset else "devign"
+    input_str = args.input_processed or f"data/processed/{ds}_train_processed.json"
+    compact_str = args.output_compact or f"data/processed/{ds}_train_compact_cpg.json.gz"
+    emb_str = args.output_embeddings or f"data/processed/{ds}_train_codet5_embeddings.npy"
+
+    input_p = Path(input_str)
+    compact_p = Path(compact_str)
+    emb_p = Path(emb_str)
 
     if args.extract_cpg or (not args.extract_cpg and not args.precompute_embeddings):
         # Mặc định thực hiện extract nếu input tồn tại
@@ -196,7 +218,7 @@ def main():
             stream_extract_compact_cpg(input_p, compact_p)
         else:
             # Fallback sang raw_c_files nếu không có processed
-            raw_cand = Path("data/raw_c_files/devign/train_metadata.json")
+            raw_cand = Path(f"data/raw_c_files/{ds}/train_metadata.json")
             if raw_cand.exists():
                 logger.info(f"[!] Không thấy {input_p}, sử dụng fallback {raw_cand} để sinh compact CPG...")
                 stream_extract_compact_cpg(raw_cand, compact_p)
