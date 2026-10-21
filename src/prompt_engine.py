@@ -163,12 +163,18 @@ def build_grace_prompt(sample: Dict[str, Any], include_demonstration: bool = Tru
     return "\n\n".join(prompt_parts)
 
 
-def build_contrastive_prompt(sample: Dict[str, Any], invert_order: bool = False) -> str:
+def build_contrastive_prompt(
+    sample: Dict[str, Any],
+    invert_order: bool = False,
+    include_security_diff: bool = True
+) -> str:
     """
     Xây dựng Câu Lệnh Tương Phản (Contrastive ICL Prompt - 2-shot) tuân thủ Figure 6:
     Cung cấp đồng thời 1 Cặp ví dụ mẫu (1 Vulnerable + 1 Safe) có cơ chế an ninh tương đồng nhất
     để giúp LLM tự thiết lập ranh giới quyết định (Decision Boundary).
     Bao gồm phân tích điểm khác biệt an ninh cốt lõi (Security Difference) giữa 2 mẫu.
+    Khi include_security_diff=False (chế độ Ablation Study), khối '--- CORE SECURITY DIFFERENCE ---'
+    sẽ được cắt bỏ để bóc tách tác động độc lập của Cặp mẫu cân bằng nhãn 1:1 so với khối giải thích an ninh.
     """
     prompt_parts = []
     
@@ -206,7 +212,7 @@ def build_contrastive_prompt(sample: Dict[str, Any], invert_order: bool = False)
     if len(s_func) > 1200:
         s_func = s_func[:1200] + "\n/* [TRUNCATED TO PRESERVE CONTEXT] */"
 
-    diff_section = f"\n\n--- CORE SECURITY DIFFERENCE ---\n{sec_diff}" if sec_diff else ""
+    diff_section = f"\n\n--- CORE SECURITY DIFFERENCE ---\n{sec_diff}" if (sec_diff and include_security_diff) else ""
 
     if not invert_order:
         contrastive_section = (
@@ -263,17 +269,20 @@ def build_contrastive_prompt(sample: Dict[str, Any], invert_order: bool = False)
 
 def build_prompt(sample: Dict[str, Any], mode: str = "contrastive_2shot") -> str:
     """
-    Hàm Dispatcher tập trung sinh prompt theo 3 chế độ thực nghiệm khoa học:
+    Hàm Dispatcher tập trung sinh prompt theo 4 chế độ thực nghiệm khoa học:
     - 'zero_shot': Không có demonstration
     - 'standard_1shot': GRACE baseline 1-shot (Chuẩn Figure 6)
     - 'contrastive_2shot': Security-Aware Contrastive ICL 2-shot (Cải tiến Stage 5)
+    - 'contrastive_2shot_nodiff': Ablation Study B3-NoDiff (Cắt bỏ Core Security Difference)
     """
     if mode == "zero_shot":
         return build_grace_prompt(sample, include_demonstration=False)
     elif mode == "standard_1shot":
         return build_grace_prompt(sample, include_demonstration=True)
     elif mode == "contrastive_2shot":
-        return build_contrastive_prompt(sample)
+        return build_contrastive_prompt(sample, include_security_diff=True)
+    elif mode == "contrastive_2shot_nodiff":
+        return build_contrastive_prompt(sample, include_security_diff=False)
     else:
-        raise ValueError(f"Chế độ mode '{mode}' không hợp lệ. Chọn: 'zero_shot', 'standard_1shot', 'contrastive_2shot'.")
+        raise ValueError(f"Chế độ mode '{mode}' không hợp lệ. Chọn: 'zero_shot', 'standard_1shot', 'contrastive_2shot', 'contrastive_2shot_nodiff'.")
 

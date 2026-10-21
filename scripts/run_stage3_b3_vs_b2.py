@@ -89,10 +89,16 @@ class MockStage3LLM:
 
         # Kiểm tra xem đây là prompt B3 (Contrastive) hay B2 (1-shot)
         is_contrastive = "### CONTRASTIVE DEMONSTRATION EXAMPLES" in prompt
+        has_sec_diff = "--- CORE SECURITY DIFFERENCE ---" in prompt
 
         if is_contrastive:
             # B3: Cả 2 nhãn 1 và 0 đều hiện diện -> không bị thiên lệch theo 1 nhãn đơn lẻ
             effective_pred = base_pred
+            # Nếu thiếu Core Security Difference (ablation B3-NoDiff), mô hình thiếu rào chắn an ninh:
+            # Mô hình có 15% xác suất hiểu nhầm hàm an toàn có guard là có lỗi (tăng nhẹ FP)
+            if not has_sec_diff and is_risky_sink and has_guard:
+                if self.rng.random() < 0.15:
+                    effective_pred = 1
         else:
             # B2: Chỉ có 1 demo -> có nguy cơ bị kéo theo nhãn của demo
             effective_pred = base_pred
@@ -192,6 +198,13 @@ def compute_paired_bootstrap_ci(
     """
     rng = random.Random(seed)
     n = len(y_true)
+    if n == 0:
+        return {
+            "n_resamples": n_resamples,
+            "delta_f1": {"mean": 0.0, "ci_95": (0.0, 0.0), "excludes_zero": False},
+            "delta_mcc": {"mean": 0.0, "ci_95": (0.0, 0.0), "excludes_zero": False},
+            "delta_balanced_accuracy": {"mean": 0.0, "ci_95": (0.0, 0.0), "excludes_zero": False}
+        }
     delta_f1_list = []
     delta_mcc_list = []
     delta_bacc_list = []
@@ -248,13 +261,92 @@ def compute_paired_bootstrap_ci(
 
 
 def print_stage3_comparison_report(report: Dict[str, Any]):
-    """In bảng báo cáo trực quan cho Đợt 3: Đối đầu B3 vs B2."""
+    """In bảng báo cáo trực quan cho Đợt 3: Đối đầu B3 vs B2 hoặc Ablation B3-NoDiff."""
+    is_ablation = not report.get("metadata", {}).get("include_security_diff", True)
     b2 = report["b2_baseline"]
     b3 = report["b3_contrastive"]
     diff = report["head_to_head_delta"]
     mcnemar = report.get("mcnemar_test", {})
     boot = report.get("paired_bootstrap_95_ci", {})
     ls = report.get("label_sensitivity_comparison", {})
+    b3_full = report.get("b3_full")
+    diff_fn = report.get("delta_full_vs_nodiff")
+
+    metric_keys = [
+        ("accuracy", "Accuracy"),
+        ("precision", "Precision"),
+        ("recall", "Recall"),
+        ("f1_score", "F1-Score"),
+        ("mcc", "MCC"),
+        ("balanced_accuracy", "Balanced Accuracy"),
+        ("predicted_vulnerable_rate", "Pred Vuln Rate")
+    ]
+
+    if is_ablation:
+        print("\n" + "=" * 98)
+        print("  BÁO CÁO ABLATION STUDY: B3-NODIFF (BÓC TÁCH TÁC ĐỘNG CÔ LẬP CỦA CORE SECURITY DIFFERENCE)")
+        print("  Tuân thủ Hợp đồng: evaluation_contract.yaml & Kế hoạch 20261014")
+        print("=" * 98)
+        print(f"[*] Tập kiểm định:  {report['metadata']['dataset']} ({report['metadata']['dev_split_file']})")
+        print(f"[*] Quy mô mẫu:     {report['metadata']['valid_samples']} / {report['metadata']['total_samples']} mẫu hợp lệ (100% có CPG)")
+        print(f"[*] Mô hình LLM:    {report['metadata']['model_name']} ({report['metadata']['provider']})")
+        print(f"[*] Chế độ:         Ablation B3-NoDiff (Cắt bỏ hoàn toàn khối '--- CORE SECURITY DIFFERENCE ---')")
+        print("-" * 98)
+        if b3_full and diff_fn:
+            print(f"{'Chỉ số':<20} | {'B2 (Baseline)':<14} | {'B3-NoDiff':<14} | {'B3-Full':<14} | {'Δ(NoDiff - B2)':<15} | {'Δ(Full - NoDiff)':<16}")
+            print("-" * 98)
+            for k, name in metric_keys:
+                vb2 = b2.get(k) if b2 else None
+                vnd = b3.get(k) if b3 else None
+                vf = b3_full.get(k) if b3_full else None
+                d_nd = diff.get(f"delta_{k}")
+                d_fn = diff_fn.get(f"delta_{k}")
+                str_b2 = f"{vb2:<14.4f}" if vb2 is not None else f"{'None':<14}"
+                str_nd = f"{vnd:<14.4f}" if vnd is not None else f"{'None':<14}"
+                str_f = f"{vf:<14.4f}" if vf is not None else f"{'None':<14}"
+                str_d_nd = f"{d_nd:+15.4f}" if d_nd is not None else f"{'None':<15}"
+                str_d_fn = f"{d_fn:+16.4f}" if d_fn is not None else f"{'None':<16}"
+                print(f"{name:<20} | {str_b2} | {str_nd} | {str_f} | {str_d_nd} | {str_d_fn}")
+        else:
+            print(f"{'Chỉ số':<24} | {'B2 (Baseline 1-shot)':<20} | {'B3-NoDiff (2-shot)':<22} | {'Chênh lệch (Delta)':<16}")
+            print("-" * 98)
+            for k, name in metric_keys:
+                vb2 = b2.get(k) if b2 else None
+                vnd = b3.get(k) if b3 else None
+                d = diff.get(f"delta_{k}")
+                str_b2 = f"{vb2:<20.4f}" if vb2 is not None else f"{'None':<20}"
+                str_nd = f"{vnd:<22.4f}" if vnd is not None else f"{'None':<22}"
+                str_d = f"{d:+16.4f}" if d is not None else f"{'None':<16}"
+                print(f"{name:<24} | {str_b2} | {str_nd} | {str_d}")
+
+        print("-" * 98)
+        print(f"[*] MA TRẬN NHẦM LẪN (CONFUSION MATRIX):")
+        if b2 and "confusion_matrix" in b2:
+            print(f"    - B2:        TP={b2['confusion_matrix']['TP (True Positive)']}, FP={b2['confusion_matrix']['FP (False Positive - Alarm)']}, TN={b2['confusion_matrix']['TN (True Negative)']}, FN={b2['confusion_matrix']['FN (False Negative - Miss)']}")
+        if b3 and "confusion_matrix" in b3:
+            print(f"    - B3-NoDiff: TP={b3['confusion_matrix']['TP (True Positive)']}, FP={b3['confusion_matrix']['FP (False Positive - Alarm)']}, TN={b3['confusion_matrix']['TN (True Negative)']}, FN={b3['confusion_matrix']['FN (False Negative - Miss)']}")
+        if b3_full and "confusion_matrix" in b3_full:
+            print(f"    - B3-Full:   TP={b3_full['confusion_matrix']['TP (True Positive)']}, FP={b3_full['confusion_matrix']['FP (False Positive - Alarm)']}, TN={b3_full['confusion_matrix']['TN (True Negative)']}, FN={b3_full['confusion_matrix']['FN (False Negative - Miss)']}")
+        print("-" * 98)
+        print(f"[*] KIỂM ĐỊNH Ý NGHĨA THỐNG KÊ (STATISTICAL TESTS):")
+        if mcnemar:
+            print(f"    - McNemar (B3-NoDiff vs B2): Chi2={mcnemar.get('chi2_statistic')}, p-value={mcnemar.get('p_value')} (Significant at p<0.05: {mcnemar.get('is_significant_p05')})")
+        if boot:
+            f1_ci = boot["delta_f1"]["ci_95"]
+            mcc_ci = boot["delta_mcc"]["ci_95"]
+            print(f"    - Paired Bootstrap 95% CI (B3-NoDiff vs B2) ΔF1:  [{f1_ci[0]:.4f}, {f1_ci[1]:.4f}] (Excludes 0: {boot['delta_f1']['excludes_zero']})")
+            print(f"    - Paired Bootstrap 95% CI (B3-NoDiff vs B2) ΔMCC: [{mcc_ci[0]:.4f}, {mcc_ci[1]:.4f}] (Excludes 0: {boot['delta_mcc']['excludes_zero']})")
+        mcnemar_fn = report.get("mcnemar_full_vs_nodiff")
+        boot_fn = report.get("paired_bootstrap_full_vs_nodiff")
+        if mcnemar_fn:
+            print(f"    - McNemar (B3-Full vs B3-NoDiff): Chi2={mcnemar_fn.get('chi2_statistic')}, p-value={mcnemar_fn.get('p_value')} (Significant at p<0.05: {mcnemar_fn.get('is_significant_p05')})")
+        if boot_fn:
+            f1_ci_fn = boot_fn["delta_f1"]["ci_95"]
+            mcc_ci_fn = boot_fn["delta_mcc"]["ci_95"]
+            print(f"    - Paired Bootstrap 95% CI (B3-Full vs B3-NoDiff) ΔF1:  [{f1_ci_fn[0]:.4f}, {f1_ci_fn[1]:.4f}] (Excludes 0: {boot_fn['delta_f1']['excludes_zero']})")
+            print(f"    - Paired Bootstrap 95% CI (B3-Full vs B3-NoDiff) ΔMCC: [{mcc_ci_fn[0]:.4f}, {mcc_ci_fn[1]:.4f}] (Excludes 0: {boot_fn['delta_mcc']['excludes_zero']})")
+        print("=" * 98 + "\n")
+        return
 
     print("\n" + "=" * 88)
     print("  BÁO CÁO THỰC NGHIỆM ĐỢT 3: SO SÁNH ĐỐI ĐẦU B3 (CONTRASTIVE) VS B2 (BASELINE)")
@@ -267,16 +359,6 @@ def print_stage3_comparison_report(report: Dict[str, Any]):
     print("-" * 88)
     print(f"{'Chỉ số':<24} | {'B2 (Baseline 1-shot)':<20} | {'B3 (Contrastive 2-shot)':<22} | {'Chênh lệch (Delta)':<16}")
     print("-" * 88)
-
-    metric_keys = [
-        ("accuracy", "Accuracy"),
-        ("precision", "Precision"),
-        ("recall", "Recall"),
-        ("f1_score", "F1-Score"),
-        ("mcc", "MCC"),
-        ("balanced_accuracy", "Balanced Accuracy"),
-        ("predicted_vulnerable_rate", "Pred Vuln Rate")
-    ]
 
     for k, name in metric_keys:
         v_b2 = b2.get(k)
@@ -294,8 +376,10 @@ def print_stage3_comparison_report(report: Dict[str, Any]):
 
     print("-" * 88)
     print(f"[*] MA TRẬN NHẦM LẪN (CONFUSION MATRIX):")
-    print(f"    - B2: TP={b2['confusion_matrix']['TP (True Positive)']}, FP={b2['confusion_matrix']['FP (False Positive - Alarm)']}, TN={b2['confusion_matrix']['TN (True Negative)']}, FN={b2['confusion_matrix']['FN (False Negative - Miss)']}")
-    print(f"    - B3: TP={b3['confusion_matrix']['TP (True Positive)']}, FP={b3['confusion_matrix']['FP (False Positive - Alarm)']}, TN={b3['confusion_matrix']['TN (True Negative)']}, FN={b3['confusion_matrix']['FN (False Negative - Miss)']}")
+    if b2 and "confusion_matrix" in b2:
+        print(f"    - B2: TP={b2['confusion_matrix']['TP (True Positive)']}, FP={b2['confusion_matrix']['FP (False Positive - Alarm)']}, TN={b2['confusion_matrix']['TN (True Negative)']}, FN={b2['confusion_matrix']['FN (False Negative - Miss)']}")
+    if b3 and "confusion_matrix" in b3:
+        print(f"    - B3: TP={b3['confusion_matrix']['TP (True Positive)']}, FP={b3['confusion_matrix']['FP (False Positive - Alarm)']}, TN={b3['confusion_matrix']['TN (True Negative)']}, FN={b3['confusion_matrix']['FN (False Negative - Miss)']}")
     print("-" * 88)
     print(f"[*] SO SÁNH ĐỘ NHẠY NHÃN ĐẢO (LABEL SENSITIVITY MITIGATION):")
     print(f"    - B2 Net Label Sensitivity:        {ls.get('b2_net_label_sensitivity_pct', 31.0):.2f}% (Bị kéo theo 95% demo Safe)")
@@ -319,6 +403,7 @@ def run_stage3_experiment(
     dev_split_file: Path,
     dataset_name: str = "devign",
     b2_report_path: Optional[Path] = None,
+    b3_full_report_path: Optional[Path] = None,
     output_path: Optional[Path] = None,
     max_samples: Optional[int] = None,
     max_train_samples: Optional[int] = None,
@@ -332,7 +417,8 @@ def run_stage3_experiment(
     train_embeddings_path: Optional[str] = None,
     train_data_path: Optional[str] = None,
     use_fallback_embedder: Optional[bool] = None,
-    run_label_sensitivity: bool = True
+    run_label_sensitivity: bool = True,
+    include_security_diff: bool = True
 ) -> Dict[str, Any]:
     """
     Thực thi toàn bộ quy trình thí nghiệm Đợt 3 (So sánh B3 vs B2).
@@ -405,10 +491,14 @@ def run_stage3_experiment(
     b2_metrics = None
     b2_report_data = None
 
-    if b2_report_path and Path(b2_report_path).exists():
-        print(f"[*] Nạp kết quả B2 từ báo cáo Stage 2 đã kiểm toán: {b2_report_path}")
-        with open(b2_report_path, "r", encoding="utf-8") as f_b2:
-            loaded_data = json.load(f_b2)
+    if b2_report_path:
+        b2_p = Path(b2_report_path)
+        if not b2_p.is_absolute():
+            b2_p = repo_root / b2_p
+        if b2_p.exists():
+            print(f"[*] Nạp kết quả B2 từ báo cáo Stage 2 đã kiểm toán: {b2_p}")
+            with open(b2_p, "r", encoding="utf-8") as f_b2:
+                loaded_data = json.load(f_b2)
         rep_ds = loaded_data.get("metadata", {}).get("dataset", "").lower()
         if rep_ds and rep_ds != dataset_name.lower():
             print(f"[!] Báo cáo B2 tại {b2_report_path} thuộc dataset '{rep_ds}', khác với '{dataset_name}'. Bỏ qua nạp file.")
@@ -461,8 +551,37 @@ def run_stage3_experiment(
                 b2_y_pred.append(pred_b2)
         b2_metrics = compute_classification_metrics(b2_y_true, b2_y_pred)
 
+    # 6b. Nạp kết quả B3-Full nếu đang chạy chế độ Ablation (include_security_diff=False)
+    b3_full_records = []
+    b3_full_metrics = None
+    b3_full_report_data = None
+
+    if not include_security_diff:
+        b3_fp = Path(b3_full_report_path) if b3_full_report_path else None
+        if b3_fp and not b3_fp.is_absolute():
+            b3_fp = repo_root / b3_fp
+        if b3_fp and b3_fp.exists():
+            print(f"[*] Nạp kết quả B3-Full từ: {b3_fp}")
+            with open(b3_fp, "r", encoding="utf-8") as f_bf:
+                b3_full_report_data = json.load(f_bf)
+        elif (repo_root / "output" / "stage3" / f"{dataset_name.lower()}_b3_vs_b2_comparison_report.json").exists():
+            cand_p = repo_root / "output" / "stage3" / f"{dataset_name.lower()}_b3_vs_b2_comparison_report.json"
+            print(f"[*] Tự động nạp kết quả B3-Full từ báo cáo Stage 3: {cand_p}")
+            with open(cand_p, "r", encoding="utf-8") as f_bf:
+                b3_full_report_data = json.load(f_bf)
+        elif dataset_name.lower() == "devign" and (repo_root / "output" / "stage3" / "b3_vs_b2_comparison_report.json").exists():
+            cand_p = repo_root / "output" / "stage3" / "b3_vs_b2_comparison_report.json"
+            print(f"[*] Tự động nạp kết quả B3-Full từ báo cáo mặc định: {cand_p}")
+            with open(cand_p, "r", encoding="utf-8") as f_bf:
+                b3_full_report_data = json.load(f_bf)
+
+        if b3_full_report_data:
+            b3_full_metrics = b3_full_report_data.get("b3_contrastive")
+            b3_full_records = b3_full_report_data.get("detailed_records_b3") or []
+
     # 7. Thực thi Suy luận B3 (Contrastive Demonstration ICL)
-    print(f"[*] Bắt đầu thực thi suy luận B3 trên {len(dev_samples)} mẫu với chiến lược {strategy}...")
+    b3_label_str = "B3-NoDiff (Ablation)" if not include_security_diff else "B3 (Contrastive)"
+    print(f"[*] Bắt đầu thực thi suy luận {b3_label_str} trên {len(dev_samples)} mẫu với chiến lược {strategy}...")
     b3_records = []
     b3_y_true = []
     b3_y_pred = []
@@ -481,7 +600,11 @@ def run_stage3_experiment(
             target_annotated["example"] = train_pool[0]
 
         # Prompt chuẩn Condition A (Vuln trước, Safe sau)
-        prompt_b3_a = build_contrastive_prompt(target_annotated, invert_order=False)
+        prompt_b3_a = build_contrastive_prompt(
+            target_annotated,
+            invert_order=False,
+            include_security_diff=include_security_diff
+        )
         resp_b3_a = call_model_with_contract_retry(engine, prompt_b3_a, use_mock=use_mock, run_iteration=1)
         pred_b3_a, desc_b3_a, valid_b3_a = parse_llm_prediction(resp_b3_a)
 
@@ -492,7 +615,11 @@ def run_stage3_experiment(
 
         if run_label_sensitivity:
             # Condition B: Inverted order (Safe trước, Vuln sau)
-            prompt_b3_b = build_contrastive_prompt(target_annotated, invert_order=True)
+            prompt_b3_b = build_contrastive_prompt(
+                target_annotated,
+                invert_order=True,
+                include_security_diff=include_security_diff
+            )
             resp_b3_b = call_model_with_contract_retry(engine, prompt_b3_b, use_mock=use_mock, run_iteration=1)
             pred_b3_b, desc_b3_b, valid_b3_b = parse_llm_prediction(resp_b3_b)
 
@@ -570,6 +697,34 @@ def run_stage3_experiment(
     mcnemar_res = compute_mcnemar_test(common_y_true, common_y_b2, common_y_b3)
     bootstrap_res = compute_paired_bootstrap_ci(common_y_true, common_y_b2, common_y_b3, n_resamples=2000, seed=seed)
 
+    # 9b. Nếu ở chế độ Ablation (include_security_diff=False) và có b3_full_records, so sánh B3-Full vs B3-NoDiff
+    mcnemar_full_vs_nodiff = None
+    bootstrap_full_vs_nodiff = None
+    delta_full_vs_nodiff = None
+    delta_full_vs_b2 = None
+
+    if not include_security_diff and b3_full_records:
+        common_yt_full = []
+        common_p_nodiff = []
+        common_p_full = []
+        full_dict = {r.get("target_id", r.get("id", str(r.get("index")))): r for r in b3_full_records}
+        for r_nd in b3_records:
+            tid = r_nd.get("target_id")
+            if tid in full_dict:
+                r_f = full_dict[tid]
+                p_f = r_f.get("pred_a", r_f.get("pred"))
+                v_f = r_f.get("valid_a", r_f.get("valid", True))
+                p_nd = r_nd.get("pred_a")
+                v_nd = r_nd.get("valid_a", True)
+                if v_f and v_nd and p_f is not None and p_nd is not None:
+                    common_yt_full.append(r_nd["target"])
+                    common_p_nodiff.append(p_nd)
+                    common_p_full.append(p_f)
+
+        if common_yt_full:
+            mcnemar_full_vs_nodiff = compute_mcnemar_test(common_yt_full, common_p_nodiff, common_p_full)
+            bootstrap_full_vs_nodiff = compute_paired_bootstrap_ci(common_yt_full, common_p_nodiff, common_p_full, n_resamples=2000, seed=seed)
+
     # 10. Tổng hợp sai phân Delta B3 - B2
     def safe_sub(m1, m2, key):
         v1 = m1.get(key)
@@ -590,11 +745,25 @@ def run_stage3_experiment(
         "delta_predicted_vulnerable_rate": safe_sub(b3_metrics, b2_metrics, "predicted_vulnerable_rate")
     }
 
+    if not include_security_diff and b3_full_metrics:
+        delta_full_vs_nodiff = {
+            f"delta_{k}": safe_sub(b3_full_metrics, b3_metrics, k)
+            for k in [
+                "accuracy", "precision", "recall", "f1_score", "mcc", "balanced_accuracy", "predicted_vulnerable_rate"
+            ]
+        }
+        delta_full_vs_b2 = {
+            f"delta_{k}": safe_sub(b3_full_metrics, b2_metrics, k)
+            for k in [
+                "accuracy", "precision", "recall", "f1_score", "mcc", "balanced_accuracy", "predicted_vulnerable_rate"
+            ]
+        }
+
     fallback_report = selector.get_fallback_report()
 
     report = {
         "metadata": {
-            "experiment": "stage3_b3_vs_b2_comparison",
+            "experiment": "stage3_ablation_nodiff" if not include_security_diff else "stage3_b3_vs_b2_comparison",
             "contract": "evaluation_contract.yaml",
             "dataset": dataset_name,
             "dev_split_file": str(dev_split_file),
@@ -605,6 +774,7 @@ def run_stage3_experiment(
             "max_tokens": 256,
             "strategy": strategy,
             "lambda_weight": lambda_weight,
+            "include_security_diff": include_security_diff,
             "total_samples": len(dev_samples),
             "valid_samples": len(b3_y_pred),
             "use_mock": use_mock
@@ -630,6 +800,16 @@ def run_stage3_experiment(
         "detailed_records_b3": b3_records
     }
 
+    if not include_security_diff:
+        report["b3_nodiff"] = b3_metrics
+        report["delta_nodiff_vs_b2"] = delta_metrics
+        if b3_full_metrics:
+            report["b3_full"] = b3_full_metrics
+            report["delta_full_vs_nodiff"] = delta_full_vs_nodiff
+            report["delta_full_vs_b2"] = delta_full_vs_b2
+            report["mcnemar_full_vs_nodiff"] = mcnemar_full_vs_nodiff
+            report["paired_bootstrap_full_vs_nodiff"] = bootstrap_full_vs_nodiff
+
     # In báo cáo trực quan
     print_stage3_comparison_report(report)
 
@@ -637,14 +817,17 @@ def run_stage3_experiment(
     if output_path is None:
         output_dir = repo_root / "output" / "stage3"
         output_dir.mkdir(parents=True, exist_ok=True)
-        output_path = output_dir / "b3_vs_b2_comparison_report.json"
+        if not include_security_diff:
+            output_path = output_dir / ("ablation_nodiff_comparison_report.json" if dataset_name.lower() == "devign" else f"{dataset_name.lower()}_ablation_nodiff_comparison_report.json")
+        else:
+            output_path = output_dir / ("b3_vs_b2_comparison_report.json" if dataset_name.lower() == "devign" else f"{dataset_name.lower()}_b3_vs_b2_comparison_report.json")
     else:
         output_path = Path(output_path)
         output_path.parent.mkdir(parents=True, exist_ok=True)
 
     with open(output_path, "w", encoding="utf-8") as f_out:
         json.dump(report, f_out, indent=2, ensure_ascii=False)
-    print(f"[✓] Đã lưu báo cáo so sánh đầy đủ tại: {output_path}")
+    print(f"[✓] Đã lưu báo cáo đầy đủ tại: {output_path}")
 
     # Xuất CSV tóm tắt
     csv_path = output_path.with_suffix(".csv")
@@ -661,22 +844,68 @@ def run_stage3_experiment(
         ]
         with open(csv_path, "w", newline="", encoding="utf-8") as f_csv:
             writer = csv.writer(f_csv)
-            writer.writerow(["Metric", "B2_Baseline", "B3_Contrastive", "Delta", "Bootstrap_95_CI"])
-            for k, name in metric_keys:
-                vb2 = b2_metrics.get(k)
-                vb3 = b3_metrics.get(k)
-                d = delta_metrics.get(f"delta_{k}")
-                str_vb2 = f"{vb2:.4f}" if vb2 is not None else "None"
-                str_vb3 = f"{vb3:.4f}" if vb3 is not None else "None"
-                str_d = f"{d:+.4f}" if d is not None else "None"
-                ci_str = ""
-                if k == "f1_score" and "delta_f1" in bootstrap_res:
-                    ci_str = f"[{bootstrap_res['delta_f1']['ci_95'][0]}, {bootstrap_res['delta_f1']['ci_95'][1]}]"
-                elif k == "mcc" and "delta_mcc" in bootstrap_res:
-                    ci_str = f"[{bootstrap_res['delta_mcc']['ci_95'][0]}, {bootstrap_res['delta_mcc']['ci_95'][1]}]"
-                elif k == "balanced_accuracy" and "delta_balanced_accuracy" in bootstrap_res:
-                    ci_str = f"[{bootstrap_res['delta_balanced_accuracy']['ci_95'][0]}, {bootstrap_res['delta_balanced_accuracy']['ci_95'][1]}]"
-                writer.writerow([name, str_vb2, str_vb3, str_d, ci_str])
+            if not include_security_diff and b3_full_metrics:
+                writer.writerow([
+                    "Metric",
+                    "B2_Baseline",
+                    "B3_NoDiff",
+                    "B3_Full",
+                    "Delta_NoDiff_vs_B2",
+                    "Delta_Full_vs_NoDiff",
+                    "Delta_Full_vs_B2",
+                    "Bootstrap_95_CI_NoDiff_vs_B2",
+                    "Bootstrap_95_CI_Full_vs_NoDiff"
+                ])
+                for k, name in metric_keys:
+                    vb2 = b2_metrics.get(k)
+                    vnd = b3_metrics.get(k)
+                    vf = b3_full_metrics.get(k)
+                    d_nd_b2 = delta_metrics.get(f"delta_{k}")
+                    d_f_nd = delta_full_vs_nodiff.get(f"delta_{k}") if delta_full_vs_nodiff else None
+                    d_f_b2 = delta_full_vs_b2.get(f"delta_{k}") if delta_full_vs_b2 else None
+
+                    ci_nd = ""
+                    if k == "f1_score" and "delta_f1" in bootstrap_res:
+                        ci_nd = f"[{bootstrap_res['delta_f1']['ci_95'][0]}, {bootstrap_res['delta_f1']['ci_95'][1]}]"
+                    elif k == "mcc" and "delta_mcc" in bootstrap_res:
+                        ci_nd = f"[{bootstrap_res['delta_mcc']['ci_95'][0]}, {bootstrap_res['delta_mcc']['ci_95'][1]}]"
+                    elif k == "balanced_accuracy" and "delta_balanced_accuracy" in bootstrap_res:
+                        ci_nd = f"[{bootstrap_res['delta_balanced_accuracy']['ci_95'][0]}, {bootstrap_res['delta_balanced_accuracy']['ci_95'][1]}]"
+
+                    ci_f = ""
+                    if bootstrap_full_vs_nodiff:
+                        if k == "f1_score" and "delta_f1" in bootstrap_full_vs_nodiff:
+                            ci_f = f"[{bootstrap_full_vs_nodiff['delta_f1']['ci_95'][0]}, {bootstrap_full_vs_nodiff['delta_f1']['ci_95'][1]}]"
+                        elif k == "mcc" and "delta_mcc" in bootstrap_full_vs_nodiff:
+                            ci_f = f"[{bootstrap_full_vs_nodiff['delta_mcc']['ci_95'][0]}, {bootstrap_full_vs_nodiff['delta_mcc']['ci_95'][1]}]"
+                        elif k == "balanced_accuracy" and "delta_balanced_accuracy" in bootstrap_full_vs_nodiff:
+                            ci_f = f"[{bootstrap_full_vs_nodiff['delta_balanced_accuracy']['ci_95'][0]}, {bootstrap_full_vs_nodiff['delta_balanced_accuracy']['ci_95'][1]}]"
+
+                    str_vb2 = f"{vb2:.4f}" if vb2 is not None else "None"
+                    str_vnd = f"{vnd:.4f}" if vnd is not None else "None"
+                    str_vf = f"{vf:.4f}" if vf is not None else "None"
+                    str_d_nd = f"{d_nd_b2:+.4f}" if d_nd_b2 is not None else "None"
+                    str_d_f_nd = f"{d_f_nd:+.4f}" if d_f_nd is not None else "None"
+                    str_d_f_b2 = f"{d_f_b2:+.4f}" if d_f_b2 is not None else "None"
+                    writer.writerow([name, str_vb2, str_vnd, str_vf, str_d_nd, str_d_f_nd, str_d_f_b2, ci_nd, ci_f])
+            else:
+                b3_header = "B3_NoDiff" if not include_security_diff else "B3_Contrastive"
+                writer.writerow(["Metric", "B2_Baseline", b3_header, "Delta", "Bootstrap_95_CI"])
+                for k, name in metric_keys:
+                    vb2 = b2_metrics.get(k)
+                    vb3 = b3_metrics.get(k)
+                    d = delta_metrics.get(f"delta_{k}")
+                    str_vb2 = f"{vb2:.4f}" if vb2 is not None else "None"
+                    str_vb3 = f"{vb3:.4f}" if vb3 is not None else "None"
+                    str_d = f"{d:+.4f}" if d is not None else "None"
+                    ci_str = ""
+                    if k == "f1_score" and "delta_f1" in bootstrap_res:
+                        ci_str = f"[{bootstrap_res['delta_f1']['ci_95'][0]}, {bootstrap_res['delta_f1']['ci_95'][1]}]"
+                    elif k == "mcc" and "delta_mcc" in bootstrap_res:
+                        ci_str = f"[{bootstrap_res['delta_mcc']['ci_95'][0]}, {bootstrap_res['delta_mcc']['ci_95'][1]}]"
+                    elif k == "balanced_accuracy" and "delta_balanced_accuracy" in bootstrap_res:
+                        ci_str = f"[{bootstrap_res['delta_balanced_accuracy']['ci_95'][0]}, {bootstrap_res['delta_balanced_accuracy']['ci_95'][1]}]"
+                    writer.writerow([name, str_vb2, str_vb3, str_d, ci_str])
         print(f"[✓] Đã xuất file CSV tóm tắt tại: {csv_path}")
     except Exception as e:
         print(f"[!] Lỗi xuất file CSV: {e}")
@@ -685,10 +914,12 @@ def run_stage3_experiment(
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Chạy thực nghiệm Đợt 3: Đối đầu B3 (Contrastive) vs B2 (Baseline)")
+    parser = argparse.ArgumentParser(description="Chạy thực nghiệm Đợt 3: Đối đầu B3 (Contrastive) vs B2 (Baseline) & Ablation B3-NoDiff")
     parser.add_argument("--dev_split", type=str, default="data/splits/devign_dev_clean_100_ids.json", help="Đường dẫn file dev split JSON")
     parser.add_argument("--dataset", type=str, default="devign", help="Tên bộ dữ liệu (devign/reveal)")
     parser.add_argument("--b2_report", type=str, default=None, help="Đường dẫn file báo cáo B2 đã có")
+    parser.add_argument("--b3_full_report", type=str, default=None, help="Đường dẫn file báo cáo B3-Full đã có để so sánh 3 đường cơ sở (B2 vs B3-NoDiff vs B3-Full)")
+    parser.add_argument("--no_security_diff", "--ablation_no_diff", dest="no_security_diff", action="store_true", help="Bóc tách ablation: Cắt bỏ khối Core Security Difference khỏi prompt B3")
     parser.add_argument("--train_data", type=str, default=None, help="Đường dẫn file train data compact cpg")
     parser.add_argument("--train_embeddings", type=str, default=None, help="Đường dẫn file .npy precomputed embeddings")
     parser.add_argument("--model", type=str, default="publishers/qwen/models/qwen3-coder-480b-a35b-instruct-maas", help="Tên model backbone LLM")
@@ -700,7 +931,7 @@ if __name__ == "__main__":
     parser.add_argument("--max_train_samples", type=int, default=None, help="Giới hạn số mẫu train pool")
     parser.add_argument("--use_mock", action="store_true", help="Chạy với Mock LLM (offline testing)")
     parser.add_argument("--use_fallback_embedder", action="store_true", help="Bắt buộc dùng TF-IDF Fallback Embedder")
-    parser.add_argument("--output", type=str, default="output/stage3/b3_vs_b2_comparison_report.json", help="Đường dẫn file JSON báo cáo")
+    parser.add_argument("--output", type=str, default=None, help="Đường dẫn file JSON báo cáo")
 
     args = parser.parse_args()
     ds_clean = args.dataset.lower().strip()
@@ -719,11 +950,19 @@ if __name__ == "__main__":
     if b2_path and not b2_path.is_absolute():
         b2_path = repo_root / b2_path
 
-    out_str = args.output
-    if out_str == "output/stage3/b3_vs_b2_comparison_report.json" and ds_clean != "devign":
-        out_str = f"output/stage3/{ds_clean}_b3_vs_b2_comparison_report.json"
+    b3_full_path = Path(args.b3_full_report) if args.b3_full_report else None
+    if b3_full_path and not b3_full_path.is_absolute():
+        b3_full_path = repo_root / b3_full_path
 
-    out_path = Path(out_str)
+    if args.output:
+        out_path = Path(args.output)
+    else:
+        if args.no_security_diff:
+            out_filename = "ablation_nodiff_comparison_report.json" if ds_clean == "devign" else f"{ds_clean}_ablation_nodiff_comparison_report.json"
+        else:
+            out_filename = "b3_vs_b2_comparison_report.json" if ds_clean == "devign" else f"{ds_clean}_b3_vs_b2_comparison_report.json"
+        out_path = repo_root / "output" / "stage3" / out_filename
+
     if not out_path.is_absolute():
         out_path = repo_root / out_path
 
@@ -731,6 +970,7 @@ if __name__ == "__main__":
         dev_split_file=split_path,
         dataset_name=args.dataset,
         b2_report_path=b2_path,
+        b3_full_report_path=b3_full_path,
         output_path=out_path,
         max_samples=args.max_samples,
         max_train_samples=args.max_train_samples,
@@ -742,5 +982,6 @@ if __name__ == "__main__":
         lambda_weight=args.lambda_weight,
         train_embeddings_path=args.train_embeddings,
         train_data_path=args.train_data,
-        use_fallback_embedder=args.use_fallback_embedder
+        use_fallback_embedder=args.use_fallback_embedder,
+        include_security_diff=(not args.no_security_diff)
     )
