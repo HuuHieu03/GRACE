@@ -1,5 +1,5 @@
-"sample_idx","target_id","target_label","target_code_snippet","demo_A_snippet","demo_B_snippet","sink_match_A","variable_match_A","guard_match_A","sink_match_B","variable_match_B","guard_match_B","better_demo (A/B/Equal/Neither)","evidence_notes"
-"1","id_235_label_False_qemu.c","0","uint32_t lduw_be_phys(target_phys_addr_t addr)
+sample_idx,target_id,target_label,target_code_snippet,demo_A_snippet,demo_B_snippet,sink_match_A,variable_match_A,guard_match_A,sink_match_B,variable_match_B,guard_match_B,better_demo (A/B/Equal/Neither),evidence_notes
+1,id_235_label_False_qemu.c,0,"uint32_t lduw_be_phys(target_phys_addr_t addr)
 
 {
 
@@ -19,8 +19,8 @@
 
     ESI = (ESI & ~0xffff) | ((ESI + T0) & 0xffff);
 
-}","","","","","","","",""
-"2","id_75_label_False_qemu.c","0","static void gen_cp0 (CPUState *env, DisasContext *ctx, uint32_t opc, int rt, int rd)
+}",1,0,0,0,0,0,A,Demo A liên quan an ninh hơn (cùng sink [address_bus_mapping]; biến chung (addr)); trong khi Demo B (khác biệt về thao tác và rào chắn an ninh).
+2,id_75_label_False_qemu.c,0,"static void gen_cp0 (CPUState *env, DisasContext *ctx, uint32_t opc, int rt, int rd)
 
 {
 
@@ -348,8 +348,8 @@
 
         raise_exception_err(EXCP0D_GPF, select
 
-/* ... [Cắt gọn do vượt quá 1800 ký tự] */","","","","","","","",""
-"3","id_396_label_True_qemu.c","1","static bool bdrv_drain_recurse(BlockDriverState *bs, bool begin)
+/* ... [Cắt gọn do vượt quá 1800 ký tự] */",1,1,1,1,1,1,Equal,"Cả hai demo đều có ngữ nghĩa an ninh tương đồng: Demo A (cùng sink [bitwise_arithmetic, pointer_dereference]; cùng guard [numerical_bounds_check]; biến chung (d, s)); Demo B (cùng sink [bitwise_arithmetic, pointer_dereference]; cùng guard [numerical_bounds_check]; biến chung (break, default))."
+3,id_396_label_True_qemu.c,1,"static bool bdrv_drain_recurse(BlockDriverState *bs, bool begin)
 
 {
 
@@ -555,8 +555,8 @@
 
             offse
 
-/* ... [Cắt gọn do vượt quá 1800 ký tự] */","","","","","","","",""
-"4","id_747_label_True_FFmpeg.c","1","void avcodec_align_dimensions2(AVCodecContext *s, int *width, int *height, int linesize_align[4]){
+/* ... [Cắt gọn do vượt quá 1800 ký tự] */",1,1,1,1,1,0,A,"Demo A liên quan an ninh hơn (cùng sink [bitwise_arithmetic, io_network_transport]; cùng guard [numerical_bounds_check]; biến chung (doesn, have)); trong khi Demo B (cùng sink [bitwise_arithmetic, io_network_transport]; biến chung (BlockDriverState, bs))."
+4,id_747_label_True_FFmpeg.c,1,"void avcodec_align_dimensions2(AVCodecContext *s, int *width, int *height, int linesize_align[4]){
 
     int w_align= 1;
 
@@ -842,8 +842,8 @@
 
         get_bits1_vector(gb, sbr->data[0].bs_add_harmonic, sbr->n[1]);
 
-}","","","","","","","",""
-"5","id_521_label_True_qemu.c","1","static int bdrv_rd_badreq_sectors(BlockDriverState *bs,
+}",1,1,1,1,0,1,A,"Demo A liên quan an ninh hơn (cùng sink [bitwise_arithmetic, pointer_dereference]; cùng guard [numerical_bounds_check]; biến chung (is, line)); trong khi Demo B (cùng sink [bitwise_arithmetic, io_network_transport]; cùng guard [numerical_bounds_check])."
+5,id_521_label_True_qemu.c,1,"static int bdrv_rd_badreq_sectors(BlockDriverState *bs,
 
                                   int64_t sector_num, int nb_sectors)
 
@@ -913,8 +913,8 @@
 
     cpu_exec_initfn(cpu);
 
-}","","","","","","","",""
-"6","id_298_label_False_qemu.c","0","static void timerlist_rearm(QEMUTimerList *timer_list)
+}",1,0,1,1,0,1,Equal,"Cả hai demo đều có ngữ nghĩa an ninh tương đồng: Demo A (cùng sink [bitwise_arithmetic, pointer_dereference]; cùng guard [numerical_bounds_check]); Demo B (cùng sink [bitwise_arithmetic, pointer_dereference]; cùng guard [numerical_bounds_check])."
+6,id_298_label_False_qemu.c,0,"static void timerlist_rearm(QEMUTimerList *timer_list)
 
 {
 
@@ -946,8 +946,8 @@
 
     error_report(""spapr-pci-vfio-host-bridge is deprecated"");
 
-}","","","","","","","",""
-"7","id_143_label_True_qemu.c","1","struct vhost_net *vhost_net_init(VLANClientState *backend, int devfd,
+}",1,0,1,0,0,0,A,Demo A liên quan an ninh hơn (cùng sink [pointer_dereference]; cùng guard [numerical_bounds_check]); trong khi Demo B (khác biệt về thao tác và rào chắn an ninh).
+7,id_143_label_True_qemu.c,1,"struct vhost_net *vhost_net_init(VLANClientState *backend, int devfd,
 
                                  bool force)
 
@@ -1012,8 +1012,8 @@
 
     return fd;
 
-}","","","","","","","",""
-"8","id_705_label_True_qemu.c","1","static int inet_connect_addr(struct addrinfo *addr, bool block,
+}",0,0,0,0,0,0,Neither,Cả hai demo đều ít liên quan đến cơ chế an ninh của hàm mục tiêu.
+8,id_705_label_True_qemu.c,1,"static int inet_connect_addr(struct addrinfo *addr, bool block,
 
                              bool *in_progress)
 
@@ -1185,8 +1185,8 @@
 
     return fd;
 
-}","","","","","","","",""
-"9","id_863_label_True_FFmpeg.c","1","static av_cold OMXContext *omx_init(void *logctx, const char *libname, const char *prefix)
+}",0,0,1,1,1,1,B,"Demo B liên quan an ninh hơn (cùng sink [bitwise_arithmetic, io_network_transport]; cùng guard [error_handling_guard]; biến chung (socket)); trong khi Demo A (cùng guard [error_handling_guard])."
+9,id_863_label_True_FFmpeg.c,1,"static av_cold OMXContext *omx_init(void *logctx, const char *libname, const char *prefix)
 
 {
 
@@ -1388,8 +1388,8 @@
 
     return 0;
 
-}","","","","","","","",""
-"10","id_782_label_True_qemu.c","1","static void vvfat_close(BlockDriverState *bs)
+}",1,1,1,1,1,1,B,"Demo B liên quan an ninh hơn (cùng sink [pointer_dereference]; cùng guard [null_pointer_check, sizeof_bounds_check]; biến chung (NULL)); trong khi Demo A (cùng sink [pointer_dereference]; cùng guard [error_handling_guard]; biến chung (break))."
+10,id_782_label_True_qemu.c,1,"static void vvfat_close(BlockDriverState *bs)
 
 {
 
@@ -1463,8 +1463,8 @@
 
     cpu_exec_initfn(cpu);
 
-}","","","","","","","",""
-"11","id_395_label_True_FFmpeg.c","1","static int fourxm_read_packet(AVFormatContext *s,
+}",1,1,1,1,0,1,A,"Demo A liên quan an ninh hơn (cùng sink [io_network_transport, pointer_dereference]; cùng guard [numerical_bounds_check]; biến chung (s)); trong khi Demo B (cùng sink [bitwise_arithmetic, io_network_transport]; cùng guard [numerical_bounds_check])."
+11,id_395_label_True_FFmpeg.c,1,"static int fourxm_read_packet(AVFormatContext *s,
 
                               AVPacket *pkt)
 
@@ -1764,8 +1764,8 @@
 
         get_bits1_vector(gb, sbr->data[0].bs_add_harmonic, sbr->n[1]);
 
-}","","","","","","","",""
-"12","id_536_label_True_qemu.c","1","int qemu_devtree_setprop(void *fdt, const char *node_path,
+}",1,0,1,1,1,1,B,"Demo B liên quan an ninh hơn (cùng sink [bitwise_arithmetic, io_network_transport]; cùng guard [numerical_bounds_check]; biến chung (data)); trong khi Demo A (cùng sink [bitwise_arithmetic]; cùng guard [error_handling_guard, numerical_bounds_check])."
+12,id_536_label_True_qemu.c,1,"int qemu_devtree_setprop(void *fdt, const char *node_path,
 
                          const char *property, void *val_array, int size)
 
@@ -1877,8 +1877,8 @@
 
     cpu_exec_initfn(cpu);
 
-}","","","","","","","",""
-"13","id_1065_label_False_FFmpeg.c","0","static void put_no_rnd_pixels_y2_mmx( UINT8  *block, const UINT8 *pixels, int line_size, int h)
+}",0,0,1,0,0,1,Equal,Cả hai demo đều có ngữ nghĩa an ninh tương đồng: Demo A (cùng guard [numerical_bounds_check]); Demo B (cùng guard [numerical_bounds_check]).
+13,id_1065_label_False_FFmpeg.c,0,"static void put_no_rnd_pixels_y2_mmx( UINT8  *block, const UINT8 *pixels, int line_size, int h)
 
 {
 
@@ -1998,8 +1998,8 @@
 
      */
 
-}","","","","","","","",""
-"14","id_292_label_False_qemu.c","0","static uint64_t sp804_read(void *opaque, target_phys_addr_t offset,
+}",1,1,0,0,0,0,A,"Demo A liên quan an ninh hơn (cùng sink [pointer_dereference]; biến chung (n, p)); trong khi Demo B (biến chung (do))."
+14,id_292_label_False_qemu.c,0,"static uint64_t sp804_read(void *opaque, target_phys_addr_t offset,
 
                            unsigned size)
 
@@ -2165,8 +2165,8 @@
 
     return 0;
 
-}","","","","","","","",""
-"15","id_713_label_True_FFmpeg.c","1","static int opt_new_stream(const char *opt, const char *arg)
+}",1,1,1,1,1,0,A,"Demo A liên quan an ninh hơn (cùng sink [bitwise_arithmetic, pointer_dereference]; cùng guard [error_handling_guard, numerical_bounds_check]; biến chung (but, hw_error)); trong khi Demo B (cùng sink [bitwise_arithmetic, io_network_transport]; biến chung (n, write))."
+15,id_713_label_True_FFmpeg.c,1,"static int opt_new_stream(const char *opt, const char *arg)
 
 {
 
@@ -2294,8 +2294,8 @@
 
     return fd;
 
-}","","","","","","","",""
-"16","id_514_label_False_FFmpeg.c","0","static int xmv_read_header(AVFormatContext *s)
+}",0,0,1,0,0,1,A,"Demo A liên quan an ninh hơn (cùng guard [null_pointer_check, numerical_bounds_check]); trong khi Demo B (cùng guard [numerical_bounds_check])."
+16,id_514_label_False_FFmpeg.c,0,"static int xmv_read_header(AVFormatContext *s)
 
 {
 
@@ -2677,8 +2677,8 @@ fail:
 
             offse
 
-/* ... [Cắt gọn do vượt quá 1800 ký tự] */","","","","","","","",""
-"17","id_146_label_True_FFmpeg.c","1","static int bit8x8_c(MpegEncContext *s, uint8_t *src1, uint8_t *src2,
+/* ... [Cắt gọn do vượt quá 1800 ký tự] */",1,0,1,1,1,1,B,"Demo B liên quan an ninh hơn (cùng sink [bitwise_arithmetic, format_logging]; cùng guard [error_handling_guard, sizeof_bounds_check]; biến chung (fail, in)); trong khi Demo A (cùng sink [bitwise_arithmetic]; cùng guard [error_handling_guard])."
+17,id_146_label_True_FFmpeg.c,1,"static int bit8x8_c(MpegEncContext *s, uint8_t *src1, uint8_t *src2,
 
                     ptrdiff_t stride, int h)
 
@@ -2942,8 +2942,8 @@ fail:
 
     return 0;
 
-}","","","","","","","",""
-"18","id_188_label_False_FFmpeg.c","0","static int config_props(AVFilterLink *outlink)
+}",1,0,1,1,1,1,B,"Demo B liên quan an ninh hơn (cùng sink [bitwise_arithmetic]; cùng guard [numerical_bounds_check]; biến chung (i, int16_t)); trong khi Demo A (cùng sink [bitwise_arithmetic, pointer_dereference]; cùng guard [numerical_bounds_check])."
+18,id_188_label_False_FFmpeg.c,0,"static int config_props(AVFilterLink *outlink)
 
 {
 
@@ -3125,8 +3125,8 @@ fail:
 
     }
 
-}","","","","","","","",""
-"19","id_1064_label_False_qemu.c","0","void kqemu_set_notdirty(CPUState *env, ram_addr_t ram_addr)
+}",1,1,1,1,1,1,A,"Demo A liên quan an ninh hơn (cùng sink [bitwise_arithmetic, format_logging]; cùng guard [error_handling_guard, null_pointer_check]; biến chung (NULL, is)); trong khi Demo B (cùng sink [bitwise_arithmetic, format_logging]; cùng guard [numerical_bounds_check]; biến chung (n))."
+19,id_1064_label_False_qemu.c,0,"void kqemu_set_notdirty(CPUState *env, ram_addr_t ram_addr)
 
 {
 
@@ -3220,8 +3220,8 @@ fail:
 
      */
 
-}","","","","","","","",""
-"20","id_51_label_False_qemu.c","0","static void do_busid_cmd(ESPState *s, uint8_t *buf, uint8_t busid)
+}",1,1,0,0,0,0,A,"Demo A liên quan an ninh hơn (cùng sink [format_logging]; biến chung (n, to)); trong khi Demo B (biến chung (only))."
+20,id_51_label_False_qemu.c,0,"static void do_busid_cmd(ESPState *s, uint8_t *buf, uint8_t busid)
 
 {
 
@@ -3379,8 +3379,8 @@ fail:
 
     }
 
-}","","","","","","","",""
-"21","id_497_label_False_qemu.c","0","void ide_sector_read(IDEState *s)
+}",1,1,1,1,1,0,A,"Demo A liên quan an ninh hơn (cùng sink [address_bus_mapping, format_logging]; cùng guard [numerical_bounds_check]; biến chung (n, s)); trong khi Demo B (cùng sink [format_logging, pointer_dereference]; biến chung (n))."
+21,id_497_label_False_qemu.c,0,"void ide_sector_read(IDEState *s)
 
 {
 
@@ -3652,8 +3652,8 @@ fail:
 
             offse
 
-/* ... [Cắt gọn do vượt quá 1800 ký tự] */","","","","","","","",""
-"22","id_183_label_False_FFmpeg.c","0","static inline void mix_2f_1r_to_dolby(AC3DecodeContext *ctx)
+/* ... [Cắt gọn do vượt quá 1800 ký tự] */",1,1,1,1,1,1,B,"Demo B liên quan an ninh hơn (cùng sink [bitwise_arithmetic, format_logging]; cùng guard [error_handling_guard]; biến chung (bs, endif)); trong khi Demo A (cùng sink [bitwise_arithmetic, format_logging]; cùng guard [numerical_bounds_check]; biến chung (bus, but))."
+22,id_183_label_False_FFmpeg.c,0,"static inline void mix_2f_1r_to_dolby(AC3DecodeContext *ctx)
 
 {
 
@@ -3797,8 +3797,8 @@ fail:
 
     }
 
-}","","","","","","","",""
-"23","id_125_label_True_FFmpeg.c","1","static int mxf_read_content_storage(MXFContext *mxf, ByteIOContext *pb, int tag)
+}",1,1,1,1,1,1,Equal,"Cả hai demo đều có ngữ nghĩa an ninh tương đồng: Demo A (cùng sink [buffer_memory_copy, pointer_dereference]; cùng guard [sizeof_bounds_check]; biến chung (memset)); Demo B (cùng sink [buffer_memory_copy, pointer_dereference]; cùng guard [sizeof_bounds_check]; biến chung (memset))."
+23,id_125_label_True_FFmpeg.c,1,"static int mxf_read_content_storage(MXFContext *mxf, ByteIOContext *pb, int tag)
 
 {
 
@@ -3928,8 +3928,8 @@ fail:
 
     return child;
 
-}","","","","","","","",""
-"24","id_162_label_True_qemu.c","1","static uint64_t qdev_get_prop_mask64(Property *prop)
+}",1,1,1,0,0,1,A,"Demo A liên quan an ninh hơn (cùng sink [bitwise_arithmetic, io_network_transport]; cùng guard [error_handling_guard]; biến chung (break)); trong khi Demo B (cùng guard [error_handling_guard])."
+24,id_162_label_True_qemu.c,1,"static uint64_t qdev_get_prop_mask64(Property *prop)
 
 {
 
@@ -3993,8 +3993,8 @@ fail:
 
     return view;
 
-}","","","","","","","",""
-"25","id_815_label_False_qemu.c","0","static void monitor_readline(const char *prompt, int is_password,
+}",1,0,1,1,0,1,Equal,"Cả hai demo đều có ngữ nghĩa an ninh tương đồng: Demo A (cùng sink [bitwise_arithmetic, pointer_dereference]; cùng guard [numerical_bounds_check]); Demo B (cùng sink [bitwise_arithmetic, pointer_dereference]; cùng guard [numerical_bounds_check])."
+25,id_815_label_False_qemu.c,0,"static void monitor_readline(const char *prompt, int is_password,
 
                              char *buf, int buf_size)
 
@@ -4038,8 +4038,8 @@ fail:
 
     return 0;
 
-}","","","","","","","",""
-"26","id_914_label_False_qemu.c","0","static void cs_write (void *opaque, target_phys_addr_t addr,
+}",0,0,0,0,0,0,Neither,Cả hai demo đều ít liên quan đến cơ chế an ninh của hàm mục tiêu.
+26,id_914_label_False_qemu.c,0,"static void cs_write (void *opaque, target_phys_addr_t addr,
 
                       uint64_t val64, unsigned size)
 
@@ -4419,8 +4419,8 @@ fail:
 
     return 0;
 
-}","","","","","","","",""
-"27","id_227_label_False_qemu.c","0","static uint64_t omap_pwt_read(void *opaque, target_phys_addr_t addr,
+}",1,1,1,1,1,1,A,"Demo A liên quan an ninh hơn (cùng sink [bitwise_arithmetic, format_logging]; cùng guard [error_handling_guard]; biến chung (do, n)); trong khi Demo B (cùng sink [bitwise_arithmetic, io_network_transport]; cùng guard [null_pointer_check]; biến chung (n, read))."
+27,id_227_label_False_qemu.c,0,"static uint64_t omap_pwt_read(void *opaque, target_phys_addr_t addr,
 
                               unsigned size)
 
@@ -4540,8 +4540,8 @@ fail:
 
     return child;
 
-}","","","","","","","",""
-"28","id_420_label_False_FFmpeg.c","0","static int count_paired_channels(uint8_t (*layout_map)[3], int tags, int pos, int *current) {
+}",1,1,1,0,1,1,A,"Demo A liên quan an ninh hơn (cùng sink [address_bus_mapping, bitwise_arithmetic]; cùng guard [numerical_bounds_check]; biến chung (addr, opaque)); trong khi Demo B (cùng guard [numerical_bounds_check]; biến chung (opaque, uint64_t))."
+28,id_420_label_False_FFmpeg.c,0,"static int count_paired_channels(uint8_t (*layout_map)[3], int tags, int pos, int *current) {
 
     int num_pos_channels = 0;
 
@@ -4849,8 +4849,8 @@ fail:
 
     return 0;
 
-}","","","","","","","",""
-"29","id_10_label_True_qemu.c","1","static inline int64_t sub64(const int64_t a, const int64_t b)
+}",1,1,1,1,0,1,A,"Demo A liên quan an ninh hơn (cùng sink [bitwise_arithmetic, pointer_dereference]; cùng guard [numerical_bounds_check]; biến chung (i)); trong khi Demo B (cùng sink [bitwise_arithmetic]; cùng guard [error_handling_guard, numerical_bounds_check]; biến chung (i))."
+29,id_10_label_True_qemu.c,1,"static inline int64_t sub64(const int64_t a, const int64_t b)
 
 {
 
@@ -4904,8 +4904,8 @@ fail:
 
     cpu_exec_initfn(cpu);
 
-}","","","","","","","",""
-"30","id_311_label_False_qemu.c","0","bool error_is_type(Error *err, const char *fmt)
+}",0,0,0,0,0,0,Neither,Cả hai demo đều ít liên quan đến cơ chế an ninh của hàm mục tiêu.
+30,id_311_label_False_qemu.c,0,"bool error_is_type(Error *err, const char *fmt)
 
 {
 
@@ -5067,8 +5067,8 @@ fail:
 
     return kvm_vcpu_ioctl(CPU(cpu), KVM_SET_VCPU_EVENTS, &events);
 
-}","","","","","","","",""
-"31","id_682_label_True_FFmpeg.c","1","int av_seek_frame(AVFormatContext *s, int stream_index, int64_t timestamp, int flags)
+}",0,0,1,0,0,1,A,"Demo A liên quan an ninh hơn (cùng guard [error_handling_guard, null_pointer_check]); trong khi Demo B (cùng guard [error_handling_guard])."
+31,id_682_label_True_FFmpeg.c,1,"int av_seek_frame(AVFormatContext *s, int stream_index, int64_t timestamp, int flags)
 
 {
 
@@ -5234,8 +5234,8 @@ fail:
 
     return child;
 
-}","","","","","","","",""
-"32","id_555_label_False_FFmpeg.c","0","static int mp3lame_encode_frame(AVCodecContext *avctx, AVPacket *avpkt,
+}",1,1,1,0,0,1,A,"Demo A liên quan an ninh hơn (cùng sink [bitwise_arithmetic, io_network_transport]; cùng guard [error_handling_guard, numerical_bounds_check]; biến chung (default)); trong khi Demo B (cùng guard [error_handling_guard, numerical_bounds_check]; biến chung (ret))."
+32,id_555_label_False_FFmpeg.c,0,"static int mp3lame_encode_frame(AVCodecContext *avctx, AVPacket *avpkt,
 
                                 const AVFrame *frame, int *got_packet_ptr)
 
@@ -5591,8 +5591,8 @@ fail:
 
     return 0;
 
-}","","","","","","","",""
-"33","id_22_label_True_qemu.c","1","static void emulated_push_error(EmulatedState *card, uint64_t code)
+}",1,1,1,1,1,1,Equal,"Cả hai demo đều có ngữ nghĩa an ninh tương đồng: Demo A (cùng sink [bitwise_arithmetic]; cùng guard [error_handling_guard, numerical_bounds_check]; biến chung (frame, int16_t)); Demo B (cùng sink [bitwise_arithmetic]; cùng guard [error_handling_guard, numerical_bounds_check]; biến chung (frame, int16_t))."
+33,id_22_label_True_qemu.c,1,"static void emulated_push_error(EmulatedState *card, uint64_t code)
 
 {
 
@@ -5662,8 +5662,8 @@ fail:
 
     aio_context_release(s->s->aio_context);
 
-}","","","","","","","",""
-"34","id_1076_label_False_FFmpeg.c","0","static int encode_frame(AVCodecContext * avctx, AVPacket *pkt,
+}",1,0,0,1,0,0,Equal,Cả hai demo đều có ngữ nghĩa an ninh tương đồng: Demo A (cùng sink [pointer_dereference]); Demo B (cùng sink [pointer_dereference]).
+34,id_1076_label_False_FFmpeg.c,0,"static int encode_frame(AVCodecContext * avctx, AVPacket *pkt,
 
                         const AVFrame *pict, int *got_packet)
 
@@ -6043,8 +6043,8 @@ fail:
 
     return 0;
 
-}","","","","","","","",""
-"35","id_255_label_True_qemu.c","1","gen_intermediate_code_internal(MIPSCPU *cpu, TranslationBlock *tb,
+}",1,1,1,1,1,1,A,"Demo A liên quan an ninh hơn (cùng sink [bitwise_arithmetic, io_network_transport]; cùng guard [null_pointer_check]; biến chung (NULL, n)); trong khi Demo B (cùng sink [bitwise_arithmetic]; cùng guard [error_handling_guard, numerical_bounds_check]; biến chung (height, i))."
+35,id_255_label_True_qemu.c,1,"gen_intermediate_code_internal(MIPSCPU *cpu, TranslationBlock *tb,
 
                                bool search_pc)
 
@@ -6364,8 +6364,8 @@ fail:
 
         int count;
 
-/* ... [Cắt gọn do vượt quá 1800 ký tự] */","","","","","","","",""
-"36","id_754_label_False_FFmpeg.c","0","static int h264_slice_header_parse(H264Context *h, H264SliceContext *sl,
+/* ... [Cắt gọn do vượt quá 1800 ký tự] */",1,0,1,1,1,1,B,"Demo B liên quan an ninh hơn (cùng sink [bitwise_arithmetic, format_logging]; cùng guard [numerical_bounds_check]; biến chung (DisasContext, OPC_MAX_SIZE)); trong khi Demo A (cùng sink [bitwise_arithmetic, pointer_dereference]; cùng guard [numerical_bounds_check])."
+36,id_754_label_False_FFmpeg.c,0,"static int h264_slice_header_parse(H264Context *h, H264SliceContext *sl,
 
                                    const H2645NAL *nal)
 
@@ -6769,8 +6769,8 @@ badframe:
 
   
 
-/* ... [Cắt gọn do vượt quá 1800 ký tự] */","","","","","","","",""
-"37","id_814_label_False_qemu.c","0","static void test_io_channel_setup_sync(SocketAddressLegacy *listen_addr,
+/* ... [Cắt gọn do vượt quá 1800 ký tự] */",1,1,1,1,1,1,A,"Demo A liên quan an ninh hơn (cùng sink [bitwise_arithmetic, format_logging]; cùng guard [null_pointer_check, numerical_bounds_check]; biến chung (NULL, i)); trong khi Demo B (cùng sink [bitwise_arithmetic, format_logging]; cùng guard [numerical_bounds_check]; biến chung (do, i))."
+37,id_814_label_False_qemu.c,0,"static void test_io_channel_setup_sync(SocketAddressLegacy *listen_addr,
 
                                        SocketAddressLegacy *connect_addr,
 
@@ -6896,8 +6896,8 @@ badframe:
 
     return fd;
 
-}","","","","","","","",""
-"38","id_512_label_False_qemu.c","0","static void rtas_display_character(sPAPREnvironment *spapr,
+}",1,0,1,1,1,1,B,"Demo B liên quan an ninh hơn (cùng sink [address_bus_mapping, bitwise_arithmetic]; cùng guard [error_handling_guard, numerical_bounds_check]; biến chung (inet, port)); trong khi Demo A (cùng sink [io_network_transport, pointer_dereference]; cùng guard [numerical_bounds_check])."
+38,id_512_label_False_qemu.c,0,"static void rtas_display_character(sPAPREnvironment *spapr,
 
                                    uint32_t token, uint32_t nargs,
 
@@ -6997,8 +6997,8 @@ badframe:
 
     aio_context_release(aio_context);
 
-}","","","","","","","",""
-"39","id_1021_label_True_FFmpeg.c","1","static void RENAME(yuv2bgr24_1)(SwsContext *c, const int16_t *buf0,
+}",1,1,0,1,0,0,A,"Demo A liên quan an ninh hơn (cùng sink [bitwise_arithmetic]; biến chung (sPAPREnvironment, spapr)); trong khi Demo B (cùng sink [bitwise_arithmetic])."
+39,id_1021_label_True_FFmpeg.c,1,"static void RENAME(yuv2bgr24_1)(SwsContext *c, const int16_t *buf0,
 
                                 const int16_t *ubuf[2], const int16_t *bguf[2],
 
@@ -7128,8 +7128,8 @@ badframe:
 
     return qdict_size(palette);
 
-}","","","","","","","",""
-"40","id_1018_label_True_FFmpeg.c","1","static int hevc_decode_frame(AVCodecContext *avctx, void *data, int *got_output,
+}",1,1,1,1,0,1,A,"Demo A liên quan an ninh hơn (cùng sink [bitwise_arithmetic, io_network_transport]; cùng guard [numerical_bounds_check]; biến chung (n)); trong khi Demo B (cùng sink [bitwise_arithmetic]; cùng guard [numerical_bounds_check])."
+40,id_1018_label_True_FFmpeg.c,1,"static int hevc_decode_frame(AVCodecContext *avctx, void *data, int *got_output,
 
                              AVPacket *avpkt)
 
@@ -7335,8 +7335,8 @@ badframe:
 
         get_bits1_vector(gb, sbr->data[0].bs_add_harmonic, sbr->n[1]);
 
-}","","","","","","","",""
-"41","id_274_label_True_qemu.c","1","static void musb_rx_req(MUSBState *s, int epnum)
+}",1,1,1,1,1,1,Equal,"Cả hai demo đều có ngữ nghĩa an ninh tương đồng: Demo A (cùng sink [bitwise_arithmetic, io_network_transport]; cùng guard [error_handling_guard]; biến chung (failed, n)); Demo B (cùng sink [bitwise_arithmetic, io_network_transport]; cùng guard [numerical_bounds_check]; biến chung (data, n))."
+41,id_274_label_True_qemu.c,1,"static void musb_rx_req(MUSBState *s, int epnum)
 
 {
 
@@ -7592,8 +7592,8 @@ badframe:
 
     return 0;
 
-}","","","","","","","",""
-"42","id_670_label_True_qemu.c","1","static void pc_dimm_check_memdev_is_busy(Object *obj, const char *name,
+}",1,0,0,1,0,1,B,"Demo B liên quan an ninh hơn (cùng sink [bitwise_arithmetic]; cùng guard [error_handling_guard]); trong khi Demo A (cùng sink [bitwise_arithmetic, io_network_transport])."
+42,id_670_label_True_qemu.c,1,"static void pc_dimm_check_memdev_is_busy(Object *obj, const char *name,
 
                                       Object *val, Error **errp)
 
@@ -7703,8 +7703,8 @@ badframe:
 
     aio_context_release(aio_context);
 
-}","","","","","","","",""
-"43","id_137_label_False_FFmpeg.c","0","void ff_put_h264_qpel16_mc31_msa(uint8_t *dst, const uint8_t *src,
+}",1,1,0,0,1,1,Equal,"Cả hai demo đều có ngữ nghĩa an ninh tương đồng: Demo A (cùng sink [io_network_transport]; biến chung (Object, obj)); Demo B (cùng guard [error_handling_guard]; biến chung (Error, error_setg))."
+43,id_137_label_False_FFmpeg.c,0,"void ff_put_h264_qpel16_mc31_msa(uint8_t *dst, const uint8_t *src,
 
                                  ptrdiff_t stride)
 
@@ -7824,8 +7824,8 @@ badframe:
 
     memory_region_notify_one(n, &entry);
 
-}","","","","","","","",""
-"44","id_88_label_True_qemu.c","1","static void tricore_cpu_initfn(Object *obj)
+}",0,0,0,0,0,0,Neither,Cả hai demo đều ít liên quan đến cơ chế an ninh của hàm mục tiêu.
+44,id_88_label_True_qemu.c,1,"static void tricore_cpu_initfn(Object *obj)
 
 {
 
@@ -7925,8 +7925,8 @@ badframe:
 
     cpu_exec_initfn(cpu);
 
-}","","","","","","","",""
-"45","id_498_label_False_qemu.c","0","static void cpu_ioreq_pio(ioreq_t *req)
+}",1,1,1,1,1,1,Equal,"Cả hai demo đều có ngữ nghĩa an ninh tương đồng: Demo A (cùng sink [bitwise_arithmetic, pointer_dereference]; cùng guard [numerical_bounds_check]; biến chung (CPU, CPUState)); Demo B (cùng sink [bitwise_arithmetic, pointer_dereference]; cùng guard [numerical_bounds_check]; biến chung (CPU, CPUState))."
+45,id_498_label_False_qemu.c,0,"static void cpu_ioreq_pio(ioreq_t *req)
 
 {
 
@@ -8148,8 +8148,8 @@ error:
 
                ""an int64 value or range"");
 
-}","","","","","","","",""
-"46","id_854_label_False_FFmpeg.c","0","static void avc_luma_midh_qrt_and_aver_dst_8w_msa(const uint8_t *src,
+}",1,1,1,1,1,1,Equal,Cả hai demo đều có ngữ nghĩa an ninh tương đồng: Demo A (cùng sink [pointer_dereference]; cùng guard [numerical_bounds_check]; biến chung (data)); Demo B (cùng sink [pointer_dereference]; cùng guard [numerical_bounds_check]; biến chung (data)).
+46,id_854_label_False_FFmpeg.c,0,"static void avc_luma_midh_qrt_and_aver_dst_8w_msa(const uint8_t *src,
 
                                                   int32_t src_stride,
 
@@ -8337,8 +8337,8 @@ error:
 
     memory_region_notify_one(n, &entry);
 
-}","","","","","","","",""
-"47","id_859_label_True_qemu.c","1","static int mp_pacl_removexattr(FsContext *ctx,
+}",0,0,0,0,0,0,Neither,Cả hai demo đều ít liên quan đến cơ chế an ninh của hàm mục tiêu.
+47,id_859_label_True_qemu.c,1,"static int mp_pacl_removexattr(FsContext *ctx,
 
                                const char *path, const char *name)
 
@@ -8468,8 +8468,8 @@ error:
 
     return child;
 
-}","","","","","","","",""
-"48","id_166_label_False_qemu.c","0","static int create_ppc_opcodes (CPUPPCState *env, ppc_def_t *def)
+}",1,1,0,0,1,1,A,"Demo A liên quan an ninh hơn (cùng sink [bitwise_arithmetic]; biến chung (is, t)); trong khi Demo B (cùng guard [error_handling_guard]; biến chung (name, ret))."
+48,id_166_label_False_qemu.c,0,"static int create_ppc_opcodes (CPUPPCState *env, ppc_def_t *def)
 
 {
 
@@ -8765,8 +8765,8 @@ error:
 
             offse
 
-/* ... [Cắt gọn do vượt quá 1800 ký tự] */","","","","","","","",""
-"49","id_257_label_True_qemu.c","1","static void parse_type_bool(Visitor *v, const char *name, bool *obj,
+/* ... [Cắt gọn do vượt quá 1800 ký tự] */",1,1,1,1,1,1,Equal,"Cả hai demo đều có ngữ nghĩa an ninh tương đồng: Demo A (cùng sink [bitwise_arithmetic, format_logging]; cùng guard [error_handling_guard, numerical_bounds_check]; biến chung (flags, n)); Demo B (cùng sink [bitwise_arithmetic, format_logging]; cùng guard [error_handling_guard]; biến chung (ERROR, end))."
+49,id_257_label_True_qemu.c,1,"static void parse_type_bool(Visitor *v, const char *name, bool *obj,
 
                             Error **errp)
 
@@ -8932,8 +8932,8 @@ error:
 
     cpu_exec_initfn(cpu);
 
-}","","","","","","","",""
-"50","id_578_label_True_FFmpeg.c","1","static int tta_decode_frame(AVCodecContext *avctx,
+}",1,1,1,1,1,1,A,"Demo A liên quan an ninh hơn (cùng sink [pointer_dereference]; cùng guard [error_handling_guard, null_pointer_check]; biến chung (Error, QERR_INVALID_PARAMETER_TYPE)); trong khi Demo B (cùng sink [bitwise_arithmetic, pointer_dereference]; cùng guard [numerical_bounds_check]; biến chung (obj))."
+50,id_578_label_True_FFmpeg.c,1,"static int tta_decode_frame(AVCodecContext *avctx,
 
         void *data, int *data_size,
 
@@ -9249,4 +9249,4 @@ error:
 
     return fd;
 
-}","","","","","","","",""
+}",1,1,1,1,1,1,B,"Demo B liên quan an ninh hơn (cùng sink [bitwise_arithmetic, io_network_transport]; cùng guard [numerical_bounds_check]; biến chung (break, default)); trong khi Demo A (cùng sink [bitwise_arithmetic, pointer_dereference]; cùng guard [null_pointer_check]; biến chung (do, size))."

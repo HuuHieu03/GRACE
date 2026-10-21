@@ -1,0 +1,9252 @@
+"sample_idx","target_id","target_label","target_code_snippet","demo_A_snippet","demo_B_snippet","sink_match_A","variable_match_A","guard_match_A","sink_match_B","variable_match_B","guard_match_B","better_demo (A/B/Equal/Neither)","evidence_notes"
+"1","id_235_label_False_qemu.c","0","uint32_t lduw_be_phys(target_phys_addr_t addr)
+
+{
+
+    return lduw_phys_internal(addr, DEVICE_BIG_ENDIAN);
+
+}","void sysbus_mmio_map_overlap(SysBusDevice *dev, int n, hwaddr addr,
+
+                             unsigned priority)
+
+{
+
+    sysbus_mmio_map_common(dev, n, addr, true, priority);
+
+}","void OPPROTO op_addw_ESI_T0(void)
+
+{
+
+    ESI = (ESI & ~0xffff) | ((ESI + T0) & 0xffff);
+
+}","","","","","","","",""
+"2","id_75_label_False_qemu.c","0","static void gen_cp0 (CPUState *env, DisasContext *ctx, uint32_t opc, int rt, int rd)
+
+{
+
+    const char *opn = ""ldst"";
+
+
+
+    switch (opc) {
+
+    case OPC_MFC0:
+
+        if (rt == 0) {
+
+            /* Treat as NOP */
+
+            return;
+
+        }
+
+        gen_mfc0(ctx, rd, ctx->opcode & 0x7);
+
+        gen_op_store_T0_gpr(rt);
+
+        opn = ""mfc0"";
+
+        break;
+
+    case OPC_MTC0:
+
+        GEN_LOAD_REG_TN(T0, rt);
+
+        gen_mtc0(ctx, rd, ctx->opcode & 0x7);
+
+        opn = ""mtc0"";
+
+        break;
+
+#ifdef TARGET_MIPS64
+
+    case OPC_DMFC0:
+
+        if (rt == 0) {
+
+            /* Treat as NOP */
+
+            return;
+
+        }
+
+        gen_dmfc0(ctx, rd, ctx->opcode & 0x7);
+
+        gen_op_store_T0_gpr(rt);
+
+        opn = ""dmfc0"";
+
+        break;
+
+    case OPC_DMTC0:
+
+        GEN_LOAD_REG_TN(T0, rt);
+
+        gen_dmtc0(ctx, rd, ctx->opcode & 0x7);
+
+        opn = ""dmtc0"";
+
+        break;
+
+#endif
+
+    case OPC_TLBWI:
+
+        opn = ""tlbwi"";
+
+        if (!env->do_tlbwi)
+
+            goto die;
+
+        gen_op_tlbwi();
+
+        break;
+
+    case OPC_TLBWR:
+
+        opn = ""tlbwr"";
+
+        if (!env->do_tlbwr)
+
+            goto die;
+
+        gen_op_tlbwr();
+
+        break;
+
+    case OPC_TLBP:
+
+        opn = ""tlbp"";
+
+        if (!env->do_tlbp)
+
+            goto die;
+
+        gen_op_tlbp();
+
+        break;
+
+    case OPC_TLBR:
+
+        opn = ""tlbr"";
+
+        if (!env->do_tlbr)
+
+            goto die;
+
+        gen_op_tlbr();
+
+        break;
+
+    case OPC_ERET:
+
+        opn = ""eret"";
+
+        save_cpu_state(ctx, 0);
+
+        gen_op_eret();
+
+        ctx->bstate = BS_EXCP;
+
+        break;
+
+    case OPC_DERET:
+
+        opn = ""deret"";
+
+        if (!(ctx->hflags & MIPS_HFLAG_DM)) {
+
+            MIPS_INVAL(opn);
+
+            generate_exception(ctx, EXCP_RI);
+
+        } else {
+
+            save_cpu_state(ctx, 0);
+
+            gen_op_deret();
+
+            ctx->bstate = BS_EXCP;
+
+        }
+
+        break;
+
+    case OPC_WAIT:
+
+        opn = ""wait"";
+
+        /* If we get an exception, we want to restart at next instruction */
+
+        ctx->pc += 4;
+
+        save_cpu_state(ctx, 1);
+
+        ctx->pc -= 4;
+
+        gen_op_wait();
+
+        ctx->bstate = BS_EXCP;
+
+        break;
+
+    default:
+
+ die:
+
+        MIPS_INVAL(opn);
+
+        generate_exception(ctx, EXCP_RI);
+
+        return;
+
+    }
+
+    MIPS_DEBUG(""%s %s %d"", opn, regnames[rt], rd);
+
+}","static void lsi_command_complete(SCSIRequest *req, uint32_t status, size_t resid)
+
+{
+
+    LSIState *s = DO_UPCAST(LSIState, dev.qdev, req->bus->qbus.parent);
+
+    int out;
+
+
+
+    out = (s->sstat1 & PHASE_MASK) == PHASE_DO;
+
+    DPRINTF(""Command complete status=%d\n"", (int)status);
+
+    s->status = status;
+
+    s->command_complete = 2;
+
+    if (s->waiting && s->dbc != 0) {
+
+        /* Raise phase mismatch for short transfers.  */
+
+        lsi_bad_phase(s, out, PHASE_ST);
+
+    } else {
+
+        lsi_set_phase(s, PHASE_ST);
+
+    }
+
+
+
+    if (s->current && req == s->current->req) {
+
+        req->hba_private = NULL;
+
+        lsi_request_free(s, s->current);
+
+        scsi_req_unref(req);
+
+    }
+
+    lsi_resume_script(s);
+
+}","static void do_interrupt_protected(int intno, int is_int, int error_code,
+
+                                   unsigned int next_eip)
+
+{
+
+    SegmentCache *dt;
+
+    uint8_t *ptr, *ssp;
+
+    int type, dpl, selector, ss_dpl;
+
+    int has_error_code, new_stack, shift;
+
+    uint32_t e1, e2, offset, ss, esp, ss_e1, ss_e2, push_size;
+
+    uint32_t old_cs, old_ss, old_esp, old_eip;
+
+
+
+    dt = &env->idt;
+
+    if (intno * 8 + 7 > dt->limit)
+
+        raise_exception_err(EXCP0D_GPF, intno * 8 + 2);
+
+    ptr = dt->base + intno * 8;
+
+    e1 = ldl(ptr);
+
+    e2 = ldl(ptr + 4);
+
+    /* check gate type */
+
+    type = (e2 >> DESC_TYPE_SHIFT) & 0x1f;
+
+    switch(type) {
+
+    case 5: /* task gate */
+
+        cpu_abort(env, ""task gate not supported"");
+
+        break;
+
+    case 6: /* 286 interrupt gate */
+
+    case 7: /* 286 trap gate */
+
+    case 14: /* 386 interrupt gate */
+
+    case 15: /* 386 trap gate */
+
+        break;
+
+    default:
+
+        raise_exception_err(EXCP0D_GPF, intno * 8 + 2);
+
+        break;
+
+    }
+
+    dpl = (e2 >> DESC_DPL_SHIFT) & 3;
+
+    /* check privledge if software int */
+
+    if (is_int && dpl < env->cpl)
+
+        raise_exception_err(EXCP0D_GPF, intno * 8 + 2);
+
+    /* check valid bit */
+
+    if (!(e2 & DESC_P_MASK))
+
+        raise_exception_err(EXCP0B_NOSEG, intno * 8 + 2);
+
+    selector = e1 >> 16;
+
+    offset = (e2 & 0xffff0000) | (e1 & 0x0000ffff);
+
+    if ((selector & 0xfffc) == 0)
+
+        raise_exception_err(EXCP0D_GPF, 0);
+
+
+
+    if (load_segment(&e1, &e2, selector) != 0)
+
+        raise_exception_err(EXCP0D_GPF, selector & 0xfffc);
+
+    if (!(e2 & DESC_S_MASK) || !(e2 & (DESC_CS_MASK)))
+
+        raise_exception_err(EXCP0D_GPF, selector & 0xfffc);
+
+    dpl = (e2 >> DESC_DPL_SHIFT) & 3;
+
+    if (dpl > env->cpl)
+
+        raise_exception_err(EXCP0D_GPF, select
+
+/* ... [Cắt gọn do vượt quá 1800 ký tự] */","","","","","","","",""
+"3","id_396_label_True_qemu.c","1","static bool bdrv_drain_recurse(BlockDriverState *bs, bool begin)
+
+{
+
+    BdrvChild *child, *tmp;
+
+    bool waited;
+
+
+
+    /* Ensure any pending metadata writes are submitted to bs->file.  */
+
+    bdrv_drain_invoke(bs, begin);
+
+
+
+    /* Wait for drained requests to finish */
+
+    waited = BDRV_POLL_WHILE(bs, atomic_read(&bs->in_flight) > 0);
+
+
+
+    QLIST_FOREACH_SAFE(child, &bs->children, next, tmp) {
+
+        BlockDriverState *bs = child->bs;
+
+        bool in_main_loop =
+
+            qemu_get_current_aio_context() == qemu_get_aio_context();
+
+        assert(bs->refcnt > 0);
+
+        if (in_main_loop) {
+
+            /* In case the recursive bdrv_drain_recurse processes a
+
+             * block_job_defer_to_main_loop BH and modifies the graph,
+
+             * let's hold a reference to bs until we are done.
+
+             *
+
+             * IOThread doesn't have such a BH, and it is not safe to call
+
+             * bdrv_unref without BQL, so skip doing it there.
+
+             */
+
+            bdrv_ref(bs);
+
+        }
+
+        waited |= bdrv_drain_recurse(bs, begin);
+
+        if (in_main_loop) {
+
+            bdrv_unref(bs);
+
+        }
+
+    }
+
+
+
+    return waited;
+
+}","static void cpu_common_initfn(Object *obj)
+
+{
+
+    CPUState *cpu = CPU(obj);
+
+    CPUClass *cc = CPU_GET_CLASS(obj);
+
+
+
+    cpu->cpu_index = UNASSIGNED_CPU_INDEX;
+
+    cpu->gdb_num_regs = cpu->gdb_num_g_regs = cc->gdb_num_core_regs;
+
+    /* *-user doesn't have configurable SMP topology */
+
+    /* the default value is changed by qemu_init_vcpu() for softmmu */
+
+    cpu->nr_cores = 1;
+
+    cpu->nr_threads = 1;
+
+
+
+    qemu_mutex_init(&cpu->work_mutex);
+
+    QTAILQ_INIT(&cpu->breakpoints);
+
+    QTAILQ_INIT(&cpu->watchpoints);
+
+
+
+    cpu->trace_dstate = bitmap_new(trace_get_vcpu_event_count());
+
+
+
+    cpu_exec_initfn(cpu);
+
+}","static int qcow_read_extensions(BlockDriverState *bs, uint64_t start_offset,
+
+                                uint64_t end_offset)
+
+{
+
+    BDRVQcowState *s = bs->opaque;
+
+    QCowExtension ext;
+
+    uint64_t offset;
+
+
+
+#ifdef DEBUG_EXT
+
+    printf(""qcow_read_extensions: start=%ld end=%ld\n"", start_offset, end_offset);
+
+#endif
+
+    offset = start_offset;
+
+    while (offset < end_offset) {
+
+
+
+#ifdef DEBUG_EXT
+
+        /* Sanity check */
+
+        if (offset > s->cluster_size)
+
+            printf(""qcow_handle_extension: suspicious offset %lu\n"", offset);
+
+
+
+        printf(""attemting to read extended header in offset %lu\n"", offset);
+
+#endif
+
+
+
+        if (bdrv_pread(s->hd, offset, &ext, sizeof(ext)) != sizeof(ext)) {
+
+            fprintf(stderr, ""qcow_handle_extension: ERROR: pread fail from offset %llu\n"",
+
+                    (unsigned long long)offset);
+
+            return 1;
+
+        }
+
+        be32_to_cpus(&ext.magic);
+
+        be32_to_cpus(&ext.len);
+
+        offset += sizeof(ext);
+
+#ifdef DEBUG_EXT
+
+        printf(""ext.magic = 0x%x\n"", ext.magic);
+
+#endif
+
+        switch (ext.magic) {
+
+        case QCOW_EXT_MAGIC_END:
+
+            return 0;
+
+
+
+        case QCOW_EXT_MAGIC_BACKING_FORMAT:
+
+            if (ext.len >= sizeof(bs->backing_format)) {
+
+                fprintf(stderr, ""ERROR: ext_backing_format: len=%u too large""
+
+                        "" (>=%zu)\n"",
+
+                        ext.len, sizeof(bs->backing_format));
+
+                return 2;
+
+            }
+
+            if (bdrv_pread(s->hd, offset , bs->backing_format,
+
+                           ext.len) != ext.len)
+
+                return 3;
+
+            bs->backing_format[ext.len] = '\0';
+
+#ifdef DEBUG_EXT
+
+            printf(""Qcow2: Got format extension %s\n"", bs->backing_format);
+
+#endif
+
+            offse
+
+/* ... [Cắt gọn do vượt quá 1800 ký tự] */","","","","","","","",""
+"4","id_747_label_True_FFmpeg.c","1","void avcodec_align_dimensions2(AVCodecContext *s, int *width, int *height, int linesize_align[4]){
+
+    int w_align= 1;
+
+    int h_align= 1;
+
+
+
+    switch(s->pix_fmt){
+
+    case PIX_FMT_YUV420P:
+
+    case PIX_FMT_YUYV422:
+
+    case PIX_FMT_UYVY422:
+
+    case PIX_FMT_YUV422P:
+
+    case PIX_FMT_YUV440P:
+
+    case PIX_FMT_YUV444P:
+
+    case PIX_FMT_GRAY8:
+
+    case PIX_FMT_GRAY16BE:
+
+    case PIX_FMT_GRAY16LE:
+
+    case PIX_FMT_YUVJ420P:
+
+    case PIX_FMT_YUVJ422P:
+
+    case PIX_FMT_YUVJ440P:
+
+    case PIX_FMT_YUVJ444P:
+
+    case PIX_FMT_YUVA420P:
+
+    case PIX_FMT_YUV420P9LE:
+
+    case PIX_FMT_YUV420P9BE:
+
+    case PIX_FMT_YUV420P10LE:
+
+    case PIX_FMT_YUV420P10BE:
+
+    case PIX_FMT_YUV422P10LE:
+
+    case PIX_FMT_YUV422P10BE:
+
+
+
+
+
+        w_align= 16; //FIXME check for non mpeg style codecs and use less alignment
+
+        h_align= 16;
+
+        if(s->codec_id == CODEC_ID_MPEG2VIDEO || s->codec_id == CODEC_ID_MJPEG || s->codec_id == CODEC_ID_AMV || s->codec_id == CODEC_ID_THP || s->codec_id == CODEC_ID_H264)
+
+            h_align= 32; // interlaced is rounded up to 2 MBs
+
+        break;
+
+    case PIX_FMT_YUV411P:
+
+    case PIX_FMT_UYYVYY411:
+
+        w_align=32;
+
+        h_align=8;
+
+        break;
+
+    case PIX_FMT_YUV410P:
+
+        if(s->codec_id == CODEC_ID_SVQ1){
+
+            w_align=64;
+
+            h_align=64;
+
+        }
+
+    case PIX_FMT_RGB555:
+
+        if(s->codec_id == CODEC_ID_RPZA){
+
+            w_align=4;
+
+            h_align=4;
+
+        }
+
+    case PIX_FMT_PAL8:
+
+    case PIX_FMT_BGR8:
+
+    case PIX_FMT_RGB8:
+
+        if(s->codec_id == CODEC_ID_SMC){
+
+            w_align=4;
+
+            h_align=4;
+
+        }
+
+        break;
+
+    case PIX_FMT_BGR24:
+
+        if((s->codec_id == CODEC_ID_MSZH) || (s->codec_id == CODEC_ID_ZLIB)){
+
+            w_align=4;
+
+            h_align=4;
+
+        }
+
+        break;
+
+    default:
+
+        w_align= 1;
+
+        h_align= 1;
+
+        break;
+
+    }
+
+
+
+    *width = FFALIGN(*width , w_align);
+
+    *height= FFALIGN(*height, h_align);
+
+    if(s->codec_id == CODEC_ID_H264 || s->lowres)
+
+        *height+=2; // some of the optimized chroma MC reads one line too much
+
+                    // which is also done in mpeg decoders with lowres > 0
+
+
+
+    linesize_align[0] =
+
+    linesize_align[1] =
+
+    linesize_align[2] =
+
+    linesize_align[3] = STRIDE_ALIGN;
+
+//STRIDE_ALIGN is 8 for SSE* but this does not work for SVQ1 chroma planes
+
+//we could change STRIDE_ALIGN to 16 for x86/sse but it would increase the
+
+//picture size unneccessarily in some cases. The solution here is not
+
+//pretty and better ideas are welcome!
+
+#if HAVE_MMX
+
+    if(s->codec_id == CODEC_ID_SVQ1 || s->codec_id == CODEC_ID_VP5 ||
+
+       s->codec_id == CODEC_ID_VP6 || s->codec_id == CODEC_ID_VP6F ||
+
+       s->codec_id == CODEC_ID_VP6A) {
+
+        linesize_align[0] =
+
+        linesize_align[1] =
+
+        linesize_align[2] = 16;
+
+    }
+
+#endif
+
+}","static void connex_init(ram_addr_t ram_size, int vga_ram_size,
+
+                const char *boot_device,
+
+                const char *kernel_filename, const char *kernel_cmdline,
+
+                const char *initrd_filename, const char *cpu_model)
+
+{
+
+    struct pxa2xx_state_s *cpu;
+
+    int index;
+
+
+
+    uint32_t connex_rom = 0x01000000;
+
+    uint32_t connex_ram = 0x04000000;
+
+
+
+    if (ram_size < (connex_ram + connex_rom + PXA2XX_INTERNAL_SIZE)) {
+
+        fprintf(stderr, ""This platform requires %i bytes of memory\n"",
+
+                connex_ram + connex_rom + PXA2XX_INTERNAL_SIZE);
+
+        exit(1);
+
+    }
+
+
+
+    cpu = pxa255_init(connex_ram);
+
+
+
+    index = drive_get_index(IF_PFLASH, 0, 0);
+
+    if (index == -1) {
+
+        fprintf(stderr, ""A flash image must be given with the ""
+
+                ""'pflash' parameter\n"");
+
+        exit(1);
+
+    }
+
+
+
+    if (!pflash_cfi01_register(0x00000000, qemu_ram_alloc(connex_rom),
+
+            drives_table[index].bdrv, sector_len, connex_rom / sector_len,
+
+            2, 0, 0, 0, 0)) {
+
+        fprintf(stderr, ""qemu: Error registering flash memory.\n"");
+
+        exit(1);
+
+    }
+
+
+
+    cpu->env->regs[15] = 0x00000000;
+
+
+
+    /* Interrupt line of NIC is connected to GPIO line 36 */
+
+    smc91c111_init(&nd_table[0], 0x04000300,
+
+                    pxa2xx_gpio_in_get(cpu->gpio)[36]);
+
+}","static void read_sbr_single_channel_element(AACContext *ac,
+
+                                            SpectralBandReplication *sbr,
+
+                                            GetBitContext *gb)
+
+{
+
+    if (get_bits1(gb)) // bs_data_extra
+
+        skip_bits(gb, 4); // bs_reserved
+
+
+
+    read_sbr_grid(ac, sbr, gb, &sbr->data[0]);
+
+    read_sbr_dtdf(sbr, gb, &sbr->data[0]);
+
+    read_sbr_invf(sbr, gb, &sbr->data[0]);
+
+    read_sbr_envelope(sbr, gb, &sbr->data[0], 0);
+
+    read_sbr_noise(sbr, gb, &sbr->data[0], 0);
+
+
+
+    if ((sbr->data[0].bs_add_harmonic_flag = get_bits1(gb)))
+
+        get_bits1_vector(gb, sbr->data[0].bs_add_harmonic, sbr->n[1]);
+
+}","","","","","","","",""
+"5","id_521_label_True_qemu.c","1","static int bdrv_rd_badreq_sectors(BlockDriverState *bs,
+
+                                  int64_t sector_num, int nb_sectors)
+
+{
+
+    return
+
+        nb_sectors < 0 ||
+
+        sector_num < 0 ||
+
+        nb_sectors > bs->total_sectors ||
+
+        sector_num > bs->total_sectors - nb_sectors;
+
+}","static int sh_pci_host_init(PCIDevice *d)
+
+{
+
+    pci_config_set_vendor_id(d->config, PCI_VENDOR_ID_HITACHI);
+
+    pci_config_set_device_id(d->config, PCI_DEVICE_ID_HITACHI_SH7751R);
+
+    pci_set_word(d->config + PCI_COMMAND, PCI_COMMAND_WAIT);
+
+    pci_set_word(d->config + PCI_STATUS, PCI_STATUS_CAP_LIST |
+
+                 PCI_STATUS_FAST_BACK | PCI_STATUS_DEVSEL_MEDIUM);
+
+    return 0;
+
+}","static void cpu_common_initfn(Object *obj)
+
+{
+
+    CPUState *cpu = CPU(obj);
+
+    CPUClass *cc = CPU_GET_CLASS(obj);
+
+
+
+    cpu->cpu_index = UNASSIGNED_CPU_INDEX;
+
+    cpu->gdb_num_regs = cpu->gdb_num_g_regs = cc->gdb_num_core_regs;
+
+    /* *-user doesn't have configurable SMP topology */
+
+    /* the default value is changed by qemu_init_vcpu() for softmmu */
+
+    cpu->nr_cores = 1;
+
+    cpu->nr_threads = 1;
+
+
+
+    qemu_mutex_init(&cpu->work_mutex);
+
+    QTAILQ_INIT(&cpu->breakpoints);
+
+    QTAILQ_INIT(&cpu->watchpoints);
+
+
+
+    cpu->trace_dstate = bitmap_new(trace_get_vcpu_event_count());
+
+
+
+    cpu_exec_initfn(cpu);
+
+}","","","","","","","",""
+"6","id_298_label_False_qemu.c","0","static void timerlist_rearm(QEMUTimerList *timer_list)
+
+{
+
+    /* Interrupt execution to force deadline recalculation.  */
+
+    if (timer_list->clock->type == QEMU_CLOCK_VIRTUAL) {
+
+        qemu_start_warp_timer();
+
+    }
+
+    timerlist_notify(timer_list);
+
+}","void virtio_queue_notify(VirtIODevice *vdev, int n)
+
+{
+
+    if (n < VIRTIO_PCI_QUEUE_MAX && vdev->vq[n].vring.desc) {
+
+        trace_virtio_queue_notify(vdev, n, &vdev->vq[n]);
+
+        vdev->vq[n].handle_output(vdev, &vdev->vq[n]);
+
+    }
+
+}","static void spapr_phb_vfio_instance_init(Object *obj)
+
+{
+
+    error_report(""spapr-pci-vfio-host-bridge is deprecated"");
+
+}","","","","","","","",""
+"7","id_143_label_True_qemu.c","1","struct vhost_net *vhost_net_init(VLANClientState *backend, int devfd,
+
+                                 bool force)
+
+{
+
+
+    return NULL;
+
+}","static void bdrv_sync_complete(void *opaque, int ret)
+
+{
+
+    /* do nothing. Masters do not directly interact with the backing store,
+
+     * only the working copy so no mutexing required.
+
+     */
+
+}","int socket_dgram(SocketAddress *remote, SocketAddress *local, Error **errp)
+
+{
+
+    QemuOpts *opts;
+
+    int fd;
+
+
+
+    opts = qemu_opts_create_nofail(&socket_optslist);
+
+    switch (remote->kind) {
+
+    case SOCKET_ADDRESS_KIND_INET:
+
+        qemu_opt_set(opts, ""host"", remote->inet->host);
+
+        qemu_opt_set(opts, ""port"", remote->inet->port);
+
+        if (local) {
+
+            qemu_opt_set(opts, ""localaddr"", local->inet->host);
+
+            qemu_opt_set(opts, ""localport"", local->inet->port);
+
+        }
+
+        fd = inet_dgram_opts(opts, errp);
+
+        break;
+
+
+
+    default:
+
+        error_setg(errp, ""socket type unsupported for datagram"");
+
+        return -1;
+
+    }
+
+    qemu_opts_del(opts);
+
+    return fd;
+
+}","","","","","","","",""
+"8","id_705_label_True_qemu.c","1","static int inet_connect_addr(struct addrinfo *addr, bool block,
+
+                             bool *in_progress)
+
+{
+
+    int sock, rc;
+
+
+
+    if (in_progress) {
+
+        *in_progress = false;
+
+    }
+
+
+
+    sock = qemu_socket(addr->ai_family, addr->ai_socktype, addr->ai_protocol);
+
+    if (sock < 0) {
+
+        fprintf(stderr, ""%s: socket(%s): %s\n"", __func__,
+
+                inet_strfamily(addr->ai_family), strerror(errno));
+
+        return -1;
+
+    }
+
+    setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on));
+
+    if (!block) {
+
+        socket_set_nonblock(sock);
+
+    }
+
+    /* connect to peer */
+
+    do {
+
+        rc = 0;
+
+        if (connect(sock, addr->ai_addr, addr->ai_addrlen) < 0) {
+
+            rc = -socket_error();
+
+        }
+
+    } while (rc == -EINTR);
+
+
+
+    if (!block && QEMU_SOCKET_RC_INPROGRESS(rc)) {
+
+        if (in_progress) {
+
+            *in_progress = true;
+
+        }
+
+    } else if (rc < 0) {
+
+        closesocket(sock);
+
+        return -1;
+
+    }
+
+    return sock;
+
+}","BdrvChild *bdrv_root_attach_child(BlockDriverState *child_bs,
+
+                                  const char *child_name,
+
+                                  const BdrvChildRole *child_role,
+
+                                  uint64_t perm, uint64_t shared_perm,
+
+                                  void *opaque, Error **errp)
+
+{
+
+    BdrvChild *child;
+
+    int ret;
+
+
+
+    ret = bdrv_check_update_perm(child_bs, perm, shared_perm, NULL, errp);
+
+    if (ret < 0) {
+
+        return NULL;
+
+    }
+
+
+
+    child = g_new(BdrvChild, 1);
+
+    *child = (BdrvChild) {
+
+        .bs             = NULL,
+
+        .name           = g_strdup(child_name),
+
+        .role           = child_role,
+
+        .perm           = perm,
+
+        .shared_perm    = shared_perm,
+
+        .opaque         = opaque,
+
+    };
+
+
+
+    bdrv_replace_child(child, child_bs);
+
+
+
+    return child;
+
+}","int socket_dgram(SocketAddress *remote, SocketAddress *local, Error **errp)
+
+{
+
+    QemuOpts *opts;
+
+    int fd;
+
+
+
+    opts = qemu_opts_create_nofail(&socket_optslist);
+
+    switch (remote->kind) {
+
+    case SOCKET_ADDRESS_KIND_INET:
+
+        qemu_opt_set(opts, ""host"", remote->inet->host);
+
+        qemu_opt_set(opts, ""port"", remote->inet->port);
+
+        if (local) {
+
+            qemu_opt_set(opts, ""localaddr"", local->inet->host);
+
+            qemu_opt_set(opts, ""localport"", local->inet->port);
+
+        }
+
+        fd = inet_dgram_opts(opts, errp);
+
+        break;
+
+
+
+    default:
+
+        error_setg(errp, ""socket type unsupported for datagram"");
+
+        return -1;
+
+    }
+
+    qemu_opts_del(opts);
+
+    return fd;
+
+}","","","","","","","",""
+"9","id_863_label_True_FFmpeg.c","1","static av_cold OMXContext *omx_init(void *logctx, const char *libname, const char *prefix)
+
+{
+
+    static const char * const libnames[] = {
+
+        ""libOMX_Core.so"",
+
+        ""libOmxCore.so"",
+
+        NULL
+
+    };
+
+    const char* const* nameptr;
+
+    int ret = AVERROR_ENCODER_NOT_FOUND;
+
+    OMXContext *omx_context;
+
+
+
+    omx_context = av_mallocz(sizeof(*omx_context));
+
+    if (!omx_context)
+
+        return NULL;
+
+    if (libname) {
+
+        ret = omx_try_load(omx_context, logctx, libname, prefix);
+
+        if (ret < 0) {
+
+            av_free(omx_context);
+
+            return NULL;
+
+        }
+
+    } else {
+
+        for (nameptr = libnames; *nameptr; nameptr++)
+
+            if (!(ret = omx_try_load(omx_context, logctx, *nameptr, prefix)))
+
+                break;
+
+        if (!*nameptr) {
+
+            av_free(omx_context);
+
+            return NULL;
+
+        }
+
+    }
+
+
+
+    omx_context->ptr_Init();
+
+    return omx_context;
+
+}","int socket_dgram(SocketAddress *remote, SocketAddress *local, Error **errp)
+
+{
+
+    QemuOpts *opts;
+
+    int fd;
+
+
+
+    opts = qemu_opts_create_nofail(&socket_optslist);
+
+    switch (remote->kind) {
+
+    case SOCKET_ADDRESS_KIND_INET:
+
+        qemu_opt_set(opts, ""host"", remote->inet->host);
+
+        qemu_opt_set(opts, ""port"", remote->inet->port);
+
+        if (local) {
+
+            qemu_opt_set(opts, ""localaddr"", local->inet->host);
+
+            qemu_opt_set(opts, ""localport"", local->inet->port);
+
+        }
+
+        fd = inet_dgram_opts(opts, errp);
+
+        break;
+
+
+
+    default:
+
+        error_setg(errp, ""socket type unsupported for datagram"");
+
+        return -1;
+
+    }
+
+    qemu_opts_del(opts);
+
+    return fd;
+
+}","static int tpm_passthrough_test_tpmdev(int fd)
+
+{
+
+    struct tpm_req_hdr req = {
+
+        .tag = cpu_to_be16(TPM_TAG_RQU_COMMAND),
+
+        .len = cpu_to_be32(sizeof(req)),
+
+        .ordinal = cpu_to_be32(TPM_ORD_GetTicks),
+
+    };
+
+    struct tpm_resp_hdr *resp;
+
+    fd_set readfds;
+
+    int n;
+
+    struct timeval tv = {
+
+        .tv_sec = 1,
+
+        .tv_usec = 0,
+
+    };
+
+    unsigned char buf[1024];
+
+
+
+    n = write(fd, &req, sizeof(req));
+
+    if (n < 0) {
+
+        return errno;
+
+    }
+
+    if (n != sizeof(req)) {
+
+        return EFAULT;
+
+    }
+
+
+
+    FD_ZERO(&readfds);
+
+    FD_SET(fd, &readfds);
+
+
+
+    /* wait for a second */
+
+    n = select(fd + 1, &readfds, NULL, NULL, &tv);
+
+    if (n != 1) {
+
+        return errno;
+
+    }
+
+
+
+    n = read(fd, &buf, sizeof(buf));
+
+    if (n < sizeof(struct tpm_resp_hdr)) {
+
+        return EFAULT;
+
+    }
+
+
+
+    resp = (struct tpm_resp_hdr *)buf;
+
+    /* check the header */
+
+    if (be16_to_cpu(resp->tag) != TPM_TAG_RSP_COMMAND ||
+
+        be32_to_cpu(resp->len) != n) {
+
+        return EBADMSG;
+
+    }
+
+
+
+    return 0;
+
+}","","","","","","","",""
+"10","id_782_label_True_qemu.c","1","static void vvfat_close(BlockDriverState *bs)
+
+{
+
+    BDRVVVFATState *s = bs->opaque;
+
+
+
+    vvfat_close_current_file(s);
+
+    array_free(&(s->fat));
+
+    array_free(&(s->directory));
+
+    array_free(&(s->mapping));
+
+    if(s->cluster_buffer)
+
+        free(s->cluster_buffer);
+
+}","static void curl_multi_read(void *arg)
+
+{
+
+    CURLState *s = (CURLState *)arg;
+
+
+
+    aio_context_acquire(s->s->aio_context);
+
+    curl_multi_do_locked(s);
+
+    curl_multi_check_completion(s->s);
+
+    aio_context_release(s->s->aio_context);
+
+}","static void cpu_common_initfn(Object *obj)
+
+{
+
+    CPUState *cpu = CPU(obj);
+
+    CPUClass *cc = CPU_GET_CLASS(obj);
+
+
+
+    cpu->cpu_index = UNASSIGNED_CPU_INDEX;
+
+    cpu->gdb_num_regs = cpu->gdb_num_g_regs = cc->gdb_num_core_regs;
+
+    /* *-user doesn't have configurable SMP topology */
+
+    /* the default value is changed by qemu_init_vcpu() for softmmu */
+
+    cpu->nr_cores = 1;
+
+    cpu->nr_threads = 1;
+
+
+
+    qemu_mutex_init(&cpu->work_mutex);
+
+    QTAILQ_INIT(&cpu->breakpoints);
+
+    QTAILQ_INIT(&cpu->watchpoints);
+
+
+
+    cpu->trace_dstate = bitmap_new(trace_get_vcpu_event_count());
+
+
+
+    cpu_exec_initfn(cpu);
+
+}","","","","","","","",""
+"11","id_395_label_True_FFmpeg.c","1","static int fourxm_read_packet(AVFormatContext *s,
+
+                              AVPacket *pkt)
+
+{
+
+    FourxmDemuxContext *fourxm = s->priv_data;
+
+    ByteIOContext *pb = &s->pb;
+
+    unsigned int fourcc_tag;
+
+    unsigned int size, out_size;
+
+    int ret = 0;
+
+    int track_number;
+
+    int packet_read = 0;
+
+    unsigned char header[8];
+
+    int64_t pts_inc;
+
+    int audio_frame_count;
+
+
+
+    while (!packet_read) {
+
+
+
+        if ((ret = get_buffer(&s->pb, header, 8)) < 0)
+
+            return ret;
+
+        fourcc_tag = LE_32(&header[0]);
+
+        size = LE_32(&header[4]);
+
+        if (url_feof(pb))
+
+            return AVERROR_IO;
+
+        switch (fourcc_tag) {
+
+
+
+        case LIST_TAG:
+
+            /* this is a good time to bump the video pts */
+
+            fourxm->video_pts += fourxm->video_pts_inc;
+
+
+
+            /* skip the LIST-* tag and move on to the next fourcc */
+
+            get_le32(pb);
+
+            break;
+
+
+
+        case ifrm_TAG:
+
+        case pfrm_TAG:
+
+        case cfrm_TAG:{
+
+
+
+            /* allocate 8 more bytes than 'size' to account for fourcc
+
+             * and size */
+
+            if (av_new_packet(pkt, size + 8))
+
+                return AVERROR_IO;
+
+            pkt->stream_index = fourxm->video_stream_index;
+
+            pkt->pts = fourxm->video_pts;
+
+            memcpy(pkt->data, header, 8);
+
+            ret = get_buffer(&s->pb, &pkt->data[8], size);
+
+
+
+            if (ret < 0)
+
+                av_free_packet(pkt);
+
+            else
+
+                packet_read = 1;
+
+            break;
+
+        }
+
+
+
+        case snd__TAG:
+
+            track_number = get_le32(pb);
+
+            out_size= get_le32(pb);
+
+            size-=8;
+
+
+
+            if (track_number == fourxm->selected_track) {
+
+                if (av_new_packet(pkt, size))
+
+                    return AVERROR_IO;
+
+                pkt->stream_index = 
+
+                    fourxm->tracks[fourxm->selected_track].stream_index;
+
+                pkt->pts = fourxm->audio_pts;
+
+                ret = get_buffer(&s->pb, pkt->data, size);
+
+                if (ret < 0)
+
+                    av_free_packet(pkt);
+
+                else
+
+                    packet_read = 1;
+
+
+
+                /* pts accounting */
+
+                audio_frame_count = size;
+
+                if (fourxm->tracks[fourxm->selected_track].adpcm)
+
+                    audio_frame_count -= 
+
+                        2 * (fourxm->tracks[fourxm->selected_track].channels);
+
+                audio_frame_count /=
+
+                      fourxm->tracks[fourxm->selected_track].channels;
+
+                if (fourxm->tracks[fourxm->selected_track].adpcm)
+
+                    audio_frame_count *= 2;
+
+                else 
+
+                    audio_frame_count /=
+
+                    (fourxm->tracks[fourxm->selected_track].bits / 8);
+
+                pts_inc = audio_frame_count;
+
+                pts_inc *= 90000;
+
+                pts_inc /= fourxm->tracks[fourxm->selected_track].sample_rate;
+
+                fourxm->audio_p
+
+/* ... [Cắt gọn do vượt quá 3000 ký tự] */","static int decode_wdlt(GetByteContext *gb, uint8_t *frame, int width, int height)
+
+{
+
+    const uint8_t *frame_end   = frame + width * height;
+
+    uint8_t *line_ptr;
+
+    int count, i, v, lines, segments;
+
+
+
+    lines = bytestream2_get_le16(gb);
+
+    if (lines > height)
+
+        return -1;
+
+
+
+    while (lines--) {
+
+        if (bytestream2_get_bytes_left(gb) < 2)
+
+            return -1;
+
+        segments = bytestream2_get_le16u(gb);
+
+        while ((segments & 0xC000) == 0xC000) {
+
+            unsigned delta = -((int16_t)segments * width);
+
+            if (frame_end - frame <= delta)
+
+                return -1;
+
+            frame    += delta;
+
+            segments = bytestream2_get_le16(gb);
+
+        }
+
+        if (segments & 0x8000) {
+
+            frame[width - 1] = segments & 0xFF;
+
+            segments = bytestream2_get_le16(gb);
+
+        }
+
+        line_ptr = frame;
+
+        frame += width;
+
+        while (segments--) {
+
+            if (frame - line_ptr <= bytestream2_peek_byte(gb))
+
+                return -1;
+
+            line_ptr += bytestream2_get_byte(gb);
+
+            count = (int8_t)bytestream2_get_byte(gb);
+
+            if (count >= 0) {
+
+                if (frame - line_ptr < count * 2)
+
+                    return -1;
+
+                if (bytestream2_get_buffer(gb, line_ptr, count * 2) != count * 2)
+
+                    return -1;
+
+                line_ptr += count * 2;
+
+            } else {
+
+                count = -count;
+
+                if (frame - line_ptr < count * 2)
+
+                    return -1;
+
+                v = bytestream2_get_le16(gb);
+
+                for (i = 0; i < count; i++)
+
+                    bytestream_put_le16(&line_ptr, v);
+
+            }
+
+        }
+
+    }
+
+
+
+    return 0;
+
+}","static void read_sbr_single_channel_element(AACContext *ac,
+
+                                            SpectralBandReplication *sbr,
+
+                                            GetBitContext *gb)
+
+{
+
+    if (get_bits1(gb)) // bs_data_extra
+
+        skip_bits(gb, 4); // bs_reserved
+
+
+
+    read_sbr_grid(ac, sbr, gb, &sbr->data[0]);
+
+    read_sbr_dtdf(sbr, gb, &sbr->data[0]);
+
+    read_sbr_invf(sbr, gb, &sbr->data[0]);
+
+    read_sbr_envelope(sbr, gb, &sbr->data[0], 0);
+
+    read_sbr_noise(sbr, gb, &sbr->data[0], 0);
+
+
+
+    if ((sbr->data[0].bs_add_harmonic_flag = get_bits1(gb)))
+
+        get_bits1_vector(gb, sbr->data[0].bs_add_harmonic, sbr->n[1]);
+
+}","","","","","","","",""
+"12","id_536_label_True_qemu.c","1","int qemu_devtree_setprop(void *fdt, const char *node_path,
+
+                         const char *property, void *val_array, int size)
+
+{
+
+    int offset;
+
+
+
+    offset = fdt_path_offset(fdt, node_path);
+
+    if (offset < 0)
+
+        return offset;
+
+
+
+    return fdt_setprop(fdt, offset, property, val_array, size);
+
+}","BdrvChild *bdrv_root_attach_child(BlockDriverState *child_bs,
+
+                                  const char *child_name,
+
+                                  const BdrvChildRole *child_role,
+
+                                  uint64_t perm, uint64_t shared_perm,
+
+                                  void *opaque, Error **errp)
+
+{
+
+    BdrvChild *child;
+
+    int ret;
+
+
+
+    ret = bdrv_check_update_perm(child_bs, perm, shared_perm, NULL, errp);
+
+    if (ret < 0) {
+
+        return NULL;
+
+    }
+
+
+
+    child = g_new(BdrvChild, 1);
+
+    *child = (BdrvChild) {
+
+        .bs             = NULL,
+
+        .name           = g_strdup(child_name),
+
+        .role           = child_role,
+
+        .perm           = perm,
+
+        .shared_perm    = shared_perm,
+
+        .opaque         = opaque,
+
+    };
+
+
+
+    bdrv_replace_child(child, child_bs);
+
+
+
+    return child;
+
+}","static void cpu_common_initfn(Object *obj)
+
+{
+
+    CPUState *cpu = CPU(obj);
+
+    CPUClass *cc = CPU_GET_CLASS(obj);
+
+
+
+    cpu->cpu_index = UNASSIGNED_CPU_INDEX;
+
+    cpu->gdb_num_regs = cpu->gdb_num_g_regs = cc->gdb_num_core_regs;
+
+    /* *-user doesn't have configurable SMP topology */
+
+    /* the default value is changed by qemu_init_vcpu() for softmmu */
+
+    cpu->nr_cores = 1;
+
+    cpu->nr_threads = 1;
+
+
+
+    qemu_mutex_init(&cpu->work_mutex);
+
+    QTAILQ_INIT(&cpu->breakpoints);
+
+    QTAILQ_INIT(&cpu->watchpoints);
+
+
+
+    cpu->trace_dstate = bitmap_new(trace_get_vcpu_event_count());
+
+
+
+    cpu_exec_initfn(cpu);
+
+}","","","","","","","",""
+"13","id_1065_label_False_FFmpeg.c","0","static void put_no_rnd_pixels_y2_mmx( UINT8  *block, const UINT8 *pixels, int line_size, int h)
+
+{
+
+  UINT8  *p;
+
+  const UINT8 *pix;
+
+  p = block;
+
+  pix = pixels;
+
+  MOVQ_ZERO(mm7);
+
+  JUMPALIGN();
+
+  do {
+
+    __asm __volatile(
+
+	""movq	%1, %%mm0\n\t""
+
+	""movq	%2, %%mm1\n\t""
+
+	""movq	%%mm0, %%mm2\n\t""
+
+	""movq	%%mm1, %%mm3\n\t""
+
+	""punpcklbw %%mm7, %%mm0\n\t""
+
+	""punpcklbw %%mm7, %%mm1\n\t""
+
+	""punpckhbw %%mm7, %%mm2\n\t""
+
+	""punpckhbw %%mm7, %%mm3\n\t""
+
+	""paddusw %%mm1, %%mm0\n\t""
+
+	""paddusw %%mm3, %%mm2\n\t""
+
+	""psrlw	$1, %%mm0\n\t""
+
+	""psrlw	$1, %%mm2\n\t""
+
+	""packuswb  %%mm2, %%mm0\n\t""
+
+	""movq	%%mm0, %0\n\t""
+
+	:""=m""(*p)
+
+	:""m""(*pix),
+
+	 ""m""(*(pix+line_size))
+
+	:""memory"");
+
+   pix += line_size;
+
+   p +=   line_size;
+
+  } while(--h);
+
+}","static unsigned int dec_move_pm(DisasContext *dc)
+
+{
+
+	TCGv t0;
+
+	int memsize;
+
+
+
+	memsize = preg_sizes[dc->op2];
+
+
+
+	DIS(fprintf (logfile, ""move.%c $p%u, [$r%u%s\n"",
+
+		     memsize_char(memsize), 
+
+		     dc->op2, dc->op1, dc->postinc ? ""+]"" : ""]""));
+
+
+
+	/* prepare store. Address in T0, value in T1.  */
+
+	if (dc->op2 == PR_CCS)
+
+		cris_evaluate_flags(dc);
+
+	t0 = tcg_temp_new(TCG_TYPE_TL);
+
+	t_gen_mov_TN_preg(t0, dc->op2);
+
+	cris_flush_cc_state(dc);
+
+	gen_store(dc, cpu_R[dc->op1], t0, memsize);
+
+	tcg_temp_free(t0);
+
+
+
+	cris_cc_mask(dc, 0);
+
+	if (dc->postinc)
+
+		tcg_gen_addi_tl(cpu_R[dc->op1], cpu_R[dc->op1], memsize);
+
+	return 2;
+
+}","static void bdrv_sync_complete(void *opaque, int ret)
+
+{
+
+    /* do nothing. Masters do not directly interact with the backing store,
+
+     * only the working copy so no mutexing required.
+
+     */
+
+}","","","","","","","",""
+"14","id_292_label_False_qemu.c","0","static uint64_t sp804_read(void *opaque, target_phys_addr_t offset,
+
+                           unsigned size)
+
+{
+
+    sp804_state *s = (sp804_state *)opaque;
+
+
+
+    if (offset < 0x20) {
+
+        return arm_timer_read(s->timer[0], offset);
+
+    }
+
+    if (offset < 0x40) {
+
+        return arm_timer_read(s->timer[1], offset - 0x20);
+
+    }
+
+
+
+    /* TimerPeriphID */
+
+    if (offset >= 0xfe0 && offset <= 0xffc) {
+
+        return sp804_ids[(offset - 0xfe0) >> 2];
+
+    }
+
+
+
+    switch (offset) {
+
+    /* Integration Test control registers, which we won't support */
+
+    case 0xf00: /* TimerITCR */
+
+    case 0xf04: /* TimerITOP (strictly write only but..) */
+
+        return 0;
+
+    }
+
+
+
+    hw_error(""%s: Bad offset %x\n"", __func__, (int)offset);
+
+    return 0;
+
+}","int armv7m_nvic_acknowledge_irq(void *opaque)
+
+{
+
+    nvic_state *s = (nvic_state *)opaque;
+
+    uint32_t irq;
+
+
+
+    irq = gic_acknowledge_irq(&s->gic, 0);
+
+    if (irq == 1023)
+
+        hw_error(""Interrupt but no vector\n"");
+
+    if (irq >= 32)
+
+        irq -= 16;
+
+    return irq;
+
+}","static int tpm_passthrough_test_tpmdev(int fd)
+
+{
+
+    struct tpm_req_hdr req = {
+
+        .tag = cpu_to_be16(TPM_TAG_RQU_COMMAND),
+
+        .len = cpu_to_be32(sizeof(req)),
+
+        .ordinal = cpu_to_be32(TPM_ORD_GetTicks),
+
+    };
+
+    struct tpm_resp_hdr *resp;
+
+    fd_set readfds;
+
+    int n;
+
+    struct timeval tv = {
+
+        .tv_sec = 1,
+
+        .tv_usec = 0,
+
+    };
+
+    unsigned char buf[1024];
+
+
+
+    n = write(fd, &req, sizeof(req));
+
+    if (n < 0) {
+
+        return errno;
+
+    }
+
+    if (n != sizeof(req)) {
+
+        return EFAULT;
+
+    }
+
+
+
+    FD_ZERO(&readfds);
+
+    FD_SET(fd, &readfds);
+
+
+
+    /* wait for a second */
+
+    n = select(fd + 1, &readfds, NULL, NULL, &tv);
+
+    if (n != 1) {
+
+        return errno;
+
+    }
+
+
+
+    n = read(fd, &buf, sizeof(buf));
+
+    if (n < sizeof(struct tpm_resp_hdr)) {
+
+        return EFAULT;
+
+    }
+
+
+
+    resp = (struct tpm_resp_hdr *)buf;
+
+    /* check the header */
+
+    if (be16_to_cpu(resp->tag) != TPM_TAG_RSP_COMMAND ||
+
+        be32_to_cpu(resp->len) != n) {
+
+        return EBADMSG;
+
+    }
+
+
+
+    return 0;
+
+}","","","","","","","",""
+"15","id_713_label_True_FFmpeg.c","1","static int opt_new_stream(const char *opt, const char *arg)
+
+{
+
+    AVFormatContext *oc;
+
+    if (nb_output_files <= 0) {
+
+        fprintf(stderr, ""At least one output file must be specified\n"");
+
+        ffmpeg_exit(1);
+
+    }
+
+    oc = output_files[nb_output_files - 1];
+
+
+
+    if      (!strcmp(opt, ""newvideo""   )) new_video_stream   (oc);
+
+    else if (!strcmp(opt, ""newaudio""   )) new_audio_stream   (oc);
+
+    else if (!strcmp(opt, ""newsubtitle"")) new_subtitle_stream(oc);
+
+    else av_assert0(0);
+
+    return 0;
+
+}","BdrvChild *bdrv_root_attach_child(BlockDriverState *child_bs,
+
+                                  const char *child_name,
+
+                                  const BdrvChildRole *child_role,
+
+                                  uint64_t perm, uint64_t shared_perm,
+
+                                  void *opaque, Error **errp)
+
+{
+
+    BdrvChild *child;
+
+    int ret;
+
+
+
+    ret = bdrv_check_update_perm(child_bs, perm, shared_perm, NULL, errp);
+
+    if (ret < 0) {
+
+        return NULL;
+
+    }
+
+
+
+    child = g_new(BdrvChild, 1);
+
+    *child = (BdrvChild) {
+
+        .bs             = NULL,
+
+        .name           = g_strdup(child_name),
+
+        .role           = child_role,
+
+        .perm           = perm,
+
+        .shared_perm    = shared_perm,
+
+        .opaque         = opaque,
+
+    };
+
+
+
+    bdrv_replace_child(child, child_bs);
+
+
+
+    return child;
+
+}","int socket_dgram(SocketAddress *remote, SocketAddress *local, Error **errp)
+
+{
+
+    QemuOpts *opts;
+
+    int fd;
+
+
+
+    opts = qemu_opts_create_nofail(&socket_optslist);
+
+    switch (remote->kind) {
+
+    case SOCKET_ADDRESS_KIND_INET:
+
+        qemu_opt_set(opts, ""host"", remote->inet->host);
+
+        qemu_opt_set(opts, ""port"", remote->inet->port);
+
+        if (local) {
+
+            qemu_opt_set(opts, ""localaddr"", local->inet->host);
+
+            qemu_opt_set(opts, ""localport"", local->inet->port);
+
+        }
+
+        fd = inet_dgram_opts(opts, errp);
+
+        break;
+
+
+
+    default:
+
+        error_setg(errp, ""socket type unsupported for datagram"");
+
+        return -1;
+
+    }
+
+    qemu_opts_del(opts);
+
+    return fd;
+
+}","","","","","","","",""
+"16","id_514_label_False_FFmpeg.c","0","static int xmv_read_header(AVFormatContext *s)
+
+{
+
+    XMVDemuxContext *xmv = s->priv_data;
+
+    AVIOContext     *pb  = s->pb;
+
+
+
+    uint32_t file_version;
+
+    uint32_t this_packet_size;
+
+    uint16_t audio_track;
+
+    int ret;
+
+
+
+    s->ctx_flags |= AVFMTCTX_NOHEADER;
+
+
+
+    avio_skip(pb, 4); /* Next packet size */
+
+
+
+    this_packet_size = avio_rl32(pb);
+
+
+
+    avio_skip(pb, 4); /* Max packet size */
+
+    avio_skip(pb, 4); /* ""xobX"" */
+
+
+
+    file_version = avio_rl32(pb);
+
+    if ((file_version != 4) && (file_version != 2))
+
+        avpriv_request_sample(s, ""Uncommon version %""PRIu32"""", file_version);
+
+
+
+    /* Video tracks */
+
+
+
+    xmv->video_width    = avio_rl32(pb);
+
+    xmv->video_height   = avio_rl32(pb);
+
+    xmv->video_duration = avio_rl32(pb);
+
+
+
+    /* Audio tracks */
+
+
+
+    xmv->audio_track_count = avio_rl16(pb);
+
+
+
+    avio_skip(pb, 2); /* Unknown (padding?) */
+
+
+
+    xmv->audio = av_mallocz_array(xmv->audio_track_count, sizeof(XMVAudioPacket));
+
+    if (!xmv->audio) {
+
+        ret = AVERROR(ENOMEM);
+
+        goto fail;
+
+    }
+
+
+
+    for (audio_track = 0; audio_track < xmv->audio_track_count; audio_track++) {
+
+        XMVAudioPacket *packet = &xmv->audio[audio_track];
+
+
+
+        packet->compression     = avio_rl16(pb);
+
+        packet->channels        = avio_rl16(pb);
+
+        packet->sample_rate     = avio_rl32(pb);
+
+        packet->bits_per_sample = avio_rl16(pb);
+
+        packet->flags           = avio_rl16(pb);
+
+
+
+        packet->bit_rate      = packet->bits_per_sample *
+
+                                packet->sample_rate *
+
+                                packet->channels;
+
+        packet->block_align   = XMV_BLOCK_ALIGN_SIZE * packet->channels;
+
+        packet->block_samples = 64;
+
+        packet->codec_id      = ff_wav_codec_get_id(packet->compression,
+
+                                                    packet->bits_per_sample);
+
+
+
+        packet->stream_index = -1;
+
+
+
+        packet->frame_size  = 0;
+
+        packet->block_count = 0;
+
+
+
+        /* TODO: ADPCM'd 5.1 sound is encoded in three separate streams.
+
+         *       Those need to be interleaved to a proper 5.1 stream. */
+
+        if (packet->flags & XMV_AUDIO_ADPCM51)
+
+            av_log(s, AV_LOG_WARNING, ""Unsupported 5.1 ADPCM audio stream ""
+
+                                      ""(0x%04X)\n"", packet->flags);
+
+
+
+        if (!packet->channels || !packet->sample_rate ||
+
+             packet->channels >= UINT16_MAX / XMV_BLOCK_ALIGN_SIZE) {
+
+            av_log(s, AV_LOG_ERROR, ""Invalid parameters for audio track %""PRIu16"".\n"",
+
+                   audio_track);
+
+            ret = AVERROR_INVALIDDATA;
+
+            goto fail;
+
+        }
+
+    }
+
+
+
+
+
+    /* Initialize the packet context */
+
+
+
+    xmv->next_packet_offset = avio_tell(pb);
+
+    xmv->next_packet_size   = this_packet_size - xmv->next_packet_offset;
+
+    xmv->stream_count       = xmv->audio_track_count + 1;
+
+
+
+    return 0;
+
+
+
+fail:
+
+    xmv_read_close(s);
+
+    return ret;
+
+}","static int decode_wdlt(GetByteContext *gb, uint8_t *frame, int width, int height)
+
+{
+
+    const uint8_t *frame_end   = frame + width * height;
+
+    uint8_t *line_ptr;
+
+    int count, i, v, lines, segments;
+
+
+
+    lines = bytestream2_get_le16(gb);
+
+    if (lines > height)
+
+        return -1;
+
+
+
+    while (lines--) {
+
+        if (bytestream2_get_bytes_left(gb) < 2)
+
+            return -1;
+
+        segments = bytestream2_get_le16u(gb);
+
+        while ((segments & 0xC000) == 0xC000) {
+
+            unsigned delta = -((int16_t)segments * width);
+
+            if (frame_end - frame <= delta)
+
+                return -1;
+
+            frame    += delta;
+
+            segments = bytestream2_get_le16(gb);
+
+        }
+
+        if (segments & 0x8000) {
+
+            frame[width - 1] = segments & 0xFF;
+
+            segments = bytestream2_get_le16(gb);
+
+        }
+
+        line_ptr = frame;
+
+        frame += width;
+
+        while (segments--) {
+
+            if (frame - line_ptr <= bytestream2_peek_byte(gb))
+
+                return -1;
+
+            line_ptr += bytestream2_get_byte(gb);
+
+            count = (int8_t)bytestream2_get_byte(gb);
+
+            if (count >= 0) {
+
+                if (frame - line_ptr < count * 2)
+
+                    return -1;
+
+                if (bytestream2_get_buffer(gb, line_ptr, count * 2) != count * 2)
+
+                    return -1;
+
+                line_ptr += count * 2;
+
+            } else {
+
+                count = -count;
+
+                if (frame - line_ptr < count * 2)
+
+                    return -1;
+
+                v = bytestream2_get_le16(gb);
+
+                for (i = 0; i < count; i++)
+
+                    bytestream_put_le16(&line_ptr, v);
+
+            }
+
+        }
+
+    }
+
+
+
+    return 0;
+
+}","static int qcow_read_extensions(BlockDriverState *bs, uint64_t start_offset,
+
+                                uint64_t end_offset)
+
+{
+
+    BDRVQcowState *s = bs->opaque;
+
+    QCowExtension ext;
+
+    uint64_t offset;
+
+
+
+#ifdef DEBUG_EXT
+
+    printf(""qcow_read_extensions: start=%ld end=%ld\n"", start_offset, end_offset);
+
+#endif
+
+    offset = start_offset;
+
+    while (offset < end_offset) {
+
+
+
+#ifdef DEBUG_EXT
+
+        /* Sanity check */
+
+        if (offset > s->cluster_size)
+
+            printf(""qcow_handle_extension: suspicious offset %lu\n"", offset);
+
+
+
+        printf(""attemting to read extended header in offset %lu\n"", offset);
+
+#endif
+
+
+
+        if (bdrv_pread(s->hd, offset, &ext, sizeof(ext)) != sizeof(ext)) {
+
+            fprintf(stderr, ""qcow_handle_extension: ERROR: pread fail from offset %llu\n"",
+
+                    (unsigned long long)offset);
+
+            return 1;
+
+        }
+
+        be32_to_cpus(&ext.magic);
+
+        be32_to_cpus(&ext.len);
+
+        offset += sizeof(ext);
+
+#ifdef DEBUG_EXT
+
+        printf(""ext.magic = 0x%x\n"", ext.magic);
+
+#endif
+
+        switch (ext.magic) {
+
+        case QCOW_EXT_MAGIC_END:
+
+            return 0;
+
+
+
+        case QCOW_EXT_MAGIC_BACKING_FORMAT:
+
+            if (ext.len >= sizeof(bs->backing_format)) {
+
+                fprintf(stderr, ""ERROR: ext_backing_format: len=%u too large""
+
+                        "" (>=%zu)\n"",
+
+                        ext.len, sizeof(bs->backing_format));
+
+                return 2;
+
+            }
+
+            if (bdrv_pread(s->hd, offset , bs->backing_format,
+
+                           ext.len) != ext.len)
+
+                return 3;
+
+            bs->backing_format[ext.len] = '\0';
+
+#ifdef DEBUG_EXT
+
+            printf(""Qcow2: Got format extension %s\n"", bs->backing_format);
+
+#endif
+
+            offse
+
+/* ... [Cắt gọn do vượt quá 1800 ký tự] */","","","","","","","",""
+"17","id_146_label_True_FFmpeg.c","1","static int bit8x8_c(MpegEncContext *s, uint8_t *src1, uint8_t *src2,
+
+                    ptrdiff_t stride, int h)
+
+{
+
+    const uint8_t *scantable = s->intra_scantable.permutated;
+
+    LOCAL_ALIGNED_16(int16_t, temp, [64]);
+
+    int i, last, run, bits, level, start_i;
+
+    const int esc_length = s->ac_esc_length;
+
+    uint8_t *length, *last_length;
+
+
+
+    av_assert2(h == 8);
+
+
+
+    s->pdsp.diff_pixels(temp, src1, src2, stride);
+
+
+
+    s->block_last_index[0 /* FIXME */] =
+
+    last                               =
+
+        s->fast_dct_quantize(s, temp, 0 /* FIXME */, s->qscale, &i);
+
+
+
+    bits = 0;
+
+
+
+    if (s->mb_intra) {
+
+        start_i     = 1;
+
+        length      = s->intra_ac_vlc_length;
+
+        last_length = s->intra_ac_vlc_last_length;
+
+        bits       += s->luma_dc_vlc_length[temp[0] + 256]; // FIXME: chroma
+
+    } else {
+
+        start_i     = 0;
+
+        length      = s->inter_ac_vlc_length;
+
+        last_length = s->inter_ac_vlc_last_length;
+
+    }
+
+
+
+    if (last >= start_i) {
+
+        run = 0;
+
+        for (i = start_i; i < last; i++) {
+
+            int j = scantable[i];
+
+            level = temp[j];
+
+
+
+            if (level) {
+
+                level += 64;
+
+                if ((level & (~127)) == 0)
+
+                    bits += length[UNI_AC_ENC_INDEX(run, level)];
+
+                else
+
+                    bits += esc_length;
+
+                run = 0;
+
+            } else
+
+                run++;
+
+        }
+
+        i = scantable[last];
+
+
+
+        level = temp[i] + 64;
+
+
+
+        av_assert2(level - 64);
+
+
+
+        if ((level & (~127)) == 0)
+
+            bits += last_length[UNI_AC_ENC_INDEX(run, level)];
+
+        else
+
+            bits += esc_length;
+
+    }
+
+
+
+    return bits;
+
+}","int socket_dgram(SocketAddress *remote, SocketAddress *local, Error **errp)
+
+{
+
+    QemuOpts *opts;
+
+    int fd;
+
+
+
+    opts = qemu_opts_create_nofail(&socket_optslist);
+
+    switch (remote->kind) {
+
+    case SOCKET_ADDRESS_KIND_INET:
+
+        qemu_opt_set(opts, ""host"", remote->inet->host);
+
+        qemu_opt_set(opts, ""port"", remote->inet->port);
+
+        if (local) {
+
+            qemu_opt_set(opts, ""localaddr"", local->inet->host);
+
+            qemu_opt_set(opts, ""localport"", local->inet->port);
+
+        }
+
+        fd = inet_dgram_opts(opts, errp);
+
+        break;
+
+
+
+    default:
+
+        error_setg(errp, ""socket type unsupported for datagram"");
+
+        return -1;
+
+    }
+
+    qemu_opts_del(opts);
+
+    return fd;
+
+}","static int decode_wdlt(GetByteContext *gb, uint8_t *frame, int width, int height)
+
+{
+
+    const uint8_t *frame_end   = frame + width * height;
+
+    uint8_t *line_ptr;
+
+    int count, i, v, lines, segments;
+
+
+
+    lines = bytestream2_get_le16(gb);
+
+    if (lines > height)
+
+        return -1;
+
+
+
+    while (lines--) {
+
+        if (bytestream2_get_bytes_left(gb) < 2)
+
+            return -1;
+
+        segments = bytestream2_get_le16u(gb);
+
+        while ((segments & 0xC000) == 0xC000) {
+
+            unsigned delta = -((int16_t)segments * width);
+
+            if (frame_end - frame <= delta)
+
+                return -1;
+
+            frame    += delta;
+
+            segments = bytestream2_get_le16(gb);
+
+        }
+
+        if (segments & 0x8000) {
+
+            frame[width - 1] = segments & 0xFF;
+
+            segments = bytestream2_get_le16(gb);
+
+        }
+
+        line_ptr = frame;
+
+        frame += width;
+
+        while (segments--) {
+
+            if (frame - line_ptr <= bytestream2_peek_byte(gb))
+
+                return -1;
+
+            line_ptr += bytestream2_get_byte(gb);
+
+            count = (int8_t)bytestream2_get_byte(gb);
+
+            if (count >= 0) {
+
+                if (frame - line_ptr < count * 2)
+
+                    return -1;
+
+                if (bytestream2_get_buffer(gb, line_ptr, count * 2) != count * 2)
+
+                    return -1;
+
+                line_ptr += count * 2;
+
+            } else {
+
+                count = -count;
+
+                if (frame - line_ptr < count * 2)
+
+                    return -1;
+
+                v = bytestream2_get_le16(gb);
+
+                for (i = 0; i < count; i++)
+
+                    bytestream_put_le16(&line_ptr, v);
+
+            }
+
+        }
+
+    }
+
+
+
+    return 0;
+
+}","","","","","","","",""
+"18","id_188_label_False_FFmpeg.c","0","static int config_props(AVFilterLink *outlink)
+
+{
+
+    AVFilterContext *ctx = outlink->src;
+
+    AVFilterLink *inlink = outlink->src->inputs[0];
+
+    ScaleContext *scale = ctx->priv;
+
+    int64_t w, h;
+
+
+
+    if (!(w = scale->w))
+
+        w = inlink->w;
+
+    if (!(h = scale->h))
+
+        h = inlink->h;
+
+    if (w == -1)
+
+        w = av_rescale(h, inlink->w, inlink->h);
+
+    if (h == -1)
+
+        h = av_rescale(w, inlink->h, inlink->w);
+
+
+
+    if (w > INT_MAX || h > INT_MAX ||
+
+        (h * inlink->w) > INT_MAX  ||
+
+        (w * inlink->h) > INT_MAX)
+
+        av_log(ctx, AV_LOG_ERROR, ""Rescaled value for width or height is too big.\n"");
+
+
+
+    outlink->w = w;
+
+    outlink->h = h;
+
+
+
+    /* TODO: make algorithm configurable */
+
+    scale->sws = sws_getContext(inlink ->w, inlink ->h, inlink ->format,
+
+                                outlink->w, outlink->h, outlink->format,
+
+                                SWS_BILINEAR, NULL, NULL, NULL);
+
+
+
+    av_log(ctx, AV_LOG_INFO, ""w:%d h:%d fmt:%s\n"",
+
+           outlink->w, outlink->h, av_pix_fmt_descriptors[outlink->format].name);
+
+
+
+    scale->input_is_pal = inlink->format == PIX_FMT_PAL8      ||
+
+                          inlink->format == PIX_FMT_BGR4_BYTE ||
+
+                          inlink->format == PIX_FMT_RGB4_BYTE ||
+
+                          inlink->format == PIX_FMT_BGR8      ||
+
+                          inlink->format == PIX_FMT_RGB8;
+
+
+
+    return !scale->sws;
+
+}","static int megasas_ld_get_info_submit(SCSIDevice *sdev, int lun,
+
+                                      MegasasCmd *cmd)
+
+{
+
+    struct mfi_ld_info *info = cmd->iov_buf;
+
+    size_t dcmd_size = sizeof(struct mfi_ld_info);
+
+    uint8_t cdb[6];
+
+    SCSIRequest *req;
+
+    ssize_t len, resid;
+
+    BlockConf *conf = &sdev->conf;
+
+    uint16_t sdev_id = ((sdev->id & 0xFF) >> 8) | (lun & 0xFF);
+
+    uint64_t ld_size;
+
+
+
+    if (!cmd->iov_buf) {
+
+        cmd->iov_buf = g_malloc(dcmd_size);
+
+        memset(cmd->iov_buf, 0x0, dcmd_size);
+
+        info = cmd->iov_buf;
+
+        megasas_setup_inquiry(cdb, 0x83, sizeof(info->vpd_page83));
+
+        req = scsi_req_new(sdev, cmd->index, lun, cdb, cmd);
+
+        if (!req) {
+
+            trace_megasas_dcmd_req_alloc_failed(cmd->index,
+
+                                                ""LD get info vpd inquiry"");
+
+            g_free(cmd->iov_buf);
+
+            cmd->iov_buf = NULL;
+
+            return MFI_STAT_FLASH_ALLOC_FAIL;
+
+        }
+
+        trace_megasas_dcmd_internal_submit(cmd->index,
+
+                                           ""LD get info vpd inquiry"", lun);
+
+        len = scsi_req_enqueue(req);
+
+        if (len > 0) {
+
+            cmd->iov_size = len;
+
+            scsi_req_continue(req);
+
+        }
+
+        return MFI_STAT_INVALID_STATUS;
+
+    }
+
+
+
+    info->ld_config.params.state = MFI_LD_STATE_OPTIMAL;
+
+    info->ld_config.properties.ld.v.target_id = lun;
+
+    info->ld_config.params.stripe_size = 3;
+
+    info->ld_config.params.num_drives = 1;
+
+    info->ld_config.params.is_consistent = 1;
+
+    /* Logical device size is in blocks */
+
+    bdrv_get_geometry(conf->bs, &ld_size);
+
+    info->size = cpu_to_le64(ld_size);
+
+    memset(info->ld_config.span, 0, sizeof(info->ld_config.span));
+
+    info->ld_config.span[0].start_block = 0;
+
+
+
+/* ... [Cắt gọn do vượt quá 1800 ký tự] */","void virtio_queue_notify(VirtIODevice *vdev, int n)
+
+{
+
+    if (n < VIRTIO_PCI_QUEUE_MAX && vdev->vq[n].vring.desc) {
+
+        trace_virtio_queue_notify(vdev, n, &vdev->vq[n]);
+
+        vdev->vq[n].handle_output(vdev, &vdev->vq[n]);
+
+    }
+
+}","","","","","","","",""
+"19","id_1064_label_False_qemu.c","0","void kqemu_set_notdirty(CPUState *env, ram_addr_t ram_addr)
+
+{
+
+    LOG_INT(""kqemu_set_notdirty: addr=%08lx\n"", 
+
+                (unsigned long)ram_addr);
+
+    /* we only track transitions to dirty state */
+
+    if (phys_ram_dirty[ram_addr >> TARGET_PAGE_BITS] != 0xff)
+
+        return;
+
+    if (nb_ram_pages_to_update >= KQEMU_MAX_RAM_PAGES_TO_UPDATE)
+
+        nb_ram_pages_to_update = KQEMU_RAM_PAGES_UPDATE_ALL;
+
+    else
+
+        ram_pages_to_update[nb_ram_pages_to_update++] = ram_addr;
+
+}","static void reanalyze(MpegTSContext *ts) {
+
+    AVIOContext *pb = ts->stream->pb;
+
+    int64_t pos = avio_tell(pb);
+
+    if(pos < 0)
+
+        return;
+
+    pos += ts->raw_packet_size - ts->pos47_full;
+
+    if (pos == TS_PACKET_SIZE) {
+
+        ts->size_stat[0] ++;
+
+    } else if (pos == TS_DVHS_PACKET_SIZE) {
+
+        ts->size_stat[1] ++;
+
+    } else if (pos == TS_FEC_PACKET_SIZE) {
+
+        ts->size_stat[2] ++;
+
+    }
+
+
+
+    ts->size_stat_count ++;
+
+    if(ts->size_stat_count > SIZE_STAT_THRESHOLD) {
+
+        int newsize = 0;
+
+        if (ts->size_stat[0] > SIZE_STAT_THRESHOLD) {
+
+            newsize = TS_PACKET_SIZE;
+
+        } else if (ts->size_stat[1] > SIZE_STAT_THRESHOLD) {
+
+            newsize = TS_DVHS_PACKET_SIZE;
+
+        } else if (ts->size_stat[2] > SIZE_STAT_THRESHOLD) {
+
+            newsize = TS_FEC_PACKET_SIZE;
+
+        }
+
+        if (newsize) {
+
+            av_log(ts->stream, AV_LOG_WARNING, ""changing packet size to %d\n"", newsize);
+
+            ts->raw_packet_size = newsize;
+
+        }
+
+        ts->size_stat_count = 0;
+
+        memset(ts->size_stat, 0, sizeof(ts->size_stat));
+
+    }
+
+}","static void bdrv_sync_complete(void *opaque, int ret)
+
+{
+
+    /* do nothing. Masters do not directly interact with the backing store,
+
+     * only the working copy so no mutexing required.
+
+     */
+
+}","","","","","","","",""
+"20","id_51_label_False_qemu.c","0","static void do_busid_cmd(ESPState *s, uint8_t *buf, uint8_t busid)
+
+{
+
+    int32_t datalen;
+
+    int lun;
+
+
+
+    DPRINTF(""do_busid_cmd: busid 0x%x\n"", busid);
+
+    lun = busid & 7;
+
+    s->current_req = scsi_req_new(s->current_dev, 0, lun, NULL);
+
+    datalen = scsi_req_enqueue(s->current_req, buf);
+
+    s->ti_size = datalen;
+
+    if (datalen != 0) {
+
+        s->rregs[ESP_RSTAT] = STAT_TC;
+
+        s->dma_left = 0;
+
+        s->dma_counter = 0;
+
+        if (datalen > 0) {
+
+            s->rregs[ESP_RSTAT] |= STAT_DI;
+
+        } else {
+
+            s->rregs[ESP_RSTAT] |= STAT_DO;
+
+        }
+
+        scsi_req_continue(s->current_req);
+
+    }
+
+    s->rregs[ESP_RINTR] = INTR_BS | INTR_FC;
+
+    s->rregs[ESP_RSEQ] = SEQ_CD;
+
+    esp_raise_irq(s);
+
+}","static unsigned int dec_move_pm(DisasContext *dc)
+
+{
+
+	TCGv t0;
+
+	int memsize;
+
+
+
+	memsize = preg_sizes[dc->op2];
+
+
+
+	DIS(fprintf (logfile, ""move.%c $p%u, [$r%u%s\n"",
+
+		     memsize_char(memsize), 
+
+		     dc->op2, dc->op1, dc->postinc ? ""+]"" : ""]""));
+
+
+
+	/* prepare store. Address in T0, value in T1.  */
+
+	if (dc->op2 == PR_CCS)
+
+		cris_evaluate_flags(dc);
+
+	t0 = tcg_temp_new(TCG_TYPE_TL);
+
+	t_gen_mov_TN_preg(t0, dc->op2);
+
+	cris_flush_cc_state(dc);
+
+	gen_store(dc, cpu_R[dc->op1], t0, memsize);
+
+	tcg_temp_free(t0);
+
+
+
+	cris_cc_mask(dc, 0);
+
+	if (dc->postinc)
+
+		tcg_gen_addi_tl(cpu_R[dc->op1], cpu_R[dc->op1], memsize);
+
+	return 2;
+
+}","static void reanalyze(MpegTSContext *ts) {
+
+    AVIOContext *pb = ts->stream->pb;
+
+    int64_t pos = avio_tell(pb);
+
+    if(pos < 0)
+
+        return;
+
+    pos += ts->raw_packet_size - ts->pos47_full;
+
+    if (pos == TS_PACKET_SIZE) {
+
+        ts->size_stat[0] ++;
+
+    } else if (pos == TS_DVHS_PACKET_SIZE) {
+
+        ts->size_stat[1] ++;
+
+    } else if (pos == TS_FEC_PACKET_SIZE) {
+
+        ts->size_stat[2] ++;
+
+    }
+
+
+
+    ts->size_stat_count ++;
+
+    if(ts->size_stat_count > SIZE_STAT_THRESHOLD) {
+
+        int newsize = 0;
+
+        if (ts->size_stat[0] > SIZE_STAT_THRESHOLD) {
+
+            newsize = TS_PACKET_SIZE;
+
+        } else if (ts->size_stat[1] > SIZE_STAT_THRESHOLD) {
+
+            newsize = TS_DVHS_PACKET_SIZE;
+
+        } else if (ts->size_stat[2] > SIZE_STAT_THRESHOLD) {
+
+            newsize = TS_FEC_PACKET_SIZE;
+
+        }
+
+        if (newsize) {
+
+            av_log(ts->stream, AV_LOG_WARNING, ""changing packet size to %d\n"", newsize);
+
+            ts->raw_packet_size = newsize;
+
+        }
+
+        ts->size_stat_count = 0;
+
+        memset(ts->size_stat, 0, sizeof(ts->size_stat));
+
+    }
+
+}","","","","","","","",""
+"21","id_497_label_False_qemu.c","0","void ide_sector_read(IDEState *s)
+
+{
+
+    int64_t sector_num;
+
+    int ret, n;
+
+
+
+    s->status = READY_STAT | SEEK_STAT;
+
+    s->error = 0; /* not needed by IDE spec, but needed by Windows */
+
+    sector_num = ide_get_sector(s);
+
+    n = s->nsector;
+
+    if (n == 0) {
+
+        /* no more sector to read from disk */
+
+        ide_transfer_stop(s);
+
+    } else {
+
+#if defined(DEBUG_IDE)
+
+        printf(""read sector=%"" PRId64 ""\n"", sector_num);
+
+#endif
+
+        if (n > s->req_nb_sectors)
+
+            n = s->req_nb_sectors;
+
+
+
+        bdrv_acct_start(s->bs, &s->acct, n * BDRV_SECTOR_SIZE, BDRV_ACCT_READ);
+
+        ret = bdrv_read(s->bs, sector_num, s->io_buffer, n);
+
+        bdrv_acct_done(s->bs, &s->acct);
+
+        if (ret != 0) {
+
+            if (ide_handle_rw_error(s, -ret,
+
+                BM_STATUS_PIO_RETRY | BM_STATUS_RETRY_READ))
+
+            {
+
+                return;
+
+            }
+
+        }
+
+        ide_transfer_start(s, s->io_buffer, 512 * n, ide_sector_read);
+
+        ide_set_irq(s->bus);
+
+        ide_set_sector(s, sector_num + n);
+
+        s->nsector -= n;
+
+    }
+
+}","static void vtd_address_space_unmap(VTDAddressSpace *as, IOMMUNotifier *n)
+
+{
+
+    IOMMUTLBEntry entry;
+
+    hwaddr size;
+
+    hwaddr start = n->start;
+
+    hwaddr end = n->end;
+
+
+
+    /*
+
+     * Note: all the codes in this function has a assumption that IOVA
+
+     * bits are no more than VTD_MGAW bits (which is restricted by
+
+     * VT-d spec), otherwise we need to consider overflow of 64 bits.
+
+     */
+
+
+
+    if (end > VTD_ADDRESS_SIZE(VTD_HOST_ADDRESS_WIDTH)) {
+
+        /*
+
+         * Don't need to unmap regions that is bigger than the whole
+
+         * VT-d supported address space size
+
+         */
+
+        end = VTD_ADDRESS_SIZE(VTD_HOST_ADDRESS_WIDTH);
+
+    }
+
+
+
+    assert(start <= end);
+
+    size = end - start;
+
+
+
+    if (ctpop64(size) != 1) {
+
+        /*
+
+         * This size cannot format a correct mask. Let's enlarge it to
+
+         * suite the minimum available mask.
+
+         */
+
+        int n = 64 - clz64(size);
+
+        if (n > VTD_MGAW) {
+
+            /* should not happen, but in case it happens, limit it */
+
+            n = VTD_MGAW;
+
+        }
+
+        size = 1ULL << n;
+
+    }
+
+
+
+    entry.target_as = &address_space_memory;
+
+    /* Adjust iova for the size */
+
+    entry.iova = n->start & ~(size - 1);
+
+    /* This field is meaningless for unmap */
+
+    entry.translated_addr = 0;
+
+    entry.perm = IOMMU_NONE;
+
+    entry.addr_mask = size - 1;
+
+
+
+    trace_vtd_as_unmap_whole(pci_bus_num(as->bus),
+
+                             VTD_PCI_SLOT(as->devfn),
+
+                             VTD_PCI_FUNC(as->devfn),
+
+                             entry.iova, size);
+
+
+
+    memory_region_notify_one(n, &entry);
+
+}","static int qcow_read_extensions(BlockDriverState *bs, uint64_t start_offset,
+
+                                uint64_t end_offset)
+
+{
+
+    BDRVQcowState *s = bs->opaque;
+
+    QCowExtension ext;
+
+    uint64_t offset;
+
+
+
+#ifdef DEBUG_EXT
+
+    printf(""qcow_read_extensions: start=%ld end=%ld\n"", start_offset, end_offset);
+
+#endif
+
+    offset = start_offset;
+
+    while (offset < end_offset) {
+
+
+
+#ifdef DEBUG_EXT
+
+        /* Sanity check */
+
+        if (offset > s->cluster_size)
+
+            printf(""qcow_handle_extension: suspicious offset %lu\n"", offset);
+
+
+
+        printf(""attemting to read extended header in offset %lu\n"", offset);
+
+#endif
+
+
+
+        if (bdrv_pread(s->hd, offset, &ext, sizeof(ext)) != sizeof(ext)) {
+
+            fprintf(stderr, ""qcow_handle_extension: ERROR: pread fail from offset %llu\n"",
+
+                    (unsigned long long)offset);
+
+            return 1;
+
+        }
+
+        be32_to_cpus(&ext.magic);
+
+        be32_to_cpus(&ext.len);
+
+        offset += sizeof(ext);
+
+#ifdef DEBUG_EXT
+
+        printf(""ext.magic = 0x%x\n"", ext.magic);
+
+#endif
+
+        switch (ext.magic) {
+
+        case QCOW_EXT_MAGIC_END:
+
+            return 0;
+
+
+
+        case QCOW_EXT_MAGIC_BACKING_FORMAT:
+
+            if (ext.len >= sizeof(bs->backing_format)) {
+
+                fprintf(stderr, ""ERROR: ext_backing_format: len=%u too large""
+
+                        "" (>=%zu)\n"",
+
+                        ext.len, sizeof(bs->backing_format));
+
+                return 2;
+
+            }
+
+            if (bdrv_pread(s->hd, offset , bs->backing_format,
+
+                           ext.len) != ext.len)
+
+                return 3;
+
+            bs->backing_format[ext.len] = '\0';
+
+#ifdef DEBUG_EXT
+
+            printf(""Qcow2: Got format extension %s\n"", bs->backing_format);
+
+#endif
+
+            offse
+
+/* ... [Cắt gọn do vượt quá 1800 ký tự] */","","","","","","","",""
+"22","id_183_label_False_FFmpeg.c","0","static inline void mix_2f_1r_to_dolby(AC3DecodeContext *ctx)
+
+{
+
+    int i;
+
+    float (*output)[256] = ctx->audio_block.block_output;
+
+
+
+    for (i = 0; i < 256; i++) {
+
+        output[1][i] -= output[3][i];
+
+        output[2][i] += output[3][i];
+
+    }
+
+    memset(output[3], 0, sizeof(output[3]));
+
+}","static void reanalyze(MpegTSContext *ts) {
+
+    AVIOContext *pb = ts->stream->pb;
+
+    int64_t pos = avio_tell(pb);
+
+    if(pos < 0)
+
+        return;
+
+    pos += ts->raw_packet_size - ts->pos47_full;
+
+    if (pos == TS_PACKET_SIZE) {
+
+        ts->size_stat[0] ++;
+
+    } else if (pos == TS_DVHS_PACKET_SIZE) {
+
+        ts->size_stat[1] ++;
+
+    } else if (pos == TS_FEC_PACKET_SIZE) {
+
+        ts->size_stat[2] ++;
+
+    }
+
+
+
+    ts->size_stat_count ++;
+
+    if(ts->size_stat_count > SIZE_STAT_THRESHOLD) {
+
+        int newsize = 0;
+
+        if (ts->size_stat[0] > SIZE_STAT_THRESHOLD) {
+
+            newsize = TS_PACKET_SIZE;
+
+        } else if (ts->size_stat[1] > SIZE_STAT_THRESHOLD) {
+
+            newsize = TS_DVHS_PACKET_SIZE;
+
+        } else if (ts->size_stat[2] > SIZE_STAT_THRESHOLD) {
+
+            newsize = TS_FEC_PACKET_SIZE;
+
+        }
+
+        if (newsize) {
+
+            av_log(ts->stream, AV_LOG_WARNING, ""changing packet size to %d\n"", newsize);
+
+            ts->raw_packet_size = newsize;
+
+        }
+
+        ts->size_stat_count = 0;
+
+        memset(ts->size_stat, 0, sizeof(ts->size_stat));
+
+    }
+
+}","static void reanalyze(MpegTSContext *ts) {
+
+    AVIOContext *pb = ts->stream->pb;
+
+    int64_t pos = avio_tell(pb);
+
+    if(pos < 0)
+
+        return;
+
+    pos += ts->raw_packet_size - ts->pos47_full;
+
+    if (pos == TS_PACKET_SIZE) {
+
+        ts->size_stat[0] ++;
+
+    } else if (pos == TS_DVHS_PACKET_SIZE) {
+
+        ts->size_stat[1] ++;
+
+    } else if (pos == TS_FEC_PACKET_SIZE) {
+
+        ts->size_stat[2] ++;
+
+    }
+
+
+
+    ts->size_stat_count ++;
+
+    if(ts->size_stat_count > SIZE_STAT_THRESHOLD) {
+
+        int newsize = 0;
+
+        if (ts->size_stat[0] > SIZE_STAT_THRESHOLD) {
+
+            newsize = TS_PACKET_SIZE;
+
+        } else if (ts->size_stat[1] > SIZE_STAT_THRESHOLD) {
+
+            newsize = TS_DVHS_PACKET_SIZE;
+
+        } else if (ts->size_stat[2] > SIZE_STAT_THRESHOLD) {
+
+            newsize = TS_FEC_PACKET_SIZE;
+
+        }
+
+        if (newsize) {
+
+            av_log(ts->stream, AV_LOG_WARNING, ""changing packet size to %d\n"", newsize);
+
+            ts->raw_packet_size = newsize;
+
+        }
+
+        ts->size_stat_count = 0;
+
+        memset(ts->size_stat, 0, sizeof(ts->size_stat));
+
+    }
+
+}","","","","","","","",""
+"23","id_125_label_True_FFmpeg.c","1","static int mxf_read_content_storage(MXFContext *mxf, ByteIOContext *pb, int tag)
+
+{
+
+    switch (tag) {
+
+    case 0x1901:
+
+        mxf->packages_count = get_be32(pb);
+
+        if (mxf->packages_count >= UINT_MAX / sizeof(UID))
+
+            return -1;
+
+        mxf->packages_refs = av_malloc(mxf->packages_count * sizeof(UID));
+
+        if (!mxf->packages_refs)
+
+            return -1;
+
+        url_fskip(pb, 4); /* useless size of objects, always 16 according to specs */
+
+        get_buffer(pb, (uint8_t *)mxf->packages_refs, mxf->packages_count * sizeof(UID));
+
+        break;
+
+    }
+
+    return 0;
+
+}","int socket_dgram(SocketAddress *remote, SocketAddress *local, Error **errp)
+
+{
+
+    QemuOpts *opts;
+
+    int fd;
+
+
+
+    opts = qemu_opts_create_nofail(&socket_optslist);
+
+    switch (remote->kind) {
+
+    case SOCKET_ADDRESS_KIND_INET:
+
+        qemu_opt_set(opts, ""host"", remote->inet->host);
+
+        qemu_opt_set(opts, ""port"", remote->inet->port);
+
+        if (local) {
+
+            qemu_opt_set(opts, ""localaddr"", local->inet->host);
+
+            qemu_opt_set(opts, ""localport"", local->inet->port);
+
+        }
+
+        fd = inet_dgram_opts(opts, errp);
+
+        break;
+
+
+
+    default:
+
+        error_setg(errp, ""socket type unsupported for datagram"");
+
+        return -1;
+
+    }
+
+    qemu_opts_del(opts);
+
+    return fd;
+
+}","BdrvChild *bdrv_root_attach_child(BlockDriverState *child_bs,
+
+                                  const char *child_name,
+
+                                  const BdrvChildRole *child_role,
+
+                                  uint64_t perm, uint64_t shared_perm,
+
+                                  void *opaque, Error **errp)
+
+{
+
+    BdrvChild *child;
+
+    int ret;
+
+
+
+    ret = bdrv_check_update_perm(child_bs, perm, shared_perm, NULL, errp);
+
+    if (ret < 0) {
+
+        return NULL;
+
+    }
+
+
+
+    child = g_new(BdrvChild, 1);
+
+    *child = (BdrvChild) {
+
+        .bs             = NULL,
+
+        .name           = g_strdup(child_name),
+
+        .role           = child_role,
+
+        .perm           = perm,
+
+        .shared_perm    = shared_perm,
+
+        .opaque         = opaque,
+
+    };
+
+
+
+    bdrv_replace_child(child, child_bs);
+
+
+
+    return child;
+
+}","","","","","","","",""
+"24","id_162_label_True_qemu.c","1","static uint64_t qdev_get_prop_mask64(Property *prop)
+
+{
+
+    assert(prop->info == &qdev_prop_bit);
+
+    return 0x1 << prop->bitnr;
+
+}","static void cpu_common_initfn(Object *obj)
+
+{
+
+    CPUState *cpu = CPU(obj);
+
+    CPUClass *cc = CPU_GET_CLASS(obj);
+
+
+
+    cpu->cpu_index = UNASSIGNED_CPU_INDEX;
+
+    cpu->gdb_num_regs = cpu->gdb_num_g_regs = cc->gdb_num_core_regs;
+
+    /* *-user doesn't have configurable SMP topology */
+
+    /* the default value is changed by qemu_init_vcpu() for softmmu */
+
+    cpu->nr_cores = 1;
+
+    cpu->nr_threads = 1;
+
+
+
+    qemu_mutex_init(&cpu->work_mutex);
+
+    QTAILQ_INIT(&cpu->breakpoints);
+
+    QTAILQ_INIT(&cpu->watchpoints);
+
+
+
+    cpu->trace_dstate = bitmap_new(trace_get_vcpu_event_count());
+
+
+
+    cpu_exec_initfn(cpu);
+
+}","static FlatView *address_space_get_flatview(AddressSpace *as)
+
+{
+
+    FlatView *view;
+
+
+
+    qemu_mutex_lock(&flat_view_mutex);
+
+    view = as->current_map;
+
+    flatview_ref(view);
+
+    qemu_mutex_unlock(&flat_view_mutex);
+
+    return view;
+
+}","","","","","","","",""
+"25","id_815_label_False_qemu.c","0","static void monitor_readline(const char *prompt, int is_password,
+
+                             char *buf, int buf_size)
+
+{
+
+    readline_start(prompt, is_password, monitor_readline_cb, NULL);
+
+    readline_show_prompt();
+
+    monitor_readline_buf = buf;
+
+    monitor_readline_buf_size = buf_size;
+
+    monitor_readline_started = 1;
+
+    while (monitor_readline_started) {
+
+        main_loop_wait(10);
+
+    }
+
+}","static void spapr_phb_vfio_instance_init(Object *obj)
+
+{
+
+    error_report(""spapr-pci-vfio-host-bridge is deprecated"");
+
+}","static int sh_pci_host_init(PCIDevice *d)
+
+{
+
+    pci_config_set_vendor_id(d->config, PCI_VENDOR_ID_HITACHI);
+
+    pci_config_set_device_id(d->config, PCI_DEVICE_ID_HITACHI_SH7751R);
+
+    pci_set_word(d->config + PCI_COMMAND, PCI_COMMAND_WAIT);
+
+    pci_set_word(d->config + PCI_STATUS, PCI_STATUS_CAP_LIST |
+
+                 PCI_STATUS_FAST_BACK | PCI_STATUS_DEVSEL_MEDIUM);
+
+    return 0;
+
+}","","","","","","","",""
+"26","id_914_label_False_qemu.c","0","static void cs_write (void *opaque, target_phys_addr_t addr,
+
+                      uint64_t val64, unsigned size)
+
+{
+
+    CSState *s = opaque;
+
+    uint32_t saddr, iaddr, val;
+
+
+
+    saddr = addr;
+
+    val = val64;
+
+
+
+    switch (saddr) {
+
+    case Index_Address:
+
+        if (!(s->regs[Index_Address] & MCE) && (val & MCE)
+
+            && (s->dregs[Interface_Configuration] & (3 << 3)))
+
+            s->aci_counter = conf.aci_counter;
+
+
+
+        s->regs[Index_Address] = val & ~(1 << 7);
+
+        break;
+
+
+
+    case Index_Data:
+
+        if (!(s->dregs[MODE_And_ID] & MODE2))
+
+            iaddr = s->regs[Index_Address] & 0x0f;
+
+        else
+
+            iaddr = s->regs[Index_Address] & 0x1f;
+
+
+
+        switch (iaddr) {
+
+        case RESERVED:
+
+        case RESERVED_2:
+
+        case RESERVED_3:
+
+            lwarn (""attempt to write %#x to reserved indirect register %d\n"",
+
+                   val, iaddr);
+
+            break;
+
+
+
+        case FS_And_Playback_Data_Format:
+
+            if (s->regs[Index_Address] & MCE) {
+
+                cs_reset_voices (s, val);
+
+            }
+
+            else {
+
+                if (s->dregs[Alternate_Feature_Status] & PMCE) {
+
+                    val = (val & ~0x0f) | (s->dregs[iaddr] & 0x0f);
+
+                    cs_reset_voices (s, val);
+
+                }
+
+                else {
+
+                    lwarn (""[P]MCE(%#x, %#x) is not set, val=%#x\n"",
+
+                           s->regs[Index_Address],
+
+                           s->dregs[Alternate_Feature_Status],
+
+                           val);
+
+                    break;
+
+                }
+
+            }
+
+            s->dregs[iaddr] = val;
+
+            break;
+
+
+
+        case Interface_Configuration:
+
+            val &= ~(1 << 5);   /* D5 is reserved */
+
+            s->dregs[iaddr] = val;
+
+            if (val & PPIO) {
+
+                lwarn (""PIO is not supported (%#x)\n"", val);
+
+                break;
+
+            }
+
+            if (val & PEN) {
+
+                if (!s->dma_running) {
+
+                    cs_reset_voices (s, s->dregs[FS_And_Playback_Data_Format]);
+
+                }
+
+            }
+
+            else {
+
+                if (s->dma_running) {
+
+                    DMA_release_DREQ (s->dma);
+
+                    AUD_set_active_out (s->voice, 0);
+
+                    s->dma_running = 0;
+
+                }
+
+            }
+
+            break;
+
+
+
+        case Error_Status_And_Initialization:
+
+            lwarn (""attempt to write to read only register %d\n"", iaddr);
+
+            break;
+
+
+
+        case MODE_And_ID:
+
+            dolog (""val=%#x\n"", val);
+
+            if (val & MODE2)
+
+                s->dregs[iaddr] |= MODE2;
+
+            else
+
+                s->dregs[iaddr] &= ~MODE2;
+
+            break;
+
+
+
+        case Alternate_Feature_Enable_I:
+
+            if (val & TE)
+
+                lerr (""timer is not yet supported\n"");
+
+            s->dregs[iaddr] = val;
+
+            break;
+
+
+
+        case Alternate_Feature_Status:
+
+            if ((s->dregs[iaddr] & P
+
+/* ... [Cắt gọn do vượt quá 3000 ký tự] */","static int qcow_read_extensions(BlockDriverState *bs, uint64_t start_offset,
+
+                                uint64_t end_offset)
+
+{
+
+    BDRVQcowState *s = bs->opaque;
+
+    QCowExtension ext;
+
+    uint64_t offset;
+
+
+
+#ifdef DEBUG_EXT
+
+    printf(""qcow_read_extensions: start=%ld end=%ld\n"", start_offset, end_offset);
+
+#endif
+
+    offset = start_offset;
+
+    while (offset < end_offset) {
+
+
+
+#ifdef DEBUG_EXT
+
+        /* Sanity check */
+
+        if (offset > s->cluster_size)
+
+            printf(""qcow_handle_extension: suspicious offset %lu\n"", offset);
+
+
+
+        printf(""attemting to read extended header in offset %lu\n"", offset);
+
+#endif
+
+
+
+        if (bdrv_pread(s->hd, offset, &ext, sizeof(ext)) != sizeof(ext)) {
+
+            fprintf(stderr, ""qcow_handle_extension: ERROR: pread fail from offset %llu\n"",
+
+                    (unsigned long long)offset);
+
+            return 1;
+
+        }
+
+        be32_to_cpus(&ext.magic);
+
+        be32_to_cpus(&ext.len);
+
+        offset += sizeof(ext);
+
+#ifdef DEBUG_EXT
+
+        printf(""ext.magic = 0x%x\n"", ext.magic);
+
+#endif
+
+        switch (ext.magic) {
+
+        case QCOW_EXT_MAGIC_END:
+
+            return 0;
+
+
+
+        case QCOW_EXT_MAGIC_BACKING_FORMAT:
+
+            if (ext.len >= sizeof(bs->backing_format)) {
+
+                fprintf(stderr, ""ERROR: ext_backing_format: len=%u too large""
+
+                        "" (>=%zu)\n"",
+
+                        ext.len, sizeof(bs->backing_format));
+
+                return 2;
+
+            }
+
+            if (bdrv_pread(s->hd, offset , bs->backing_format,
+
+                           ext.len) != ext.len)
+
+                return 3;
+
+            bs->backing_format[ext.len] = '\0';
+
+#ifdef DEBUG_EXT
+
+            printf(""Qcow2: Got format extension %s\n"", bs->backing_format);
+
+#endif
+
+            offse
+
+/* ... [Cắt gọn do vượt quá 1800 ký tự] */","static int tpm_passthrough_test_tpmdev(int fd)
+
+{
+
+    struct tpm_req_hdr req = {
+
+        .tag = cpu_to_be16(TPM_TAG_RQU_COMMAND),
+
+        .len = cpu_to_be32(sizeof(req)),
+
+        .ordinal = cpu_to_be32(TPM_ORD_GetTicks),
+
+    };
+
+    struct tpm_resp_hdr *resp;
+
+    fd_set readfds;
+
+    int n;
+
+    struct timeval tv = {
+
+        .tv_sec = 1,
+
+        .tv_usec = 0,
+
+    };
+
+    unsigned char buf[1024];
+
+
+
+    n = write(fd, &req, sizeof(req));
+
+    if (n < 0) {
+
+        return errno;
+
+    }
+
+    if (n != sizeof(req)) {
+
+        return EFAULT;
+
+    }
+
+
+
+    FD_ZERO(&readfds);
+
+    FD_SET(fd, &readfds);
+
+
+
+    /* wait for a second */
+
+    n = select(fd + 1, &readfds, NULL, NULL, &tv);
+
+    if (n != 1) {
+
+        return errno;
+
+    }
+
+
+
+    n = read(fd, &buf, sizeof(buf));
+
+    if (n < sizeof(struct tpm_resp_hdr)) {
+
+        return EFAULT;
+
+    }
+
+
+
+    resp = (struct tpm_resp_hdr *)buf;
+
+    /* check the header */
+
+    if (be16_to_cpu(resp->tag) != TPM_TAG_RSP_COMMAND ||
+
+        be32_to_cpu(resp->len) != n) {
+
+        return EBADMSG;
+
+    }
+
+
+
+    return 0;
+
+}","","","","","","","",""
+"27","id_227_label_False_qemu.c","0","static uint64_t omap_pwt_read(void *opaque, target_phys_addr_t addr,
+
+                              unsigned size)
+
+{
+
+    struct omap_pwt_s *s = (struct omap_pwt_s *) opaque;
+
+    int offset = addr & OMAP_MPUI_REG_MASK;
+
+
+
+    if (size != 1) {
+
+        return omap_badwidth_read8(opaque, addr);
+
+    }
+
+
+
+    switch (offset) {
+
+    case 0x00:	/* FRC */
+
+        return s->frc;
+
+    case 0x04:	/* VCR */
+
+        return s->vrc;
+
+    case 0x08:	/* GCR */
+
+        return s->gcr;
+
+    }
+
+    OMAP_BAD_REG(addr);
+
+    return 0;
+
+}","static uint64_t pcnet_ioport_read(void *opaque, target_phys_addr_t addr,
+
+                                  unsigned size)
+
+{
+
+    PCNetState *d = opaque;
+
+
+
+    if (addr < 16 && size == 1) {
+
+        return pcnet_aprom_readb(d, addr);
+
+    } else if (addr >= 0x10 && addr < 0x20 && size == 2) {
+
+        return pcnet_ioport_readw(d, addr);
+
+    } else if (addr >= 0x10 && addr < 0x20 && size == 4) {
+
+        return pcnet_ioport_readl(d, addr);
+
+    }
+
+    return ((uint64_t)1 << (size * 8)) - 1;
+
+}","BdrvChild *bdrv_root_attach_child(BlockDriverState *child_bs,
+
+                                  const char *child_name,
+
+                                  const BdrvChildRole *child_role,
+
+                                  uint64_t perm, uint64_t shared_perm,
+
+                                  void *opaque, Error **errp)
+
+{
+
+    BdrvChild *child;
+
+    int ret;
+
+
+
+    ret = bdrv_check_update_perm(child_bs, perm, shared_perm, NULL, errp);
+
+    if (ret < 0) {
+
+        return NULL;
+
+    }
+
+
+
+    child = g_new(BdrvChild, 1);
+
+    *child = (BdrvChild) {
+
+        .bs             = NULL,
+
+        .name           = g_strdup(child_name),
+
+        .role           = child_role,
+
+        .perm           = perm,
+
+        .shared_perm    = shared_perm,
+
+        .opaque         = opaque,
+
+    };
+
+
+
+    bdrv_replace_child(child, child_bs);
+
+
+
+    return child;
+
+}","","","","","","","",""
+"28","id_420_label_False_FFmpeg.c","0","static int count_paired_channels(uint8_t (*layout_map)[3], int tags, int pos, int *current) {
+
+    int num_pos_channels = 0;
+
+    int first_cpe = 0;
+
+    int sce_parity = 0;
+
+    int i;
+
+    for (i = *current; i < tags; i++) {
+
+        if (layout_map[i][2] != pos)
+
+            break;
+
+        if (layout_map[i][0] == TYPE_CPE) {
+
+            if (sce_parity) {
+
+                if (pos == AAC_CHANNEL_FRONT || !first_cpe) {
+
+                    sce_parity = 0;
+
+                } else {
+
+                    return -1;
+
+                }
+
+            }
+
+            num_pos_channels += 2;
+
+            first_cpe = 1;
+
+        } else {
+
+            num_pos_channels++;
+
+            sce_parity ^= 1;
+
+        }
+
+    }
+
+    if (sce_parity &&
+
+        ((pos == AAC_CHANNEL_FRONT && first_cpe) || pos == AAC_CHANNEL_SIDE))
+
+            return -1;
+
+    *current = i;
+
+    return num_pos_channels;
+
+}","int tcg_gen_code(TCGContext *s, TranslationBlock *tb)
+
+{
+
+    int i, oi, oi_next, num_insns;
+
+
+
+#ifdef CONFIG_PROFILER
+
+    {
+
+        int n;
+
+
+
+        n = s->gen_last_op_idx + 1;
+
+        s->op_count += n;
+
+        if (n > s->op_count_max) {
+
+            s->op_count_max = n;
+
+        }
+
+
+
+        n = s->nb_temps;
+
+        s->temp_count += n;
+
+        if (n > s->temp_count_max) {
+
+            s->temp_count_max = n;
+
+        }
+
+    }
+
+#endif
+
+
+
+#ifdef DEBUG_DISAS
+
+    if (unlikely(qemu_loglevel_mask(CPU_LOG_TB_OP)
+
+                 && qemu_log_in_addr_range(tb->pc))) {
+
+        qemu_log(""OP:\n"");
+
+        tcg_dump_ops(s);
+
+        qemu_log(""\n"");
+
+    }
+
+#endif
+
+
+
+#ifdef CONFIG_PROFILER
+
+    s->opt_time -= profile_getclock();
+
+#endif
+
+
+
+#ifdef USE_TCG_OPTIMIZATIONS
+
+    tcg_optimize(s);
+
+#endif
+
+
+
+#ifdef CONFIG_PROFILER
+
+    s->opt_time += profile_getclock();
+
+    s->la_time -= profile_getclock();
+
+#endif
+
+
+
+    tcg_liveness_analysis(s);
+
+
+
+#ifdef CONFIG_PROFILER
+
+    s->la_time += profile_getclock();
+
+#endif
+
+
+
+#ifdef DEBUG_DISAS
+
+    if (unlikely(qemu_loglevel_mask(CPU_LOG_TB_OP_OPT)
+
+                 && qemu_log_in_addr_range(tb->pc))) {
+
+        qemu_log(""OP after optimization and liveness analysis:\n"");
+
+        tcg_dump_ops(s);
+
+        qemu_log(""\n"");
+
+    }
+
+#endif
+
+
+
+    tcg_reg_alloc_start(s);
+
+
+
+    s->code_buf = tb->tc_ptr;
+
+    s->code_ptr = tb->tc_ptr;
+
+
+
+    tcg_out_tb_init(s);
+
+
+
+    num_insns = -1;
+
+    for (oi = s->gen_first_op_idx; oi >= 0; oi = oi_next) {
+
+        TCGOp * const op = &s->gen_op_buf[oi];
+
+        TCGArg * const args = &s->gen_opparam_buf[op->args];
+
+        TCGOpcode opc = op->opc;
+
+        const TCGOpDef *def = &tcg_op_defs[opc];
+
+        uint16_t dead_args = s->op_dead_args[oi];
+
+        uint8_t sync_args = s->op_sync_args[oi];
+
+
+
+  
+
+/* ... [Cắt gọn do vượt quá 1800 ký tự] */","static int decode_wdlt(GetByteContext *gb, uint8_t *frame, int width, int height)
+
+{
+
+    const uint8_t *frame_end   = frame + width * height;
+
+    uint8_t *line_ptr;
+
+    int count, i, v, lines, segments;
+
+
+
+    lines = bytestream2_get_le16(gb);
+
+    if (lines > height)
+
+        return -1;
+
+
+
+    while (lines--) {
+
+        if (bytestream2_get_bytes_left(gb) < 2)
+
+            return -1;
+
+        segments = bytestream2_get_le16u(gb);
+
+        while ((segments & 0xC000) == 0xC000) {
+
+            unsigned delta = -((int16_t)segments * width);
+
+            if (frame_end - frame <= delta)
+
+                return -1;
+
+            frame    += delta;
+
+            segments = bytestream2_get_le16(gb);
+
+        }
+
+        if (segments & 0x8000) {
+
+            frame[width - 1] = segments & 0xFF;
+
+            segments = bytestream2_get_le16(gb);
+
+        }
+
+        line_ptr = frame;
+
+        frame += width;
+
+        while (segments--) {
+
+            if (frame - line_ptr <= bytestream2_peek_byte(gb))
+
+                return -1;
+
+            line_ptr += bytestream2_get_byte(gb);
+
+            count = (int8_t)bytestream2_get_byte(gb);
+
+            if (count >= 0) {
+
+                if (frame - line_ptr < count * 2)
+
+                    return -1;
+
+                if (bytestream2_get_buffer(gb, line_ptr, count * 2) != count * 2)
+
+                    return -1;
+
+                line_ptr += count * 2;
+
+            } else {
+
+                count = -count;
+
+                if (frame - line_ptr < count * 2)
+
+                    return -1;
+
+                v = bytestream2_get_le16(gb);
+
+                for (i = 0; i < count; i++)
+
+                    bytestream_put_le16(&line_ptr, v);
+
+            }
+
+        }
+
+    }
+
+
+
+    return 0;
+
+}","","","","","","","",""
+"29","id_10_label_True_qemu.c","1","static inline int64_t sub64(const int64_t a, const int64_t b)
+
+{
+
+	return a - b;
+
+}","static void bdrv_sync_complete(void *opaque, int ret)
+
+{
+
+    /* do nothing. Masters do not directly interact with the backing store,
+
+     * only the working copy so no mutexing required.
+
+     */
+
+}","static void cpu_common_initfn(Object *obj)
+
+{
+
+    CPUState *cpu = CPU(obj);
+
+    CPUClass *cc = CPU_GET_CLASS(obj);
+
+
+
+    cpu->cpu_index = UNASSIGNED_CPU_INDEX;
+
+    cpu->gdb_num_regs = cpu->gdb_num_g_regs = cc->gdb_num_core_regs;
+
+    /* *-user doesn't have configurable SMP topology */
+
+    /* the default value is changed by qemu_init_vcpu() for softmmu */
+
+    cpu->nr_cores = 1;
+
+    cpu->nr_threads = 1;
+
+
+
+    qemu_mutex_init(&cpu->work_mutex);
+
+    QTAILQ_INIT(&cpu->breakpoints);
+
+    QTAILQ_INIT(&cpu->watchpoints);
+
+
+
+    cpu->trace_dstate = bitmap_new(trace_get_vcpu_event_count());
+
+
+
+    cpu_exec_initfn(cpu);
+
+}","","","","","","","",""
+"30","id_311_label_False_qemu.c","0","bool error_is_type(Error *err, const char *fmt)
+
+{
+
+    const char *error_class;
+
+    char *ptr;
+
+    char *end;
+
+
+
+    if (!err) {
+
+        return false;
+
+    }
+
+
+
+    ptr = strstr(fmt, ""'class': '"");
+
+    assert(ptr != NULL);
+
+    ptr += strlen(""'class': '"");
+
+
+
+    end = strchr(ptr, '\'');
+
+    assert(end != NULL);
+
+
+
+    error_class = error_get_field(err, ""class"");
+
+    if (strlen(error_class) != end - ptr) {
+
+        return false;
+
+    }
+
+
+
+    return strncmp(ptr, error_class, end - ptr) == 0;
+
+}","static void do_eject(int argc, const char **argv)
+
+{
+
+    BlockDriverState *bs;
+
+    const char **parg;
+
+    int force;
+
+
+
+    parg = argv + 1;
+
+    if (!*parg) {
+
+    fail:
+
+        help_cmd(argv[0]);
+
+        return;
+
+    }
+
+    force = 0;
+
+    if (!strcmp(*parg, ""-f"")) {
+
+        force = 1;
+
+        parg++;
+
+    }
+
+    if (!*parg)
+
+        goto fail;
+
+    bs = bdrv_find(*parg);
+
+    if (!bs) {
+
+        term_printf(""device not found\n"");
+
+        return;
+
+    }
+
+    eject_device(bs, force);
+
+}","static int kvm_put_vcpu_events(X86CPU *cpu, int level)
+
+{
+
+    CPUX86State *env = &cpu->env;
+
+    struct kvm_vcpu_events events;
+
+
+
+    if (!kvm_has_vcpu_events()) {
+
+        return 0;
+
+    }
+
+
+
+    events.exception.injected = (env->exception_injected >= 0);
+
+    events.exception.nr = env->exception_injected;
+
+    events.exception.has_error_code = env->has_error_code;
+
+    events.exception.error_code = env->error_code;
+
+    events.exception.pad = 0;
+
+
+
+    events.interrupt.injected = (env->interrupt_injected >= 0);
+
+    events.interrupt.nr = env->interrupt_injected;
+
+    events.interrupt.soft = env->soft_interrupt;
+
+
+
+    events.nmi.injected = env->nmi_injected;
+
+    events.nmi.pending = env->nmi_pending;
+
+    events.nmi.masked = !!(env->hflags2 & HF2_NMI_MASK);
+
+    events.nmi.pad = 0;
+
+
+
+    events.sipi_vector = env->sipi_vector;
+
+
+
+    events.flags = 0;
+
+    if (level >= KVM_PUT_RESET_STATE) {
+
+        events.flags |=
+
+            KVM_VCPUEVENT_VALID_NMI_PENDING | KVM_VCPUEVENT_VALID_SIPI_VECTOR;
+
+    }
+
+
+
+    return kvm_vcpu_ioctl(CPU(cpu), KVM_SET_VCPU_EVENTS, &events);
+
+}","","","","","","","",""
+"31","id_682_label_True_FFmpeg.c","1","int av_seek_frame(AVFormatContext *s, int stream_index, int64_t timestamp, int flags)
+
+{
+
+    int ret;
+
+    AVStream *st;
+
+
+
+    ff_read_frame_flush(s);
+
+
+
+    if(flags & AVSEEK_FLAG_BYTE)
+
+        return av_seek_frame_byte(s, stream_index, timestamp, flags);
+
+
+
+    if(stream_index < 0){
+
+        stream_index= av_find_default_stream_index(s);
+
+        if(stream_index < 0)
+
+            return -1;
+
+
+
+        st= s->streams[stream_index];
+
+       /* timestamp for default must be expressed in AV_TIME_BASE units */
+
+        timestamp = av_rescale(timestamp, st->time_base.den, AV_TIME_BASE * (int64_t)st->time_base.num);
+
+    }
+
+
+
+    /* first, we try the format specific seek */
+
+    if (s->iformat->read_seek)
+
+        ret = s->iformat->read_seek(s, stream_index, timestamp, flags);
+
+    else
+
+        ret = -1;
+
+    if (ret >= 0) {
+
+        return 0;
+
+    }
+
+
+
+    if(s->iformat->read_timestamp)
+
+        return av_seek_frame_binary(s, stream_index, timestamp, flags);
+
+    else
+
+        return av_seek_frame_generic(s, stream_index, timestamp, flags);
+
+}","int socket_dgram(SocketAddress *remote, SocketAddress *local, Error **errp)
+
+{
+
+    QemuOpts *opts;
+
+    int fd;
+
+
+
+    opts = qemu_opts_create_nofail(&socket_optslist);
+
+    switch (remote->kind) {
+
+    case SOCKET_ADDRESS_KIND_INET:
+
+        qemu_opt_set(opts, ""host"", remote->inet->host);
+
+        qemu_opt_set(opts, ""port"", remote->inet->port);
+
+        if (local) {
+
+            qemu_opt_set(opts, ""localaddr"", local->inet->host);
+
+            qemu_opt_set(opts, ""localport"", local->inet->port);
+
+        }
+
+        fd = inet_dgram_opts(opts, errp);
+
+        break;
+
+
+
+    default:
+
+        error_setg(errp, ""socket type unsupported for datagram"");
+
+        return -1;
+
+    }
+
+    qemu_opts_del(opts);
+
+    return fd;
+
+}","BdrvChild *bdrv_root_attach_child(BlockDriverState *child_bs,
+
+                                  const char *child_name,
+
+                                  const BdrvChildRole *child_role,
+
+                                  uint64_t perm, uint64_t shared_perm,
+
+                                  void *opaque, Error **errp)
+
+{
+
+    BdrvChild *child;
+
+    int ret;
+
+
+
+    ret = bdrv_check_update_perm(child_bs, perm, shared_perm, NULL, errp);
+
+    if (ret < 0) {
+
+        return NULL;
+
+    }
+
+
+
+    child = g_new(BdrvChild, 1);
+
+    *child = (BdrvChild) {
+
+        .bs             = NULL,
+
+        .name           = g_strdup(child_name),
+
+        .role           = child_role,
+
+        .perm           = perm,
+
+        .shared_perm    = shared_perm,
+
+        .opaque         = opaque,
+
+    };
+
+
+
+    bdrv_replace_child(child, child_bs);
+
+
+
+    return child;
+
+}","","","","","","","",""
+"32","id_555_label_False_FFmpeg.c","0","static int mp3lame_encode_frame(AVCodecContext *avctx, AVPacket *avpkt,
+
+                                const AVFrame *frame, int *got_packet_ptr)
+
+{
+
+    LAMEContext *s = avctx->priv_data;
+
+    MPADecodeHeader hdr;
+
+    int len, ret, ch;
+
+    int lame_result;
+
+    uint32_t h;
+
+
+
+    if (frame) {
+
+        switch (avctx->sample_fmt) {
+
+        case AV_SAMPLE_FMT_S16P:
+
+            ENCODE_BUFFER(lame_encode_buffer, int16_t, frame->data);
+
+            break;
+
+        case AV_SAMPLE_FMT_S32P:
+
+            ENCODE_BUFFER(lame_encode_buffer_int, int32_t, frame->data);
+
+            break;
+
+        case AV_SAMPLE_FMT_FLTP:
+
+            if (frame->linesize[0] < 4 * FFALIGN(frame->nb_samples, 8)) {
+
+                av_log(avctx, AV_LOG_ERROR, ""inadequate AVFrame plane padding\n"");
+
+                return AVERROR(EINVAL);
+
+            }
+
+            for (ch = 0; ch < avctx->channels; ch++) {
+
+                s->fdsp.vector_fmul_scalar(s->samples_flt[ch],
+
+                                           (const float *)frame->data[ch],
+
+                                           32768.0f,
+
+                                           FFALIGN(frame->nb_samples, 8));
+
+            }
+
+            ENCODE_BUFFER(lame_encode_buffer_float, float, s->samples_flt);
+
+            break;
+
+        default:
+
+            return AVERROR_BUG;
+
+        }
+
+    } else {
+
+        lame_result = lame_encode_flush(s->gfp, s->buffer + s->buffer_index,
+
+                                        s->buffer_size - s->buffer_index);
+
+    }
+
+    if (lame_result < 0) {
+
+        if (lame_result == -1) {
+
+            av_log(avctx, AV_LOG_ERROR,
+
+                   ""lame: output buffer too small (buffer index: %d, free bytes: %d)\n"",
+
+                   s->buffer_index, s->buffer_size - s->buffer_index);
+
+        }
+
+        return -1;
+
+    }
+
+    s->buffer_index += lame_result;
+
+    ret = realloc_buffer(s);
+
+    if (ret < 0) {
+
+        av_log(avctx, AV_LOG_ERROR, ""error reallocating output buffer\n"");
+
+        return ret;
+
+    }
+
+
+
+    /* add current frame to the queue */
+
+    if (frame) {
+
+        if ((ret = ff_af_queue_add(&s->afq, frame)) < 0)
+
+            return ret;
+
+    }
+
+
+
+    /* Move 1 frame from the LAME buffer to the output packet, if available.
+
+       We have to parse the first frame header in the output buffer to
+
+       determine the frame size. */
+
+    if (s->buffer_index < 4)
+
+        return 0;
+
+    h = AV_RB32(s->buffer);
+
+    if (ff_mpa_check_header(h) < 0) {
+
+        av_log(avctx, AV_LOG_ERROR, ""Invalid mp3 header at start of buffer\n"");
+
+        return AVERROR_BUG;
+
+    }
+
+    if (avpriv_mpegaudio_decode_header(&hdr, h)) {
+
+        av_log(avctx, AV_LOG_ERROR, ""free format output not supported\n"");
+
+        return -1;
+
+    }
+
+    len = hdr.frame_size;
+
+    ff_dlog(avctx, ""in:%d packet-len:%d index:%d\n"", avctx->frame_size, len,
+
+            s->buffer_index);
+
+    if (len <= s->buffer_index) {
+
+        if ((ret = ff_alloc_packet(avpkt, len))) {
+
+            av_log(avctx, AV_LOG_ERROR,
+
+/* ... [Cắt gọn do vượt quá 3000 ký tự] */","static int decode_wdlt(GetByteContext *gb, uint8_t *frame, int width, int height)
+
+{
+
+    const uint8_t *frame_end   = frame + width * height;
+
+    uint8_t *line_ptr;
+
+    int count, i, v, lines, segments;
+
+
+
+    lines = bytestream2_get_le16(gb);
+
+    if (lines > height)
+
+        return -1;
+
+
+
+    while (lines--) {
+
+        if (bytestream2_get_bytes_left(gb) < 2)
+
+            return -1;
+
+        segments = bytestream2_get_le16u(gb);
+
+        while ((segments & 0xC000) == 0xC000) {
+
+            unsigned delta = -((int16_t)segments * width);
+
+            if (frame_end - frame <= delta)
+
+                return -1;
+
+            frame    += delta;
+
+            segments = bytestream2_get_le16(gb);
+
+        }
+
+        if (segments & 0x8000) {
+
+            frame[width - 1] = segments & 0xFF;
+
+            segments = bytestream2_get_le16(gb);
+
+        }
+
+        line_ptr = frame;
+
+        frame += width;
+
+        while (segments--) {
+
+            if (frame - line_ptr <= bytestream2_peek_byte(gb))
+
+                return -1;
+
+            line_ptr += bytestream2_get_byte(gb);
+
+            count = (int8_t)bytestream2_get_byte(gb);
+
+            if (count >= 0) {
+
+                if (frame - line_ptr < count * 2)
+
+                    return -1;
+
+                if (bytestream2_get_buffer(gb, line_ptr, count * 2) != count * 2)
+
+                    return -1;
+
+                line_ptr += count * 2;
+
+            } else {
+
+                count = -count;
+
+                if (frame - line_ptr < count * 2)
+
+                    return -1;
+
+                v = bytestream2_get_le16(gb);
+
+                for (i = 0; i < count; i++)
+
+                    bytestream_put_le16(&line_ptr, v);
+
+            }
+
+        }
+
+    }
+
+
+
+    return 0;
+
+}","static int decode_wdlt(GetByteContext *gb, uint8_t *frame, int width, int height)
+
+{
+
+    const uint8_t *frame_end   = frame + width * height;
+
+    uint8_t *line_ptr;
+
+    int count, i, v, lines, segments;
+
+
+
+    lines = bytestream2_get_le16(gb);
+
+    if (lines > height)
+
+        return -1;
+
+
+
+    while (lines--) {
+
+        if (bytestream2_get_bytes_left(gb) < 2)
+
+            return -1;
+
+        segments = bytestream2_get_le16u(gb);
+
+        while ((segments & 0xC000) == 0xC000) {
+
+            unsigned delta = -((int16_t)segments * width);
+
+            if (frame_end - frame <= delta)
+
+                return -1;
+
+            frame    += delta;
+
+            segments = bytestream2_get_le16(gb);
+
+        }
+
+        if (segments & 0x8000) {
+
+            frame[width - 1] = segments & 0xFF;
+
+            segments = bytestream2_get_le16(gb);
+
+        }
+
+        line_ptr = frame;
+
+        frame += width;
+
+        while (segments--) {
+
+            if (frame - line_ptr <= bytestream2_peek_byte(gb))
+
+                return -1;
+
+            line_ptr += bytestream2_get_byte(gb);
+
+            count = (int8_t)bytestream2_get_byte(gb);
+
+            if (count >= 0) {
+
+                if (frame - line_ptr < count * 2)
+
+                    return -1;
+
+                if (bytestream2_get_buffer(gb, line_ptr, count * 2) != count * 2)
+
+                    return -1;
+
+                line_ptr += count * 2;
+
+            } else {
+
+                count = -count;
+
+                if (frame - line_ptr < count * 2)
+
+                    return -1;
+
+                v = bytestream2_get_le16(gb);
+
+                for (i = 0; i < count; i++)
+
+                    bytestream_put_le16(&line_ptr, v);
+
+            }
+
+        }
+
+    }
+
+
+
+    return 0;
+
+}","","","","","","","",""
+"33","id_22_label_True_qemu.c","1","static void emulated_push_error(EmulatedState *card, uint64_t code)
+
+{
+
+    EmulEvent *event = (EmulEvent *)g_malloc(sizeof(EmulEvent));
+
+
+
+    assert(event);
+
+    event->p.error.type = EMUL_ERROR;
+
+    event->p.error.code = code;
+
+    emulated_push_event(card, event);
+
+}","static void cpu_common_initfn(Object *obj)
+
+{
+
+    CPUState *cpu = CPU(obj);
+
+    CPUClass *cc = CPU_GET_CLASS(obj);
+
+
+
+    cpu->cpu_index = UNASSIGNED_CPU_INDEX;
+
+    cpu->gdb_num_regs = cpu->gdb_num_g_regs = cc->gdb_num_core_regs;
+
+    /* *-user doesn't have configurable SMP topology */
+
+    /* the default value is changed by qemu_init_vcpu() for softmmu */
+
+    cpu->nr_cores = 1;
+
+    cpu->nr_threads = 1;
+
+
+
+    qemu_mutex_init(&cpu->work_mutex);
+
+    QTAILQ_INIT(&cpu->breakpoints);
+
+    QTAILQ_INIT(&cpu->watchpoints);
+
+
+
+    cpu->trace_dstate = bitmap_new(trace_get_vcpu_event_count());
+
+
+
+    cpu_exec_initfn(cpu);
+
+}","static void curl_multi_read(void *arg)
+
+{
+
+    CURLState *s = (CURLState *)arg;
+
+
+
+    aio_context_acquire(s->s->aio_context);
+
+    curl_multi_do_locked(s);
+
+    curl_multi_check_completion(s->s);
+
+    aio_context_release(s->s->aio_context);
+
+}","","","","","","","",""
+"34","id_1076_label_False_FFmpeg.c","0","static int encode_frame(AVCodecContext * avctx, AVPacket *pkt,
+
+                        const AVFrame *pict, int *got_packet)
+
+{
+
+    TiffEncoderContext *s = avctx->priv_data;
+
+    AVFrame *const p = &s->picture;
+
+    int i;
+
+    uint8_t *ptr;
+
+    uint8_t *offset;
+
+    uint32_t strips;
+
+    uint32_t *strip_sizes = NULL;
+
+    uint32_t *strip_offsets = NULL;
+
+    int bytes_per_row;
+
+    uint32_t res[2] = { 72, 1 };        // image resolution (72/1)
+
+    uint16_t bpp_tab[] = { 8, 8, 8, 8 };
+
+    int ret;
+
+    int is_yuv = 0;
+
+    uint8_t *yuv_line = NULL;
+
+    int shift_h, shift_v;
+
+    const AVPixFmtDescriptor* pfd;
+
+
+
+    s->avctx = avctx;
+
+
+
+    *p = *pict;
+
+    p->pict_type = AV_PICTURE_TYPE_I;
+
+    p->key_frame = 1;
+
+    avctx->coded_frame= &s->picture;
+
+
+
+    s->width = avctx->width;
+
+    s->height = avctx->height;
+
+    s->subsampling[0] = 1;
+
+    s->subsampling[1] = 1;
+
+
+
+    switch (avctx->pix_fmt) {
+
+    case PIX_FMT_RGB48LE:
+
+    case PIX_FMT_GRAY16LE:
+
+    case PIX_FMT_RGB24:
+
+    case PIX_FMT_GRAY8:
+
+    case PIX_FMT_PAL8:
+
+        pfd = &av_pix_fmt_descriptors[avctx->pix_fmt];
+
+        s->bpp = av_get_bits_per_pixel(pfd);
+
+        if (pfd->flags & PIX_FMT_PAL) {
+
+            s->photometric_interpretation = 3;
+
+        } else if (pfd->flags & PIX_FMT_RGB) {
+
+            s->photometric_interpretation = 2;
+
+        } else {
+
+            s->photometric_interpretation = 1;
+
+        }
+
+        s->bpp_tab_size = pfd->nb_components;
+
+        for (i = 0; i < s->bpp_tab_size; i++) {
+
+            bpp_tab[i] = s->bpp / s->bpp_tab_size;
+
+        }
+
+        break;
+
+    case PIX_FMT_MONOBLACK:
+
+        s->bpp = 1;
+
+        s->photometric_interpretation = 1;
+
+        s->bpp_tab_size = 0;
+
+        break;
+
+    case PIX_FMT_MONOWHITE:
+
+        s->bpp = 1;
+
+        s->photometric_interpretation = 0;
+
+        s->bpp_tab_size = 0;
+
+        break;
+
+    case PIX_FMT_YUV420P:
+
+    case PIX_FMT_YUV422P:
+
+    case PIX_FMT_YUV444P:
+
+    case PIX_FMT_YUV410P:
+
+    case PIX_FMT_YUV411P:
+
+        s->photometric_interpretation = 6;
+
+        avcodec_get_chroma_sub_sample(avctx->pix_fmt,
+
+                &shift_h, &shift_v);
+
+        s->bpp = 8 + (16 >> (shift_h + shift_v));
+
+        s->subsampling[0] = 1 << shift_h;
+
+        s->subsampling[1] = 1 << shift_v;
+
+        s->bpp_tab_size = 3;
+
+        is_yuv = 1;
+
+        break;
+
+    default:
+
+        av_log(s->avctx, AV_LOG_ERROR,
+
+               ""This colors format is not supported\n"");
+
+        return -1;
+
+    }
+
+
+
+    if (s->compr == TIFF_DEFLATE || s->compr == TIFF_ADOBE_DEFLATE || s->compr == TIFF_LZW)
+
+        //best choose for DEFLATE
+
+        s->rps = s->height;
+
+    else
+
+        s->rps = FFMAX(8192 / (((s->width * s->bpp) >> 3) + 1), 1);     // suggest size of strip
+
+    s->rps = ((s->rps - 1) / s->subsampling[1] + 1) * s->subsampling[1]; // round rps up
+
+
+
+    strips = (s->height - 1) / s->rps + 1;
+
+
+
+    if (!pkt->data &&
+
+        (ret = av_new_packet(pkt, avctx->width * avctx->height * s->bpp * 2 +
+
+         
+
+/* ... [Cắt gọn do vượt quá 3000 ký tự] */","static int tpm_passthrough_test_tpmdev(int fd)
+
+{
+
+    struct tpm_req_hdr req = {
+
+        .tag = cpu_to_be16(TPM_TAG_RQU_COMMAND),
+
+        .len = cpu_to_be32(sizeof(req)),
+
+        .ordinal = cpu_to_be32(TPM_ORD_GetTicks),
+
+    };
+
+    struct tpm_resp_hdr *resp;
+
+    fd_set readfds;
+
+    int n;
+
+    struct timeval tv = {
+
+        .tv_sec = 1,
+
+        .tv_usec = 0,
+
+    };
+
+    unsigned char buf[1024];
+
+
+
+    n = write(fd, &req, sizeof(req));
+
+    if (n < 0) {
+
+        return errno;
+
+    }
+
+    if (n != sizeof(req)) {
+
+        return EFAULT;
+
+    }
+
+
+
+    FD_ZERO(&readfds);
+
+    FD_SET(fd, &readfds);
+
+
+
+    /* wait for a second */
+
+    n = select(fd + 1, &readfds, NULL, NULL, &tv);
+
+    if (n != 1) {
+
+        return errno;
+
+    }
+
+
+
+    n = read(fd, &buf, sizeof(buf));
+
+    if (n < sizeof(struct tpm_resp_hdr)) {
+
+        return EFAULT;
+
+    }
+
+
+
+    resp = (struct tpm_resp_hdr *)buf;
+
+    /* check the header */
+
+    if (be16_to_cpu(resp->tag) != TPM_TAG_RSP_COMMAND ||
+
+        be32_to_cpu(resp->len) != n) {
+
+        return EBADMSG;
+
+    }
+
+
+
+    return 0;
+
+}","static int decode_wdlt(GetByteContext *gb, uint8_t *frame, int width, int height)
+
+{
+
+    const uint8_t *frame_end   = frame + width * height;
+
+    uint8_t *line_ptr;
+
+    int count, i, v, lines, segments;
+
+
+
+    lines = bytestream2_get_le16(gb);
+
+    if (lines > height)
+
+        return -1;
+
+
+
+    while (lines--) {
+
+        if (bytestream2_get_bytes_left(gb) < 2)
+
+            return -1;
+
+        segments = bytestream2_get_le16u(gb);
+
+        while ((segments & 0xC000) == 0xC000) {
+
+            unsigned delta = -((int16_t)segments * width);
+
+            if (frame_end - frame <= delta)
+
+                return -1;
+
+            frame    += delta;
+
+            segments = bytestream2_get_le16(gb);
+
+        }
+
+        if (segments & 0x8000) {
+
+            frame[width - 1] = segments & 0xFF;
+
+            segments = bytestream2_get_le16(gb);
+
+        }
+
+        line_ptr = frame;
+
+        frame += width;
+
+        while (segments--) {
+
+            if (frame - line_ptr <= bytestream2_peek_byte(gb))
+
+                return -1;
+
+            line_ptr += bytestream2_get_byte(gb);
+
+            count = (int8_t)bytestream2_get_byte(gb);
+
+            if (count >= 0) {
+
+                if (frame - line_ptr < count * 2)
+
+                    return -1;
+
+                if (bytestream2_get_buffer(gb, line_ptr, count * 2) != count * 2)
+
+                    return -1;
+
+                line_ptr += count * 2;
+
+            } else {
+
+                count = -count;
+
+                if (frame - line_ptr < count * 2)
+
+                    return -1;
+
+                v = bytestream2_get_le16(gb);
+
+                for (i = 0; i < count; i++)
+
+                    bytestream_put_le16(&line_ptr, v);
+
+            }
+
+        }
+
+    }
+
+
+
+    return 0;
+
+}","","","","","","","",""
+"35","id_255_label_True_qemu.c","1","gen_intermediate_code_internal(MIPSCPU *cpu, TranslationBlock *tb,
+
+                               bool search_pc)
+
+{
+
+    CPUState *cs = CPU(cpu);
+
+    CPUMIPSState *env = &cpu->env;
+
+    DisasContext ctx;
+
+    target_ulong pc_start;
+
+    uint16_t *gen_opc_end;
+
+    CPUBreakpoint *bp;
+
+    int j, lj = -1;
+
+    int num_insns;
+
+    int max_insns;
+
+    int insn_bytes;
+
+    int is_branch;
+
+
+
+    if (search_pc)
+
+        qemu_log(""search pc %d\n"", search_pc);
+
+
+
+    pc_start = tb->pc;
+
+    gen_opc_end = tcg_ctx.gen_opc_buf + OPC_MAX_SIZE;
+
+    ctx.pc = pc_start;
+
+    ctx.saved_pc = -1;
+
+    ctx.singlestep_enabled = cs->singlestep_enabled;
+
+    ctx.insn_flags = env->insn_flags;
+
+    ctx.tb = tb;
+
+    ctx.bstate = BS_NONE;
+
+    /* Restore delay slot state from the tb context.  */
+
+    ctx.hflags = (uint32_t)tb->flags; /* FIXME: maybe use 64 bits here? */
+
+    restore_cpu_state(env, &ctx);
+
+#ifdef CONFIG_USER_ONLY
+
+        ctx.mem_idx = MIPS_HFLAG_UM;
+
+#else
+
+        ctx.mem_idx = ctx.hflags & MIPS_HFLAG_KSU;
+
+#endif
+
+    num_insns = 0;
+
+    max_insns = tb->cflags & CF_COUNT_MASK;
+
+    if (max_insns == 0)
+
+        max_insns = CF_COUNT_MASK;
+
+    LOG_DISAS(""\ntb %p idx %d hflags %04x\n"", tb, ctx.mem_idx, ctx.hflags);
+
+    gen_tb_start();
+
+    while (ctx.bstate == BS_NONE) {
+
+        if (unlikely(!QTAILQ_EMPTY(&env->breakpoints))) {
+
+            QTAILQ_FOREACH(bp, &env->breakpoints, entry) {
+
+                if (bp->pc == ctx.pc) {
+
+                    save_cpu_state(&ctx, 1);
+
+                    ctx.bstate = BS_BRANCH;
+
+                    gen_helper_0e0i(raise_exception, EXCP_DEBUG);
+
+                    /* Include the breakpoint location or the tb won't
+
+                     * be flushed when it must be.  */
+
+                    ctx.pc += 4;
+
+                    goto done_generating;
+
+                }
+
+            }
+
+        }
+
+
+
+        if (search_pc) {
+
+            j = tcg_ctx.gen_opc_ptr - tcg_ctx.gen_opc_buf;
+
+            if (lj < j) {
+
+                lj++;
+
+                while (lj < j)
+
+                    tcg_ctx.gen_opc_instr_start[lj++] = 0;
+
+            }
+
+            tcg_ctx.gen_opc_pc[lj] = ctx.pc;
+
+            gen_opc_hflags[lj] = ctx.hflags & MIPS_HFLAG_BMASK;
+
+            gen_opc_btarget[lj] = ctx.btarget;
+
+            tcg_ctx.gen_opc_instr_start[lj] = 1;
+
+            tcg_ctx.gen_opc_icount[lj] = num_insns;
+
+        }
+
+        if (num_insns + 1 == max_insns && (tb->cflags & CF_LAST_IO))
+
+            gen_io_start();
+
+
+
+        is_branch = 0;
+
+        if (!(ctx.hflags & MIPS_HFLAG_M16)) {
+
+            ctx.opcode = cpu_ldl_code(env, ctx.pc);
+
+            insn_bytes = 4;
+
+            decode_opc(env, &ctx, &is_branch);
+
+        } else if (ctx.insn_flags & ASE_MICROMIPS) {
+
+            ctx.opcode = cpu_lduw_code(env, ctx.pc);
+
+            insn_bytes = decode_micromips_opc(env, &ctx, &is_branch);
+
+        } else if (ctx.insn_flags & ASE_MIPS16) {
+
+            ctx.opcode = cpu_lduw_code(env, ctx.pc);
+
+            insn_bytes = decode_mips16_op
+
+/* ... [Cắt gọn do vượt quá 3000 ký tự] */","int socket_dgram(SocketAddress *remote, SocketAddress *local, Error **errp)
+
+{
+
+    QemuOpts *opts;
+
+    int fd;
+
+
+
+    opts = qemu_opts_create_nofail(&socket_optslist);
+
+    switch (remote->kind) {
+
+    case SOCKET_ADDRESS_KIND_INET:
+
+        qemu_opt_set(opts, ""host"", remote->inet->host);
+
+        qemu_opt_set(opts, ""port"", remote->inet->port);
+
+        if (local) {
+
+            qemu_opt_set(opts, ""localaddr"", local->inet->host);
+
+            qemu_opt_set(opts, ""localport"", local->inet->port);
+
+        }
+
+        fd = inet_dgram_opts(opts, errp);
+
+        break;
+
+
+
+    default:
+
+        error_setg(errp, ""socket type unsupported for datagram"");
+
+        return -1;
+
+    }
+
+    qemu_opts_del(opts);
+
+    return fd;
+
+}","int cpu_x86_gen_code(uint8_t *gen_code_buf, int max_code_size, 
+
+                     int *gen_code_size_ptr,
+
+                     uint8_t *pc_start,  uint8_t *cs_base, int flags)
+
+{
+
+    DisasContext dc1, *dc = &dc1;
+
+    uint8_t *pc_ptr;
+
+    uint16_t *gen_opc_end;
+
+    int gen_code_size;
+
+    long ret;
+
+#ifdef DEBUG_DISAS
+
+    struct disassemble_info disasm_info;
+
+#endif
+
+    
+
+    /* generate intermediate code */
+
+
+
+    dc->code32 = (flags >> GEN_FLAG_CODE32_SHIFT) & 1;
+
+    dc->ss32 = (flags >> GEN_FLAG_SS32_SHIFT) & 1;
+
+    dc->addseg = (flags >> GEN_FLAG_ADDSEG_SHIFT) & 1;
+
+    dc->f_st = (flags >> GEN_FLAG_ST_SHIFT) & 7;
+
+    dc->cc_op = CC_OP_DYNAMIC;
+
+    dc->cs_base = cs_base;
+
+
+
+    gen_opc_ptr = gen_opc_buf;
+
+    gen_opc_end = gen_opc_buf + OPC_MAX_SIZE;
+
+    gen_opparam_ptr = gen_opparam_buf;
+
+
+
+    dc->is_jmp = 0;
+
+    pc_ptr = pc_start;
+
+    do {
+
+        ret = disas_insn(dc, pc_ptr);
+
+        if (ret == -1) {
+
+            /* we trigger an illegal instruction operation only if it
+
+               is the first instruction. Otherwise, we simply stop
+
+               generating the code just before it */
+
+            if (pc_ptr == pc_start)
+
+                return -1;
+
+            else
+
+                break;
+
+        }
+
+        pc_ptr = (void *)ret;
+
+    } while (!dc->is_jmp && gen_opc_ptr < gen_opc_end);
+
+    /* we must store the eflags state if it is not already done */
+
+    if (dc->cc_op != CC_OP_DYNAMIC)
+
+        gen_op_set_cc_op(dc->cc_op);
+
+    if (dc->is_jmp != 1) {
+
+        /* we add an additionnal jmp to update the simulated PC */
+
+        gen_op_jmp_im(ret - (unsigned long)dc->cs_base);
+
+    }
+
+    *gen_opc_ptr = INDEX_op_end;
+
+
+
+    /* optimize flag computations */
+
+#ifdef DEBUG_DISAS
+
+    if (loglevel) {
+
+        uint8_t *pc;
+
+        int count;
+
+/* ... [Cắt gọn do vượt quá 1800 ký tự] */","","","","","","","",""
+"36","id_754_label_False_FFmpeg.c","0","static int h264_slice_header_parse(H264Context *h, H264SliceContext *sl,
+
+                                   const H2645NAL *nal)
+
+{
+
+    const SPS *sps;
+
+    const PPS *pps;
+
+    int ret;
+
+    unsigned int slice_type, tmp, i;
+
+    int field_pic_flag, bottom_field_flag;
+
+    int frame_num, droppable, picture_structure;
+
+    int mb_aff_frame = 0;
+
+
+
+    sl->first_mb_addr = get_ue_golomb(&sl->gb);
+
+
+
+    if (sl->first_mb_addr == 0) { // FIXME better field boundary detection
+
+        if (h->current_slice && h->cur_pic_ptr && FIELD_PICTURE(h)) {
+
+            ff_h264_field_end(h, sl, 1);
+
+        }
+
+
+
+        h->current_slice = 0;
+
+        if (!h->first_field) {
+
+            if (h->cur_pic_ptr && !h->droppable) {
+
+                ff_thread_report_progress(&h->cur_pic_ptr->tf, INT_MAX,
+
+                                          h->picture_structure == PICT_BOTTOM_FIELD);
+
+            }
+
+            h->cur_pic_ptr = NULL;
+
+        }
+
+    }
+
+
+
+    slice_type = get_ue_golomb_31(&sl->gb);
+
+    if (slice_type > 9) {
+
+        av_log(h->avctx, AV_LOG_ERROR,
+
+               ""slice type %d too large at %d\n"",
+
+               slice_type, sl->first_mb_addr);
+
+        return AVERROR_INVALIDDATA;
+
+    }
+
+    if (slice_type > 4) {
+
+        slice_type -= 5;
+
+        sl->slice_type_fixed = 1;
+
+    } else
+
+        sl->slice_type_fixed = 0;
+
+
+
+    slice_type         = ff_h264_golomb_to_pict_type[slice_type];
+
+    sl->slice_type     = slice_type;
+
+    sl->slice_type_nos = slice_type & 3;
+
+
+
+    if (nal->type  == NAL_IDR_SLICE &&
+
+        sl->slice_type_nos != AV_PICTURE_TYPE_I) {
+
+        av_log(h->avctx, AV_LOG_ERROR, ""A non-intra slice in an IDR NAL unit.\n"");
+
+        return AVERROR_INVALIDDATA;
+
+    }
+
+
+
+    sl->pps_id = get_ue_golomb(&sl->gb);
+
+    if (sl->pps_id >= MAX_PPS_COUNT) {
+
+        av_log(h->avctx, AV_LOG_ERROR, ""pps_id %u out of range\n"", sl->pps_id);
+
+        return AVERROR_INVALIDDATA;
+
+    }
+
+    if (!h->ps.pps_list[sl->pps_id]) {
+
+        av_log(h->avctx, AV_LOG_ERROR,
+
+               ""non-existing PPS %u referenced\n"",
+
+               sl->pps_id);
+
+        return AVERROR_INVALIDDATA;
+
+    }
+
+    if (h->current_slice > 0 &&
+
+        h->ps.pps != (const PPS*)h->ps.pps_list[sl->pps_id]->data) {
+
+        av_log(h->avctx, AV_LOG_ERROR, ""PPS changed between slices\n"");
+
+        return AVERROR_INVALIDDATA;
+
+    }
+
+    pps = (const PPS*)h->ps.pps_list[sl->pps_id]->data;
+
+
+
+    if (!h->ps.sps_list[pps->sps_id]) {
+
+        av_log(h->avctx, AV_LOG_ERROR,
+
+               ""non-existing SPS %u referenced\n"", pps->sps_id);
+
+        return AVERROR_INVALIDDATA;
+
+    }
+
+    sps = (const SPS*)h->ps.sps_list[pps->sps_id]->data;
+
+
+
+    frame_num = get_bits(&sl->gb, sps->log2_max_frame_num);
+
+    if (!h->setup_finished)
+
+        h->poc.frame_num = frame_num;
+
+
+
+    sl->mb_mbaff       = 0;
+
+
+
+    droppable = nal->ref_idc == 0;
+
+    if (sps->frame_mbs_only_flag) {
+
+        picture_structure = PICT_FRAME;
+
+    } else {
+
+        field_pic_flag = get_bits1(&sl->gb);
+
+        i
+
+/* ... [Cắt gọn do vượt quá 3000 ký tự] */","long do_sigreturn(CPUSH4State *regs)
+
+{
+
+    struct target_sigframe *frame;
+
+    abi_ulong frame_addr;
+
+    sigset_t blocked;
+
+    target_sigset_t target_set;
+
+    target_ulong r0;
+
+    int i;
+
+    int err = 0;
+
+
+
+#if defined(DEBUG_SIGNAL)
+
+    fprintf(stderr, ""do_sigreturn\n"");
+
+#endif
+
+    frame_addr = regs->gregs[15];
+
+    if (!lock_user_struct(VERIFY_READ, frame, frame_addr, 1))
+
+   	goto badframe;
+
+
+
+    err |= __get_user(target_set.sig[0], &frame->sc.oldmask);
+
+    for(i = 1; i < TARGET_NSIG_WORDS; i++) {
+
+        err |= (__get_user(target_set.sig[i], &frame->extramask[i - 1]));
+
+    }
+
+
+
+    if (err)
+
+        goto badframe;
+
+
+
+    target_to_host_sigset_internal(&blocked, &target_set);
+
+    sigprocmask(SIG_SETMASK, &blocked, NULL);
+
+
+
+    if (restore_sigcontext(regs, &frame->sc, &r0))
+
+        goto badframe;
+
+
+
+    unlock_user_struct(frame, frame_addr, 0);
+
+    return r0;
+
+
+
+badframe:
+
+    unlock_user_struct(frame, frame_addr, 0);
+
+    force_sig(TARGET_SIGSEGV);
+
+    return 0;
+
+}","int tcg_gen_code(TCGContext *s, TranslationBlock *tb)
+
+{
+
+    int i, oi, oi_next, num_insns;
+
+
+
+#ifdef CONFIG_PROFILER
+
+    {
+
+        int n;
+
+
+
+        n = s->gen_last_op_idx + 1;
+
+        s->op_count += n;
+
+        if (n > s->op_count_max) {
+
+            s->op_count_max = n;
+
+        }
+
+
+
+        n = s->nb_temps;
+
+        s->temp_count += n;
+
+        if (n > s->temp_count_max) {
+
+            s->temp_count_max = n;
+
+        }
+
+    }
+
+#endif
+
+
+
+#ifdef DEBUG_DISAS
+
+    if (unlikely(qemu_loglevel_mask(CPU_LOG_TB_OP)
+
+                 && qemu_log_in_addr_range(tb->pc))) {
+
+        qemu_log(""OP:\n"");
+
+        tcg_dump_ops(s);
+
+        qemu_log(""\n"");
+
+    }
+
+#endif
+
+
+
+#ifdef CONFIG_PROFILER
+
+    s->opt_time -= profile_getclock();
+
+#endif
+
+
+
+#ifdef USE_TCG_OPTIMIZATIONS
+
+    tcg_optimize(s);
+
+#endif
+
+
+
+#ifdef CONFIG_PROFILER
+
+    s->opt_time += profile_getclock();
+
+    s->la_time -= profile_getclock();
+
+#endif
+
+
+
+    tcg_liveness_analysis(s);
+
+
+
+#ifdef CONFIG_PROFILER
+
+    s->la_time += profile_getclock();
+
+#endif
+
+
+
+#ifdef DEBUG_DISAS
+
+    if (unlikely(qemu_loglevel_mask(CPU_LOG_TB_OP_OPT)
+
+                 && qemu_log_in_addr_range(tb->pc))) {
+
+        qemu_log(""OP after optimization and liveness analysis:\n"");
+
+        tcg_dump_ops(s);
+
+        qemu_log(""\n"");
+
+    }
+
+#endif
+
+
+
+    tcg_reg_alloc_start(s);
+
+
+
+    s->code_buf = tb->tc_ptr;
+
+    s->code_ptr = tb->tc_ptr;
+
+
+
+    tcg_out_tb_init(s);
+
+
+
+    num_insns = -1;
+
+    for (oi = s->gen_first_op_idx; oi >= 0; oi = oi_next) {
+
+        TCGOp * const op = &s->gen_op_buf[oi];
+
+        TCGArg * const args = &s->gen_opparam_buf[op->args];
+
+        TCGOpcode opc = op->opc;
+
+        const TCGOpDef *def = &tcg_op_defs[opc];
+
+        uint16_t dead_args = s->op_dead_args[oi];
+
+        uint8_t sync_args = s->op_sync_args[oi];
+
+
+
+  
+
+/* ... [Cắt gọn do vượt quá 1800 ký tự] */","","","","","","","",""
+"37","id_814_label_False_qemu.c","0","static void test_io_channel_setup_sync(SocketAddressLegacy *listen_addr,
+
+                                       SocketAddressLegacy *connect_addr,
+
+                                       QIOChannel **src,
+
+                                       QIOChannel **dst)
+
+{
+
+    QIOChannelSocket *lioc;
+
+
+
+    lioc = qio_channel_socket_new();
+
+    qio_channel_socket_listen_sync(lioc, listen_addr, &error_abort);
+
+
+
+    if (listen_addr->type == SOCKET_ADDRESS_LEGACY_KIND_INET) {
+
+        SocketAddressLegacy *laddr = qio_channel_socket_get_local_address(
+
+            lioc, &error_abort);
+
+
+
+        g_free(connect_addr->u.inet.data->port);
+
+        connect_addr->u.inet.data->port = g_strdup(laddr->u.inet.data->port);
+
+
+
+        qapi_free_SocketAddressLegacy(laddr);
+
+    }
+
+
+
+    *src = QIO_CHANNEL(qio_channel_socket_new());
+
+    qio_channel_socket_connect_sync(
+
+        QIO_CHANNEL_SOCKET(*src), connect_addr, &error_abort);
+
+    qio_channel_set_delay(*src, false);
+
+
+
+    qio_channel_wait(QIO_CHANNEL(lioc), G_IO_IN);
+
+    *dst = QIO_CHANNEL(qio_channel_socket_accept(lioc, &error_abort));
+
+    g_assert(*dst);
+
+
+
+    test_io_channel_set_socket_bufs(*src, *dst);
+
+
+
+    object_unref(OBJECT(lioc));
+
+}","static void curl_multi_read(void *arg)
+
+{
+
+    CURLState *s = (CURLState *)arg;
+
+
+
+    aio_context_acquire(s->s->aio_context);
+
+    curl_multi_do_locked(s);
+
+    curl_multi_check_completion(s->s);
+
+    aio_context_release(s->s->aio_context);
+
+}","int socket_dgram(SocketAddress *remote, SocketAddress *local, Error **errp)
+
+{
+
+    QemuOpts *opts;
+
+    int fd;
+
+
+
+    opts = qemu_opts_create_nofail(&socket_optslist);
+
+    switch (remote->kind) {
+
+    case SOCKET_ADDRESS_KIND_INET:
+
+        qemu_opt_set(opts, ""host"", remote->inet->host);
+
+        qemu_opt_set(opts, ""port"", remote->inet->port);
+
+        if (local) {
+
+            qemu_opt_set(opts, ""localaddr"", local->inet->host);
+
+            qemu_opt_set(opts, ""localport"", local->inet->port);
+
+        }
+
+        fd = inet_dgram_opts(opts, errp);
+
+        break;
+
+
+
+    default:
+
+        error_setg(errp, ""socket type unsupported for datagram"");
+
+        return -1;
+
+    }
+
+    qemu_opts_del(opts);
+
+    return fd;
+
+}","","","","","","","",""
+"38","id_512_label_False_qemu.c","0","static void rtas_display_character(sPAPREnvironment *spapr,
+
+                                   uint32_t token, uint32_t nargs,
+
+                                   target_ulong args,
+
+                                   uint32_t nret, target_ulong rets)
+
+{
+
+    uint8_t c = rtas_ld(args, 0);
+
+    VIOsPAPRDevice *sdev = vty_lookup(spapr, 0);
+
+
+
+    if (!sdev) {
+
+        rtas_st(rets, 0, -1);
+
+    } else {
+
+        vty_putchars(sdev, &c, sizeof(c));
+
+        rtas_st(rets, 0, 0);
+
+    }
+
+}","static void spapr_create_nvram(sPAPREnvironment *spapr)
+
+{
+
+    DeviceState *dev = qdev_create(&spapr->vio_bus->bus, ""spapr-nvram"");
+
+    DriveInfo *dinfo = drive_get(IF_PFLASH, 0, 0);
+
+
+
+    if (dinfo) {
+
+        qdev_prop_set_drive_nofail(dev, ""drive"",
+
+                                   blk_bs(blk_by_legacy_dinfo(dinfo)));
+
+    }
+
+
+
+    qdev_init_nofail(dev);
+
+
+
+    spapr->nvram = (struct sPAPRNVRAM *)dev;
+
+}","void qmp_block_dirty_bitmap_remove(const char *node, const char *name,
+
+                                   Error **errp)
+
+{
+
+    AioContext *aio_context;
+
+    BlockDriverState *bs;
+
+    BdrvDirtyBitmap *bitmap;
+
+
+
+    bitmap = block_dirty_bitmap_lookup(node, name, &bs, &aio_context, errp);
+
+    if (!bitmap || !bs) {
+
+        return;
+
+    }
+
+
+
+    if (bdrv_dirty_bitmap_frozen(bitmap)) {
+
+        error_setg(errp,
+
+                   ""Bitmap '%s' is currently frozen and cannot be removed"",
+
+                   name);
+
+        goto out;
+
+    }
+
+    bdrv_dirty_bitmap_make_anon(bitmap);
+
+    bdrv_release_dirty_bitmap(bs, bitmap);
+
+
+
+ out:
+
+    aio_context_release(aio_context);
+
+}","","","","","","","",""
+"39","id_1021_label_True_FFmpeg.c","1","static void RENAME(yuv2bgr24_1)(SwsContext *c, const int16_t *buf0,
+
+                                const int16_t *ubuf[2], const int16_t *bguf[2],
+
+                                const int16_t *abuf0, uint8_t *dest,
+
+                                int dstW, int uvalpha, int y)
+
+{
+
+    const int16_t *ubuf0 = ubuf[0], *ubuf1 = ubuf[1];
+
+    const int16_t *buf1= buf0; //FIXME needed for RGB1/BGR1
+
+
+
+    if (uvalpha < 2048) { // note this is not correct (shifts chrominance by 0.5 pixels) but it is a bit faster
+
+        __asm__ volatile(
+
+            ""mov %%""REG_b"", ""ESP_OFFSET""(%5)        \n\t""
+
+            ""mov        %4, %%""REG_b""               \n\t""
+
+            ""push %%""REG_BP""                        \n\t""
+
+            YSCALEYUV2RGB1(%%REGBP, %5)
+
+            ""pxor    %%mm7, %%mm7                   \n\t""
+
+            WRITEBGR24(%%REGb, 8280(%5), %%REGBP)
+
+            ""pop %%""REG_BP""                         \n\t""
+
+            ""mov ""ESP_OFFSET""(%5), %%""REG_b""        \n\t""
+
+            :: ""c"" (buf0), ""d"" (buf1), ""S"" (ubuf0), ""D"" (ubuf1), ""m"" (dest),
+
+               ""a"" (&c->redDither)
+
+        );
+
+    } else {
+
+        __asm__ volatile(
+
+            ""mov %%""REG_b"", ""ESP_OFFSET""(%5)        \n\t""
+
+            ""mov        %4, %%""REG_b""               \n\t""
+
+            ""push %%""REG_BP""                        \n\t""
+
+            YSCALEYUV2RGB1b(%%REGBP, %5)
+
+            ""pxor    %%mm7, %%mm7                   \n\t""
+
+            WRITEBGR24(%%REGb, 8280(%5), %%REGBP)
+
+            ""pop %%""REG_BP""                         \n\t""
+
+            ""mov ""ESP_OFFSET""(%5), %%""REG_b""        \n\t""
+
+            :: ""c"" (buf0), ""d"" (buf1), ""S"" (ubuf0), ""D"" (ubuf1), ""m"" (dest),
+
+               ""a"" (&c->redDither)
+
+        );
+
+    }
+
+}","static void read_sbr_single_channel_element(AACContext *ac,
+
+                                            SpectralBandReplication *sbr,
+
+                                            GetBitContext *gb)
+
+{
+
+    if (get_bits1(gb)) // bs_data_extra
+
+        skip_bits(gb, 4); // bs_reserved
+
+
+
+    read_sbr_grid(ac, sbr, gb, &sbr->data[0]);
+
+    read_sbr_dtdf(sbr, gb, &sbr->data[0]);
+
+    read_sbr_invf(sbr, gb, &sbr->data[0]);
+
+    read_sbr_envelope(sbr, gb, &sbr->data[0], 0);
+
+    read_sbr_noise(sbr, gb, &sbr->data[0], 0);
+
+
+
+    if ((sbr->data[0].bs_add_harmonic_flag = get_bits1(gb)))
+
+        get_bits1_vector(gb, sbr->data[0].bs_add_harmonic, sbr->n[1]);
+
+}","static int tight_palette_insert(QDict *palette, uint32_t rgb, int bpp, int max)
+
+{
+
+    uint8_t key[6];
+
+    int idx = qdict_size(palette);
+
+    bool present;
+
+
+
+    tight_palette_rgb2buf(rgb, bpp, key);
+
+    present = qdict_haskey(palette, (char *)key);
+
+    if (idx >= max && !present) {
+
+        return 0;
+
+    }
+
+    if (!present) {
+
+        qdict_put(palette, (char *)key, qint_from_int(idx));
+
+    }
+
+    return qdict_size(palette);
+
+}","","","","","","","",""
+"40","id_1018_label_True_FFmpeg.c","1","static int hevc_decode_frame(AVCodecContext *avctx, void *data, int *got_output,
+
+                             AVPacket *avpkt)
+
+{
+
+    int ret;
+
+    int new_extradata_size;
+
+    uint8_t *new_extradata;
+
+    HEVCContext *s = avctx->priv_data;
+
+
+
+    if (!avpkt->size) {
+
+        ret = ff_hevc_output_frame(s, data, 1);
+
+        if (ret < 0)
+
+            return ret;
+
+
+
+        *got_output = ret;
+
+        return 0;
+
+    }
+
+
+
+    new_extradata = av_packet_get_side_data(avpkt, AV_PKT_DATA_NEW_EXTRADATA,
+
+                                            &new_extradata_size);
+
+    if (new_extradata && new_extradata_size > 0) {
+
+        ret = hevc_decode_extradata(s, new_extradata, new_extradata_size);
+
+        if (ret < 0)
+
+            return ret;
+
+    }
+
+
+
+    s->ref = NULL;
+
+    ret    = decode_nal_units(s, avpkt->data, avpkt->size);
+
+    if (ret < 0)
+
+        return ret;
+
+
+
+    if (avctx->hwaccel) {
+
+        if (s->ref && (ret = avctx->hwaccel->end_frame(avctx)) < 0) {
+
+            av_log(avctx, AV_LOG_ERROR,
+
+                   ""hardware accelerator failed to decode picture\n"");
+
+            ff_hevc_unref_frame(s, s->ref, ~0);
+
+            return ret;
+
+        }
+
+    } else {
+
+        /* verify the SEI checksum */
+
+        if (avctx->err_recognition & AV_EF_CRCCHECK && s->is_decoded &&
+
+            s->sei.picture_hash.is_md5) {
+
+            ret = verify_md5(s, s->ref->frame);
+
+            if (ret < 0 && avctx->err_recognition & AV_EF_EXPLODE) {
+
+                ff_hevc_unref_frame(s, s->ref, ~0);
+
+                return ret;
+
+            }
+
+        }
+
+    }
+
+    s->sei.picture_hash.is_md5 = 0;
+
+
+
+    if (s->is_decoded) {
+
+        av_log(avctx, AV_LOG_DEBUG, ""Decoded frame with POC %d.\n"", s->poc);
+
+        s->is_decoded = 0;
+
+    }
+
+
+
+    if (s->output_frame->buf[0]) {
+
+        av_frame_move_ref(data, s->output_frame);
+
+        *got_output = 1;
+
+    }
+
+
+
+    return avpkt->size;
+
+}","static int write_elf64_load(DumpState *s, MemoryMapping *memory_mapping,
+
+                            int phdr_index, hwaddr offset)
+
+{
+
+    Elf64_Phdr phdr;
+
+    int ret;
+
+    int endian = s->dump_info.d_endian;
+
+
+
+    memset(&phdr, 0, sizeof(Elf64_Phdr));
+
+    phdr.p_type = cpu_convert_to_target32(PT_LOAD, endian);
+
+    phdr.p_offset = cpu_convert_to_target64(offset, endian);
+
+    phdr.p_paddr = cpu_convert_to_target64(memory_mapping->phys_addr, endian);
+
+    if (offset == -1) {
+
+        /* When the memory is not stored into vmcore, offset will be -1 */
+
+        phdr.p_filesz = 0;
+
+    } else {
+
+        phdr.p_filesz = cpu_convert_to_target64(memory_mapping->length, endian);
+
+    }
+
+    phdr.p_memsz = cpu_convert_to_target64(memory_mapping->length, endian);
+
+    phdr.p_vaddr = cpu_convert_to_target64(memory_mapping->virt_addr, endian);
+
+
+
+    ret = fd_write_vmcore(&phdr, sizeof(Elf64_Phdr), s);
+
+    if (ret < 0) {
+
+        dump_error(s, ""dump: failed to write program header table.\n"");
+
+        return -1;
+
+    }
+
+
+
+    return 0;
+
+}","static void read_sbr_single_channel_element(AACContext *ac,
+
+                                            SpectralBandReplication *sbr,
+
+                                            GetBitContext *gb)
+
+{
+
+    if (get_bits1(gb)) // bs_data_extra
+
+        skip_bits(gb, 4); // bs_reserved
+
+
+
+    read_sbr_grid(ac, sbr, gb, &sbr->data[0]);
+
+    read_sbr_dtdf(sbr, gb, &sbr->data[0]);
+
+    read_sbr_invf(sbr, gb, &sbr->data[0]);
+
+    read_sbr_envelope(sbr, gb, &sbr->data[0], 0);
+
+    read_sbr_noise(sbr, gb, &sbr->data[0], 0);
+
+
+
+    if ((sbr->data[0].bs_add_harmonic_flag = get_bits1(gb)))
+
+        get_bits1_vector(gb, sbr->data[0].bs_add_harmonic, sbr->n[1]);
+
+}","","","","","","","",""
+"41","id_274_label_True_qemu.c","1","static void musb_rx_req(MUSBState *s, int epnum)
+
+{
+
+    MUSBEndPoint *ep = s->ep + epnum;
+
+    int total;
+
+
+
+    /* If we already have a packet, which didn't fit into the
+
+     * 64 bytes of the FIFO, only move the FIFO start and return. (Obsolete) */
+
+    if (ep->packey[1].p.pid == USB_TOKEN_IN && ep->status[1] >= 0 &&
+
+                    (ep->fifostart[1]) + ep->rxcount <
+
+                    ep->packey[1].p.len) {
+
+        TRACE(""0x%08x, %d"",  ep->fifostart[1], ep->rxcount );
+
+        ep->fifostart[1] += ep->rxcount;
+
+        ep->fifolen[1] = 0;
+
+
+
+        ep->rxcount = MIN(ep->packey[0].p.len - (ep->fifostart[1]),
+
+                        ep->maxp[1]);
+
+
+
+        ep->csr[1] &= ~MGC_M_RXCSR_H_REQPKT;
+
+        if (!epnum)
+
+            ep->csr[0] &= ~MGC_M_CSR0_H_REQPKT;
+
+
+
+        /* Clear all of the error bits first */
+
+        ep->csr[1] &= ~(MGC_M_RXCSR_H_ERROR | MGC_M_RXCSR_H_RXSTALL |
+
+                        MGC_M_RXCSR_DATAERROR);
+
+        if (!epnum)
+
+            ep->csr[0] &= ~(MGC_M_CSR0_H_ERROR | MGC_M_CSR0_H_RXSTALL |
+
+                            MGC_M_CSR0_H_NAKTIMEOUT | MGC_M_CSR0_H_NO_PING);
+
+
+
+        ep->csr[1] |= MGC_M_RXCSR_FIFOFULL | MGC_M_RXCSR_RXPKTRDY;
+
+        if (!epnum)
+
+            ep->csr[0] |= MGC_M_CSR0_RXPKTRDY;
+
+        musb_rx_intr_set(s, epnum, 1);
+
+        return;
+
+    }
+
+
+
+    /* The driver sets maxp[1] to 64 or less because it knows the hardware
+
+     * FIFO is this deep.  Bigger packets get split in
+
+     * usb_generic_handle_packet but we can also do the splitting locally
+
+     * for performance.  It turns out we can also have a bigger FIFO and
+
+     * ignore the limit set in ep->maxp[1].  The Linux MUSB driver deals
+
+     * OK with single packets of even 32KB and we avoid splitting, however
+
+     * usb_msd.c sometimes sends a packet bigger than what Linux expects
+
+     * (e.g. 8192 bytes instead of 4096) and we get an OVERRUN.  Splitting
+
+     * hides this overrun from Linux.  Up to 4096 everything is fine
+
+     * though.  Currently this is disabled.
+
+     *
+
+     * XXX: mind ep->fifosize.  */
+
+    total = MIN(ep->maxp[1] & 0x3ff, sizeof(s->buf));
+
+
+
+#ifdef SETUPLEN_HACK
+
+    /* Why should *we* do that instead of Linux?  */
+
+    if (!epnum) {
+
+        if (ep->packey[0].p.devaddr == 2) {
+
+            total = MIN(s->setup_len, 8);
+
+        } else {
+
+            total = MIN(s->setup_len, 64);
+
+        }
+
+        s->setup_len -= total;
+
+    }
+
+#endif
+
+
+
+    return musb_packet(s, ep, epnum, USB_TOKEN_IN,
+
+                    total, musb_rx_packet_complete, 1);
+
+}","static void read_sbr_single_channel_element(AACContext *ac,
+
+                                            SpectralBandReplication *sbr,
+
+                                            GetBitContext *gb)
+
+{
+
+    if (get_bits1(gb)) // bs_data_extra
+
+        skip_bits(gb, 4); // bs_reserved
+
+
+
+    read_sbr_grid(ac, sbr, gb, &sbr->data[0]);
+
+    read_sbr_dtdf(sbr, gb, &sbr->data[0]);
+
+    read_sbr_invf(sbr, gb, &sbr->data[0]);
+
+    read_sbr_envelope(sbr, gb, &sbr->data[0], 0);
+
+    read_sbr_noise(sbr, gb, &sbr->data[0], 0);
+
+
+
+    if ((sbr->data[0].bs_add_harmonic_flag = get_bits1(gb)))
+
+        get_bits1_vector(gb, sbr->data[0].bs_add_harmonic, sbr->n[1]);
+
+}","static int decode_wdlt(GetByteContext *gb, uint8_t *frame, int width, int height)
+
+{
+
+    const uint8_t *frame_end   = frame + width * height;
+
+    uint8_t *line_ptr;
+
+    int count, i, v, lines, segments;
+
+
+
+    lines = bytestream2_get_le16(gb);
+
+    if (lines > height)
+
+        return -1;
+
+
+
+    while (lines--) {
+
+        if (bytestream2_get_bytes_left(gb) < 2)
+
+            return -1;
+
+        segments = bytestream2_get_le16u(gb);
+
+        while ((segments & 0xC000) == 0xC000) {
+
+            unsigned delta = -((int16_t)segments * width);
+
+            if (frame_end - frame <= delta)
+
+                return -1;
+
+            frame    += delta;
+
+            segments = bytestream2_get_le16(gb);
+
+        }
+
+        if (segments & 0x8000) {
+
+            frame[width - 1] = segments & 0xFF;
+
+            segments = bytestream2_get_le16(gb);
+
+        }
+
+        line_ptr = frame;
+
+        frame += width;
+
+        while (segments--) {
+
+            if (frame - line_ptr <= bytestream2_peek_byte(gb))
+
+                return -1;
+
+            line_ptr += bytestream2_get_byte(gb);
+
+            count = (int8_t)bytestream2_get_byte(gb);
+
+            if (count >= 0) {
+
+                if (frame - line_ptr < count * 2)
+
+                    return -1;
+
+                if (bytestream2_get_buffer(gb, line_ptr, count * 2) != count * 2)
+
+                    return -1;
+
+                line_ptr += count * 2;
+
+            } else {
+
+                count = -count;
+
+                if (frame - line_ptr < count * 2)
+
+                    return -1;
+
+                v = bytestream2_get_le16(gb);
+
+                for (i = 0; i < count; i++)
+
+                    bytestream_put_le16(&line_ptr, v);
+
+            }
+
+        }
+
+    }
+
+
+
+    return 0;
+
+}","","","","","","","",""
+"42","id_670_label_True_qemu.c","1","static void pc_dimm_check_memdev_is_busy(Object *obj, const char *name,
+
+                                      Object *val, Error **errp)
+
+{
+
+    MemoryRegion *mr;
+
+
+
+    mr = host_memory_backend_get_memory(MEMORY_BACKEND(val), errp);
+
+    if (memory_region_is_mapped(mr)) {
+
+        char *path = object_get_canonical_path_component(val);
+
+        error_setg(errp, ""can't use already busy memdev: %s"", path);
+
+        g_free(path);
+
+    } else {
+
+        qdev_prop_allow_set_link_before_realize(obj, name, val, errp);
+
+    }
+
+}","static void cpu_common_initfn(Object *obj)
+
+{
+
+    CPUState *cpu = CPU(obj);
+
+    CPUClass *cc = CPU_GET_CLASS(obj);
+
+
+
+    cpu->cpu_index = UNASSIGNED_CPU_INDEX;
+
+    cpu->gdb_num_regs = cpu->gdb_num_g_regs = cc->gdb_num_core_regs;
+
+    /* *-user doesn't have configurable SMP topology */
+
+    /* the default value is changed by qemu_init_vcpu() for softmmu */
+
+    cpu->nr_cores = 1;
+
+    cpu->nr_threads = 1;
+
+
+
+    qemu_mutex_init(&cpu->work_mutex);
+
+    QTAILQ_INIT(&cpu->breakpoints);
+
+    QTAILQ_INIT(&cpu->watchpoints);
+
+
+
+    cpu->trace_dstate = bitmap_new(trace_get_vcpu_event_count());
+
+
+
+    cpu_exec_initfn(cpu);
+
+}","void qmp_block_dirty_bitmap_remove(const char *node, const char *name,
+
+                                   Error **errp)
+
+{
+
+    AioContext *aio_context;
+
+    BlockDriverState *bs;
+
+    BdrvDirtyBitmap *bitmap;
+
+
+
+    bitmap = block_dirty_bitmap_lookup(node, name, &bs, &aio_context, errp);
+
+    if (!bitmap || !bs) {
+
+        return;
+
+    }
+
+
+
+    if (bdrv_dirty_bitmap_frozen(bitmap)) {
+
+        error_setg(errp,
+
+                   ""Bitmap '%s' is currently frozen and cannot be removed"",
+
+                   name);
+
+        goto out;
+
+    }
+
+    bdrv_dirty_bitmap_make_anon(bitmap);
+
+    bdrv_release_dirty_bitmap(bs, bitmap);
+
+
+
+ out:
+
+    aio_context_release(aio_context);
+
+}","","","","","","","",""
+"43","id_137_label_False_FFmpeg.c","0","void ff_put_h264_qpel16_mc31_msa(uint8_t *dst, const uint8_t *src,
+
+                                 ptrdiff_t stride)
+
+{
+
+    avc_luma_hv_qrt_16w_msa(src - 2,
+
+                            src - (stride * 2) +
+
+                            sizeof(uint8_t), stride, dst, stride, 16);
+
+}","static void spapr_phb_vfio_instance_init(Object *obj)
+
+{
+
+    error_report(""spapr-pci-vfio-host-bridge is deprecated"");
+
+}","static void vtd_address_space_unmap(VTDAddressSpace *as, IOMMUNotifier *n)
+
+{
+
+    IOMMUTLBEntry entry;
+
+    hwaddr size;
+
+    hwaddr start = n->start;
+
+    hwaddr end = n->end;
+
+
+
+    /*
+
+     * Note: all the codes in this function has a assumption that IOVA
+
+     * bits are no more than VTD_MGAW bits (which is restricted by
+
+     * VT-d spec), otherwise we need to consider overflow of 64 bits.
+
+     */
+
+
+
+    if (end > VTD_ADDRESS_SIZE(VTD_HOST_ADDRESS_WIDTH)) {
+
+        /*
+
+         * Don't need to unmap regions that is bigger than the whole
+
+         * VT-d supported address space size
+
+         */
+
+        end = VTD_ADDRESS_SIZE(VTD_HOST_ADDRESS_WIDTH);
+
+    }
+
+
+
+    assert(start <= end);
+
+    size = end - start;
+
+
+
+    if (ctpop64(size) != 1) {
+
+        /*
+
+         * This size cannot format a correct mask. Let's enlarge it to
+
+         * suite the minimum available mask.
+
+         */
+
+        int n = 64 - clz64(size);
+
+        if (n > VTD_MGAW) {
+
+            /* should not happen, but in case it happens, limit it */
+
+            n = VTD_MGAW;
+
+        }
+
+        size = 1ULL << n;
+
+    }
+
+
+
+    entry.target_as = &address_space_memory;
+
+    /* Adjust iova for the size */
+
+    entry.iova = n->start & ~(size - 1);
+
+    /* This field is meaningless for unmap */
+
+    entry.translated_addr = 0;
+
+    entry.perm = IOMMU_NONE;
+
+    entry.addr_mask = size - 1;
+
+
+
+    trace_vtd_as_unmap_whole(pci_bus_num(as->bus),
+
+                             VTD_PCI_SLOT(as->devfn),
+
+                             VTD_PCI_FUNC(as->devfn),
+
+                             entry.iova, size);
+
+
+
+    memory_region_notify_one(n, &entry);
+
+}","","","","","","","",""
+"44","id_88_label_True_qemu.c","1","static void tricore_cpu_initfn(Object *obj)
+
+{
+
+    CPUState *cs = CPU(obj);
+
+    TriCoreCPU *cpu = TRICORE_CPU(obj);
+
+    CPUTriCoreState *env = &cpu->env;
+
+
+
+    cs->env_ptr = env;
+
+    cpu_exec_init(cs, &error_abort);
+
+
+
+    if (tcg_enabled()) {
+
+        tricore_tcg_init();
+
+    }
+
+}","static void cpu_common_initfn(Object *obj)
+
+{
+
+    CPUState *cpu = CPU(obj);
+
+    CPUClass *cc = CPU_GET_CLASS(obj);
+
+
+
+    cpu->cpu_index = UNASSIGNED_CPU_INDEX;
+
+    cpu->gdb_num_regs = cpu->gdb_num_g_regs = cc->gdb_num_core_regs;
+
+    /* *-user doesn't have configurable SMP topology */
+
+    /* the default value is changed by qemu_init_vcpu() for softmmu */
+
+    cpu->nr_cores = 1;
+
+    cpu->nr_threads = 1;
+
+
+
+    qemu_mutex_init(&cpu->work_mutex);
+
+    QTAILQ_INIT(&cpu->breakpoints);
+
+    QTAILQ_INIT(&cpu->watchpoints);
+
+
+
+    cpu->trace_dstate = bitmap_new(trace_get_vcpu_event_count());
+
+
+
+    cpu_exec_initfn(cpu);
+
+}","static void cpu_common_initfn(Object *obj)
+
+{
+
+    CPUState *cpu = CPU(obj);
+
+    CPUClass *cc = CPU_GET_CLASS(obj);
+
+
+
+    cpu->cpu_index = UNASSIGNED_CPU_INDEX;
+
+    cpu->gdb_num_regs = cpu->gdb_num_g_regs = cc->gdb_num_core_regs;
+
+    /* *-user doesn't have configurable SMP topology */
+
+    /* the default value is changed by qemu_init_vcpu() for softmmu */
+
+    cpu->nr_cores = 1;
+
+    cpu->nr_threads = 1;
+
+
+
+    qemu_mutex_init(&cpu->work_mutex);
+
+    QTAILQ_INIT(&cpu->breakpoints);
+
+    QTAILQ_INIT(&cpu->watchpoints);
+
+
+
+    cpu->trace_dstate = bitmap_new(trace_get_vcpu_event_count());
+
+
+
+    cpu_exec_initfn(cpu);
+
+}","","","","","","","",""
+"45","id_498_label_False_qemu.c","0","static void cpu_ioreq_pio(ioreq_t *req)
+
+{
+
+    int i;
+
+
+
+    if (req->dir == IOREQ_READ) {
+
+        if (!req->data_is_ptr) {
+
+            req->data = do_inp(req->addr, req->size);
+
+        } else {
+
+            uint32_t tmp;
+
+
+
+            for (i = 0; i < req->count; i++) {
+
+                tmp = do_inp(req->addr, req->size);
+
+                write_phys_req_item(req->data, req, i, &tmp);
+
+            }
+
+        }
+
+    } else if (req->dir == IOREQ_WRITE) {
+
+        if (!req->data_is_ptr) {
+
+            do_outp(req->addr, req->size, req->data);
+
+        } else {
+
+            for (i = 0; i < req->count; i++) {
+
+                uint32_t tmp = 0;
+
+
+
+                read_phys_req_item(req->data, req, i, &tmp);
+
+                do_outp(req->addr, req->size, tmp);
+
+            }
+
+        }
+
+    }
+
+}","static void parse_type_int64(Visitor *v, const char *name, int64_t *obj,
+
+                             Error **errp)
+
+{
+
+    StringInputVisitor *siv = to_siv(v);
+
+
+
+    if (!siv->string) {
+
+        error_setg(errp, QERR_INVALID_PARAMETER_TYPE, name ? name : ""null"",
+
+                   ""integer"");
+
+        return;
+
+    }
+
+
+
+    if (parse_str(siv, name, errp) < 0) {
+
+        return;
+
+    }
+
+
+
+    if (!siv->ranges) {
+
+        goto error;
+
+    }
+
+
+
+    if (!siv->cur_range) {
+
+        Range *r;
+
+
+
+        siv->cur_range = g_list_first(siv->ranges);
+
+        if (!siv->cur_range) {
+
+            goto error;
+
+        }
+
+
+
+        r = siv->cur_range->data;
+
+        if (!r) {
+
+            goto error;
+
+        }
+
+
+
+        siv->cur = r->begin;
+
+    }
+
+
+
+    *obj = siv->cur;
+
+    siv->cur++;
+
+    return;
+
+
+
+error:
+
+    error_setg(errp, QERR_INVALID_PARAMETER_VALUE, name ? name : ""null"",
+
+               ""an int64 value or range"");
+
+}","static void parse_type_int64(Visitor *v, const char *name, int64_t *obj,
+
+                             Error **errp)
+
+{
+
+    StringInputVisitor *siv = to_siv(v);
+
+
+
+    if (!siv->string) {
+
+        error_setg(errp, QERR_INVALID_PARAMETER_TYPE, name ? name : ""null"",
+
+                   ""integer"");
+
+        return;
+
+    }
+
+
+
+    if (parse_str(siv, name, errp) < 0) {
+
+        return;
+
+    }
+
+
+
+    if (!siv->ranges) {
+
+        goto error;
+
+    }
+
+
+
+    if (!siv->cur_range) {
+
+        Range *r;
+
+
+
+        siv->cur_range = g_list_first(siv->ranges);
+
+        if (!siv->cur_range) {
+
+            goto error;
+
+        }
+
+
+
+        r = siv->cur_range->data;
+
+        if (!r) {
+
+            goto error;
+
+        }
+
+
+
+        siv->cur = r->begin;
+
+    }
+
+
+
+    *obj = siv->cur;
+
+    siv->cur++;
+
+    return;
+
+
+
+error:
+
+    error_setg(errp, QERR_INVALID_PARAMETER_VALUE, name ? name : ""null"",
+
+               ""an int64 value or range"");
+
+}","","","","","","","",""
+"46","id_854_label_False_FFmpeg.c","0","static void avc_luma_midh_qrt_and_aver_dst_8w_msa(const uint8_t *src,
+
+                                                  int32_t src_stride,
+
+                                                  uint8_t *dst,
+
+                                                  int32_t dst_stride,
+
+                                                  int32_t height,
+
+                                                  uint8_t horiz_offset)
+
+{
+
+    uint32_t multiple8_cnt;
+
+
+
+    for (multiple8_cnt = 2; multiple8_cnt--;) {
+
+        avc_luma_midh_qrt_and_aver_dst_4w_msa(src, src_stride, dst, dst_stride,
+
+                                              height, horiz_offset);
+
+
+
+        src += 4;
+
+        dst += 4;
+
+    }
+
+}","BdrvChild *bdrv_root_attach_child(BlockDriverState *child_bs,
+
+                                  const char *child_name,
+
+                                  const BdrvChildRole *child_role,
+
+                                  uint64_t perm, uint64_t shared_perm,
+
+                                  void *opaque, Error **errp)
+
+{
+
+    BdrvChild *child;
+
+    int ret;
+
+
+
+    ret = bdrv_check_update_perm(child_bs, perm, shared_perm, NULL, errp);
+
+    if (ret < 0) {
+
+        return NULL;
+
+    }
+
+
+
+    child = g_new(BdrvChild, 1);
+
+    *child = (BdrvChild) {
+
+        .bs             = NULL,
+
+        .name           = g_strdup(child_name),
+
+        .role           = child_role,
+
+        .perm           = perm,
+
+        .shared_perm    = shared_perm,
+
+        .opaque         = opaque,
+
+    };
+
+
+
+    bdrv_replace_child(child, child_bs);
+
+
+
+    return child;
+
+}","static void vtd_address_space_unmap(VTDAddressSpace *as, IOMMUNotifier *n)
+
+{
+
+    IOMMUTLBEntry entry;
+
+    hwaddr size;
+
+    hwaddr start = n->start;
+
+    hwaddr end = n->end;
+
+
+
+    /*
+
+     * Note: all the codes in this function has a assumption that IOVA
+
+     * bits are no more than VTD_MGAW bits (which is restricted by
+
+     * VT-d spec), otherwise we need to consider overflow of 64 bits.
+
+     */
+
+
+
+    if (end > VTD_ADDRESS_SIZE(VTD_HOST_ADDRESS_WIDTH)) {
+
+        /*
+
+         * Don't need to unmap regions that is bigger than the whole
+
+         * VT-d supported address space size
+
+         */
+
+        end = VTD_ADDRESS_SIZE(VTD_HOST_ADDRESS_WIDTH);
+
+    }
+
+
+
+    assert(start <= end);
+
+    size = end - start;
+
+
+
+    if (ctpop64(size) != 1) {
+
+        /*
+
+         * This size cannot format a correct mask. Let's enlarge it to
+
+         * suite the minimum available mask.
+
+         */
+
+        int n = 64 - clz64(size);
+
+        if (n > VTD_MGAW) {
+
+            /* should not happen, but in case it happens, limit it */
+
+            n = VTD_MGAW;
+
+        }
+
+        size = 1ULL << n;
+
+    }
+
+
+
+    entry.target_as = &address_space_memory;
+
+    /* Adjust iova for the size */
+
+    entry.iova = n->start & ~(size - 1);
+
+    /* This field is meaningless for unmap */
+
+    entry.translated_addr = 0;
+
+    entry.perm = IOMMU_NONE;
+
+    entry.addr_mask = size - 1;
+
+
+
+    trace_vtd_as_unmap_whole(pci_bus_num(as->bus),
+
+                             VTD_PCI_SLOT(as->devfn),
+
+                             VTD_PCI_FUNC(as->devfn),
+
+                             entry.iova, size);
+
+
+
+    memory_region_notify_one(n, &entry);
+
+}","","","","","","","",""
+"47","id_859_label_True_qemu.c","1","static int mp_pacl_removexattr(FsContext *ctx,
+
+                               const char *path, const char *name)
+
+{
+
+    int ret;
+
+    char *buffer;
+
+
+
+    buffer = rpath(ctx, path);
+
+    ret  = lremovexattr(buffer, MAP_ACL_ACCESS);
+
+    if (ret == -1 && errno == ENODATA) {
+
+        /*
+
+         * We don't get ENODATA error when trying to remove a
+
+         * posix acl that is not present. So don't throw the error
+
+         * even in case of mapped security model
+
+         */
+
+        errno = 0;
+
+        ret = 0;
+
+    }
+
+    g_free(buffer);
+
+    return ret;
+
+}","static void cpu_common_initfn(Object *obj)
+
+{
+
+    CPUState *cpu = CPU(obj);
+
+    CPUClass *cc = CPU_GET_CLASS(obj);
+
+
+
+    cpu->cpu_index = UNASSIGNED_CPU_INDEX;
+
+    cpu->gdb_num_regs = cpu->gdb_num_g_regs = cc->gdb_num_core_regs;
+
+    /* *-user doesn't have configurable SMP topology */
+
+    /* the default value is changed by qemu_init_vcpu() for softmmu */
+
+    cpu->nr_cores = 1;
+
+    cpu->nr_threads = 1;
+
+
+
+    qemu_mutex_init(&cpu->work_mutex);
+
+    QTAILQ_INIT(&cpu->breakpoints);
+
+    QTAILQ_INIT(&cpu->watchpoints);
+
+
+
+    cpu->trace_dstate = bitmap_new(trace_get_vcpu_event_count());
+
+
+
+    cpu_exec_initfn(cpu);
+
+}","BdrvChild *bdrv_root_attach_child(BlockDriverState *child_bs,
+
+                                  const char *child_name,
+
+                                  const BdrvChildRole *child_role,
+
+                                  uint64_t perm, uint64_t shared_perm,
+
+                                  void *opaque, Error **errp)
+
+{
+
+    BdrvChild *child;
+
+    int ret;
+
+
+
+    ret = bdrv_check_update_perm(child_bs, perm, shared_perm, NULL, errp);
+
+    if (ret < 0) {
+
+        return NULL;
+
+    }
+
+
+
+    child = g_new(BdrvChild, 1);
+
+    *child = (BdrvChild) {
+
+        .bs             = NULL,
+
+        .name           = g_strdup(child_name),
+
+        .role           = child_role,
+
+        .perm           = perm,
+
+        .shared_perm    = shared_perm,
+
+        .opaque         = opaque,
+
+    };
+
+
+
+    bdrv_replace_child(child, child_bs);
+
+
+
+    return child;
+
+}","","","","","","","",""
+"48","id_166_label_False_qemu.c","0","static int create_ppc_opcodes (CPUPPCState *env, ppc_def_t *def)
+
+{
+
+    opcode_t *opc, *start, *end;
+
+
+
+    fill_new_table(env->opcodes, 0x40);
+
+#if defined(PPC_DUMP_CPU)
+
+    printf(""* PowerPC instructions for PVR %08x: %s flags %016"" PRIx64
+
+           "" %08x\n"",
+
+           def->pvr, def->name, def->insns_flags, def->flags);
+
+#endif
+
+    if (&opc_start < &opc_end) {
+
+        start = &opc_start;
+
+        end = &opc_end;
+
+    } else {
+
+        start = &opc_end;
+
+        end = &opc_start;
+
+    }
+
+    for (opc = start + 1; opc != end; opc++) {
+
+        if ((opc->handler.type & def->insns_flags) != 0) {
+
+            if (register_insn(env->opcodes, opc) < 0) {
+
+                printf(""*** ERROR initializing PowerPC instruction ""
+
+                       ""0x%02x 0x%02x 0x%02x\n"", opc->opc1, opc->opc2,
+
+                       opc->opc3);
+
+                return -1;
+
+            }
+
+#if defined(PPC_DUMP_CPU)
+
+            if (opc1 != 0x00) {
+
+                if (opc->opc3 == 0xFF) {
+
+                    if (opc->opc2 == 0xFF) {
+
+                        printf("" %02x -- -- (%2d ----) : %s\n"",
+
+                               opc->opc1, opc->opc1, opc->oname);
+
+                    } else {
+
+                        printf("" %02x %02x -- (%2d %4d) : %s\n"",
+
+                               opc->opc1, opc->opc2, opc->opc1, opc->opc2,
+
+                               opc->oname);
+
+                    }
+
+                } else {
+
+                    printf("" %02x %02x %02x (%2d %4d) : %s\n"",
+
+                           opc->opc1, opc->opc2, opc->opc3,
+
+                           opc->opc1, (opc->opc3 << 5) | opc->opc2,
+
+                           opc->oname);
+
+                }
+
+            }
+
+#endif
+
+        }
+
+    }
+
+    fix_opcode_tables(env->opcodes);
+
+    fflush(stdout);
+
+    fflush(stderr);
+
+
+
+    return 0;
+
+}","int ff_xvmc_field_start(MpegEncContext*s, AVCodecContext *avctx)
+
+{
+
+    struct xvmc_pixfmt_render *last, *next, *render = (struct xvmc_pixfmt_render*)s->current_picture.data[2];
+
+    const int mb_block_count = 4 + (1 << s->chroma_format);
+
+
+
+    assert(avctx);
+
+    if (!render || render->magic_id != AV_XVMC_RENDER_MAGIC ||
+
+        !render->data_blocks || !render->mv_blocks){
+
+        av_log(avctx, AV_LOG_ERROR,
+
+               ""Render token doesn't look as expected.\n"");
+
+        return -1; // make sure that this is a render packet
+
+    }
+
+
+
+    render->picture_structure = s->picture_structure;
+
+    render->flags             = s->first_field ? 0 : XVMC_SECOND_FIELD;
+
+
+
+    if (render->filled_mv_blocks_num) {
+
+        av_log(avctx, AV_LOG_ERROR,
+
+               ""Rendering surface contains %i unprocessed blocks.\n"",
+
+               render->filled_mv_blocks_num);
+
+        return -1;
+
+    }
+
+    if (render->total_number_of_mv_blocks   < 1 ||
+
+        render->total_number_of_data_blocks < mb_block_count) {
+
+        av_log(avctx, AV_LOG_ERROR,
+
+               ""Rendering surface doesn't provide enough block structures to work with.\n"");
+
+        return -1;
+
+    }
+
+    if (render->total_number_of_mv_blocks   < 1 ||
+
+        render->total_number_of_data_blocks < mb_block_count) {
+
+        av_log(avctx, AV_LOG_ERROR,
+
+               ""Rendering surface doesn't provide enough block structures to work with.\n"");
+
+        return -1;
+
+    }
+
+
+
+    render->p_future_surface = NULL;
+
+    render->p_past_surface   = NULL;
+
+
+
+    switch(s->pict_type) {
+
+        case  FF_I_TYPE:
+
+            return 0; // no prediction from other frames
+
+        case  FF_B_TYPE:
+
+            next = (struct xvmc_pixfmt_render*)s->next_picture.data[2];
+
+            if (!next)
+
+                return -1;
+
+    
+
+/* ... [Cắt gọn do vượt quá 1800 ký tự] */","static int qcow_read_extensions(BlockDriverState *bs, uint64_t start_offset,
+
+                                uint64_t end_offset)
+
+{
+
+    BDRVQcowState *s = bs->opaque;
+
+    QCowExtension ext;
+
+    uint64_t offset;
+
+
+
+#ifdef DEBUG_EXT
+
+    printf(""qcow_read_extensions: start=%ld end=%ld\n"", start_offset, end_offset);
+
+#endif
+
+    offset = start_offset;
+
+    while (offset < end_offset) {
+
+
+
+#ifdef DEBUG_EXT
+
+        /* Sanity check */
+
+        if (offset > s->cluster_size)
+
+            printf(""qcow_handle_extension: suspicious offset %lu\n"", offset);
+
+
+
+        printf(""attemting to read extended header in offset %lu\n"", offset);
+
+#endif
+
+
+
+        if (bdrv_pread(s->hd, offset, &ext, sizeof(ext)) != sizeof(ext)) {
+
+            fprintf(stderr, ""qcow_handle_extension: ERROR: pread fail from offset %llu\n"",
+
+                    (unsigned long long)offset);
+
+            return 1;
+
+        }
+
+        be32_to_cpus(&ext.magic);
+
+        be32_to_cpus(&ext.len);
+
+        offset += sizeof(ext);
+
+#ifdef DEBUG_EXT
+
+        printf(""ext.magic = 0x%x\n"", ext.magic);
+
+#endif
+
+        switch (ext.magic) {
+
+        case QCOW_EXT_MAGIC_END:
+
+            return 0;
+
+
+
+        case QCOW_EXT_MAGIC_BACKING_FORMAT:
+
+            if (ext.len >= sizeof(bs->backing_format)) {
+
+                fprintf(stderr, ""ERROR: ext_backing_format: len=%u too large""
+
+                        "" (>=%zu)\n"",
+
+                        ext.len, sizeof(bs->backing_format));
+
+                return 2;
+
+            }
+
+            if (bdrv_pread(s->hd, offset , bs->backing_format,
+
+                           ext.len) != ext.len)
+
+                return 3;
+
+            bs->backing_format[ext.len] = '\0';
+
+#ifdef DEBUG_EXT
+
+            printf(""Qcow2: Got format extension %s\n"", bs->backing_format);
+
+#endif
+
+            offse
+
+/* ... [Cắt gọn do vượt quá 1800 ký tự] */","","","","","","","",""
+"49","id_257_label_True_qemu.c","1","static void parse_type_bool(Visitor *v, const char *name, bool *obj,
+
+                            Error **errp)
+
+{
+
+    StringInputVisitor *siv = to_siv(v);
+
+
+
+    if (siv->string) {
+
+        if (!strcasecmp(siv->string, ""on"") ||
+
+            !strcasecmp(siv->string, ""yes"") ||
+
+            !strcasecmp(siv->string, ""true"")) {
+
+            *obj = true;
+
+            return;
+
+        }
+
+        if (!strcasecmp(siv->string, ""off"") ||
+
+            !strcasecmp(siv->string, ""no"") ||
+
+            !strcasecmp(siv->string, ""false"")) {
+
+            *obj = false;
+
+            return;
+
+        }
+
+    }
+
+
+
+    error_setg(errp, QERR_INVALID_PARAMETER_TYPE, name ? name : ""null"",
+
+               ""boolean"");
+
+}","static void parse_type_int64(Visitor *v, const char *name, int64_t *obj,
+
+                             Error **errp)
+
+{
+
+    StringInputVisitor *siv = to_siv(v);
+
+
+
+    if (!siv->string) {
+
+        error_setg(errp, QERR_INVALID_PARAMETER_TYPE, name ? name : ""null"",
+
+                   ""integer"");
+
+        return;
+
+    }
+
+
+
+    if (parse_str(siv, name, errp) < 0) {
+
+        return;
+
+    }
+
+
+
+    if (!siv->ranges) {
+
+        goto error;
+
+    }
+
+
+
+    if (!siv->cur_range) {
+
+        Range *r;
+
+
+
+        siv->cur_range = g_list_first(siv->ranges);
+
+        if (!siv->cur_range) {
+
+            goto error;
+
+        }
+
+
+
+        r = siv->cur_range->data;
+
+        if (!r) {
+
+            goto error;
+
+        }
+
+
+
+        siv->cur = r->begin;
+
+    }
+
+
+
+    *obj = siv->cur;
+
+    siv->cur++;
+
+    return;
+
+
+
+error:
+
+    error_setg(errp, QERR_INVALID_PARAMETER_VALUE, name ? name : ""null"",
+
+               ""an int64 value or range"");
+
+}","static void cpu_common_initfn(Object *obj)
+
+{
+
+    CPUState *cpu = CPU(obj);
+
+    CPUClass *cc = CPU_GET_CLASS(obj);
+
+
+
+    cpu->cpu_index = UNASSIGNED_CPU_INDEX;
+
+    cpu->gdb_num_regs = cpu->gdb_num_g_regs = cc->gdb_num_core_regs;
+
+    /* *-user doesn't have configurable SMP topology */
+
+    /* the default value is changed by qemu_init_vcpu() for softmmu */
+
+    cpu->nr_cores = 1;
+
+    cpu->nr_threads = 1;
+
+
+
+    qemu_mutex_init(&cpu->work_mutex);
+
+    QTAILQ_INIT(&cpu->breakpoints);
+
+    QTAILQ_INIT(&cpu->watchpoints);
+
+
+
+    cpu->trace_dstate = bitmap_new(trace_get_vcpu_event_count());
+
+
+
+    cpu_exec_initfn(cpu);
+
+}","","","","","","","",""
+"50","id_578_label_True_FFmpeg.c","1","static int tta_decode_frame(AVCodecContext *avctx,
+
+        void *data, int *data_size,
+
+        AVPacket *avpkt)
+
+{
+
+    const uint8_t *buf = avpkt->data;
+
+    int buf_size = avpkt->size;
+
+    TTAContext *s = avctx->priv_data;
+
+    int i;
+
+
+
+    init_get_bits(&s->gb, buf, buf_size*8);
+
+    {
+
+        int32_t predictors[s->channels];
+
+        TTAFilter filters[s->channels];
+
+        TTARice rices[s->channels];
+
+        int cur_chan = 0, framelen = s->frame_length;
+
+        int32_t *p;
+
+
+
+        // FIXME: seeking
+
+        s->total_frames--;
+
+        if (!s->total_frames && s->last_frame_length)
+
+            framelen = s->last_frame_length;
+
+
+
+        // init per channel states
+
+        for (i = 0; i < s->channels; i++) {
+
+            predictors[i] = 0;
+
+            ttafilter_init(&(filters[i]), ttafilter_configs[s->bps-1][0], ttafilter_configs[s->bps-1][1]);
+
+            rice_init(&(rices[i]), 10, 10);
+
+        }
+
+
+
+        for (p = s->decode_buffer; p < s->decode_buffer + (framelen * s->channels); p++) {
+
+            int32_t *predictor = &(predictors[cur_chan]);
+
+            TTAFilter *filter = &(filters[cur_chan]);
+
+            TTARice *rice = &(rices[cur_chan]);
+
+            uint32_t unary, depth, k;
+
+            int32_t value;
+
+
+
+            unary = tta_get_unary(&s->gb);
+
+
+
+            if (unary == 0) {
+
+                depth = 0;
+
+                k = rice->k0;
+
+            } else {
+
+                depth = 1;
+
+                k = rice->k1;
+
+                unary--;
+
+            }
+
+
+
+            if (k)
+
+                value = (unary << k) + get_bits(&s->gb, k);
+
+            else
+
+                value = unary;
+
+
+
+            // FIXME: copy paste from original
+
+            switch (depth) {
+
+            case 1:
+
+                rice->sum1 += value - (rice->sum1 >> 4);
+
+                if (rice->k1 > 0 && rice->sum1 < shift_16[rice->k1])
+
+                    rice->k1--;
+
+                else if(rice->sum1 > shift_16[rice->k1 + 1])
+
+                    rice->k1++;
+
+                value += shift_1[rice->k0];
+
+            default:
+
+                rice->sum0 += value - (rice->sum0 >> 4);
+
+                if (rice->k0 > 0 && rice->sum0 < shift_16[rice->k0])
+
+                    rice->k0--;
+
+                else if(rice->sum0 > shift_16[rice->k0 + 1])
+
+                    rice->k0++;
+
+            }
+
+
+
+            // extract coded value
+
+#define UNFOLD(x) (((x)&1) ? (++(x)>>1) : (-(x)>>1))
+
+            *p = UNFOLD(value);
+
+
+
+            // run hybrid filter
+
+            ttafilter_process(filter, p, 0);
+
+
+
+            // fixed order prediction
+
+#define PRED(x, k) (int32_t)((((uint64_t)x << k) - x) >> k)
+
+            switch (s->bps) {
+
+                case 1: *p += PRED(*predictor, 4); break;
+
+                case 2:
+
+                case 3: *p += PRED(*predictor, 5); break;
+
+                case 4: *p += *predictor; break;
+
+            }
+
+            *predictor = *p;
+
+
+
+#if 0
+
+            // extract 32bit float from last two int samples
+
+           
+
+/* ... [Cắt gọn do vượt quá 3000 ký tự] */","static int megasas_ld_get_info_submit(SCSIDevice *sdev, int lun,
+
+                                      MegasasCmd *cmd)
+
+{
+
+    struct mfi_ld_info *info = cmd->iov_buf;
+
+    size_t dcmd_size = sizeof(struct mfi_ld_info);
+
+    uint8_t cdb[6];
+
+    SCSIRequest *req;
+
+    ssize_t len, resid;
+
+    BlockConf *conf = &sdev->conf;
+
+    uint16_t sdev_id = ((sdev->id & 0xFF) >> 8) | (lun & 0xFF);
+
+    uint64_t ld_size;
+
+
+
+    if (!cmd->iov_buf) {
+
+        cmd->iov_buf = g_malloc(dcmd_size);
+
+        memset(cmd->iov_buf, 0x0, dcmd_size);
+
+        info = cmd->iov_buf;
+
+        megasas_setup_inquiry(cdb, 0x83, sizeof(info->vpd_page83));
+
+        req = scsi_req_new(sdev, cmd->index, lun, cdb, cmd);
+
+        if (!req) {
+
+            trace_megasas_dcmd_req_alloc_failed(cmd->index,
+
+                                                ""LD get info vpd inquiry"");
+
+            g_free(cmd->iov_buf);
+
+            cmd->iov_buf = NULL;
+
+            return MFI_STAT_FLASH_ALLOC_FAIL;
+
+        }
+
+        trace_megasas_dcmd_internal_submit(cmd->index,
+
+                                           ""LD get info vpd inquiry"", lun);
+
+        len = scsi_req_enqueue(req);
+
+        if (len > 0) {
+
+            cmd->iov_size = len;
+
+            scsi_req_continue(req);
+
+        }
+
+        return MFI_STAT_INVALID_STATUS;
+
+    }
+
+
+
+    info->ld_config.params.state = MFI_LD_STATE_OPTIMAL;
+
+    info->ld_config.properties.ld.v.target_id = lun;
+
+    info->ld_config.params.stripe_size = 3;
+
+    info->ld_config.params.num_drives = 1;
+
+    info->ld_config.params.is_consistent = 1;
+
+    /* Logical device size is in blocks */
+
+    bdrv_get_geometry(conf->bs, &ld_size);
+
+    info->size = cpu_to_le64(ld_size);
+
+    memset(info->ld_config.span, 0, sizeof(info->ld_config.span));
+
+    info->ld_config.span[0].start_block = 0;
+
+
+
+/* ... [Cắt gọn do vượt quá 1800 ký tự] */","int socket_dgram(SocketAddress *remote, SocketAddress *local, Error **errp)
+
+{
+
+    QemuOpts *opts;
+
+    int fd;
+
+
+
+    opts = qemu_opts_create_nofail(&socket_optslist);
+
+    switch (remote->kind) {
+
+    case SOCKET_ADDRESS_KIND_INET:
+
+        qemu_opt_set(opts, ""host"", remote->inet->host);
+
+        qemu_opt_set(opts, ""port"", remote->inet->port);
+
+        if (local) {
+
+            qemu_opt_set(opts, ""localaddr"", local->inet->host);
+
+            qemu_opt_set(opts, ""localport"", local->inet->port);
+
+        }
+
+        fd = inet_dgram_opts(opts, errp);
+
+        break;
+
+
+
+    default:
+
+        error_setg(errp, ""socket type unsupported for datagram"");
+
+        return -1;
+
+    }
+
+    qemu_opts_del(opts);
+
+    return fd;
+
+}","","","","","","","",""
