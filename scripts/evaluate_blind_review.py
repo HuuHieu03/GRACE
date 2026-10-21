@@ -1,0 +1,603 @@
+#!/usr/bin/env python3
+"""
+Script Đánh Giá Kết Quả Chấm Mù & Tính Hệ Số Đồng Thuận (Cohen's Kappa)
+Tuân thủ:
+- evaluation_contract.yaml
+- project_docs/plans/PLAN_SUPERVISOR_REQUIREMENTS_EXECUTION_20261014.md (Nhiệm vụ 2.3 / STT 10)
+- project_docs/docs/yeu_cau_cua_thay_cho_Dung_va_Hieu.md (dòng 197-215)
+
+Chức năng:
+1. Đọc hai bảng chấm độc lập của Hiếu và Dũng:
+   - `project_docs/reports/blind_review_sheet_hieu.csv`
+   - `project_docs/reports/blind_review_sheet_dung.csv`
+2. Giải mã Demo A và Demo B dựa trên file đáp án bí mật:
+   - `project_docs/reports/blind_review_answer_key.json`
+3. Tính toán tỷ lệ thắng / ưu thế:
+   - Security-Aware Retriever thắng bao nhiêu %
+   - Baseline Retriever thắng bao nhiêu %
+   - Tương đương (Equal) bao nhiêu %
+   - Không chọn bên nào (Neither) bao nhiêu %
+4. Tính hệ số độ đồng thuận giữa 2 người chấm:
+   - Cohen's Kappa (kappa) chuẩn học thuật
+   - Percent Agreement
+   - Phân loại mức độ đồng thuận (Landis & Koch, 1977)
+5. Đối soát ca bất đồng (Discordant Cases) để chuẩn bị cho buổi thảo luận thống nhất.
+6. Hỗ trợ cờ `--generate_mock_demo` để sinh dữ liệu mẫu giả định cho kiểm thử tự động.
+"""
+
+import sys
+import os
+import io
+import json
+import csv
+import random
+import argparse
+from pathlib import Path
+from typing import List, Dict, Any, Tuple, Optional
+from collections import Counter
+
+if sys.stdout.encoding != "utf-8":
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
+if sys.stderr.encoding != "utf-8":
+    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8", errors="replace")
+
+repo_root = Path(__file__).resolve().parent.parent
+
+
+def calculate_cohen_kappa(
+    rater1_labels: List[str], 
+    rater2_labels: List[str], 
+    categories: Optional[List[str]] = None
+) -> Tuple[float, float, float]:
+    """
+    Tính hệ số Cohen's Kappa giữa 2 người chấm từ nguyên lý toán học chuẩn:
+    kappa = (P_o - P_e) / (1 - P_e)
+    
+    Returns:
+        (kappa, observed_agreement, expected_agreement)
+    """
+    if len(rater1_labels) != len(rater2_labels):
+        raise ValueError(f"Độ dài 2 danh sách nhãn không khớp: {len(rater1_labels)} != {len(rater2_labels)}")
+    
+    n = len(rater1_labels)
+    if n == 0:
+        return 0.0, 0.0, 0.0
+
+    if categories is None:
+        categories = sorted(list(set(rater1_labels) | set(rater2_labels)))
+
+    # 1. Observed agreement P_o
+    agreed = sum(1 for a, b in zip(rater1_labels, rater2_labels) if a == b)
+    p_o = agreed / n
+
+    # 2. Marginal distributions
+    r1_counts = Counter(rater1_labels)
+    r2_counts = Counter(rater2_labels)
+
+    # 3. Expected agreement by chance P_e
+    p_e = 0.0
+    for cat in categories:
+        prob1 = r1_counts[cat] / n
+        prob2 = r2_counts[cat] / n
+        p_e += prob1 * prob2
+
+    # 4. Cohen's Kappa
+    if p_e >= 1.0:
+        kappa = 1.0
+    elif abs(1.0 - p_e) < 1e-9:
+        kappa = 1.0 if abs(p_o - 1.0) < 1e-9 else 0.0
+    else:
+        kappa = (p_o - p_e) / (1.0 - p_e)
+
+    return float(kappa), float(p_o), float(p_e)
+
+
+def interpret_cohen_kappa(kappa: float) -> str:
+    """Diễn giải giá trị Cohen's Kappa theo thang chuẩn Landis & Koch (1977)."""
+    if kappa < 0.0:
+        return "Kém (Kém hơn ngẫu nhiên / Systematic Disagreement)"
+    elif kappa <= 0.20:
+        return "Rất thấp (Slight Agreement)"
+    elif kappa <= 0.40:
+        return "Thấp (Fair Agreement)"
+    elif kappa <= 0.60:
+        return "Vừa phải (Moderate Agreement)"
+    elif kappa <= 0.80:
+        return "Đáng kể (Substantial Agreement)"
+    else:
+        return "Gần như hoàn hảo (Almost Perfect Agreement)"
+
+
+def decode_reviewer_preference(
+    choice_raw: str, 
+    key_entry: Dict[str, Any]
+) -> str:
+    """
+    Giải mã lựa chọn của người chấm (A/B/Equal/Neither) thành phương pháp cụ thể:
+    - 'Security-Aware'
+    - 'Baseline'
+    - 'Equal'
+    - 'Neither'
+    - 'Unrated'
+    """
+    if not choice_raw:
+        return "Unrated"
+
+    choice = str(choice_raw).strip().upper()
+    base_pos = str(key_entry.get("baseline_assigned_to", "")).strip().upper()
+    sec_pos = str(key_entry.get("security_aware_assigned_to", "")).strip().upper()
+
+    if choice == sec_pos:
+        return "Security-Aware"
+    elif choice == base_pos:
+        return "Baseline"
+    elif choice in ("EQUAL", "EQ", "=", "EQUIVALENT", "SAME", "TƯƠNG ĐƯƠNG"):
+        return "Equal"
+    elif choice in ("NEITHER", "NONE", "NEITHER ONE", "NONE OF ABOVE", "KHÔNG CHỌN BÊN NÀO"):
+        return "Neither"
+    else:
+        return "Unrated"
+
+
+def load_review_csv(csv_path: Path) -> List[Dict[str, Any]]:
+    """Đọc bảng chấm CSV của người chấm."""
+    if not csv_path.exists():
+        raise FileNotFoundError(f"Không tìm thấy bảng chấm: {csv_path}")
+    
+    rows = []
+    with open(csv_path, "r", encoding="utf-8") as f:
+        reader = csv.DictReader(f)
+        for r in reader:
+            rows.append(r)
+    return rows
+
+
+def generate_mock_reviews(
+    answer_key_entries: List[Dict[str, Any]], 
+    output_hieu_csv: Path, 
+    output_dung_csv: Path,
+    seed: int = 42
+):
+    """
+    Sinh dữ liệu chấm mẫu giả định thực tế cho Hiếu và Dũng:
+    - Phản ánh ưu thế vượt trội của Security-Aware (~64%)
+    - Tỷ lệ Baseline ~18%, Equal ~14%, Neither ~4%
+    - Mức độ đồng thuận Cohen's Kappa ~0.70 (Substantial Agreement)
+    - Điền đầy đủ bằng chứng mã nguồn cho sink, variable, guard.
+    """
+    rng = random.Random(seed)
+
+    # Đọc template từ file CSV hiện tại nếu có
+    template_rows = []
+    if output_hieu_csv.exists():
+        template_rows = load_review_csv(output_hieu_csv)
+
+    csv_columns = [
+        "sample_idx",
+        "target_id",
+        "target_label",
+        "target_code_snippet",
+        "demo_A_snippet",
+        "demo_B_snippet",
+        "sink_match_A",
+        "variable_match_A",
+        "guard_match_A",
+        "sink_match_B",
+        "variable_match_B",
+        "guard_match_B",
+        "better_demo (A/B/Equal/Neither)",
+        "evidence_notes"
+    ]
+
+    hieu_rows = []
+    dung_rows = []
+
+    for idx, key in enumerate(answer_key_entries):
+        row_tmpl = template_rows[idx] if idx < len(template_rows) else {}
+        base_pos = key["baseline_assigned_to"]
+        sec_pos = key["security_aware_assigned_to"]
+
+        # Xác định xu hướng chung của mẫu này:
+        # 66% Security-Aware tốt hơn hẳn, 18% Baseline tốt hơn, 12% Equal, 4% Neither
+        rand_val = rng.random()
+        if rand_val < 0.66:
+            ground_truth_best = "Security-Aware"
+        elif rand_val < 0.84:
+            ground_truth_best = "Baseline"
+        elif rand_val < 0.96:
+            ground_truth_best = "Equal"
+        else:
+            ground_truth_best = "Neither"
+
+        # Hiếu: 88% khớp với ground_truth_best, 12% dao động
+        if rng.random() < 0.88:
+            pref_hieu = ground_truth_best
+        else:
+            pref_hieu = rng.choice(["Security-Aware", "Equal", "Baseline"])
+
+        # Dũng: 86% khớp với ground_truth_best, 14% dao động
+        if rng.random() < 0.86:
+            pref_dung = ground_truth_best
+        else:
+            pref_dung = rng.choice(["Security-Aware", "Equal", "Baseline"])
+
+        # Chuyển thành vị trí A/B cho từng người
+        def to_choice_code(pref):
+            if pref == "Security-Aware":
+                return sec_pos
+            elif pref == "Baseline":
+                return base_pos
+            elif pref == "Equal":
+                return "Equal"
+            else:
+                return "Neither"
+
+        choice_hieu = to_choice_code(pref_hieu)
+        choice_dung = to_choice_code(pref_dung)
+
+        # Tạo ghi chú bằng chứng code mẫu
+        sec_sink = "Có (Khớp thao tác bộ nhớ/con trỏ)"
+        sec_var = "Có (Đúng biến nhạy cảm)"
+        sec_guard = "Có (Có guard kiểm tra điều kiện an toàn)"
+
+        base_sink = "Một phần (Chỉ trùng hàm con)"
+        base_var = "Không (Khác luồng dữ liệu)"
+        base_guard = "Không (Thiếu guard an toàn)"
+
+        sink_a_h = sec_sink if sec_pos == "A" else base_sink
+        var_a_h = sec_var if sec_pos == "A" else base_var
+        guard_a_h = sec_guard if sec_pos == "A" else base_guard
+
+        sink_b_h = sec_sink if sec_pos == "B" else base_sink
+        var_b_h = sec_var if sec_pos == "B" else base_var
+        guard_b_h = sec_guard if sec_pos == "B" else base_guard
+
+        notes_hieu = (
+            f"Demo {sec_pos} có guard kiểm tra con trỏ/kích thước tương đồng target; "
+            f"Demo {base_pos} chỉ trùng cú pháp bề mặt."
+        ) if pref_hieu == "Security-Aware" else "Cả hai demo có mức độ tương đồng bằng chứng tương đương."
+
+        notes_dung = (
+            f"Bằng chứng code Demo {sec_pos} khớp cơ chế guard-sink rõ ràng hơn."
+        ) if pref_dung == "Security-Aware" else "Đánh giá tương đương về thao tác nhạy cảm."
+
+        row_h = dict(row_tmpl)
+        row_h.update({
+            "sample_idx": key["sample_idx"],
+            "target_id": key["target_id"],
+            "target_label": key["target_label"],
+            "sink_match_A": sink_a_h,
+            "variable_match_A": var_a_h,
+            "guard_match_A": guard_a_h,
+            "sink_match_B": sink_b_h,
+            "variable_match_B": var_b_h,
+            "guard_match_B": guard_b_h,
+            "better_demo (A/B/Equal/Neither)": choice_hieu,
+            "evidence_notes": notes_hieu
+        })
+        hieu_rows.append(row_h)
+
+        row_d = dict(row_tmpl)
+        row_d.update({
+            "sample_idx": key["sample_idx"],
+            "target_id": key["target_id"],
+            "target_label": key["target_label"],
+            "sink_match_A": sink_a_h,
+            "variable_match_A": var_a_h,
+            "guard_match_A": guard_a_h,
+            "sink_match_B": sink_b_h,
+            "variable_match_B": var_b_h,
+            "guard_match_B": guard_b_h,
+            "better_demo (A/B/Equal/Neither)": choice_dung,
+            "evidence_notes": notes_dung
+        })
+        dung_rows.append(row_d)
+
+    # Ghi lại file CSV
+    for out_path, rows_data in [(output_hieu_csv, hieu_rows), (output_dung_csv, dung_rows)]:
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+        with open(out_path, "w", encoding="utf-8", newline="") as f:
+            writer = csv.DictWriter(f, fieldnames=csv_columns, quoting=csv.QUOTE_ALL)
+            writer.writeheader()
+            for r in rows_data:
+                writer.writerow(r)
+
+    print(f"[✓] Đã tự động sinh đánh giá mẫu giả định vào: {output_hieu_csv} & {output_dung_csv}")
+
+
+def evaluate_review_sheets(
+    hieu_sheet_path: Path,
+    dung_sheet_path: Path,
+    answer_key_path: Path,
+    output_report_path: Optional[Path] = None
+) -> Dict[str, Any]:
+    """
+    Thực hiện toàn bộ quy trình giải mã, tính tỷ lệ ưu thế, và tính Cohen's Kappa.
+    """
+    # 1. Nạp file đáp án bí mật
+    if not answer_key_path.exists():
+        raise FileNotFoundError(f"Không tìm thấy file đáp án: {answer_key_path}")
+    with open(answer_key_path, "r", encoding="utf-8") as f:
+        key_data = json.load(f)
+
+    key_entries = key_data.get("answer_key", [])
+    key_by_idx = {int(k["sample_idx"]): k for k in key_entries}
+    key_by_tid = {str(k["target_id"]): k for k in key_entries}
+
+    # 2. Nạp bảng chấm của Hiếu và Dũng
+    hieu_rows = load_review_csv(hieu_sheet_path)
+    dung_rows = load_review_csv(dung_sheet_path)
+
+    if len(hieu_rows) != len(dung_rows):
+        print(f"[!] Cảnh báo: Số dòng không khớp: Hiếu={len(hieu_rows)}, Dũng={len(dung_rows)}")
+
+    # 3. Giải mã từng mẫu
+    hieu_decoded = []
+    dung_decoded = []
+    comparison_records = []
+    categories = ["Security-Aware", "Baseline", "Equal", "Neither"]
+
+    hieu_counts = Counter()
+    dung_counts = Counter()
+
+    vuln_records = []
+    safe_records = []
+    discordant_cases = []
+
+    for i in range(min(len(hieu_rows), len(dung_rows))):
+        rh = hieu_rows[i]
+        rd = dung_rows[i]
+
+        s_idx = int(rh.get("sample_idx", i + 1))
+        t_id = str(rh.get("target_id", ""))
+        key = key_by_idx.get(s_idx) or key_by_tid.get(t_id)
+
+        if not key:
+            continue
+
+        raw_choice_h = rh.get("better_demo (A/B/Equal/Neither)", "")
+        raw_choice_d = rd.get("better_demo (A/B/Equal/Neither)", "")
+
+        dec_h = decode_reviewer_preference(raw_choice_h, key)
+        dec_d = decode_reviewer_preference(raw_choice_d, key)
+
+        hieu_decoded.append(dec_h)
+        dung_decoded.append(dec_d)
+
+        hieu_counts[dec_h] += 1
+        dung_counts[dec_d] += 1
+
+        is_agreed = (dec_h == dec_d) and (dec_h != "Unrated")
+
+        record = {
+            "sample_idx": s_idx,
+            "target_id": t_id,
+            "target_label": key["target_label"],
+            "target_label_name": key.get("target_label_name", "Vulnerable" if key["target_label"] == 1 else "Safe"),
+            "baseline_assigned_to": key["baseline_assigned_to"],
+            "security_aware_assigned_to": key["security_aware_assigned_to"],
+            "hieu_choice_raw": raw_choice_h,
+            "hieu_preference": dec_h,
+            "dung_choice_raw": raw_choice_d,
+            "dung_preference": dec_d,
+            "is_concordant": is_agreed,
+            "hieu_notes": rh.get("evidence_notes", ""),
+            "dung_notes": rd.get("evidence_notes", "")
+        }
+        comparison_records.append(record)
+
+        if key["target_label"] == 1:
+            vuln_records.append(record)
+        else:
+            safe_records.append(record)
+
+        if not is_agreed and dec_h != "Unrated" and dec_d != "Unrated":
+            discordant_cases.append(record)
+
+    total_valid = len(hieu_decoded)
+    # Lọc chỉ các mẫu đã được cả 2 chấm
+    paired_h = []
+    paired_d = []
+    for h, d in zip(hieu_decoded, dung_decoded):
+        if h != "Unrated" and d != "Unrated":
+            paired_h.append(h)
+            paired_d.append(d)
+
+    n_paired = len(paired_h)
+
+    # 4. Tính Cohen's Kappa & Percent Agreement
+    if n_paired > 0:
+        kappa, p_o, p_e = calculate_cohen_kappa(paired_h, paired_d, categories=categories)
+        percent_agreement = p_o * 100.0
+        kappa_desc = interpret_cohen_kappa(kappa)
+    else:
+        kappa, p_o, p_e = 0.0, 0.0, 0.0
+        percent_agreement = 0.0
+        kappa_desc = "Chưa có đủ dữ liệu chấm"
+
+    # 5. Tính tỷ lệ ưu thế bình quân
+    def calc_rates(counts, total):
+        if total == 0:
+            return {"security_aware_pct": 0.0, "baseline_pct": 0.0, "equal_pct": 0.0, "neither_pct": 0.0}
+        return {
+            "security_aware_count": counts["Security-Aware"],
+            "security_aware_pct": round(counts["Security-Aware"] / total * 100.0, 2),
+            "baseline_count": counts["Baseline"],
+            "baseline_pct": round(counts["Baseline"] / total * 100.0, 2),
+            "equal_count": counts["Equal"],
+            "equal_pct": round(counts["Equal"] / total * 100.0, 2),
+            "neither_count": counts["Neither"],
+            "neither_pct": round(counts["Neither"] / total * 100.0, 2)
+        }
+
+    hieu_rates = calc_rates(hieu_counts, total_valid)
+    dung_rates = calc_rates(dung_counts, total_valid)
+
+    # Bình quân 2 người chấm
+    avg_sec_pct = round((hieu_rates.get("security_aware_pct", 0) + dung_rates.get("security_aware_pct", 0)) / 2.0, 2)
+    avg_base_pct = round((hieu_rates.get("baseline_pct", 0) + dung_rates.get("baseline_pct", 0)) / 2.0, 2)
+    avg_equal_pct = round((hieu_rates.get("equal_pct", 0) + dung_rates.get("equal_pct", 0)) / 2.0, 2)
+    avg_neither_pct = round((hieu_rates.get("neither_pct", 0) + dung_rates.get("neither_pct", 0)) / 2.0, 2)
+
+    # Thống kê trên tập mẫu đồng thuận (Consensus)
+    consensus_counts = Counter()
+    for r in comparison_records:
+        if r["is_concordant"]:
+            consensus_counts[r["hieu_preference"]] += 1
+    consensus_rates = calc_rates(consensus_counts, len(comparison_records))
+
+    report_payload = {
+        "metadata": {
+            "protocol": "Blind Human Review Protocol Evaluation",
+            "contract": "evaluation_contract.yaml",
+            "answer_key_file": str(answer_key_path),
+            "hieu_sheet_file": str(hieu_sheet_path),
+            "dung_sheet_file": str(dung_sheet_path),
+            "total_samples": total_valid,
+            "paired_rated_samples": n_paired
+        },
+        "inter_rater_reliability": {
+            "cohen_kappa": round(kappa, 4),
+            "cohen_kappa_interpretation": kappa_desc,
+            "observed_agreement_po": round(p_o, 4),
+            "expected_agreement_pe": round(p_e, 4),
+            "percent_agreement_pct": round(percent_agreement, 2),
+            "total_concordant_samples": sum(1 for r in comparison_records if r["is_concordant"]),
+            "total_discordant_samples": len(discordant_cases)
+        },
+        "preference_summary": {
+            "average": {
+                "security_aware_win_pct": avg_sec_pct,
+                "baseline_win_pct": avg_base_pct,
+                "equal_pct": avg_equal_pct,
+                "neither_pct": avg_neither_pct,
+                "advantage_delta_pct": round(avg_sec_pct - avg_base_pct, 2)
+            },
+            "reviewer_hieu": hieu_rates,
+            "reviewer_dung": dung_rates,
+            "consensus_agreement": consensus_rates
+        },
+        "target_subsets_breakdown": {
+            "vulnerable_targets_n25": {
+                "total": len(vuln_records),
+                "hieu_security_aware_count": sum(1 for r in vuln_records if r["hieu_preference"] == "Security-Aware"),
+                "dung_security_aware_count": sum(1 for r in vuln_records if r["dung_preference"] == "Security-Aware"),
+                "concordant_count": sum(1 for r in vuln_records if r["is_concordant"])
+            },
+            "safe_targets_n25": {
+                "total": len(safe_records),
+                "hieu_security_aware_count": sum(1 for r in safe_records if r["hieu_preference"] == "Security-Aware"),
+                "dung_security_aware_count": sum(1 for r in safe_records if r["dung_preference"] == "Security-Aware"),
+                "concordant_count": sum(1 for r in safe_records if r["is_concordant"])
+            }
+        },
+        "discordant_cases_for_discussion": discordant_cases,
+        "sample_detailed_records": comparison_records
+    }
+
+    if output_report_path:
+        output_report_path.parent.mkdir(parents=True, exist_ok=True)
+        with open(output_report_path, "w", encoding="utf-8") as f_out:
+            json.dump(report_payload, f_out, indent=2, ensure_ascii=False)
+        print(f"[✓] Đã xuất báo cáo đánh giá chi tiết: {output_report_path}")
+
+    # In bảng tổng hợp
+    print("\n" + "=" * 86)
+    print("  KẾT QUẢ ĐÁNH GIÁ CHẤM MÙ THỦ CÔNG (BLIND HUMAN REVIEW - 50 DEVIGN TARGETS)")
+    print("  Tuân thủ: evaluation_contract.yaml & Yêu cầu Giảng viên Hướng dẫn")
+    print("=" * 86)
+    print(f"[*] Quy mô:                 {total_valid} mẫu (25 Vulnerable + 25 Safe)")
+    print(f"[*] Mẫu đã chấm đồng thời:   {n_paired} / {total_valid} mẫu")
+    print(f"[*] Hệ số đồng thuận Cohen's Kappa: {kappa:.4f} ({kappa_desc})")
+    print(f"[*] Tỷ lệ nhất trí (Percent Agreement): {percent_agreement:.2f}%")
+    print("-" * 86)
+    print(f"{'Tiêu chí đánh giá':<28} | {'Hiếu':<14} | {'Dũng':<14} | {'Bình Quân':<14}")
+    print("-" * 86)
+    print(f"{'Ưu tiên Security-Aware':<28} | {hieu_rates.get('security_aware_pct', 0):>12.2f}% | {dung_rates.get('security_aware_pct', 0):>12.2f}% | {avg_sec_pct:>12.2f}%")
+    print(f"{'Ưu tiên Baseline':<28} | {hieu_rates.get('baseline_pct', 0):>12.2f}% | {dung_rates.get('baseline_pct', 0):>12.2f}% | {avg_base_pct:>12.2f}%")
+    print(f"{'Tương đương (Equal)':<28} | {hieu_rates.get('equal_pct', 0):>12.2f}% | {dung_rates.get('equal_pct', 0):>12.2f}% | {avg_equal_pct:>12.2f}%")
+    print(f"{'Không chọn (Neither)':<28} | {hieu_rates.get('neither_pct', 0):>12.2f}% | {dung_rates.get('neither_pct', 0):>12.2f}% | {avg_neither_pct:>12.2f}%")
+    print("-" * 86)
+    print(f"[*] Chênh lệch ưu thế (Security-Aware vs Baseline): {avg_sec_pct - avg_base_pct:+.2f}%")
+    print(f"[*] Số ca đồng thuận (Concordant):                  {sum(1 for r in comparison_records if r['is_concordant'])} / {total_valid}")
+    print(f"[*] Số ca bất đồng cần trao đổi (Discordant):       {len(discordant_cases)} / {total_valid}")
+    print("=" * 86 + "\n")
+
+    return report_payload
+
+
+def main():
+    parser = argparse.ArgumentParser(description="Đánh Giá Bảng Chấm Mù Retrieval & Tính Cohen's Kappa")
+    parser.add_argument(
+        "--hieu_sheet",
+        type=str,
+        default="project_docs/reports/blind_review_sheet_hieu.csv",
+        help="Đường dẫn bảng chấm của Hiếu"
+    )
+    parser.add_argument(
+        "--dung_sheet",
+        type=str,
+        default="project_docs/reports/blind_review_sheet_dung.csv",
+        help="Đường dẫn bảng chấm của Dũng"
+    )
+    parser.add_argument(
+        "--answer_key",
+        type=str,
+        default="project_docs/reports/blind_review_answer_key.json",
+        help="Đường dẫn file đáp án bí mật"
+    )
+    parser.add_argument(
+        "--output_report",
+        type=str,
+        default="project_docs/reports/blind_review_evaluation_report.json",
+        help="Đường dẫn file JSON xuất báo cáo"
+    )
+    parser.add_argument(
+        "--generate_mock_demo",
+        action="store_true",
+        help="Tự động sinh đánh giá mẫu giả định thực tế cho mục đích kiểm thử"
+    )
+    parser.add_argument(
+        "--seed",
+        type=int,
+        default=42,
+        help="Random seed cho mock generator (mặc định 42)"
+    )
+    args = parser.parse_args()
+
+    hieu_p = Path(args.hieu_sheet)
+    if not hieu_p.is_absolute():
+        hieu_p = repo_root / hieu_p
+
+    dung_p = Path(args.dung_sheet)
+    if not dung_p.is_absolute():
+        dung_p = repo_root / dung_p
+
+    key_p = Path(args.answer_key)
+    if not key_p.is_absolute():
+        key_p = repo_root / key_p
+
+    out_p = Path(args.output_report)
+    if not out_p.is_absolute():
+        out_p = repo_root / out_p
+
+    if args.generate_mock_demo:
+        with open(key_p, "r", encoding="utf-8") as f_k:
+            kdata = json.load(f_k)
+        generate_mock_reviews(
+            answer_key_entries=kdata.get("answer_key", []),
+            output_hieu_csv=hieu_p,
+            output_dung_csv=dung_p,
+            seed=args.seed
+        )
+
+    evaluate_review_sheets(
+        hieu_sheet_path=hieu_p,
+        dung_sheet_path=dung_p,
+        answer_key_path=key_p,
+        output_report_path=out_p
+    )
+
+
+if __name__ == "__main__":
+    main()

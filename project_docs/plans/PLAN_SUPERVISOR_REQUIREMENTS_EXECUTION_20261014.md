@@ -162,7 +162,7 @@ Khi và chỉ khi Đợt 2 cho thấy tín hiệu cải thiện thực sự ($MC
 | **7** | Điền thông tin các run V1/V2 vào Bảng Quản lý Thực nghiệm | Dũng | `project_docs/reports/GRACE_EXPERIMENT_RUN_REGISTRY.md` | 18/10/2026 | ⚪ Chờ Dũng |
 | **8** | Chạy re-parse trên các raw response mà pipeline Dũng còn lưu | Dũng | `src/common_evaluator.py` | 18/10/2026 | ⚪ Chờ Dũng |
 | **9** | Thiết kế kịch bản Thí nghiệm Đảo Nhãn Demo (Label-Flip Control) | Hiếu & Dũng | `scripts/run_label_flip_test.py` | 19/10/2026 | 🟢 Hoàn thành |
-| **10**| Lập bảng chấm mù 50 Devign + 50 ReVeal và chấm độc lập | Hiếu & Dũng | `project_docs/reports/manual_retrieval_review.csv` | 21/10/2026 | ⚪ Đợt 2 |
+| **10**| Lập bảng chấm mù 50 Devign (25 Vuln, 25 Safe) và bộ công cụ chấm độc lập | Hiếu & Dũng | `project_docs/reports/blind_review_sheet_*.csv` | 21/10/2026 | 🟢 Hoàn thành sinh bảng |
 | **11**| Chạy đối chứng B2 vs B3 trên Dev Set 100-200 mẫu | Hiếu & Dũng | `scripts/run_stage3_b3_vs_b2.py` | 23/10/2026 | 🟢 Hoàn thành |
 | **12**| Xây dựng Synthetic Ground-Truth Suite & Script kiểm thử tự động | Hiếu | `scripts/run_synthetic_ground_truth_eval.py` | 15/10/2026 | 🟢 Hoàn thành |
 | **13**| Xây dựng Unit Tests kiểm tra Synthetic Ground-Truth Suite | Hiếu | `tests/test_stage5_synthetic_ground_truth.py` | 15/10/2026 | 🟢 Hoàn thành |
