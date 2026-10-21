@@ -1,0 +1,103 @@
+{
+  "description": "Baseline metrics from Stage 2 Label-Flip Test BEFORE adding Joern 0.2.5 CPG graphs",
+  "total_samples": 100,
+  "valid_samples": 100,
+  "invalid_count": 0,
+  "invalid_rate": 0.0,
+  "quantitative_findings": {
+    "flip_count": 51,
+    "flip_rate": 0.51,
+    "flip_rate_pct": 51.0,
+    "natural_variance_count": 1,
+    "natural_variance_rate": 0.01,
+    "natural_variance_pct": 1.0,
+    "net_label_sensitivity": 0.5,
+    "net_label_sensitivity_pct": 50.0
+  },
+  "behavioral_breakdown": {
+    "correct_to_wrong": 33,
+    "correct_to_wrong_pct": 33.0,
+    "wrong_to_correct": 18,
+    "wrong_to_correct_pct": 18.0,
+    "stayed_correct": 25,
+    "stayed_correct_pct": 25.0,
+    "stayed_wrong": 24,
+    "stayed_wrong_pct": 24.0
+  },
+  "demo_label_breakdown": {
+    "vuln_demo_count": 45,
+    "vuln_demo_flips": 27,
+    "vuln_demo_flip_rate_pct": 60.0,
+    "safe_demo_count": 55,
+    "safe_demo_flips": 24,
+    "safe_demo_flip_rate_pct": 43.64
+  },
+  "condition_metrics": {
+    "condition_a_original": {
+      "total_samples": 100,
+      "valid_samples": 100,
+      "invalid_samples": 0,
+      "invalid_rate": 0.0,
+      "accuracy": 0.58,
+      "precision": 0.625,
+      "recall": 0.5556,
+      "f1_score": 0.5882,
+      "mcc": 0.1639,
+      "balanced_accuracy": 0.5821,
+      "predicted_vulnerable_rate": 0.48,
+      "confusion_matrix": {
+        "TP (True Positive)": 30,
+        "FP (False Positive - Alarm)": 18,
+        "TN (True Negative)": 28,
+        "FN (False Negative - Miss)": 24
+      }
+    },
+    "condition_b_flipped": {
+      "total_samples": 100,
+      "valid_samples": 100,
+      "invalid_samples": 0,
+      "invalid_rate": 0.0,
+      "accuracy": 0.43,
+      "precision": 0.4667,
+      "recall": 0.3889,
+      "f1_score": 0.4242,
+      "mcc": -0.1331,
+      "balanced_accuracy": 0.4336,
+      "predicted_vulnerable_rate": 0.45,
+      "confusion_matrix": {
+        "TP (True Positive)": 21,
+        "FP (False Positive - Alarm)": 24,
+        "TN (True Negative)": 22,
+        "FN (False Negative - Miss)": 33
+      }
+    },
+    "condition_c_repeated": {
+      "total_samples": 100,
+      "valid_samples": 100,
+      "invalid_samples": 0,
+      "invalid_rate": 0.0,
+      "accuracy": 0.57,
+      "precision": 0.617,
+      "recall": 0.537,
+      "f1_score": 0.5743,
+      "mcc": 0.1455,
+      "balanced_accuracy": 0.5729,
+      "predicted_vulnerable_rate": 0.47,
+      "confusion_matrix": {
+        "TP (True Positive)": 29,
+        "FP (False Positive - Alarm)": 18,
+        "TN (True Negative)": 28,
+        "FN (False Negative - Miss)": 25
+      }
+    }
+  },
+  "experiment_metadata": {
+    "dataset": "devign",
+    "dev_split_file": "data/splits/devign_dev_clean_100_ids.json",
+    "has_cpg_graph": false,
+    "model_name": "publishers/qwen/models/qwen3-coder-480b-a35b-instruct-maas",
+    "provider": "Vertex AI",
+    "seed": 42,
+    "timestamp": "2026-10-19 10:44:13"
+  }
+}
