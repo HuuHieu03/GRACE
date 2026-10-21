@@ -104,38 +104,64 @@ def slice_dataset(
     return sliced
 
 
-def stream_json_array(file_path: Path, max_items: Optional[int] = None) -> List[Dict[str, Any]]:
-    """Đọc file JSON mảng đối tượng lớn theo cơ chế luồng (Streaming) để tránh tràn bộ nhớ RAM."""
+def iter_json_array(file_path: Path, max_items: Optional[int] = None):
+    """
+    Generator đọc file JSON mảng đối tượng lớn theo cơ chế luồng (Streaming Generator).
+    Sử dụng máy trạng thái đếm ngoặc (brace depth) và bỏ qua ngoặc trong chuỗi (string literals)
+    để không bao giờ bị cắt nhầm khi gặp ngoặc nhọn '{' '}' bên trong mã nguồn C/C++.
+    """
     import json
-    items = []
-    current_obj_lines = []
-    in_obj = False
-    current_indent = ""
-    
-    with open(file_path, "r", encoding="utf-8") as f:
-        for line in f:
-            stripped = line.strip()
-            if not in_obj:
-                if stripped == "{" or stripped.startswith("{ ") or stripped.startswith("{\n") or line.lstrip().startswith("{"):
-                    in_obj = True
-                    current_indent = line[:line.find("{")]
-                    current_obj_lines = [line]
-            else:
-                current_obj_lines.append(line)
-                line_without_newline = line.rstrip("\r\n")
-                if (line_without_newline.startswith(current_indent + "}") or 
-                    line_without_newline.startswith(current_indent + "},") or 
-                    line_without_newline.startswith(current_indent + "}]")):
-                    in_obj = False
-                    raw_str = "".join(current_obj_lines).strip().rstrip(",")
-                    try:
-                        items.append(json.loads(raw_str))
-                    except Exception:
-                        pass
-                    current_obj_lines = []
-                    if max_items is not None and len(items) >= max_items:
-                        break
-    return items
+    if not Path(file_path).exists():
+        return
+
+    buf = []
+    depth = 0
+    in_string = False
+    escape = False
+    yielded = 0
+
+    with open(file_path, "r", encoding="utf-8", errors="replace") as f:
+        # Đọc theo khối chunk 64KB để tối ưu I/O và RAM
+        while True:
+            chunk = f.read(65536)
+            if not chunk:
+                break
+            for ch in chunk:
+                if depth == 0:
+                    if ch == '{':
+                        depth = 1
+                        buf = ['{']
+                        in_string = False
+                        escape = False
+                else:
+                    buf.append(ch)
+                    if escape:
+                        escape = False
+                    elif ch == '\\':
+                        escape = True
+                    elif ch == '"':
+                        in_string = not in_string
+                    elif not in_string:
+                        if ch == '{':
+                            depth += 1
+                        elif ch == '}':
+                            depth -= 1
+                            if depth == 0:
+                                raw_str = "".join(buf)
+                                try:
+                                    item = json.loads(raw_str)
+                                    yield item
+                                    yielded += 1
+                                    if max_items is not None and yielded >= max_items:
+                                        return
+                                except Exception:
+                                    pass
+                                buf = []
+
+
+def stream_json_array(file_path: Path, max_items: Optional[int] = None) -> List[Dict[str, Any]]:
+    """Đọc file JSON mảng đối tượng lớn theo cơ chế luồng trả về danh sách đối tượng."""
+    return list(iter_json_array(file_path, max_items=max_items))
 
 
 def load_hf_dataset(

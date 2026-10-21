@@ -25,6 +25,10 @@ ENV/
 data/*
 !data/splits/
 !data/splits/**
+!data/processed/
+data/processed/*
+!data/processed/*compact_cpg.json.gz
+!data/processed/*codet5_embeddings.npy
 checkpoints/
 output/
 log/
