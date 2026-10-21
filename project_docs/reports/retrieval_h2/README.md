@@ -1,8 +1,17 @@
 # H2: shared candidate archive and offline selection comparison
 
-Status (2026-10-21): implementation prepared for Git-clone deployment through
-Kaggle CLI; full-train embedding and experiment results pending execution.
+Status (2026-10-21): code pushed to origin/main and private Kaggle notebook
+version 1 submitted through CLI with GPU enabled. Kaggle reports QUEUED;
+full-train embedding and experiment results remain pending execution.
 No H2 measurements are reported yet.
+
+Notebook: https://www.kaggle.com/code/huuhieu3333/grace-h2-shared-top50-r0-r1
+
+Frozen execution commit: `827aab9b50039647f2f1136dee3c6a1fa5640374`.
+Notebook deployment commit: `e559873`. Submission command:
+`kaggle kernels push -p kaggle_notebooks/retrieval_h2 -t 7200`.
+The API accepted version 1 with no failure message. QUEUED confirms submission,
+not that GPU code has started or finished. Check status before interpreting results.
 
 The notebook in `kaggle_notebooks/retrieval_h2` clones this Git repository and
 checks out an exact committed revision. It reads the tracked compact CPG gzip
