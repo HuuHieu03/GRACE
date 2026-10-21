@@ -3,7 +3,7 @@
     "protocol": "Blind Human Review Protocol (Stage 2.3 / STT 10)",
     "contract": "evaluation_contract.yaml",
     "dataset": "devign",
-    "source_split": "data\\splits\\devign_dev_clean_100_ids.json",
+    "source_split": "data/splits/devign_dev_clean_100_ids.json",
     "total_samples": 50,
     "vuln_samples": 25,
     "safe_samples": 25,

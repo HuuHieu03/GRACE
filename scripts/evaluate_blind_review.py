@@ -65,6 +65,8 @@ def calculate_cohen_kappa(
 
     if categories is None:
         categories = sorted(list(set(rater1_labels) | set(rater2_labels)))
+    else:
+        categories = sorted(list(set(categories) | set(rater1_labels) | set(rater2_labels)))
 
     # 1. Observed agreement P_o
     agreed = sum(1 for a, b in zip(rater1_labels, rater2_labels) if a == b)
@@ -119,24 +121,162 @@ def decode_reviewer_preference(
     - 'Equal'
     - 'Neither'
     - 'Unrated'
+    Hỗ trợ cả ký tự đơn (A, B) lẫn các biến thể ngôn ngữ tự nhiên:
+    'Demo A', 'demo_b', 'Chọn A', 'A tốt hơn', 'Equal', 'Tương đương', 'Neither', 'Không'...
     """
     if not choice_raw:
         return "Unrated"
 
-    choice = str(choice_raw).strip().upper()
+    choice = str(choice_raw).strip()
+    if not choice:
+        return "Unrated"
+
+    choice_upper = choice.upper()
+    if choice_upper in ("UNRATED", "N/A", "NA", "CHƯA ĐÁNH GIÁ", "CHUA DANH GIA", "CHƯA CHẤM", "CHUA CHAM"):
+        return "Unrated"
+
     base_pos = str(key_entry.get("baseline_assigned_to", "")).strip().upper()
     sec_pos = str(key_entry.get("security_aware_assigned_to", "")).strip().upper()
 
-    if choice == sec_pos:
+    # 1. Khớp chính xác
+    if choice_upper == sec_pos:
         return "Security-Aware"
-    elif choice == base_pos:
+    elif choice_upper == base_pos:
         return "Baseline"
-    elif choice in ("EQUAL", "EQ", "=", "EQUIVALENT", "SAME", "TƯƠNG ĐƯƠNG"):
+    elif choice_upper in ("EQUAL", "EQ", "=", "EQUIVALENT", "SAME", "TƯƠNG ĐƯƠNG", "TUONG DUONG", "NHƯ NHAU", "NHU NHAU", "BẰNG NHAU", "BANG NHAU"):
         return "Equal"
-    elif choice in ("NEITHER", "NONE", "NEITHER ONE", "NONE OF ABOVE", "KHÔNG CHỌN BÊN NÀO"):
+    elif choice_upper in ("NEITHER", "NONE", "NONE OF ABOVE", "NEITHER ONE", "KHÔNG CHỌN BÊN NÀO", "KHONG CHON BEN NAO", "KHÔNG", "KHONG", "CHƯA XÁC ĐỊNH", "CHUA XAC DINH"):
         return "Neither"
-    else:
-        return "Unrated"
+
+    # 2. Xử lý biểu thức chính quy cho các biến thể người chấm điền tự do
+    import re
+    if re.search(r'\b(EQUAL|TƯƠNG ĐƯƠNG|TUONG DUONG|NHƯ NHAU|NHU NHAU|BẰNG NHAU|BANG NHAU)\b', choice_upper):
+        return "Equal"
+    if re.search(r'\b(NEITHER|NONE|KHÔNG CHỌN|KHONG CHON|KHÔNG BÊN|KHONG BEN|CHƯA XÁC ĐỊNH|CHUA XAC DINH)\b', choice_upper):
+        return "Neither"
+
+    # Kiểm tra nhắc tới A hoặc B
+    has_a = bool(re.search(r'(^|\b|DEMO[-_\s]*)(A)($|\b|[\s\.\:\,\)\/])', choice_upper))
+    has_b = bool(re.search(r'(^|\b|DEMO[-_\s]*)(B)($|\b|[\s\.\:\,\)\/])', choice_upper))
+
+    if has_a and not has_b:
+        return "Security-Aware" if sec_pos == "A" else "Baseline"
+    elif has_b and not has_a:
+        return "Security-Aware" if sec_pos == "B" else "Baseline"
+
+    return "Unrated"
+
+
+def classify_rubric_match(val_raw: str) -> str:
+    """Phân loại mức độ bằng chứng: 'Match', 'Partial', 'No_Match', 'Unspecified'."""
+    if not val_raw:
+        return "Unspecified"
+    s = str(val_raw).strip().lower()
+    if any(k in s for k in ["chưa xác định", "unknown", "unspecified", "chua xac dinh"]):
+        return "Unspecified"
+    if any(k in s for k in ["một phần", "mot phan", "partial", "tương đối", "tuong doi"]):
+        return "Partial"
+    if any(k in s for k in ["có", "co", "yes", "true", "khớp", "khop", "match", "1"]):
+        return "Match"
+    if any(k in s for k in ["không", "khong", "no", "false", "none", "0"]):
+        return "No_Match"
+    return "Unspecified"
+
+
+def analyze_rubric_evidence(
+    records: List[Dict[str, Any]],
+    hieu_map: Dict[int, Dict[str, Any]],
+    dung_map: Dict[int, Dict[str, Any]]
+) -> Dict[str, Any]:
+    """
+    Tổng hợp và so sánh bằng chứng rubric (Sink / Variable / Guard) giữa Baseline và Security-Aware.
+    """
+    def compute_stats(rater_map, rater_name):
+        sec_sink_match = 0
+        base_sink_match = 0
+        sec_var_match = 0
+        base_var_match = 0
+        sec_guard_match = 0
+        base_guard_match = 0
+        total_rated = 0
+
+        for r in records:
+            s_idx = r["sample_idx"]
+            row = rater_map.get(s_idx)
+            if not row:
+                continue
+
+            sec_pos = r["security_aware_assigned_to"]
+            base_pos = r["baseline_assigned_to"]
+
+            sink_sec = classify_rubric_match(row.get(f"sink_match_{sec_pos}", ""))
+            sink_base = classify_rubric_match(row.get(f"sink_match_{base_pos}", ""))
+            var_sec = classify_rubric_match(row.get(f"variable_match_{sec_pos}", ""))
+            var_base = classify_rubric_match(row.get(f"variable_match_{base_pos}", ""))
+            guard_sec = classify_rubric_match(row.get(f"guard_match_{sec_pos}", ""))
+            guard_base = classify_rubric_match(row.get(f"guard_match_{base_pos}", ""))
+
+            if sink_sec in ("Match", "Partial"):
+                sec_sink_match += 1
+            if sink_base in ("Match", "Partial"):
+                base_sink_match += 1
+
+            if var_sec in ("Match", "Partial"):
+                sec_var_match += 1
+            if var_base in ("Match", "Partial"):
+                base_var_match += 1
+
+            if guard_sec in ("Match", "Partial"):
+                sec_guard_match += 1
+            if guard_base in ("Match", "Partial"):
+                base_guard_match += 1
+
+            total_rated += 1
+
+        n = max(total_rated, 1)
+        return {
+            "rater": rater_name,
+            "total_samples": total_rated,
+            "sink_match": {
+                "security_aware_count": sec_sink_match,
+                "security_aware_pct": round(sec_sink_match / n * 100.0, 2),
+                "baseline_count": base_sink_match,
+                "baseline_pct": round(base_sink_match / n * 100.0, 2),
+                "delta_pct": round((sec_sink_match - base_sink_match) / n * 100.0, 2)
+            },
+            "variable_match": {
+                "security_aware_count": sec_var_match,
+                "security_aware_pct": round(sec_var_match / n * 100.0, 2),
+                "baseline_count": base_var_match,
+                "baseline_pct": round(base_var_match / n * 100.0, 2),
+                "delta_pct": round((sec_var_match - base_var_match) / n * 100.0, 2)
+            },
+            "guard_match": {
+                "security_aware_count": sec_guard_match,
+                "security_aware_pct": round(sec_guard_match / n * 100.0, 2),
+                "baseline_count": base_guard_match,
+                "baseline_pct": round(base_guard_match / n * 100.0, 2),
+                "delta_pct": round((sec_guard_match - base_guard_match) / n * 100.0, 2)
+            }
+        }
+
+    hieu_stats = compute_stats(hieu_map, "Hiếu")
+    dung_stats = compute_stats(dung_map, "Dũng")
+
+    avg_summary = {
+        "sink_match_security_aware_pct": round((hieu_stats["sink_match"]["security_aware_pct"] + dung_stats["sink_match"]["security_aware_pct"]) / 2.0, 2),
+        "sink_match_baseline_pct": round((hieu_stats["sink_match"]["baseline_pct"] + dung_stats["sink_match"]["baseline_pct"]) / 2.0, 2),
+        "variable_match_security_aware_pct": round((hieu_stats["variable_match"]["security_aware_pct"] + dung_stats["variable_match"]["security_aware_pct"]) / 2.0, 2),
+        "variable_match_baseline_pct": round((hieu_stats["variable_match"]["baseline_pct"] + dung_stats["variable_match"]["baseline_pct"]) / 2.0, 2),
+        "guard_match_security_aware_pct": round((hieu_stats["guard_match"]["security_aware_pct"] + dung_stats["guard_match"]["security_aware_pct"]) / 2.0, 2),
+        "guard_match_baseline_pct": round((hieu_stats["guard_match"]["baseline_pct"] + dung_stats["guard_match"]["baseline_pct"]) / 2.0, 2)
+    }
+
+    return {
+        "average": avg_summary,
+        "reviewer_hieu": hieu_stats,
+        "reviewer_dung": dung_stats
+    }
 
 
 def load_review_csv(csv_path: Path) -> List[Dict[str, Any]]:
@@ -331,7 +471,24 @@ def evaluate_review_sheets(
     if len(hieu_rows) != len(dung_rows):
         print(f"[!] Cảnh báo: Số dòng không khớp: Hiếu={len(hieu_rows)}, Dũng={len(dung_rows)}")
 
-    # 3. Giải mã từng mẫu
+    # 3. Ánh xạ các bảng chấm theo sample_idx và target_id để chống việc xáo trộn thứ tự dòng trong CSV
+    hieu_by_idx = {}
+    for r in hieu_rows:
+        s = r.get("sample_idx")
+        if s is not None and str(s).strip().isdigit():
+            hieu_by_idx[int(s)] = r
+        if r.get("target_id"):
+            hieu_by_idx[r["target_id"]] = r
+
+    dung_by_idx = {}
+    for r in dung_rows:
+        s = r.get("sample_idx")
+        if s is not None and str(s).strip().isdigit():
+            dung_by_idx[int(s)] = r
+        if r.get("target_id"):
+            dung_by_idx[r["target_id"]] = r
+
+    # 4. Giải mã từng mẫu theo thứ tự chuẩn mực từ answer_key
     hieu_decoded = []
     dung_decoded = []
     comparison_records = []
@@ -343,17 +500,14 @@ def evaluate_review_sheets(
     vuln_records = []
     safe_records = []
     discordant_cases = []
+    partially_or_unrated_cases = []
 
-    for i in range(min(len(hieu_rows), len(dung_rows))):
-        rh = hieu_rows[i]
-        rd = dung_rows[i]
+    for key in key_entries:
+        s_idx = int(key["sample_idx"])
+        t_id = str(key["target_id"])
 
-        s_idx = int(rh.get("sample_idx", i + 1))
-        t_id = str(rh.get("target_id", ""))
-        key = key_by_idx.get(s_idx) or key_by_tid.get(t_id)
-
-        if not key:
-            continue
+        rh = hieu_by_idx.get(s_idx) or hieu_by_idx.get(t_id) or {}
+        rd = dung_by_idx.get(s_idx) or dung_by_idx.get(t_id) or {}
 
         raw_choice_h = rh.get("better_demo (A/B/Equal/Neither)", "")
         raw_choice_d = rd.get("better_demo (A/B/Equal/Neither)", "")
@@ -393,6 +547,8 @@ def evaluate_review_sheets(
 
         if not is_agreed and dec_h != "Unrated" and dec_d != "Unrated":
             discordant_cases.append(record)
+        elif dec_h == "Unrated" or dec_d == "Unrated":
+            partially_or_unrated_cases.append(record)
 
     total_valid = len(hieu_decoded)
     # Lọc chỉ các mẫu đã được cả 2 chấm
@@ -405,7 +561,7 @@ def evaluate_review_sheets(
 
     n_paired = len(paired_h)
 
-    # 4. Tính Cohen's Kappa & Percent Agreement
+    # 5. Tính Cohen's Kappa & Percent Agreement
     if n_paired > 0:
         kappa, p_o, p_e = calculate_cohen_kappa(paired_h, paired_d, categories=categories)
         percent_agreement = p_o * 100.0
@@ -415,10 +571,16 @@ def evaluate_review_sheets(
         percent_agreement = 0.0
         kappa_desc = "Chưa có đủ dữ liệu chấm"
 
-    # 5. Tính tỷ lệ ưu thế bình quân
+    # 6. Tính tỷ lệ ưu thế bình quân
     def calc_rates(counts, total):
         if total == 0:
-            return {"security_aware_pct": 0.0, "baseline_pct": 0.0, "equal_pct": 0.0, "neither_pct": 0.0}
+            return {
+                "security_aware_count": 0, "security_aware_pct": 0.0,
+                "baseline_count": 0, "baseline_pct": 0.0,
+                "equal_count": 0, "equal_pct": 0.0,
+                "neither_count": 0, "neither_pct": 0.0,
+                "unrated_count": 0, "unrated_pct": 0.0
+            }
         return {
             "security_aware_count": counts["Security-Aware"],
             "security_aware_pct": round(counts["Security-Aware"] / total * 100.0, 2),
@@ -427,7 +589,9 @@ def evaluate_review_sheets(
             "equal_count": counts["Equal"],
             "equal_pct": round(counts["Equal"] / total * 100.0, 2),
             "neither_count": counts["Neither"],
-            "neither_pct": round(counts["Neither"] / total * 100.0, 2)
+            "neither_pct": round(counts["Neither"] / total * 100.0, 2),
+            "unrated_count": counts["Unrated"],
+            "unrated_pct": round(counts["Unrated"] / total * 100.0, 2)
         }
 
     hieu_rates = calc_rates(hieu_counts, total_valid)
@@ -438,13 +602,36 @@ def evaluate_review_sheets(
     avg_base_pct = round((hieu_rates.get("baseline_pct", 0) + dung_rates.get("baseline_pct", 0)) / 2.0, 2)
     avg_equal_pct = round((hieu_rates.get("equal_pct", 0) + dung_rates.get("equal_pct", 0)) / 2.0, 2)
     avg_neither_pct = round((hieu_rates.get("neither_pct", 0) + dung_rates.get("neither_pct", 0)) / 2.0, 2)
+    avg_unrated_pct = round((hieu_rates.get("unrated_pct", 0) + dung_rates.get("unrated_pct", 0)) / 2.0, 2)
 
     # Thống kê trên tập mẫu đồng thuận (Consensus)
     consensus_counts = Counter()
+    total_concordant = 0
     for r in comparison_records:
         if r["is_concordant"]:
             consensus_counts[r["hieu_preference"]] += 1
+            total_concordant += 1
+
     consensus_rates = calc_rates(consensus_counts, len(comparison_records))
+    consensus_rates["concordant_samples_count"] = total_concordant
+    consensus_rates["concordant_rate_pct"] = round(total_concordant / max(total_valid, 1) * 100.0, 2)
+    if total_concordant > 0:
+        consensus_rates["security_aware_pct_among_concordant"] = round(consensus_counts["Security-Aware"] / total_concordant * 100.0, 2)
+        consensus_rates["baseline_pct_among_concordant"] = round(consensus_counts["Baseline"] / total_concordant * 100.0, 2)
+        consensus_rates["equal_pct_among_concordant"] = round(consensus_counts["Equal"] / total_concordant * 100.0, 2)
+        consensus_rates["neither_pct_among_concordant"] = round(consensus_counts["Neither"] / total_concordant * 100.0, 2)
+    else:
+        consensus_rates["security_aware_pct_among_concordant"] = 0.0
+        consensus_rates["baseline_pct_among_concordant"] = 0.0
+        consensus_rates["equal_pct_among_concordant"] = 0.0
+        consensus_rates["neither_pct_among_concordant"] = 0.0
+
+    # 7. Tổng hợp bằng chứng rubric (Sink, Variable, Guard)
+    rubric_summary = analyze_rubric_evidence(
+        records=comparison_records,
+        hieu_map=hieu_by_idx,
+        dung_map=dung_by_idx
+    )
 
     report_payload = {
         "metadata": {
@@ -462,8 +649,9 @@ def evaluate_review_sheets(
             "observed_agreement_po": round(p_o, 4),
             "expected_agreement_pe": round(p_e, 4),
             "percent_agreement_pct": round(percent_agreement, 2),
-            "total_concordant_samples": sum(1 for r in comparison_records if r["is_concordant"]),
-            "total_discordant_samples": len(discordant_cases)
+            "total_concordant_samples": total_concordant,
+            "total_discordant_samples": len(discordant_cases),
+            "partially_or_unrated_samples": len(partially_or_unrated_cases)
         },
         "preference_summary": {
             "average": {
@@ -471,12 +659,14 @@ def evaluate_review_sheets(
                 "baseline_win_pct": avg_base_pct,
                 "equal_pct": avg_equal_pct,
                 "neither_pct": avg_neither_pct,
+                "unrated_pct": avg_unrated_pct,
                 "advantage_delta_pct": round(avg_sec_pct - avg_base_pct, 2)
             },
             "reviewer_hieu": hieu_rates,
             "reviewer_dung": dung_rates,
             "consensus_agreement": consensus_rates
         },
+        "rubric_evidence_summary": rubric_summary,
         "target_subsets_breakdown": {
             "vulnerable_targets_n25": {
                 "total": len(vuln_records),

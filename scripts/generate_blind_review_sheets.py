@@ -250,7 +250,9 @@ def format_code_snippet(code: str, max_chars: int = 2500) -> str:
     """Chuẩn hóa và cắt gọn snippet mã nguồn nếu cần, bảo đảm đọc tốt trong bảng tính."""
     if not code:
         return "/* Code unavailable */"
-    code_clean = code.strip()
+    code_clean = code.replace("\r\n", "\n").replace("\r", "\n").strip()
+    import re
+    code_clean = re.sub(r'\n{3,}', '\n\n', code_clean)
     if len(code_clean) > max_chars:
         return code_clean[:max_chars] + f"\n\n/* ... [Cắt gọn do vượt quá {max_chars} ký tự] */"
     return code_clean
@@ -368,7 +370,7 @@ def generate_blind_sheets(
             "protocol": "Blind Human Review Protocol (Stage 2.3 / STT 10)",
             "contract": "evaluation_contract.yaml",
             "dataset": "devign",
-            "source_split": str(dev_split_path.relative_to(repo_root) if dev_split_path.is_relative_to(repo_root) else dev_split_path),
+            "source_split": str(dev_split_path.relative_to(repo_root) if dev_split_path.is_relative_to(repo_root) else dev_split_path).replace("\\", "/"),
             "total_samples": len(answer_key_entries),
             "vuln_samples": vuln_c,
             "safe_samples": safe_c,

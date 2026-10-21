@@ -257,13 +257,27 @@ def test_decoder_logic():
     assert decode_reviewer_preference("A", key_entry_sec_a) == "Security-Aware"
     assert decode_reviewer_preference("B", key_entry_sec_a) == "Baseline"
 
+    # Các biến thể ngôn ngữ tự nhiên từ người chấm
+    assert decode_reviewer_preference("Demo A", key_entry_base_a) == "Baseline"
+    assert decode_reviewer_preference("demo_a", key_entry_base_a) == "Baseline"
+    assert decode_reviewer_preference("Demo B", key_entry_base_a) == "Security-Aware"
+    assert decode_reviewer_preference("Chọn A", key_entry_base_a) == "Baseline"
+    assert decode_reviewer_preference("A tốt hơn", key_entry_base_a) == "Baseline"
+    assert decode_reviewer_preference("B (tốt hơn)", key_entry_base_a) == "Security-Aware"
+    assert decode_reviewer_preference("Tương đương", key_entry_base_a) == "Equal"
+    assert decode_reviewer_preference("Như nhau", key_entry_base_a) == "Equal"
+    assert decode_reviewer_preference("Không chọn bên nào", key_entry_base_a) == "Neither"
+    assert decode_reviewer_preference("Chưa xác định", key_entry_base_a) == "Neither"
+    assert decode_reviewer_preference("Chưa đánh giá", key_entry_base_a) == "Unrated"
+    assert decode_reviewer_preference("Unrated", key_entry_base_a) == "Unrated"
+
 
 def test_evaluation_pipeline_with_mock_data(tmp_path):
     """
     Kiểm tra toàn diện pipeline evaluate_review_sheets với dữ liệu mẫu giả định:
     - Sinh mock cho cả 2 người chấm.
     - Chạy đánh giá và xuất báo cáo JSON.
-    - Xác nhận các chỉ số tổng hợp hợp lệ.
+    - Xác nhận các chỉ số tổng hợp hợp lệ và rubric evidence summary.
     """
     key_path = repo_root / "project_docs" / "reports" / "blind_review_answer_key.json"
     with open(key_path, "r", encoding="utf-8") as f:
@@ -306,4 +320,116 @@ def test_evaluation_pipeline_with_mock_data(tmp_path):
         + avg_pref["baseline_win_pct"]
         + avg_pref["equal_pct"]
         + avg_pref["neither_pct"]
+        + avg_pref.get("unrated_pct", 0.0)
     ) == pytest.approx(100.0, abs=0.1)
+
+    # Kiểm tra Rubric Evidence Summary (Sink, Variable, Guard)
+    assert "rubric_evidence_summary" in report
+    rubric = report["rubric_evidence_summary"]["average"]
+    assert rubric["sink_match_security_aware_pct"] >= rubric["sink_match_baseline_pct"]
+    assert rubric["variable_match_security_aware_pct"] >= rubric["variable_match_baseline_pct"]
+    assert rubric["guard_match_security_aware_pct"] >= rubric["guard_match_baseline_pct"]
+
+
+def test_evaluation_robust_to_row_permutation(tmp_path):
+    """
+    Kiểm tra tính bất biến trước việc sắp xếp lại hàng trong CSV:
+    Nếu một người chấm sắp xếp lại thứ tự hàng (ví dụ: theo target_id hoặc target_label),
+    kết quả đánh giá và hệ số Cohen's Kappa phải hoàn toàn trùng khớp 100%.
+    """
+    key_path = repo_root / "project_docs" / "reports" / "blind_review_answer_key.json"
+    with open(key_path, "r", encoding="utf-8") as f:
+        key_data = json.load(f)
+
+    mock_hieu = tmp_path / "perm_hieu.csv"
+    mock_dung = tmp_path / "perm_dung.csv"
+    mock_dung_shuffled = tmp_path / "perm_dung_shuffled.csv"
+
+    generate_mock_reviews(
+        answer_key_entries=key_data["answer_key"],
+        output_hieu_csv=mock_hieu,
+        output_dung_csv=mock_dung,
+        seed=42
+    )
+
+    # Đọc lại bảng của Dũng và xáo trộn ngẫu nhiên thứ tự các hàng
+    with open(mock_dung, "r", encoding="utf-8") as f:
+        reader = csv.DictReader(f)
+        fields = reader.fieldnames
+        rows = list(reader)
+
+    rng_perm = random.Random(123)
+    shuffled_rows = list(rows)
+    rng_perm.shuffle(shuffled_rows)
+
+    with open(mock_dung_shuffled, "w", encoding="utf-8", newline="") as f:
+        writer = csv.DictWriter(f, fieldnames=fields, quoting=csv.QUOTE_ALL)
+        writer.writeheader()
+        for r in shuffled_rows:
+            writer.writerow(r)
+
+    # Chạy đánh giá trên cả 2 phiên bản
+    rep_orig = evaluate_review_sheets(
+        hieu_sheet_path=mock_hieu,
+        dung_sheet_path=mock_dung,
+        answer_key_path=key_path
+    )
+
+    rep_shuffled = evaluate_review_sheets(
+        hieu_sheet_path=mock_hieu,
+        dung_sheet_path=mock_dung_shuffled,
+        answer_key_path=key_path
+    )
+
+    # Đảm bảo kết quả giống hệt nhau
+    assert rep_orig["inter_rater_reliability"]["cohen_kappa"] == rep_shuffled["inter_rater_reliability"]["cohen_kappa"]
+    assert rep_orig["inter_rater_reliability"]["total_concordant_samples"] == rep_shuffled["inter_rater_reliability"]["total_concordant_samples"]
+    assert rep_orig["preference_summary"]["average"]["security_aware_win_pct"] == rep_shuffled["preference_summary"]["average"]["security_aware_win_pct"]
+
+
+def test_unrated_and_partially_rated_handling(tmp_path):
+    """
+    Kiểm tra xử lý các trường hợp chưa chấm hoặc chấm một phần:
+    - Nếu 1 người chấm để trống, mẫu đó phải được tính là partially_or_unrated_samples.
+    - Tỷ lệ unrated_pct phải được phản ánh chính xác.
+    """
+    key_path = repo_root / "project_docs" / "reports" / "blind_review_answer_key.json"
+    with open(key_path, "r", encoding="utf-8") as f:
+        key_data = json.load(f)
+
+    mock_hieu = tmp_path / "unrated_hieu.csv"
+    mock_dung = tmp_path / "unrated_dung.csv"
+
+    generate_mock_reviews(
+        answer_key_entries=key_data["answer_key"],
+        output_hieu_csv=mock_hieu,
+        output_dung_csv=mock_dung,
+        seed=42
+    )
+
+    # Xóa 5 đánh giá của Dũng
+    with open(mock_dung, "r", encoding="utf-8") as f:
+        reader = csv.DictReader(f)
+        fields = reader.fieldnames
+        rows = list(reader)
+
+    for i in range(5):
+        rows[i]["better_demo (A/B/Equal/Neither)"] = ""
+
+    with open(mock_dung, "w", encoding="utf-8", newline="") as f:
+        writer = csv.DictWriter(f, fieldnames=fields, quoting=csv.QUOTE_ALL)
+        writer.writeheader()
+        for r in rows:
+            writer.writerow(r)
+
+    rep = evaluate_review_sheets(
+        hieu_sheet_path=mock_hieu,
+        dung_sheet_path=mock_dung,
+        answer_key_path=key_path
+    )
+
+    assert rep["metadata"]["paired_rated_samples"] == 45
+    assert rep["inter_rater_reliability"]["partially_or_unrated_samples"] == 5
+    assert rep["preference_summary"]["reviewer_dung"]["unrated_count"] == 5
+    assert rep["preference_summary"]["reviewer_dung"]["unrated_pct"] == 10.0
+
