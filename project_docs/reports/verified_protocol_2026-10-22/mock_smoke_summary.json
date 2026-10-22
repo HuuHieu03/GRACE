@@ -1,0 +1,9 @@
+{
+  "execution_mode": "mock",
+  "conditions": 20,
+  "api_calls": 0,
+  "purpose": "Infrastructure/controls test only; no model-quality or gold-label conclusion.",
+  "identity_hash": "fc7d7eb5d7149f8e272fc55cae43fd304d20e1ea0e020ca816de64fbb91576c6",
+  "plan_sha256": "beedd814063ddf638900145f6e0c8753314285af02d288a7bdc2cd91b1cc5eb6",
+  "artifacts": "output/stage4_verified/mock_protocol_smoke_v1"
+}

@@ -1,0 +1,144 @@
+﻿{
+  "scope": "Current local files; historical run equivalence requires a run manifest.",
+  "datasets": {
+    "devign": {
+      "train_rows": 21854,
+      "unique_train_ids": 21854,
+      "id_groups_with_different_code": 0,
+      "id_groups_with_both_labels": 0,
+      "metadata_labels": {
+        "vulnerable": 50,
+        "safe": 50
+      },
+      "actual_labels": {
+        "1": 54,
+        "0": 46
+      },
+      "normalized_train_target_code_overlap": [],
+      "target_source_file_mismatches": [],
+      "target_source_files_missing": [],
+      "pair_member_count": 200,
+      "pair_members_missing_in_train_by_id_code_label": [],
+      "pair_members_nonunique_by_full_identity": [],
+      "pair_members_with_ambiguous_legacy_id": 0,
+      "rendered_targets_over_3000_chars": 14
+    },
+    "reveal": {
+      "train_rows": 18187,
+      "unique_train_ids": 1017,
+      "id_groups_with_different_code": 940,
+      "id_groups_with_both_labels": 663,
+      "metadata_labels": {
+        "vulnerable": 50,
+        "safe": 50
+      },
+      "actual_labels": {
+        "1": 50,
+        "0": 50
+      },
+      "normalized_train_target_code_overlap": [
+        {
+          "query_id": "-16551315108292821",
+          "query_target": 1,
+          "matches": [
+            {
+              "row": 12774,
+              "id": "-16551315108292821",
+              "target": 0,
+              "exact_stripped_code": true
+            }
+          ]
+        },
+        {
+          "query_id": "3728341105073176576",
+          "query_target": 1,
+          "matches": [
+            {
+              "row": 13719,
+              "id": "3599206110384554647",
+              "target": 0,
+              "exact_stripped_code": true
+            }
+          ]
+        }
+      ],
+      "target_source_file_mismatches": [],
+      "target_source_files_missing": [],
+      "pair_member_count": 200,
+      "pair_members_missing_in_train_by_id_code_label": [],
+      "pair_members_nonunique_by_full_identity": [],
+      "pair_members_with_ambiguous_legacy_id": 200,
+      "rendered_targets_over_3000_chars": 22
+    }
+  },
+  "stage2": {
+    "output/stage2/label_flip/label_flip_test_report.json": {
+      "raw_responses": 300,
+      "reparse_changes": [],
+      "parse_methods": {
+        "Strict '1'": 113,
+        "Strict '0'": 187
+      }
+    },
+    "output/stage2/label_flip/run1_no_graph/label_flip_test_report.json": {
+      "raw_responses": 300,
+      "reparse_changes": [],
+      "parse_methods": {
+        "Strict '1'": 140,
+        "Strict '0'": 160
+      }
+    },
+    "output/stage2/label_flip/run2_with_graph/label_flip_test_report.json": {
+      "raw_responses": 300,
+      "reparse_changes": [],
+      "parse_methods": {
+        "Strict '1'": 155,
+        "Strict '0'": 145
+      }
+    },
+    "graph_comparison": {
+      "common_ids": 100,
+      "demo_ids_changed": 99
+    }
+  },
+  "stage3_summary_vs_json": {
+    "accuracy": {
+      "csv_b3": "0.6800",
+      "json_b3": 0.46
+    },
+    "f1_score": {
+      "csv_b3": "0.6531",
+      "json_b3": 0.55
+    },
+    "mcc": {
+      "csv_b3": "0.3644",
+      "json_b3": -0.1118
+    }
+  },
+  "reveal_review_target_identity": {
+    "rows": 50,
+    "not_source_prefix_after_whitespace_normalization": 50,
+    "both_sheets_share_target_snippets": true,
+    "mismatch_examples": [
+      {
+        "sample_idx": "1",
+        "target_id": "7817292828288926681",
+        "sheet_start": "static Image * ReadVIFFImage ( const ImageInfo * image_info , ExceptionInfo * exception ) {",
+        "source_start": "static Image * ReadVIFFImage ( const ImageInfo * image_info , ExceptionInfo * exception ) {"
+      },
+      {
+        "sample_idx": "2",
+        "target_id": "-2654475221056024278",
+        "sheet_start": "int av_dict_set ( AVDictionary * * pm , const char * key , const char * value , int flags ) {",
+        "source_start": "static void process_blob ( struct rev_info * revs , struct blob * blob , show_object_fn show , struct name_path * path , const char * name , void * cb_data ) {"
+      },
+      {
+        "sample_idx": "3",
+        "target_id": "1931051720960659129",
+        "sheet_start": "void vp9_change_config ( struct VP9_COMP * cpi , const VP9EncoderConfig * oxcf ) {",
+        "source_start": "DEFINE_TEST ( test_write_disk_secure ) {"
+      }
+    ],
+    "caveat": "Non-prefix alone may reflect abridgement; different function examples need source inspection."
+  }
+}

@@ -283,7 +283,7 @@ def format_code_snippet(code: str, max_chars: int = 2500) -> str:
     return code_clean
 
 
-def generate_blind_sheets(
+def _generate_unverified_legacy_sheets(
     dev_split_path: Path,
     output_key_path: Path,
     output_hieu_path: Path,
@@ -440,6 +440,21 @@ def generate_blind_sheets(
         print(f"[✓] Đã tạo bảng chấm mù cho {rater_name}: {out_csv}")
 
     return key_payload, review_rows
+
+
+def generate_blind_sheets(*args, **kwargs):
+    """Prevent reusing the retired label-conditioned packet generator.
+
+    Existing sheets remain historical evidence. Utility loaders used by old
+    evaluations remain importable, but no new packet may be generated through
+    this entry point without verified actual B2 selections and function UIDs.
+    """
+    raise RuntimeError(
+        "Legacy review generation is disabled: target-label-conditioned demo "
+        "selection and substitute B2 examples are not valid review inputs. "
+        "Run scripts/prepare_verified_review_inputs.py for the missing-input inventory. "
+        "Do not overwrite existing reviewer sheets."
+    )
 
 
 def main():

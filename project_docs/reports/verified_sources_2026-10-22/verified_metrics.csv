@@ -1,0 +1,5 @@
+run_id,dataset,support,raw_response,actual_prompt,total_samples,valid_samples,invalid_samples,invalid_rate,tp,tn,fp,fn,accuracy,precision,recall,f1_score,mcc,balanced_accuracy,predicted_vulnerable_rate,always_vulnerable_f1,always_vulnerable_acc,always_safe_f1,always_safe_acc
+stage3_devign_ver03,devign,metrics_recomputed_from_per_id_predictions,unavailable_in_export,unavailable_in_export,100,100,0,0.0,33,13,33,21,0.46,0.5,0.6111,0.55,-0.1118,0.4469,0.66,0.7013,0.54,0.0,0.46
+stage3_reveal_ver04,reveal,metrics_recomputed_from_per_id_predictions,unavailable_in_export,unavailable_in_export,100,100,0,0.0,22,37,13,28,0.59,0.6286,0.44,0.5176,0.1887,0.59,0.35,0.6667,0.5,0.0,0.5
+stage3_devign_nodiff_ver05,devign,metrics_recomputed_from_per_id_predictions,unavailable_in_export,unavailable_in_export,100,100,0,0.0,28,19,27,26,0.47,0.5091,0.5185,0.5138,-0.0686,0.4658,0.55,0.7013,0.54,0.0,0.46
+stage2_devign_original_b2,devign,metrics_recomputed_and_raw_reparsed,available_300_responses,unavailable_in_export,100,100,0,0.0,14,32,14,40,0.46,0.5,0.2593,0.3415,-0.05,0.4775,0.28,0.7013,0.54,0.0,0.46

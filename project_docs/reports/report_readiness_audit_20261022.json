@@ -1,0 +1,315 @@
+﻿{
+  "scope": "local archived records and current source; no API calls",
+  "stage3": {
+    "b3_vs_b2_comparison_report.json": {
+      "records": 100,
+      "unique_ids": 100,
+      "all_ids_and_labels_match_split": true,
+      "recomputed_b3_metrics_match": true,
+      "invalid_a": 0,
+      "raw_response_or_prompt_keys": [],
+      "paired_ci": {
+        "n_resamples": 2000,
+        "delta_f1": {
+          "mean": 0.1883,
+          "ci_95": [
+            0.071,
+            0.3093
+          ],
+          "excludes_zero": true
+        },
+        "delta_mcc": {
+          "mean": -0.0812,
+          "ci_95": [
+            -0.2995,
+            0.1456
+          ],
+          "excludes_zero": false
+        },
+        "delta_balanced_accuracy": {
+          "mean": -0.0393,
+          "ci_95": [
+            -0.1429,
+            0.0669
+          ],
+          "excludes_zero": false
+        }
+      },
+      "b3_metrics": {
+        "total_samples": 100,
+        "valid_samples": 100,
+        "invalid_samples": 0,
+        "invalid_rate": 0.0,
+        "accuracy": 0.46,
+        "precision": 0.5,
+        "recall": 0.6111,
+        "f1_score": 0.55,
+        "mcc": -0.1118,
+        "balanced_accuracy": 0.4469,
+        "predicted_vulnerable_rate": 0.66,
+        "confusion_matrix": {
+          "TP (True Positive)": 33,
+          "FP (False Positive - Alarm)": 33,
+          "TN (True Negative)": 13,
+          "FN (False Negative - Miss)": 21
+        },
+        "baselines": {
+          "always_vulnerable_f1": 0.7013,
+          "always_vulnerable_acc": 0.54,
+          "always_safe_f1": 0.0,
+          "always_safe_acc": 0.46
+        }
+      },
+      "fallback": {
+        "total_queries": 100,
+        "fallback_count": 0,
+        "fallback_rate_pct": 0.0,
+        "missing_vuln_count": 0,
+        "missing_safe_count": 0,
+        "details_sample": []
+      }
+    },
+    "reveal_b3_vs_b2_comparison_report.json": {
+      "records": 100,
+      "unique_ids": 100,
+      "all_ids_and_labels_match_split": true,
+      "recomputed_b3_metrics_match": true,
+      "invalid_a": 0,
+      "raw_response_or_prompt_keys": [],
+      "paired_ci": {
+        "n_resamples": 2000,
+        "delta_f1": {
+          "mean": 0.1293,
+          "ci_95": [
+            0.0107,
+            0.2476
+          ],
+          "excludes_zero": true
+        },
+        "delta_mcc": {
+          "mean": 0.0428,
+          "ci_95": [
+            -0.128,
+            0.2116
+          ],
+          "excludes_zero": false
+        },
+        "delta_balanced_accuracy": {
+          "mean": 0.0295,
+          "ci_95": [
+            -0.0468,
+            0.1075
+          ],
+          "excludes_zero": false
+        }
+      },
+      "b3_metrics": {
+        "total_samples": 100,
+        "valid_samples": 100,
+        "invalid_samples": 0,
+        "invalid_rate": 0.0,
+        "accuracy": 0.59,
+        "precision": 0.6286,
+        "recall": 0.44,
+        "f1_score": 0.5176,
+        "mcc": 0.1887,
+        "balanced_accuracy": 0.59,
+        "predicted_vulnerable_rate": 0.35,
+        "confusion_matrix": {
+          "TP (True Positive)": 22,
+          "FP (False Positive - Alarm)": 13,
+          "TN (True Negative)": 37,
+          "FN (False Negative - Miss)": 28
+        },
+        "baselines": {
+          "always_vulnerable_f1": 0.6667,
+          "always_vulnerable_acc": 0.5,
+          "always_safe_f1": 0.0,
+          "always_safe_acc": 0.5
+        }
+      },
+      "fallback": {
+        "total_queries": 100,
+        "fallback_count": 0,
+        "fallback_rate_pct": 0.0,
+        "missing_vuln_count": 0,
+        "missing_safe_count": 0,
+        "details_sample": []
+      }
+    },
+    "ablation_nodiff_comparison_report.json": {
+      "records": 100,
+      "unique_ids": 100,
+      "all_ids_and_labels_match_split": true,
+      "recomputed_b3_metrics_match": true,
+      "invalid_a": 0,
+      "raw_response_or_prompt_keys": [],
+      "paired_ci": {
+        "n_resamples": 2000,
+        "delta_f1": {
+          "mean": 0.1714,
+          "ci_95": [
+            0.0593,
+            0.2876
+          ],
+          "excludes_zero": true
+        },
+        "delta_mcc": {
+          "mean": -0.0192,
+          "ci_95": [
+            -0.2177,
+            0.1869
+          ],
+          "excludes_zero": false
+        },
+        "delta_balanced_accuracy": {
+          "mean": -0.0122,
+          "ci_95": [
+            -0.1062,
+            0.0853
+          ],
+          "excludes_zero": false
+        }
+      },
+      "b3_metrics": {
+        "total_samples": 100,
+        "valid_samples": 100,
+        "invalid_samples": 0,
+        "invalid_rate": 0.0,
+        "accuracy": 0.47,
+        "precision": 0.5091,
+        "recall": 0.5185,
+        "f1_score": 0.5138,
+        "mcc": -0.0686,
+        "balanced_accuracy": 0.4658,
+        "predicted_vulnerable_rate": 0.55,
+        "confusion_matrix": {
+          "TP (True Positive)": 28,
+          "FP (False Positive - Alarm)": 27,
+          "TN (True Negative)": 19,
+          "FN (False Negative - Miss)": 26
+        },
+        "baselines": {
+          "always_vulnerable_f1": 0.7013,
+          "always_vulnerable_acc": 0.54,
+          "always_safe_f1": 0.0,
+          "always_safe_acc": 0.46
+        }
+      },
+      "fallback": {
+        "total_queries": 100,
+        "fallback_count": 0,
+        "fallback_rate_pct": 0.0,
+        "missing_vuln_count": 0,
+        "missing_safe_count": 0,
+        "details_sample": []
+      }
+    }
+  },
+  "ablation": {
+    "same_demo_bodies_and_ids": 100,
+    "full_vs_nodiff_ci": {
+      "n_resamples": 2000,
+      "delta_f1": {
+        "mean": 0.0369,
+        "ci_95": [
+          -0.0156,
+          0.0993
+        ],
+        "excludes_zero": false
+      },
+      "delta_mcc": {
+        "mean": -0.0411,
+        "ci_95": [
+          -0.1672,
+          0.0841
+        ],
+        "excludes_zero": false
+      },
+      "delta_balanced_accuracy": {
+        "mean": -0.0179,
+        "ci_95": [
+          -0.0803,
+          0.0431
+        ],
+        "excludes_zero": false
+      }
+    }
+  },
+  "current_renderer_graph_prefix_audit": {
+    "devign": {
+      "samples": 100,
+      "empty_code": 0,
+      "queries_with_edge_endpoint_outside_rendered_nodes": 94
+    },
+    "reveal": {
+      "samples": 100,
+      "empty_code": 0,
+      "queries_with_edge_endpoint_outside_rendered_nodes": 80
+    }
+  },
+  "dung_sheet": {
+    "rows": 50,
+    "exact_heuristic_choice_and_all_six_rubric_matches": 50,
+    "caveat": "Match is evidence of heuristic compatibility, not proof of who executed the script."
+  },
+  "old_review_label_conditioning": {
+    "devign": {
+      "rows": 50,
+      "security_demo_same_label_as_target": 50,
+      "baseline_demo_opposite_label_to_target": 25
+    },
+    "reveal": {
+      "rows": 50,
+      "security_demo_same_label_as_target": 50,
+      "baseline_demo_opposite_label_to_target": 50
+    }
+  },
+  "parser_probes": {
+    "0": [
+      0,
+      "Strict '0'",
+      true
+    ],
+    "1": [
+      1,
+      "Strict '1'",
+      true
+    ],
+    "Vulnerable": [
+      1,
+      "Semantic Regex: Vulnerable",
+      true
+    ],
+    "Non-vulnerable": [
+      0,
+      "Semantic Regex: Safe",
+      true
+    ],
+    "": [
+      null,
+      "Invalid: Empty Response",
+      false
+    ],
+    "cannot determine\n1": [
+      1,
+      "Last line '1'",
+      true
+    ],
+    "0\n1": [
+      1,
+      "Last line '1'",
+      true
+    ],
+    "There are 0 vulnerabilities": [
+      1,
+      "Semantic Regex: Vulnerable",
+      true
+    ],
+    "Non-vulnerable (1)": [
+      1,
+      "Explicit Label: Vulnerable/1",
+      true
+    ]
+  }
+}

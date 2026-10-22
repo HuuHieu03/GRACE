@@ -1,3 +1,10 @@
+> **BẢN LỊCH SỬ — CHƯA ĐƯỢC NGHIỆM THU, KHÔNG GỬI NGUYÊN TRẠNG.**
+> Review phát hiện số liệu/claims chưa đủ bằng chứng, lỗi identity/bộ chấm ReVeal và đối chứng.
+> Dùng [bảng nguồn đã đối soát](verified_sources_2026-10-22/report.md) cho số liệu có giới hạn truy vết;
+> xem [review lần hai](v1.1.0_2026-10-22_supervisor_readiness_second_review.md) và
+> [tiến độ khắc phục](../progress/v1.0.0_2026-10-22_supervisor_remediation_progress.md).
+> Nội dung dưới đây được giữ nguyên để truy vết các khẳng định cũ, không phải kết luận đã xác nhận.
+
 # BÁO CÁO TIẾN ĐỘ TỔNG HỢP VÀ KẾT QUẢ THỰC NGHIỆM ĐỀ TÀI GRACE
 ## Đối chiếu Toàn diện Yêu cầu của Giảng viên Hướng dẫn & Kiểm định Tính Đáng tin Khoa học
 

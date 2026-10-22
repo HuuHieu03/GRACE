@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "confirmed_by": "user",
+  "date": "2026-10-22",
+  "runs": [
+    {"dataset": "devign", "run": "Ver03", "b2_per_id_prediction": "UNAVAILABLE_CONFIRMED", "b2_raw_response": "UNAVAILABLE_CONFIRMED", "b2_actual_prompt": "UNAVAILABLE_CONFIRMED"},
+    {"dataset": "reveal", "run": "Ver04", "b2_per_id_prediction": "UNAVAILABLE_CONFIRMED", "b2_raw_response": "UNAVAILABLE_CONFIRMED", "b2_actual_prompt": "UNAVAILABLE_CONFIRMED"}
+  ],
+  "stage2_devign": "Per-ID B2 predictions/raw exist in label_flip_test_report.json; different run, not a substitute.",
+  "decision": "Historical independent B2-vs-B3 review cannot be reconstructed. Prepare a new instrumented experiment before new review; preserve historical evidence and limitations."
+}

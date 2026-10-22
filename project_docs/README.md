@@ -6,8 +6,16 @@ Tài liệu này định nghĩa quy chuẩn quản lý tài liệu, theo dõi ti
 
 ## Tài liệu hiện tại — cập nhật 2026-10-22
 
-- [Báo Cáo Tiến Độ Tổng Hợp & Nghiệm Thu](reports/bao_cao_tien_do_tong_hop_nghiem_thu_20261022.md): **Tài liệu chính thức gửi Thầy hướng dẫn** — tổng hợp toàn diện đối chiếu yêu cầu, ma trận ground-truth, kiểm định B3 vs B2, Ablation B3-NoDiff, và Blind Human Review 100 mẫu (50 Devign + 50 ReVeal).
-- [Báo Cáo Chấm Mù ReVeal 50 Mẫu](reports/blind_review_reveal_technical_report.md): Báo cáo kỹ thuật chi tiết về giao thức chấm mù ReVeal, hệ số Cohen's Kappa $\kappa = 0.3271$ và biên bản hội chẩn 50 mẫu.
+- [Báo cáo tiến độ đã đối soát](reports/bao_cao_tien_do_da_doi_soat_20261022.md): **Bản hiện tại để trao đổi tiến độ với thầy**; chưa nghiệm thu cải tiến hoặc independent review. Ghi rõ B2 lịch sử mất, kết quả âm và phần nghiên cứu còn lại.
+- [Bàn giao kỹ thuật protocol mới](reports/verified_protocol_2026-10-22/report.md): lưu vết/evaluator/payload/controls đã triển khai;586tests đạt,20synthetic conditions,0API. Chưa có run LLM thật mới.
+- [Nguồn số liệu đã đối soát](reports/verified_sources_2026-10-22/report.md): bảng dùng cho báo cáo tiến độ, kèm registry SHA-256 và phân biệt metric tái tính với số chỉ còn tổng hợp; loại summary CSV mâu thuẫn khỏi nguồn báo cáo.
+- [Tiến độ khắc phục tuần tự](progress/v1.0.0_2026-10-22_supervisor_remediation_progress.md): trạng thái sáu việc sau review, bằng chứng nghiệm thu và phần còn chờ.
+- [Contract dữ liệu v2](reports/data_contract_v2_2026-10-22/report.md): UID riêng từng hàm, code/source verification, phân bố thật và lexical near-clone audit; không sửa nhãn hoặc artifact lịch sử.
+- [Đầu vào bộ chấm mới](reports/verified_review_inputs_2026-10-22/report.md): chưa đủ actual B2 records Ver03/Ver04; generator cũ đã bị chặn, không tự tạo phiếu thay thế.
+- [Review lần hai và checklist gửi thầy](reports/v1.1.0_2026-10-22_supervisor_readiness_second_review.md): **Kết luận mới nhất: chưa đủ gửi bản nghiệm thu hiện tại**. Bổ sung lỗi ID/code ReVeal, CSV lệch JSON, metadata split và graph ablation; H2 replay khớp, 900 Stage 2 raw responses reparse không đổi. Có checklist riêng trước báo cáo tiến độ và trước kết luận cải tiến.
+- [Review mức sẵn sàng gửi thầy](reports/v1.0.0_2026-10-22_supervisor_readiness_review.md): **Đọc trước bản tổng hợp nghiệm thu**. Review phát hiện lỗi chọn demo theo target label trong bộ chấm cũ, thiếu raw/prompt Stage 3 và các kết luận vượt bằng chứng; chưa đủ điều kiện nghiệm thu cải tiến.
+- [Bản tổng hợp nghiệm thu cũ](reports/bao_cao_tien_do_tong_hop_nghiem_thu_20261022.md): **Lịch sử, chưa đủ điều kiện gửi nguyên trạng**; giữ để truy vết các khẳng định trước review.
+- [Báo cáo chấm ReVeal cũ](reports/blind_review_reveal_technical_report.md): artifact lịch sử; chưa nghiệm thu độc lập hoặc identity/code. Không dùng Kappa/tỷ lệ ưu tiên trong tài liệu này để xác nhận retriever tốt hơn.
 - [Tiến độ tổng hợp H2 và E1.3](progress/v1.0.0_2026-10-22_h2_and_e13_progress.md): điểm bắt đầu để nắm trạng thái mới nhất.
 - [Kế hoạch sink evidence và retrieval ablation](plans/v1.0.0_2026-10-21_sink_evidence_and_retrieval_ablation_plan.md): checklist đã đồng bộ với kết quả thực tế.
 - [Báo cáo H2](reports/retrieval_h2/results_2026-10-22/report.md): R1 đổi 0/100 lựa chọn; không chạy paired LLM cho hai arm hiện tại.

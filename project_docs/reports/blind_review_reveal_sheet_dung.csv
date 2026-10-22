@@ -1,52 +1,1523 @@
 "sample_idx","target_id","target_label","target_code_snippet","demo_A_snippet","demo_B_snippet","sink_match_A","variable_match_A","guard_match_A","sink_match_B","variable_match_B","guard_match_B","better_demo (A/B/Equal/Neither)","evidence_notes"
-"1","7817292828288926681","1","static Image * ReadVIFFImage ( const ImageInfo * image_info , ExceptionInfo * exception ) {\n ViffInfo viff_info ;\n Image * image = AcquireImage ( image_info ) ;\n status = OpenBlob ( image_info , image , ReadBinaryBlobMode , exception ) ;\n count = ReadBlob ( image , 1 , & viff_info . identifier ) ;\n do {\n if ( ( count != 1 ) || ( ( unsigned char ) viff_info . identifier != 0xab ) ) ThrowReaderException ( CorruptImageError , ""NotAVIFFImage"" ) ;\n ( void ) ReadBlob ( image , sizeof ( viff_info . file_type ) , & viff_info . file_type ) ;\n pixels = ( unsigned char * ) AcquireQuantumMemory ( number_pixels , bytes_per_pixel * sizeof ( * pixels ) ) ;\n ( void ) ReadBlob ( image , bytes_per_pixel * number_pixels , pixels ) ;\n } while ( 0 ) ;\n return image ;\n}","static int check_bits_for_superframe ( GetBitContext * orig_gb , WMAVoiceContext * s ) {\n init_get_bits ( gb , orig_gb -> buffer , orig_gb -> size_in_bits ) ;\n assert ( get_bits_left ( gb ) == get_bits_left ( orig_gb ) ) ;\n if ( get_bits_left ( gb ) < 14 ) return 1 ;\n if ( ! get_bits1 ( gb ) ) return - 1 ;\n return 0 ;\n}","static void spl_filesystem_object_free_storage ( void * object TSRMLS_DC ) {\n spl_filesystem_object * intern = ( spl_filesystem_object * ) object ;\n if ( intern -> oth_handler && intern -> oth_handler -> dtor ) {\n intern -> oth_handler -> dtor ( intern TSRMLS_CC ) ;\n }\n zend_object_std_dtor ( & intern -> std TSRMLS_CC ) ;\n if ( intern -> _path ) efree ( intern -> _path ) ;\n if ( intern -> file_name ) efree ( intern -> file_name ) ;\n efree ( object ) ;\n}","0","0","1","1","Partial","0","B","Demo B thể hiện thao tác giải phóng bộ nhớ dynamic với efree và xử lý con trỏ cấu trúc, tương thích hơn về ngữ nghĩa quản lý tài nguyên so với Demo A chỉ xử lý bitstream."
-"2","-2654475221056024278","1","int av_dict_set ( AVDictionary * * pm , const char * key , const char * value , int flags ) {\n AVDictionary * m = * pm ;\n AVDictionaryEntry * tag = av_dict_get ( m , key , NULL , flags ) ;\n char * copy_key = NULL , * copy_value = NULL ;\n if ( tag ) {\n if ( flags & AV_DICT_DONT_OVERWRITE ) return 0 ;\n if ( copy_value ) {\n av_free ( tag -> value ) ;\n tag -> value = copy_value ;\n }\n return 0 ;\n }\n copy_key = av_strdup ( key ) ;\n copy_value = av_strdup ( value ) ;\n return 0 ;\n}","void fz_fin_cached_color_converter ( fz_context * ctx , fz_color_converter * cc_ ) {\n fz_cached_color_converter * cc ;\n if ( cc_ == NULL ) return ;\n cc = cc_ -> opaque ;\n if ( cc == NULL ) return ;\n cc_ -> opaque = NULL ;\n fz_drop_hash_table ( ctx , cc -> hash ) ;\n fz_free ( ctx , cc ) ;\n}","static void spl_filesystem_object_free_storage ( void * object TSRMLS_DC ) {\n spl_filesystem_object * intern = ( spl_filesystem_object * ) object ;\n if ( intern -> file_name ) efree ( intern -> file_name ) ;\n if ( intern -> orig_path ) efree ( intern -> orig_path ) ;\n efree ( object ) ;\n}","Partial","Partial","1","1","Partial","0","B","Demo B phản ánh trực tiếp mẫu giải phóng các chuỗi con trỏ trường dữ liệu (file_name, orig_path), gần với quy trình giải phóng và sao chép chuỗi trong dictionary hơn Demo A."
-"3","1931051720960659129","1","void vp9_change_config ( struct VP9_COMP * cpi , const VP9EncoderConfig * oxcf ) {\n VP9_COMMON * const cm = & cpi -> common ;\n if ( cm -> profile != oxcf -> profile ) cm -> profile = oxcf -> profile ;\n cm -> bit_depth = oxcf -> bit_depth ;\n if ( cpi -> initial_width ) {\n assert ( cm -> width <= cpi -> initial_width ) ;\n assert ( cm -> height <= cpi -> initial_height ) ;\n }\n update_frame_size ( cpi ) ;\n}","static void spl_filesystem_object_free_storage ( void * object TSRMLS_DC ) {\n spl_filesystem_object * intern = ( spl_filesystem_object * ) object ;\n if ( intern -> _path ) efree ( intern -> _path ) ;\n efree ( object ) ;\n}","void vp9_change_config ( struct VP9_COMP * cpi , const VP9EncoderConfig * oxcf ) {\n VP9_COMMON * const cm = & cpi -> common ;\n cm -> bit_depth = oxcf -> bit_depth ;\n if ( cm -> profile <= PROFILE_1 ) assert ( cm -> bit_depth == VPX_BITS_8 ) ;\n else assert ( cm -> bit_depth > VPX_BITS_8 ) ;\n}","0","0","0","Partial","1","1","A","Demo A thể hiện cấu trúc giải phóng tài nguyên hệ thống, cung cấp mẫu hình quản lý rủi ro bộ nhớ tổng quát hữu ích."
-"4","3528176083733952042","1","static int virDomainDiskDefParseXML ( virDomainDiskDefPtr def , xmlNodePtr node , xmlXPathContextPtr ctxt ) {\n char * type = virXMLPropString ( node , ""type"" ) ;\n char * device = virXMLPropString ( node , ""device"" ) ;\n if ( ! type ) def -> type = VIR_DOMAIN_DISK_TYPE_FILE ;\n else if ( ( def -> type = virDomainDiskTypeFromString ( type ) ) < 0 ) goto error ;\n return 0 ;\n error :\n return - 1 ;\n}","static void pk_transaction_class_init ( PkTransactionClass * klass ) {\n GObjectClass * object_class = G_OBJECT_CLASS ( klass ) ;\n object_class -> dispose = pk_transaction_dispose ;\n g_type_class_add_private ( klass , sizeof ( PkTransactionPrivate ) ) ;\n}","static void spl_filesystem_object_free_storage ( void * object TSRMLS_DC ) {\n spl_filesystem_object * intern = ( spl_filesystem_object * ) object ;\n if ( intern -> _path ) efree ( intern -> _path ) ;\n efree ( object ) ;\n}","0","0","0","0","0","0","Equal","Cả hai demo đều có sự tương đồng ngữ nghĩa ở mức thấp với Target phân tích XML; mức độ hỗ trợ an ninh của hai bên là ngang nhau."
-"5","453825853695477219","1","static int sunrast_decode_frame ( AVCodecContext * avctx , void * data , int * got_frame , AVPacket * avpkt ) {\n const uint8_t * buf = avpkt -> data ;\n if ( avpkt -> size < 32 ) return AVERROR_INVALIDDATA ;\n w = AV_RB32 ( buf + 4 ) ;\n h = AV_RB32 ( buf + 8 ) ;\n if ( av_image_check_size ( w , h , 0 , avctx ) ) return AVERROR_INVALIDDATA ;\n memcpy ( ptr , buf , len ) ;\n return buf - bufstart ;\n}","static int sunrast_decode_frame ( AVCodecContext * avctx , void * data , int * got_frame , AVPacket * avpkt ) {\n const uint8_t * buf = avpkt -> data ;\n if ( avpkt -> size < 32 ) return AVERROR_INVALIDDATA ;\n w = AV_RB32 ( buf + 4 ) ;\n if ( av_image_check_size ( w , h , 0 , avctx ) ) return AVERROR_INVALIDDATA ;\n memcpy ( ptr , buf , len ) ;\n return buf - bufstart ;\n}","static void spl_filesystem_object_free_storage ( void * object TSRMLS_DC ) {\n spl_filesystem_object * intern = ( spl_filesystem_object * ) object ;\n if ( intern -> _path ) efree ( intern -> _path ) ;\n efree ( object ) ;\n}","1","1","1","0","0","0","B","Demo B thể hiện cấu trúc mã nguồn có lỗi tiềm ẩn trong quản lý bộ nhớ heap, giúp đối chiếu nhận diện mẫu dễ bị tổn thương."
-"6","7078129966845159750","1","static int http_RecvPostMessage ( http_parser_t * parser , SOCKINFO * info , char * filename , struct SendInstruction * Instr ) {\n num_read = sock_read ( info , Buf , sizeof ( Buf ) , & Timeout ) ;\n if ( num_read > 0 ) {\n memcpy ( Buf , & parser -> msg . msg . buf [ parser -> entity_start_position + entity_offset ] , Data_Buf_Size ) ;\n }\n return ret_code ;\n}","static int http_RecvPostMessage ( http_parser_t * parser , SOCKINFO * info , char * filename , struct SendInstruction * Instr ) {\n num_read = sock_read ( info , Buf , sizeof ( Buf ) , & Timeout ) ;\n if ( num_read > 0 ) {\n if ( membuffer_append ( & parser -> msg . msg , Buf , ( size_t ) num_read ) != 0 ) return HTTP_INTERNAL_SERVER_ERROR ;\n }\n return ret_code ;\n}","static void spl_filesystem_object_free_storage ( void * object TSRMLS_DC ) {\n spl_filesystem_object * intern = ( spl_filesystem_object * ) object ;\n if ( intern -> _path ) efree ( intern -> _path ) ;\n efree ( object ) ;\n}","1","1","1","0","Partial","0","B","Demo B phản ánh trực quan rủi ro thao tác bộ đệm không được kiểm soát kích thước đầy đủ trước khi thực hiện thao tác nhạy cảm."
-"7","4561548163749120103","1","static int http_parse_headers ( http_parser_t * parser , char * buffer , size_t len ) {\n char * name = buffer ;\n char * value = strchr ( buffer , ':' ) ;\n if ( ! value ) return - 1 ;\n * value = '\\0' ;\n return 0 ;\n}","static int http_RecvPostMessage ( http_parser_t * parser , SOCKINFO * info , char * filename , struct SendInstruction * Instr ) {\n num_read = sock_read ( info , Buf , sizeof ( Buf ) , & Timeout ) ;\n return ret_code ;\n}","static void spl_filesystem_object_free_storage ( void * object TSRMLS_DC ) {\n spl_filesystem_object * intern = ( spl_filesystem_object * ) object ;\n if ( intern -> file_name ) efree ( intern -> file_name ) ;\n efree ( object ) ;\n}","Partial","Partial","1","1","Partial","0","B","Demo B liên quan an ninh hơn (cùng sink thao tác chuỗi/con trỏ và giải phóng tài nguyên phân tích cú pháp header)."
-"8","-2614908340588220483","1","void ff_write_quant_matrix ( PutBitContext * pb , uint16_t * matrix ) {\n int i ;\n for ( i = 0 ; i < 64 ; i ++ ) {\n put_bits ( pb , 8 , matrix [ ff_zigzag_direct [ i ] ] ) ;\n }\n}","void ff_write_quant_matrix ( PutBitContext * pb , uint16_t * matrix ) {\n int i ;\n if ( matrix ) {\n for ( i = 0 ; i < 64 ; i ++ ) put_bits ( pb , 8 , matrix [ ff_zigzag_direct [ i ] ] ) ;\n }\n else put_bits ( pb , 1 , 0 ) ;\n}","static void spl_filesystem_object_free_storage ( void * object TSRMLS_DC ) {\n spl_filesystem_object * intern = ( spl_filesystem_object * ) object ;\n if ( intern -> _path ) efree ( intern -> _path ) ;\n efree ( object ) ;\n}","1","1","1","0","0","0","A","Demo A liên quan an ninh hơn (cùng sink ghi bitstream và bổ sung guard if (matrix) kiểm tra con trỏ trước khi dereference)."
-"9","4620577553943347649","1","int virLogParseOutputs ( const char * src , virLogOutputPtr * * outputs ) {\n char * * strings = NULL ;\n if ( ! ( strings = virStringSplitCount ( src , "" "" , 0 , & count ) ) ) goto cleanup ;\n for ( i = 0 ; i < count ; i ++ ) {\n if ( ! ( output = virLogParseOutput ( strings [ i ] ) ) ) goto cleanup ;\n }\n cleanup : virStringListFree ( strings ) ;\n return ret ;\n}","static void spl_filesystem_object_free_storage ( void * object TSRMLS_DC ) {\n spl_filesystem_object * intern = ( spl_filesystem_object * ) object ;\n if ( intern -> _path ) efree ( intern -> _path ) ;\n efree ( object ) ;\n}","int virLogParseOutputs ( const char * src , virLogOutputPtr * * outputs ) {\n char * * strings = NULL ;\n if ( ! ( strings = virStringSplitCount ( src , "" "" , 0 , & count ) ) ) goto cleanup ;\n cleanup : virStringListFree ( strings ) ;\n return ret ;\n}","1","Partial","Partial","1","1","1","A","Demo A cung cấp mẫu đối chứng dọn dẹp bộ nhớ động tổng quát, minh họa cơ chế phòng ngừa rò rỉ bộ nhớ hữu ích."
-"10","2930500905204315787","1","static void fz_drop_link_imp ( fz_context * ctx , fz_storable * storable ) {\n fz_icclink * link = ( fz_icclink * ) storable ;\n fz_cmm_fin_link ( ctx , link ) ;\n fz_free ( ctx , link ) ;\n}","static void fz_drop_link_imp ( fz_context * ctx , fz_storable * storable ) {\n fz_icclink * link = ( fz_icclink * ) storable ;\n fz_cmm_fin_link ( ctx , link ) ;\n fz_free ( ctx , link ) ;\n}","static void spl_filesystem_object_free_storage ( void * object TSRMLS_DC ) {\n spl_filesystem_object * intern = ( spl_filesystem_object * ) object ;\n if ( intern -> _path ) efree ( intern -> _path ) ;\n efree ( object ) ;\n}","1","1","0","1","Partial","0","Neither","Cả hai demo đều chưa minh họa được điều kiện an ninh bảo vệ chống lại use-after-free khi refcount của link chưa đạt 0."
-"11","-8029592471297395650","1","static int parse_mp4_descr ( MP4DescrParseContext * d , int tag , int len ) {\n switch ( tag ) {\n case MP4ESDescrTag :\n d -> es_id = avio_rb16 ( d -> pb ) ;\n break ;\n default :\n avio_skip ( d -> pb , len ) ;\n break ;\n }\n return 0 ;\n}","static void pk_transaction_class_init ( PkTransactionClass * klass ) {\n g_type_class_add_private ( klass , sizeof ( PkTransactionPrivate ) ) ;\n}","static void spl_filesystem_object_free_storage ( void * object TSRMLS_DC ) {\n spl_filesystem_object * intern = ( spl_filesystem_object * ) object ;\n if ( intern -> _path ) efree ( intern -> _path ) ;\n efree ( object ) ;\n}","0","0","0","0","0","0","Equal","Hai demo đều có đặc trưng cú pháp và bảo vệ an ninh ở mức độ tương đương khi so sánh với hàm parse descriptor."
-"12","-4078760840682683657","1","void ff_write_quant_matrix ( PutBitContext * pb , uint16_t * matrix ) {\n int i ;\n for ( i = 0 ; i < 64 ; i ++ ) put_bits ( pb , 8 , matrix [ ff_zigzag_direct [ i ] ] ) ;\n}","void ff_write_quant_matrix ( PutBitContext * pb , uint16_t * matrix ) {\n if ( matrix ) {\n put_bits ( pb , 1 , 1 ) ;\n }\n else put_bits ( pb , 1 , 0 ) ;\n}","static void spl_filesystem_object_free_storage ( void * object TSRMLS_DC ) {\n spl_filesystem_object * intern = ( spl_filesystem_object * ) object ;\n efree ( object ) ;\n}","1","1","1","0","0","0","A","Demo A liên quan an ninh hơn (cùng sink [bitwise_arithmetic, pointer_dereference]; cùng guard [null_pointer_check])."
-"13","-2971164434690241379","1","void fz_fin_cached_color_converter ( fz_context * ctx , fz_color_converter * cc_ ) {\n fz_cached_color_converter * cc = cc_ -> opaque ;\n cc_ -> opaque = NULL ;\n fz_drop_hash_table ( ctx , cc -> hash ) ;\n fz_free ( ctx , cc ) ;\n}","void fz_fin_cached_color_converter ( fz_context * ctx , fz_color_converter * cc_ ) {\n if ( cc_ == NULL ) return ;\n cc = cc_ -> opaque ;\n if ( cc == NULL ) return ;\n fz_free ( ctx , cc ) ;\n}","static void spl_filesystem_object_free_storage ( void * object TSRMLS_DC ) {\n spl_filesystem_object * intern = ( spl_filesystem_object * ) object ;\n if ( intern -> _path ) efree ( intern -> _path ) ;\n efree ( object ) ;\n}","1","1","1","1","Partial","0","B","Demo B thể hiện cấu trúc phân cấp giải phóng đối tượng lưu trữ, cung cấp mẫu hình tương thích cho phân tích vòng đời tài nguyên."
-"14","1470723493451072803","1","void vp9_set_svc ( VP9_COMP * cpi , int use_svc ) {\n cpi -> use_svc = use_svc ;\n return ;\n}","void vp9_set_svc ( VP9_COMP * cpi , int use_svc ) {\n cpi -> use_svc = use_svc ;\n return ;\n}","static void spl_filesystem_object_free_storage ( void * object TSRMLS_DC ) {\n spl_filesystem_object * intern = ( spl_filesystem_object * ) object ;\n if ( intern -> _path ) efree ( intern -> _path ) ;\n efree ( object ) ;\n}","Partial","1","0","0","0","0","B","Demo B phản ánh phương thức giải phóng storage sau quá trình cấu hình, bổ trợ tốt cho việc đánh giá độ an toàn của chu trình cấp phát."
-"15","8952659721822029396","1","static void pk_transaction_finalize ( GObject * object ) {\n PkTransaction * transaction = PK_TRANSACTION ( object ) ;\n if ( transaction -> priv -> tid != NULL ) g_free ( transaction -> priv -> tid ) ;\n G_OBJECT_CLASS ( pk_transaction_parent_class ) -> finalize ( object ) ;\n}","static void pk_transaction_class_init ( PkTransactionClass * klass ) {\n GObjectClass * object_class = G_OBJECT_CLASS ( klass ) ;\n object_class -> finalize = pk_transaction_finalize ;\n}","static void spl_filesystem_object_free_storage ( void * object TSRMLS_DC ) {\n spl_filesystem_object * intern = ( spl_filesystem_object * ) object ;\n if ( intern -> _path ) efree ( intern -> _path ) ;\n efree ( object ) ;\n}","0","Partial","0","1","0","0","Equal","Cả hai demo đều cung cấp ngữ nghĩa an ninh một phần: Demo A liên quan đến vòng đời khởi tạo/finalize của GObject, Demo B liên quan đến giải phóng bộ nhớ dynamic."
-"16","1286774465219423144","1","void fz_drop_color_converter ( fz_context * ctx , fz_color_converter * cc ) {\n if ( cc && cc -> drop_color_converter ) {\n cc -> drop_color_converter ( ctx , cc ) ;\n }\n}","void fz_fin_cached_color_converter ( fz_context * ctx , fz_color_converter * cc_ ) {\n if ( cc_ == NULL ) return ;\n fz_free ( ctx , cc ) ;\n}","static void spl_filesystem_object_free_storage ( void * object TSRMLS_DC ) {\n spl_filesystem_object * intern = ( spl_filesystem_object * ) object ;\n if ( intern -> oth_handler && intern -> oth_handler -> dtor ) {\n intern -> oth_handler -> dtor ( intern TSRMLS_CC ) ;\n }\n efree ( object ) ;\n}","Partial","Partial","1","1","Partial","1","B","Demo B liên quan an ninh hơn (cùng sink gọi callback dtor và giải phóng đối tượng qua con trỏ hàm)."
-"17","-16551315108292821","1","static int http_SendStatus ( http_parser_t * parser , SOCKINFO * info , int http_status_code , struct SendInstruction * Instr ) {\n char * status_msg = http_get_status_msg ( http_status_code ) ;\n if ( ! status_msg ) return - 1 ;\n sock_write ( info , status_msg , strlen ( status_msg ) ) ;\n return 0 ;\n}","static void spl_filesystem_object_free_storage ( void * object TSRMLS_DC ) {\n spl_filesystem_object * intern = ( spl_filesystem_object * ) object ;\n efree ( object ) ;\n}","static int http_RecvPostMessage ( http_parser_t * parser , SOCKINFO * info , char * filename , struct SendInstruction * Instr ) {\n num_read = sock_read ( info , Buf , sizeof ( Buf ) , & Timeout ) ;\n return ret_code ;\n}","0","0","0","1","Partial","1","Equal","Demo A mang lại mẫu hình thu hồi bộ nhớ sau giao dịch, Demo B có cùng đối tượng SOCKINFO; mức độ liên quan an ninh tổng thể tương đương."
-"18","8425497811998776592","1","static int decode_frame ( AVCodecContext * avctx , void * data , int * got_frame , AVPacket * avpkt ) {\n int ret = init_get_bits ( & gb , avpkt -> data , avpkt -> size * 8 ) ;\n if ( ret < 0 ) return ret ;\n return avpkt -> size ;\n}","static int check_bits_for_superframe ( GetBitContext * orig_gb , WMAVoiceContext * s ) {\n init_get_bits ( gb , orig_gb -> buffer , orig_gb -> size_in_bits ) ;\n if ( get_bits_left ( gb ) < 14 ) return 1 ;\n return 0 ;\n}","static void spl_filesystem_object_free_storage ( void * object TSRMLS_DC ) {\n spl_filesystem_object * intern = ( spl_filesystem_object * ) object ;\n efree ( object ) ;\n}","1","Partial","1","0","0","0","A","Demo A liên quan an ninh hơn (cùng sink [bitwise_arithmetic, pointer_dereference]; cùng guard [numerical_bounds_check]; biến chung (orig_gb, gb))."
-"19","-755883256379441954","1","int virLogFindOutput ( virLogOutputPtr * list , size_t noutputs , virLogDestination dest , const char * name ) {\n size_t i ;\n for ( i = 0 ; i < noutputs ; i ++ ) {\n if ( list [ i ] -> dest == dest && STREQ ( list [ i ] -> name , name ) ) return i ;\n }\n return - 1 ;\n}","static void spl_filesystem_object_free_storage ( void * object TSRMLS_DC ) {\n spl_filesystem_object * intern = ( spl_filesystem_object * ) object ;\n if ( intern -> _path ) efree ( intern -> _path ) ;\n efree ( object ) ;\n}","int virLogParseOutputs ( const char * src , virLogOutputPtr * * outputs ) {\n size_t noutputs = 0 ;\n if ( ! ( strings = virStringSplitCount ( src , "" "" , 0 , & count ) ) ) goto cleanup ;\n cleanup : virStringListFree ( strings ) ;\n return ret ;\n}","0","0","0","Partial","1","1","B","Demo B chia sẻ chung kiểu cấu trúc virLogOutputPtr và noutputs, phù hợp hơn về mặt biến và ngữ cảnh quản lý logging."
-"20","-4765077557530511796","1","void ff_zigzag_direct_init ( uint8_t * zigzag_direct ) {\n int i ;\n for ( i = 0 ; i < 64 ; i ++ ) zigzag_direct [ i ] = i ;\n}","static void spl_filesystem_object_free_storage ( void * object TSRMLS_DC ) {\n spl_filesystem_object * intern = ( spl_filesystem_object * ) object ;\n efree ( object ) ;\n}","void ff_write_quant_matrix ( PutBitContext * pb , uint16_t * matrix ) {\n if ( matrix ) put_bits ( pb , 1 , 1 ) ;\n}","0","0","0","0","Partial","0","Neither","Cả hai demo đều không có guard hoặc sink tương đương về xử lý mảng trực tiếp cho Target."
-"21","1274314752608585941","1","static void pk_transaction_dispose ( GObject * object ) {\n PkTransaction * transaction = PK_TRANSACTION ( object ) ;\n if ( transaction -> priv -> proxy != NULL ) g_object_unref ( transaction -> priv -> proxy ) ;\n G_OBJECT_CLASS ( pk_transaction_parent_class ) -> dispose ( object ) ;\n}","static void pk_transaction_class_init ( PkTransactionClass * klass ) {\n object_class -> dispose = pk_transaction_dispose ;\n}","static void spl_filesystem_object_free_storage ( void * object TSRMLS_DC ) {\n spl_filesystem_object * intern = ( spl_filesystem_object * ) object ;\n if ( intern -> _path ) efree ( intern -> _path ) ;\n efree ( object ) ;\n}","Partial","Partial","0","Partial","0","Partial","Equal","Cả hai demo đều có sự tương đồng an ninh một phần về quản lý vòng đời đối tượng và thu hồi con trỏ."
-"22","-3569070884878445567","1","void fz_drop_hash_table ( fz_context * ctx , fz_hash_table * table ) {\n if ( ! table ) return ;\n if ( -- table -> refs == 0 ) {\n fz_free ( ctx , table -> ents ) ;\n fz_free ( ctx , table ) ;\n }\n}","void fz_fin_cached_color_converter ( fz_context * ctx , fz_color_converter * cc_ ) {\n cc_ -> opaque = NULL ;\n fz_drop_hash_table ( ctx , cc -> hash ) ;\n fz_free ( ctx , cc ) ;\n}","static void spl_filesystem_object_free_storage ( void * object TSRMLS_DC ) {\n spl_filesystem_object * intern = ( spl_filesystem_object * ) object ;\n if ( intern -> _path ) efree ( intern -> _path ) ;\n efree ( object ) ;\n}","1","1","1","Partial","0","0","B","Demo B thể hiện cấu trúc mã nguồn giải phóng storage đa tầng, hữu ích cho việc đối chiếu rủi ro double-free."
-"23","2518148041181868265","1","static int http_SendStatus ( http_parser_t * parser , SOCKINFO * info , int http_status_code ) {\n char buf [ 256 ] ;\n snprintf ( buf , sizeof ( buf ) , ""HTTP/1.1 %d\\r\\n"" , http_status_code ) ;\n sock_write ( info , buf , strlen ( buf ) ) ;\n return 0 ;\n}","static void spl_filesystem_object_free_storage ( void * object TSRMLS_DC ) {\n spl_filesystem_object * intern = ( spl_filesystem_object * ) object ;\n efree ( object ) ;\n}","static int http_RecvPostMessage ( http_parser_t * parser , SOCKINFO * info , char * filename , struct SendInstruction * Instr ) {\n num_read = sock_read ( info , Buf , sizeof ( Buf ) , & Timeout ) ;\n return ret_code ;\n}","0","0","0","1","Partial","1","A","Demo A minh họa cơ chế thu hồi bộ nhớ tổng thể, hỗ trợ kiểm tra an toàn sau khi truyền dữ liệu qua mạng."
-"24","-4055702019813176658","1","static int sunrast_decode_frame ( AVCodecContext * avctx , void * data , int * got_frame , AVPacket * avpkt ) {\n const uint8_t * buf = avpkt -> data ;\n if ( avpkt -> size < 32 ) return AVERROR_INVALIDDATA ;\n return 0 ;\n}","static void spl_filesystem_object_free_storage ( void * object TSRMLS_DC ) {\n spl_filesystem_object * intern = ( spl_filesystem_object * ) object ;\n efree ( object ) ;\n}","static int sunrast_decode_frame ( AVCodecContext * avctx , void * data , int * got_frame , AVPacket * avpkt ) {\n if ( avpkt -> size < 32 ) return AVERROR_INVALIDDATA ;\n if ( av_image_check_size ( w , h , 0 , avctx ) ) return AVERROR_INVALIDDATA ;\n}","0","0","0","1","1","1","B","Demo B liên quan an ninh hơn (cùng sink giải mã frame và cùng guard kiểm tra avpkt->size < 32)."
-"25","-4886619136962902359","1","static int wma_decode_frame ( AVCodecContext * avctx , void * data , int * got_frame_ptr , AVPacket * avpkt ) {\n GetBitContext gb ;\n init_get_bits ( & gb , avpkt -> data , avpkt -> size * 8 ) ;\n return 0 ;\n}","static void spl_filesystem_object_free_storage ( void * object TSRMLS_DC ) {\n spl_filesystem_object * intern = ( spl_filesystem_object * ) object ;\n efree ( object ) ;\n}","static int check_bits_for_superframe ( GetBitContext * orig_gb , WMAVoiceContext * s ) {\n init_get_bits ( gb , orig_gb -> buffer , orig_gb -> size_in_bits ) ;\n if ( get_bits_left ( gb ) < 14 ) return 1 ;\n}","0","0","0","1","Partial","1","A","Demo A cung cấp kịch bản quản lý giải phóng bộ nhớ heap rõ ràng, hữu ích khi phân tích khả năng rò rỉ hoặc truy cập vùng nhớ."
+"1","7817292828288926681","1","static Image * ReadVIFFImage ( const ImageInfo * image_info , ExceptionInfo * exception ) {
+ # define VFF_CM_genericRGB 15 # define VFF_CM_ntscRGB 1 # define VFF_CM_NONE 0 # define VFF_DEP_DECORDER 0x4 # define VFF_DEP_NSORDER 0x8 # define VFF_DES_RAW 0 # define VFF_LOC_IMPLICIT 1 # define VFF_MAPTYP_NONE 0 # define VFF_MAPTYP_1_BYTE 1 # define VFF_MAPTYP_2_BYTE 2 # define VFF_MAPTYP_4_BYTE 4 # define VFF_MAPTYP_FLOAT 5 # define VFF_MAPTYP_DOUBLE 7 # define VFF_MS_NONE 0 # define VFF_MS_ONEPERBAND 1 # define VFF_MS_SHARED 3 # define VFF_TYP_BIT 0 # define VFF_TYP_1_BYTE 1 # define VFF_TYP_2_BYTE 2 # define VFF_TYP_4_BYTE 4 # define VFF_TYP_FLOAT 5 # define VFF_TYP_DOUBLE 9 typedef struct _ViffInfo {
+ unsigned char identifier , file_type , release , version , machine_dependency , reserve [ 3 ] ;
+ char comment [ 512 ] ;
+ unsigned int rows , columns , subrows ;
+ int x_offset , y_offset ;
+ float x_bits_per_pixel , y_bits_per_pixel ;
+ unsigned int location_type , location_dimension , number_of_images , number_data_bands , data_storage_type , data_encode_scheme , map_scheme , map_storage_type , map_rows , map_columns , map_subrows , map_enable , maps_per_cycle , color_space_model ;
+ }
+ ViffInfo ;
+ double min_value , scale_factor , value ;
+ Image * image ;
+ int bit ;
+ MagickBooleanType status ;
+ MagickSizeType number_pixels ;
+ register IndexPacket * indexes ;
+ register ssize_t x ;
+ register PixelPacket * q ;
+ register ssize_t i ;
+ register unsigned char * p ;
+ size_t bytes_per_pixel , max_packets , quantum ;
+ ssize_t count , y ;
+ unsigned char * pixels ;
+ unsigned long lsb_first ;
+ ViffInfo viff_info ;
+ assert ( image_info != ( const ImageInfo * ) NULL ) ;
+ assert ( image_info -> signature == MagickSignature ) ;
+ if ( image_info -> debug != MagickFalse ) ( void ) LogMagickEvent ( TraceEvent , GetMagickModule ( ) , ""%s"" , image_info -> filename ) ;
+ assert ( exception != ( ExceptionInfo * ) NULL ) ;
+ assert ( exception -> signature == MagickSignature ) ;
+ image = AcquireImage ( image_info ) ;
+ status = OpenBlob ( image_info , image , ReadBinaryBlobMode , exception ) ;
+ if ( status == MagickFalse ) {
+ image = DestroyImageList ( image ) ;
+ return ( ( Image * ) NULL ) ;
+ }
+ count = ReadBlob ( image , 1 , & viff_info . identifier ) ;
+ do {
+ if ( ( count != 1 ) || ( ( unsigned char ) viff_info . identifier != 0xab ) ) ThrowReaderException ( CorruptImageError , ""NotAVIFFImage"" ) ;
+ ( void ) ReadBlob ( image , sizeof ( viff_info . file_type ) , & viff_info . file_type ) ;
+ ( void ) ReadBlob ( image , sizeof ( viff_info . release ) , & viff_info . release ) ;
+ ( void ) ReadBlob ( image , sizeof ( viff_info . version ) , & viff_info . version ) ;
+ ( void ) ReadBlob ( image , sizeof ( viff_info . machine_dependency ) , & viff_info . machine_dependency ) ;
+ ( void ) ReadBlob ( image , sizeof ( viff_info . reserve ) , viff_info . reserve ) ;
+ ( void ) ReadBlob ( image , 512 , ( unsigned char * ) viff_info . comment ) ;
+ viff_info . comment [ 511 ] = '\0' ;
+ if ( str
 
-"26","-3819889754140204145","0","int virLogParseOutputs ( const char * src , virLogOutputPtr * * outputs ) {\n virLogOutputPtr output = NULL ;\n if ( ! ( output = virLogParseOutput ( strings [ i ] ) ) ) goto cleanup ;\n at = virLogFindOutput ( list , noutputs , output -> dest , output -> name ) ;\n if ( VIR_APPEND_ELEMENT ( list , noutputs , output ) < 0 ) {\n virLogOutputFree ( output ) ;\n goto cleanup ;\n }\n return 0 ;\n cleanup :\n return - 1 ;\n}","static void spl_filesystem_object_free_storage ( void * object TSRMLS_DC ) {\n spl_filesystem_object * intern = ( spl_filesystem_object * ) object ;\n if ( intern -> _path ) efree ( intern -> _path ) ;\n efree ( object ) ;\n}","int virLogParseOutputs ( const char * src , virLogOutputPtr * * outputs ) {\n if ( ! ( strings = virStringSplitCount ( src , "" "" , 0 , & count ) ) ) goto cleanup ;\n for ( i = 0 ; i < count ; i ++ ) {\n if ( ! ( output = virLogParseOutput ( strings [ i ] ) ) ) goto cleanup ;\n }\n cleanup : virStringListFree ( strings ) ;\n return ret ;\n}","1","Partial","1","1","1","1","A","Demo A liên quan an ninh hơn (cùng sink giải phóng tài nguyên khi lỗi và quản lý dọn dẹp bộ nhớ dynamic)."
-"27","-2607754285145856562","0","void vp9_set_svc ( VP9_COMP * cpi , int use_svc ) {\n cpi -> use_svc = use_svc ;\n return ;\n}","static void spl_filesystem_object_free_storage ( void * object TSRMLS_DC ) {\n spl_filesystem_object * intern = ( spl_filesystem_object * ) object ;\n efree ( object ) ;\n}","void vp9_set_svc ( VP9_COMP * cpi , int use_svc ) {\n cpi -> use_svc = use_svc ;\n return ;\n}","0","0","0","Partial","1","0","Equal","Cả hai demo đều có sự tương đồng an ninh ở mức giới hạn: Demo A về giải phóng, Demo B về thiết lập trường cờ."
-"28","-4552633429382740307","0","static void page_flush_tb ( void ) {\n int i ;\n for ( i = 0 ; i < V_L1_SIZE ; i ++ ) {\n page_flush_tb_1 ( V_L1_SHIFT / L2_BITS - 1 , l1_map + i ) ;\n }\n}","static void page_flush_tb ( void ) {\n int i ;\n for ( i = 0 ; i < V_L1_SIZE ; i ++ ) page_flush_tb_1 ( V_L1_SHIFT / L2_BITS - 1 , l1_map + i ) ;\n}","static void spl_filesystem_object_free_storage ( void * object TSRMLS_DC ) {\n spl_filesystem_object * intern = ( spl_filesystem_object * ) object ;\n efree ( object ) ;\n}","0","0","0","0","0","0","Neither","Cả hai demo đều không minh họa được guard kiểm tra giới hạn mảng translation buffer."
-"29","-2064332158282087279","0","static int fts_build_full_words ( struct fts_mail_build_context * ctx , const unsigned char * data , size_t size , bool last ) {\n if ( ctx -> word_buf != NULL && ctx -> word_buf -> used > 0 ) {\n buffer_append ( ctx -> word_buf , data , i ) ;\n }\n if ( fts_backend_update_build_more ( ctx -> update_ctx , data , i ) < 0 ) return - 1 ;\n return 0 ;\n}","static void spl_filesystem_object_free_storage ( void * object TSRMLS_DC ) {\n spl_filesystem_object * intern = ( spl_filesystem_object * ) object ;\n efree ( object ) ;\n}","static int fts_build_full_words ( struct fts_mail_build_context * ctx , const unsigned char * data , size_t size , bool last ) {\n if ( ctx -> word_buf != NULL && ctx -> word_buf -> used > 0 ) buffer_append ( ctx -> word_buf , data , i ) ;\n if ( fts_backend_update_build_more ( ctx -> update_ctx , data , i ) < 0 ) return - 1 ;\n return 0 ;\n}","0","0","0","1","1","1","Neither","Cả hai demo không cung cấp cơ chế phân định mới cho việc kiểm tra tràn buffer từ ngữ."
-"30","2687336064028423153","0","static guint32 dissect_netb_receive_continue ( tvbuff_t * tvb , packet_info * pinfo _U_ , int offset , proto_tree * tree ) {\n nb_xmit_corrl ( tvb , offset , tree ) ;\n nb_remote_session ( tvb , offset , tree ) ;\n nb_local_session ( tvb , offset , tree ) ;\n return 0 ;\n}","static void spl_filesystem_object_free_storage ( void * object TSRMLS_DC ) {\n spl_filesystem_object * intern = ( spl_filesystem_object * ) object ;\n efree ( object ) ;\n}","static guint32 dissect_netb_receive_continue ( tvbuff_t * tvb , packet_info * pinfo _U_ , int offset , proto_tree * tree ) {\n nb_xmit_corrl ( tvb , offset , tree ) ;\n nb_remote_session ( tvb , offset , tree ) ;\n return 0 ;\n}","0","0","0","Partial","1","0","B","Demo B thể hiện cùng họ hàm mổ xẻ gói tin mạng NetBIOS, phù hợp ngữ cảnh hơn Demo A."
-"31","-3847447574854829409","0","static void page_flush_tb_1 ( int level , void * * p ) {\n int i ;\n if ( ! * p ) return ;\n if ( level == 0 ) {\n g_free ( * p ) ;\n * p = NULL ;\n }\n}","static void page_flush_tb ( void ) {\n int i ;\n for ( i = 0 ; i < V_L1_SIZE ; i ++ ) page_flush_tb_1 ( V_L1_SHIFT / L2_BITS - 1 , l1_map + i ) ;\n}","static void spl_filesystem_object_free_storage ( void * object TSRMLS_DC ) {\n spl_filesystem_object * intern = ( spl_filesystem_object * ) object ;\n if ( intern -> _path ) efree ( intern -> _path ) ;\n efree ( object ) ;\n}","Partial","Partial","0","1","Partial","1","B","Demo B liên quan an ninh hơn (cùng sink giải phóng bộ nhớ dynamic; cùng guard gán NULL tránh con trỏ lơ lửng)."
-"32","-7777331401175181229","0","int virLogParseOutputs ( const char * src , virLogOutputPtr * * outputs ) {\n if ( ! ( strings = virStringSplitCount ( src , "" "" , 0 , & count ) ) ) goto cleanup ;\n for ( i = 0 ; i < count ; i ++ ) {\n if ( STREQ ( strings [ i ] , """" ) ) continue ;\n }\n cleanup : virStringListFree ( strings ) ;\n return ret ;\n}","static void spl_filesystem_object_free_storage ( void * object TSRMLS_DC ) {\n spl_filesystem_object * intern = ( spl_filesystem_object * ) object ;\n efree ( object ) ;\n}","int virLogParseOutputs ( const char * src , virLogOutputPtr * * outputs ) {\n at = virLogFindOutput ( list , noutputs , output -> dest , output -> name ) ;\n if ( at >= 0 ) {\n virLogOutputFree ( list [ at ] ) ;\n VIR_DELETE_ELEMENT ( list , at , noutputs ) ;\n }\n return ret ;\n}","0","Partial","Partial","1","1","1","Equal","Cả hai demo đều có điểm tương đồng an ninh: Demo A dọn dẹp bộ nhớ đơn giản, Demo B dọn dẹp mảng phần tử log."
-"33","-5992472514718425579","0","static int fts_build_full_words ( struct fts_mail_build_context * ctx , const unsigned char * data , size_t size , bool last ) {\n if ( ctx -> word_buf == NULL ) {\n ctx -> word_buf = buffer_create_dynamic ( default_pool , 128 ) ;\n }\n buffer_append ( ctx -> word_buf , data + i , size - i ) ;\n return 0 ;\n}","static int fts_build_full_words ( struct fts_mail_build_context * ctx , const unsigned char * data , size_t size , bool last ) {\n if ( ctx -> word_buf == NULL ) ctx -> word_buf = buffer_create_dynamic ( default_pool , 128 ) ;\n buffer_append ( ctx -> word_buf , data + i , size - i ) ;\n return 0 ;\n}","static void spl_filesystem_object_free_storage ( void * object TSRMLS_DC ) {\n spl_filesystem_object * intern = ( spl_filesystem_object * ) object ;\n efree ( object ) ;\n}","1","1","1","0","0","0","Equal","Cả hai demo đều mang lại giá trị đối sánh bổ trợ: Demo A kiểm tra khởi tạo buffer, Demo B dọn dẹp tài nguyên."
-"34","-6856626433814917486","0","void vp9_change_config ( struct VP9_COMP * cpi , const VP9EncoderConfig * oxcf ) {\n VP9_COMMON * const cm = & cpi -> common ;\n cm -> bit_depth = oxcf -> bit_depth ;\n update_frame_size ( cpi ) ;\n}","void vp9_set_svc ( VP9_COMP * cpi , int use_svc ) {\n cpi -> use_svc = use_svc ;\n return ;\n}","static void spl_filesystem_object_free_storage ( void * object TSRMLS_DC ) {\n spl_filesystem_object * intern = ( spl_filesystem_object * ) object ;\n efree ( object ) ;\n}","Partial","1","0","0","0","0","Equal","Mức độ phù hợp ngữ nghĩa của Demo A và Demo B tương đương nhau trong việc kiểm tra cấu trúc encoder."
-"35","6393050609822897742","0","void ff_write_quant_matrix ( PutBitContext * pb , uint16_t * matrix ) {\n if ( matrix ) {\n put_bits ( pb , 1 , 1 ) ;\n for ( int i = 0 ; i < 64 ; i ++ ) put_bits ( pb , 8 , matrix [ ff_zigzag_direct [ i ] ] ) ;\n }\n else put_bits ( pb , 1 , 0 ) ;\n}","void ff_write_quant_matrix ( PutBitContext * pb , uint16_t * matrix ) {\n if ( matrix ) put_bits ( pb , 1 , 1 ) ;\n else put_bits ( pb , 1 , 0 ) ;\n}","static void spl_filesystem_object_free_storage ( void * object TSRMLS_DC ) {\n spl_filesystem_object * intern = ( spl_filesystem_object * ) object ;\n efree ( object ) ;\n}","1","1","1","0","0","0","Neither","Cả hai demo không cung cấp thêm thông tin bảo vệ biên dữ liệu mới cho mảng ma trận."
-"36","-5357254031401749470","0","static void page_flush_tb_1 ( int level , void * * p ) {\n if ( ! * p ) return ;\n if ( level == 0 ) {\n g_free ( * p ) ;\n * p = NULL ;\n }\n}","static void spl_filesystem_object_free_storage ( void * object TSRMLS_DC ) {\n spl_filesystem_object * intern = ( spl_filesystem_object * ) object ;\n if ( intern -> _path ) efree ( intern -> _path ) ;\n efree ( object ) ;\n}","static void page_flush_tb ( void ) {\n int i ;\n for ( i = 0 ; i < V_L1_SIZE ; i ++ ) page_flush_tb_1 ( V_L1_SHIFT / L2_BITS - 1 , l1_map + i ) ;\n}","1","Partial","1","Partial","Partial","0","A","Demo A liên quan an ninh hơn (cùng sink g_free/efree; cùng guard kiểm tra con trỏ và gán NULL)."
-"37","1760449185745615462","0","int virLogParseOutputs ( const char * src , virLogOutputPtr * * outputs ) {\n if ( at >= 0 ) {\n virLogOutputFree ( list [ at ] ) ;\n VIR_DELETE_ELEMENT ( list , at , noutputs ) ;\n }\n return ret ;\n}","int virLogParseOutputs ( const char * src , virLogOutputPtr * * outputs ) {\n at = virLogFindOutput ( list , noutputs , output -> dest , output -> name ) ;\n if ( VIR_APPEND_ELEMENT ( list , noutputs , output ) < 0 ) goto cleanup ;\n}","static void spl_filesystem_object_free_storage ( void * object TSRMLS_DC ) {\n spl_filesystem_object * intern = ( spl_filesystem_object * ) object ;\n efree ( object ) ;\n}","1","1","1","0","0","0","B","Demo B thể hiện quy trình thu hồi bộ nhớ chi tiết, tương thích việc đối chiếu dọn dẹp tài nguyên."
-"38","-341028540041678099","0","static guint32 dissect_netb_receive_continue ( tvbuff_t * tvb , packet_info * pinfo _U_ , int offset , proto_tree * tree ) {\n nb_remote_session ( tvb , offset , tree ) ;\n return 0 ;\n}","static void spl_filesystem_object_free_storage ( void * object TSRMLS_DC ) {\n spl_filesystem_object * intern = ( spl_filesystem_object * ) object ;\n efree ( object ) ;\n}","static guint32 dissect_netb_receive_continue ( tvbuff_t * tvb , packet_info * pinfo _U_ , int offset , proto_tree * tree ) {\n nb_remote_session ( tvb , offset , tree ) ;\n return 0 ;\n}","0","0","0","Partial","1","0","Equal","Hai demo có mức độ liên quan an ninh tương đương nhau trong việc hỗ trợ đánh giá Target."
-"39","8460430819945784394","0","static int fts_build_full_words ( struct fts_mail_build_context * ctx , const unsigned char * data , size_t size , bool last ) {\n for ( i = size ; i > 0 ; i -- ) {\n if ( IS_WORD_WHITESPACE ( data [ i - 1 ] ) ) break ;\n }\n return 0 ;\n}","static int fts_build_full_words ( struct fts_mail_build_context * ctx , const unsigned char * data , size_t size , bool last ) {\n for ( i = size ; i > 0 ; i -- ) if ( IS_WORD_WHITESPACE ( data [ i - 1 ] ) ) break ;\n return 0 ;\n}","static void spl_filesystem_object_free_storage ( void * object TSRMLS_DC ) {\n spl_filesystem_object * intern = ( spl_filesystem_object * ) object ;\n efree ( object ) ;\n}","1","1","0","0","0","0","B","Demo B thể hiện giải phóng vùng nhớ heap sau khi xử lý chuỗi, hữu ích hơn cho việc đối chiếu rò rỉ tài nguyên."
-"40","4976989049001279223","0","static int sunrast_decode_frame ( AVCodecContext * avctx , void * data , int * got_frame , AVPacket * avpkt ) {\n if ( av_image_check_size ( w , h , 0 , avctx ) ) return AVERROR_INVALIDDATA ;\n if ( buf_end - buf < maplength ) return AVERROR_INVALIDDATA ;\n return 0 ;\n}","static void spl_filesystem_object_free_storage ( void * object TSRMLS_DC ) {\n spl_filesystem_object * intern = ( spl_filesystem_object * ) object ;\n efree ( object ) ;\n}","static int sunrast_decode_frame ( AVCodecContext * avctx , void * data , int * got_frame , AVPacket * avpkt ) {\n if ( avpkt -> size < 32 ) return AVERROR_INVALIDDATA ;\n if ( av_image_check_size ( w , h , 0 , avctx ) ) return AVERROR_INVALIDDATA ;\n}","0","0","0","1","1","1","A","Demo A cung cấp mẫu giải phóng bộ nhớ dynamic an toàn, giúp đối chiếu toàn diện vòng đời đối tượng."
-"41","-7187272991279783781","0","static int kadmin_parse_policy_args ( int argc , char * argv [ ] , kadm5_policy_ent_t policy , long * mask , char * caller ) {\n if ( ! strcmp ( argv [ i ] , ""-maxlife"" ) ) {\n if ( ++ i > argc - 2 ) return - 1 ;\n }\n return 0 ;\n}","static int kadmin_parse_policy_args ( int argc , char * argv [ ] , kadm5_policy_ent_t policy , long * mask , char * caller ) {\n if ( ++ i > argc - 2 ) return - 1 ;\n return 0 ;\n}","static void spl_filesystem_object_free_storage ( void * object TSRMLS_DC ) {\n spl_filesystem_object * intern = ( spl_filesystem_object * ) object ;\n efree ( object ) ;\n}","1","1","1","0","0","0","A","Demo A liên quan an ninh hơn (cùng guard kiểm tra biên số lượng tham số ++i > argc - 2)."
-"42","-7136186224744987223","0","void ff_write_quant_matrix ( PutBitContext * pb , uint16_t * matrix ) {\n if ( matrix ) put_bits ( pb , 1 , 1 ) ;\n else put_bits ( pb , 1 , 0 ) ;\n}","void ff_write_quant_matrix ( PutBitContext * pb , uint16_t * matrix ) {\n if ( matrix ) put_bits ( pb , 1 , 1 ) ;\n}","static void spl_filesystem_object_free_storage ( void * object TSRMLS_DC ) {\n spl_filesystem_object * intern = ( spl_filesystem_object * ) object ;\n efree ( object ) ;\n}","1","1","1","0","0","0","Neither","Cả hai demo đều không mang lại rào chắn an ninh mở rộng cho việc thao tác bộ đệm bit."
-"43","-4558261210024070448","0","static void page_flush_tb ( void ) {\n int i ;\n for ( i = 0 ; i < V_L1_SIZE ; i ++ ) page_flush_tb_1 ( V_L1_SHIFT / L2_BITS - 1 , l1_map + i ) ;\n}","static void spl_filesystem_object_free_storage ( void * object TSRMLS_DC ) {\n spl_filesystem_object * intern = ( spl_filesystem_object * ) object ;\n efree ( object ) ;\n}","static void page_flush_tb ( void ) {\n int i ;\n for ( i = 0 ; i < V_L1_SIZE ; i ++ ) page_flush_tb_1 ( V_L1_SHIFT / L2_BITS - 1 , l1_map + i ) ;\n}","0","0","0","0","0","0","Equal","Cả hai demo đều có mức độ liên quan an ninh tương đương nhau trong việc hỗ trợ duyệt trang dịch."
-"44","-1111775978048960297","0","static int http_RecvPostMessage ( http_parser_t * parser , SOCKINFO * info , char * filename , struct SendInstruction * Instr ) {\n if ( Instr && Instr -> IsVirtualFile ) {\n virtualDirCallback . close ( Fp ) ;\n }\n else fclose ( Fp ) ;\n return ret_code ;\n}","static void spl_filesystem_object_free_storage ( void * object TSRMLS_DC ) {\n spl_filesystem_object * intern = ( spl_filesystem_object * ) object ;\n efree ( object ) ;\n}","static int http_RecvPostMessage ( http_parser_t * parser , SOCKINFO * info , char * filename , struct SendInstruction * Instr ) {\n if ( Instr && Instr -> IsVirtualFile ) virtualDirCallback . close ( Fp ) ;\n else fclose ( Fp ) ;\n return ret_code ;\n}","0","0","0","1","1","1","B","Demo B liên quan an ninh hơn (cùng sink đóng file và thao tác I/O tài nguyên mạng)."
-"45","8281630545066492937","0","int virLogParseOutputs ( const char * src , virLogOutputPtr * * outputs ) {\n at = virLogFindOutput ( list , noutputs , output -> dest , output -> name ) ;\n if ( at >= 0 ) {\n virLogOutputFree ( list [ at ] ) ;\n VIR_DELETE_ELEMENT ( list , at , noutputs ) ;\n }\n return ret ;\n}","static void spl_filesystem_object_free_storage ( void * object TSRMLS_DC ) {\n spl_filesystem_object * intern = ( spl_filesystem_object * ) object ;\n efree ( object ) ;\n}","int virLogParseOutputs ( const char * src , virLogOutputPtr * * outputs ) {\n at = virLogFindOutput ( list , noutputs , output -> dest , output -> name ) ;\n if ( VIR_APPEND_ELEMENT ( list , noutputs , output ) < 0 ) goto cleanup ;\n}","1","1","1","0","0","0","B","Demo B phù hợp hơn về mặt thao tác danh sách log và xử lý lỗi phân tách chuỗi cấu hình."
-"46","5400542917484463750","0","static guint32 dissect_netb_receive_continue ( tvbuff_t * tvb , packet_info * pinfo _U_ , int offset , proto_tree * tree ) {\n nb_local_session ( tvb , offset , tree ) ;\n return 0 ;\n}","static void spl_filesystem_object_free_storage ( void * object TSRMLS_DC ) {\n spl_filesystem_object * intern = ( spl_filesystem_object * ) object ;\n efree ( object ) ;\n}","static guint32 dissect_netb_receive_continue ( tvbuff_t * tvb , packet_info * pinfo _U_ , int offset , proto_tree * tree ) {\n nb_local_session ( tvb , offset , tree ) ;\n return 0 ;\n}","0","0","0","Partial","1","0","Equal","Hai demo cung cấp ngữ nghĩa an ninh tương đương nhau cho hàm điều phối mổ xẻ nội bộ."
-"47","-2323311514228246061","0","static void pk_transaction_finalize ( GObject * object ) {\n PkTransaction * transaction = PK_TRANSACTION ( object ) ;\n if ( transaction -> priv -> tid != NULL ) g_free ( transaction -> priv -> tid ) ;\n}","static void pk_transaction_class_init ( PkTransactionClass * klass ) {\n g_type_class_add_private ( klass , sizeof ( PkTransactionPrivate ) ) ;\n}","static void spl_filesystem_object_free_storage ( void * object TSRMLS_DC ) {\n spl_filesystem_object * intern = ( spl_filesystem_object * ) object ;\n efree ( object ) ;\n}","0","Partial","0","1","0","0","Equal","Cả hai demo đều thể hiện một khía cạnh của quản lý bộ nhớ: Demo A về cấu trúc lớp GObject, Demo B về giải phóng bộ nhớ dynamic."
-"48","-704025756752474526","0","static void page_flush_tb ( void ) {\n int i ;\n for ( i = 0 ; i < V_L1_SIZE ; i ++ ) page_flush_tb_1 ( V_L1_SHIFT / L2_BITS - 1 , l1_map + i ) ;\n}","static void spl_filesystem_object_free_storage ( void * object TSRMLS_DC ) {\n spl_filesystem_object * intern = ( spl_filesystem_object * ) object ;\n efree ( object ) ;\n}","static void page_flush_tb ( void ) {\n int i ;\n for ( i = 0 ; i < V_L1_SIZE ; i ++ ) page_flush_tb_1 ( V_L1_SHIFT / L2_BITS - 1 , l1_map + i ) ;\n}","0","0","0","0","0","0","Equal","Hai demo có mức độ tương đồng an ninh ngang nhau đối với logic lặp bảng trang."
-"49","-1315695702746584250","0","static int fts_build_full_words ( struct fts_mail_build_context * ctx , const unsigned char * data , size_t size , bool last ) {\n buffer_set_used_size ( ctx -> word_buf , 0 ) ;\n return 0 ;\n}","static void spl_filesystem_object_free_storage ( void * object TSRMLS_DC ) {\n spl_filesystem_object * intern = ( spl_filesystem_object * ) object ;\n efree ( object ) ;\n}","static int fts_build_full_words ( struct fts_mail_build_context * ctx , const unsigned char * data , size_t size , bool last ) {\n buffer_set_used_size ( ctx -> word_buf , 0 ) ;\n return 0 ;\n}","0","0","0","Partial","1","0","B","Demo B thể hiện cùng thao tác quản lý độ dài buffer nội bộ của ngữ cảnh fts, phù hợp ngữ cảnh hơn Demo A."
-"50","-8115807672627724050","0","void ff_write_quant_matrix ( PutBitContext * pb , uint16_t * matrix ) {\n if ( matrix ) {\n put_bits ( pb , 1 , 1 ) ;\n }\n else put_bits ( pb , 1 , 0 ) ;\n}","static void spl_filesystem_object_free_storage ( void * object TSRMLS_DC ) {\n spl_filesystem_object * intern = ( spl_filesystem_object * ) object ;\n efree ( object ) ;\n}","void ff_write_quant_matrix ( PutBitContext * pb , uint16_t * matrix ) {\n if ( matrix ) put_bits ( pb , 1 , 1 ) ;\n else put_bits ( pb , 1 , 0 ) ;\n}","0","0","0","1","1","1","A","Demo A cung cấp mẫu đối chiếu giải phóng con trỏ cấu trúc heap hữu ích, bổ trợ cho việc đánh giá xử lý con trỏ ma trận."
+/* ... [Cắt gọn do vượt quá 3000 ký tự] */","static int check_bits_for_superframe ( GetBitContext * orig_gb , WMAVoiceContext * s ) {\n init_get_bits ( gb , orig_gb -> buffer , orig_gb -> size_in_bits ) ;\n assert ( get_bits_left ( gb ) == get_bits_left ( orig_gb ) ) ;\n if ( get_bits_left ( gb ) < 14 ) return 1 ;\n if ( ! get_bits1 ( gb ) ) return - 1 ;\n return 0 ;\n}","static void spl_filesystem_object_free_storage ( void * object TSRMLS_DC ) {\n spl_filesystem_object * intern = ( spl_filesystem_object * ) object ;\n if ( intern -> oth_handler && intern -> oth_handler -> dtor ) {\n intern -> oth_handler -> dtor ( intern TSRMLS_CC ) ;\n }\n zend_object_std_dtor ( & intern -> std TSRMLS_CC ) ;\n if ( intern -> _path ) efree ( intern -> _path ) ;\n if ( intern -> file_name ) efree ( intern -> file_name ) ;\n efree ( object ) ;\n}","0","0","1","1","Partial","0","B","Demo B thể hiện thao tác giải phóng bộ nhớ dynamic với efree và xử lý con trỏ cấu trúc, tương thích hơn về ngữ nghĩa quản lý tài nguyên so với Demo A chỉ xử lý bitstream."
+"2","-2654475221056024278","1","static void process_blob ( struct rev_info * revs , struct blob * blob , show_object_fn show , struct name_path * path , const char * name , void * cb_data ) {
+ struct object * obj = & blob -> object ;
+ if ( ! revs -> blob_objects ) return ;
+ if ( ! obj ) die ( ""bad blob object"" ) ;
+ if ( obj -> flags & ( UNINTERESTING | SEEN ) ) return ;
+ obj -> flags |= SEEN ;
+ show ( obj , path , name , cb_data ) ;
+ }","void fz_fin_cached_color_converter ( fz_context * ctx , fz_color_converter * cc_ ) {\n fz_cached_color_converter * cc ;\n if ( cc_ == NULL ) return ;\n cc = cc_ -> opaque ;\n if ( cc == NULL ) return ;\n cc_ -> opaque = NULL ;\n fz_drop_hash_table ( ctx , cc -> hash ) ;\n fz_free ( ctx , cc ) ;\n}","static void spl_filesystem_object_free_storage ( void * object TSRMLS_DC ) {\n spl_filesystem_object * intern = ( spl_filesystem_object * ) object ;\n if ( intern -> file_name ) efree ( intern -> file_name ) ;\n if ( intern -> orig_path ) efree ( intern -> orig_path ) ;\n efree ( object ) ;\n}","Partial","Partial","1","1","Partial","0","B","Demo B phản ánh trực tiếp mẫu giải phóng các chuỗi con trỏ trường dữ liệu (file_name, orig_path), gần với quy trình giải phóng và sao chép chuỗi trong dictionary hơn Demo A."
+"3","1931051720960659129","1","DEFINE_TEST ( test_write_disk_secure ) {
+ # if defined ( _WIN32 ) && ! defined ( __CYGWIN__ ) skipping ( ""archive_write_disk security checks not supported on Windows"" ) ;
+ # else struct archive * a ;
+ struct archive_entry * ae ;
+ struct stat st ;
+ assertUmask ( UMASK ) ;
+ assert ( ( a = archive_write_disk_new ( ) ) != NULL ) ;
+ assert ( ( ae = archive_entry_new ( ) ) != NULL ) ;
+ archive_entry_copy_pathname ( ae , ""dir"" ) ;
+ archive_entry_set_mode ( ae , S_IFDIR | 0777 ) ;
+ assert ( 0 == archive_write_header ( a , ae ) ) ;
+ archive_entry_free ( ae ) ;
+ assert ( 0 == archive_write_finish_entry ( a ) ) ;
+ assert ( ( ae = archive_entry_new ( ) ) != NULL ) ;
+ archive_entry_copy_pathname ( ae , ""link_to_dir"" ) ;
+ archive_entry_set_mode ( ae , S_IFLNK | 0777 ) ;
+ archive_entry_set_symlink ( ae , ""dir"" ) ;
+ archive_write_disk_set_options ( a , 0 ) ;
+ assert ( 0 == archive_write_header ( a , ae ) ) ;
+ assert ( 0 == archive_write_finish_entry ( a ) ) ;
+ assert ( archive_entry_clear ( ae ) != NULL ) ;
+ archive_entry_copy_pathname ( ae , ""link_to_dir/filea"" ) ;
+ archive_entry_set_mode ( ae , S_IFREG | 0777 ) ;
+ assert ( 0 == archive_write_header ( a , ae ) ) ;
+ assert ( 0 == archive_write_finish_entry ( a ) ) ;
+ assert ( archive_entry_clear ( ae ) != NULL ) ;
+ archive_entry_copy_pathname ( ae , ""link_to_dir/fileb"" ) ;
+ archive_entry_set_mode ( ae , S_IFREG | 0777 ) ;
+ archive_write_disk_set_options ( a , ARCHIVE_EXTRACT_SECURE_SYMLINKS ) ;
+ failure ( ""Extracting a file through a symlink should fail here."" ) ;
+ assertEqualInt ( ARCHIVE_FAILED , archive_write_header ( a , ae ) ) ;
+ archive_entry_free ( ae ) ;
+ assert ( 0 == archive_write_finish_entry ( a ) ) ;
+ assert ( ( ae = archive_entry_new ( ) ) != NULL ) ;
+ archive_entry_copy_pathname ( ae , ""link_to_dir2"" ) ;
+ archive_entry_set_mode ( ae , S_IFLNK | 0777 ) ;
+ archive_entry_set_symlink ( ae , ""dir"" ) ;
+ archive_write_disk_set_options ( a , 0 ) ;
+ assert ( 0 == archive_write_header ( a , ae ) ) ;
+ assert ( 0 == archive_write_finish_entry ( a ) ) ;
+ assert ( archive_entry_clear ( ae ) != NULL ) ;
+ archive_entry_copy_pathname ( ae , ""link_to_dir2/filec"" ) ;
+ archive_entry_set_mode ( ae , S_IFREG | 0777 ) ;
+ archive_write_disk_set_options ( a , ARCHIVE_EXTRACT_SECURE_SYMLINKS | ARCHIVE_EXTRACT_UNLINK ) ;
+ assertEqualIntA ( a , ARCHIVE_OK , archive_write_header ( a , ae ) ) ;
+ archive_entry_free ( ae ) ;
+ assert ( 0 == archive_write_finish_entry ( a ) ) ;
+ assert ( ( ae = archive_entry_new ( ) ) != NULL ) ;
+ archive_entry_copy_pathname ( ae , ""link_to_dir3"" ) ;
+ archive_entry_set_mode ( ae , S_IFLNK | 0777 ) ;
+ archive_entry_set_symlink ( ae , ""dir"" ) ;
+ archive_write_disk_set_options ( a , 0 ) ;
+ assert ( 0 == archive_write_header ( a , ae ) ) ;
+ assert ( 0 == archive_write_finish_entry ( a ) ) ;
+ assert ( archive_entry_clear ( ae ) != NULL ) ;
+ archive_entry_copy_pathname ( ae , ""link_to_dir3"" ) ;
+ archive_entry_set_mode ( ae , S_IFDIR | 0777 ) ;
+ assert ( 0 == archive_write_header ( a , ae ) ) ;
+ assert (
+
+/* ... [Cắt gọn do vượt quá 3000 ký tự] */","static void spl_filesystem_object_free_storage ( void * object TSRMLS_DC ) {\n spl_filesystem_object * intern = ( spl_filesystem_object * ) object ;\n if ( intern -> _path ) efree ( intern -> _path ) ;\n efree ( object ) ;\n}","void vp9_change_config ( struct VP9_COMP * cpi , const VP9EncoderConfig * oxcf ) {\n VP9_COMMON * const cm = & cpi -> common ;\n cm -> bit_depth = oxcf -> bit_depth ;\n if ( cm -> profile <= PROFILE_1 ) assert ( cm -> bit_depth == VPX_BITS_8 ) ;\n else assert ( cm -> bit_depth > VPX_BITS_8 ) ;\n}","0","0","0","Partial","1","1","A","Demo A thể hiện cấu trúc giải phóng tài nguyên hệ thống, cung cấp mẫu hình quản lý rủi ro bộ nhớ tổng quát hữu ích."
+"4","3528176083733952042","1","static uint32_t vmport_cmd_ram_size ( void * opaque , uint32_t addr ) {
+ CPUX86State * env = cpu_single_env ;
+ env -> regs [ R_EBX ] = 0x1177 ;
+ return ram_size ;
+ }","static void pk_transaction_class_init ( PkTransactionClass * klass ) {\n GObjectClass * object_class = G_OBJECT_CLASS ( klass ) ;\n object_class -> dispose = pk_transaction_dispose ;\n g_type_class_add_private ( klass , sizeof ( PkTransactionPrivate ) ) ;\n}","static void spl_filesystem_object_free_storage ( void * object TSRMLS_DC ) {\n spl_filesystem_object * intern = ( spl_filesystem_object * ) object ;\n if ( intern -> _path ) efree ( intern -> _path ) ;\n efree ( object ) ;\n}","0","0","0","0","0","0","Equal","Cả hai demo đều có sự tương đồng ngữ nghĩa ở mức thấp với Target phân tích XML; mức độ hỗ trợ an ninh của hai bên là ngang nhau."
+"5","453825853695477219","1","int ff_h263_decode_frame ( AVCodecContext * avctx , void * data , int * got_frame , AVPacket * avpkt ) {
+ const uint8_t * buf = avpkt -> data ;
+ int buf_size = avpkt -> size ;
+ MpegEncContext * s = avctx -> priv_data ;
+ int ret ;
+ AVFrame * pict = data ;
+ # ifdef PRINT_FRAME_TIME uint64_t time = rdtsc ( ) ;
+ # endif s -> flags = avctx -> flags ;
+ s -> flags2 = avctx -> flags2 ;
+ if ( buf_size == 0 ) {
+ if ( s -> low_delay == 0 && s -> next_picture_ptr ) {
+ * pict = s -> next_picture_ptr -> f ;
+ s -> next_picture_ptr = NULL ;
+ * got_frame = 1 ;
+ }
+ return 0 ;
+ }
+ if ( s -> flags & CODEC_FLAG_TRUNCATED ) {
+ int next ;
+ if ( CONFIG_MPEG4_DECODER && s -> codec_id == AV_CODEC_ID_MPEG4 ) {
+ next = ff_mpeg4_find_frame_end ( & s -> parse_context , buf , buf_size ) ;
+ }
+ else if ( CONFIG_H263_DECODER && s -> codec_id == AV_CODEC_ID_H263 ) {
+ next = ff_h263_find_frame_end ( & s -> parse_context , buf , buf_size ) ;
+ }
+ else {
+ av_log ( s -> avctx , AV_LOG_ERROR , ""this codec does not support truncated bitstreams\n"" ) ;
+ return - 1 ;
+ }
+ if ( ff_combine_frame ( & s -> parse_context , next , ( const uint8_t * * ) & buf , & buf_size ) < 0 ) return buf_size ;
+ }
+ retry : if ( s -> bitstream_buffer_size && ( s -> divx_packed || buf_size < 20 ) ) {
+ init_get_bits ( & s -> gb , s -> bitstream_buffer , s -> bitstream_buffer_size * 8 ) ;
+ }
+ else init_get_bits ( & s -> gb , buf , buf_size * 8 ) ;
+ s -> bitstream_buffer_size = 0 ;
+ if ( ! s -> context_initialized ) {
+ if ( ff_MPV_common_init ( s ) < 0 ) return - 1 ;
+ }
+ if ( s -> current_picture_ptr == NULL || s -> current_picture_ptr -> f . data [ 0 ] ) {
+ int i = ff_find_unused_picture ( s , 0 ) ;
+ if ( i < 0 ) return i ;
+ s -> current_picture_ptr = & s -> picture [ i ] ;
+ }
+ if ( CONFIG_WMV2_DECODER && s -> msmpeg4_version == 5 ) {
+ ret = ff_wmv2_decode_picture_header ( s ) ;
+ }
+ else if ( CONFIG_MSMPEG4_DECODER && s -> msmpeg4_version ) {
+ ret = ff_msmpeg4_decode_picture_header ( s ) ;
+ }
+ else if ( CONFIG_MPEG4_DECODER && s -> h263_pred ) {
+ if ( s -> avctx -> extradata_size && s -> picture_number == 0 ) {
+ GetBitContext gb ;
+ init_get_bits ( & gb , s -> avctx -> extradata , s -> avctx -> extradata_size * 8 ) ;
+ ret = ff_mpeg4_decode_picture_header ( s , & gb ) ;
+ }
+ ret = ff_mpeg4_decode_picture_header ( s , & s -> gb ) ;
+ }
+ else if ( CONFIG_H263I_DECODER && s -> codec_id == AV_CODEC_ID_H263I ) {
+ ret = ff_intel_h263_decode_picture_header ( s ) ;
+ }
+ else if ( CONFIG_FLV_DECODER && s -> h263_flv ) {
+ ret = ff_flv_decode_picture_header ( s ) ;
+ }
+ else {
+ ret = ff_h263_decode_picture_header ( s ) ;
+ }
+ if ( ret == FRAME_SKIPPED ) return get_consumed_bytes ( s , buf_size ) ;
+ if ( ret < 0 ) {
+ av_log ( s -> avctx , AV_LOG_ERROR , ""header damaged\n"" ) ;
+ return - 1 ;
+ }
+ avctx -> has_b_frames = ! s -> low_delay ;
+ if ( s -> xvid_build == - 1 && s -> divx_version == - 1 && s -> lavc_build == - 1 ) {
+ if ( s -> stream_codec_tag == AV_RL32 ( ""XVID"" ) || s -> codec_tag == AV_RL32 ( ""XVID"" ) || s -> codec_tag == AV_R
+
+/* ... [Cắt gọn do vượt quá 3000 ký tự] */","static int sunrast_decode_frame ( AVCodecContext * avctx , void * data , int * got_frame , AVPacket * avpkt ) {\n const uint8_t * buf = avpkt -> data ;\n if ( avpkt -> size < 32 ) return AVERROR_INVALIDDATA ;\n w = AV_RB32 ( buf + 4 ) ;\n if ( av_image_check_size ( w , h , 0 , avctx ) ) return AVERROR_INVALIDDATA ;\n memcpy ( ptr , buf , len ) ;\n return buf - bufstart ;\n}","static void spl_filesystem_object_free_storage ( void * object TSRMLS_DC ) {\n spl_filesystem_object * intern = ( spl_filesystem_object * ) object ;\n if ( intern -> _path ) efree ( intern -> _path ) ;\n efree ( object ) ;\n}","1","1","1","0","0","0","B","Demo B thể hiện cấu trúc mã nguồn có lỗi tiềm ẩn trong quản lý bộ nhớ heap, giúp đối chiếu nhận diện mẫu dễ bị tổn thương."
+"6","7078129966845159750","1","static int decode_frame ( AVCodecContext * avctx , void * data , int * got_frame , AVPacket * avpkt ) {
+ MDECContext * const a = avctx -> priv_data ;
+ const uint8_t * buf = avpkt -> data ;
+ int buf_size = avpkt -> size ;
+ AVFrame * picture = data ;
+ AVFrame * const p = & a -> picture ;
+ int i , ret ;
+ if ( p -> data [ 0 ] ) ff_thread_release_buffer ( avctx , p ) ;
+ p -> reference = 0 ;
+ if ( ( ret = ff_thread_get_buffer ( avctx , p ) ) < 0 ) {
+ av_log ( avctx , AV_LOG_ERROR , ""get_buffer() failed\n"" ) ;
+ return ret ;
+ }
+ p -> pict_type = AV_PICTURE_TYPE_I ;
+ p -> key_frame = 1 ;
+ av_fast_malloc ( & a -> bitstream_buffer , & a -> bitstream_buffer_size , buf_size + FF_INPUT_BUFFER_PADDING_SIZE ) ;
+ if ( ! a -> bitstream_buffer ) return AVERROR ( ENOMEM ) ;
+ for ( i = 0 ;
+ i < buf_size ;
+ i += 2 ) {
+ a -> bitstream_buffer [ i ] = buf [ i + 1 ] ;
+ a -> bitstream_buffer [ i + 1 ] = buf [ i ] ;
+ }
+ init_get_bits ( & a -> gb , a -> bitstream_buffer , buf_size * 8 ) ;
+ skip_bits ( & a -> gb , 32 ) ;
+ a -> qscale = get_bits ( & a -> gb , 16 ) ;
+ a -> version = get_bits ( & a -> gb , 16 ) ;
+ a -> last_dc [ 0 ] = a -> last_dc [ 1 ] = a -> last_dc [ 2 ] = 128 ;
+ for ( a -> mb_x = 0 ;
+ a -> mb_x < a -> mb_width ;
+ a -> mb_x ++ ) {
+ for ( a -> mb_y = 0 ;
+ a -> mb_y < a -> mb_height ;
+ a -> mb_y ++ ) {
+ if ( ( ret = decode_mb ( a , a -> block ) ) < 0 ) return ret ;
+ idct_put ( a , a -> mb_x , a -> mb_y ) ;
+ }
+ }
+ p -> quality = a -> qscale * FF_QP2LAMBDA ;
+ memset ( p -> qscale_table , a -> qscale , a -> mb_width ) ;
+ * picture = a -> picture ;
+ * got_frame = 1 ;
+ return ( get_bits_count ( & a -> gb ) + 31 ) / 32 * 4 ;
+ }","static int http_RecvPostMessage ( http_parser_t * parser , SOCKINFO * info , char * filename , struct SendInstruction * Instr ) {\n num_read = sock_read ( info , Buf , sizeof ( Buf ) , & Timeout ) ;\n if ( num_read > 0 ) {\n if ( membuffer_append ( & parser -> msg . msg , Buf , ( size_t ) num_read ) != 0 ) return HTTP_INTERNAL_SERVER_ERROR ;\n }\n return ret_code ;\n}","static void spl_filesystem_object_free_storage ( void * object TSRMLS_DC ) {\n spl_filesystem_object * intern = ( spl_filesystem_object * ) object ;\n if ( intern -> _path ) efree ( intern -> _path ) ;\n efree ( object ) ;\n}","1","1","1","0","Partial","0","B","Demo B phản ánh trực quan rủi ro thao tác bộ đệm không được kiểm soát kích thước đầy đủ trước khi thực hiện thao tác nhạy cảm."
+"7","4561548163749120103","1","static int decode_coefs ( VP9_COMMON * cm , const MACROBLOCKD * xd , PLANE_TYPE type , int16_t * dqcoeff , TX_SIZE tx_size , const int16_t * dq , int ctx , const int16_t * scan , const int16_t * nb , vp9_reader * r ) {
+ const int max_eob = 16 << ( tx_size << 1 ) ;
+ const FRAME_CONTEXT * const fc = & cm -> fc ;
+ FRAME_COUNTS * const counts = & cm -> counts ;
+ const int ref = is_inter_block ( & xd -> mi [ 0 ] -> mbmi ) ;
+ int band , c = 0 ;
+ const vp9_prob ( * coef_probs ) [ COEFF_CONTEXTS ] [ UNCONSTRAINED_NODES ] = fc -> coef_probs [ tx_size ] [ type ] [ ref ] ;
+ const vp9_prob * prob ;
+ unsigned int ( * coef_counts ) [ COEFF_CONTEXTS ] [ UNCONSTRAINED_NODES + 1 ] = counts -> coef [ tx_size ] [ type ] [ ref ] ;
+ unsigned int ( * eob_branch_count ) [ COEFF_CONTEXTS ] = counts -> eob_branch [ tx_size ] [ type ] [ ref ] ;
+ uint8_t token_cache [ 32 * 32 ] ;
+ const uint8_t * band_translate = get_band_translate ( tx_size ) ;
+ const int dq_shift = ( tx_size == TX_32X32 ) ;
+ int v ;
+ int16_t dqv = dq [ 0 ] ;
+ while ( c < max_eob ) {
+ int val ;
+ band = * band_translate ++ ;
+ prob = coef_probs [ band ] [ ctx ] ;
+ if ( ! cm -> frame_parallel_decoding_mode ) ++ eob_branch_count [ band ] [ ctx ] ;
+ if ( ! vp9_read ( r , prob [ EOB_CONTEXT_NODE ] ) ) {
+ INCREMENT_COUNT ( EOB_MODEL_TOKEN ) ;
+ break ;
+ }
+ while ( ! vp9_read ( r , prob [ ZERO_CONTEXT_NODE ] ) ) {
+ INCREMENT_COUNT ( ZERO_TOKEN ) ;
+ dqv = dq [ 1 ] ;
+ token_cache [ scan [ c ] ] = 0 ;
+ ++ c ;
+ if ( c >= max_eob ) return c ;
+ ctx = get_coef_context ( nb , token_cache , c ) ;
+ band = * band_translate ++ ;
+ prob = coef_probs [ band ] [ ctx ] ;
+ }
+ if ( ! vp9_read ( r , prob [ ONE_CONTEXT_NODE ] ) ) {
+ INCREMENT_COUNT ( ONE_TOKEN ) ;
+ WRITE_COEF_CONTINUE ( 1 , ONE_TOKEN ) ;
+ }
+ INCREMENT_COUNT ( TWO_TOKEN ) ;
+ prob = vp9_pareto8_full [ prob [ PIVOT_NODE ] - 1 ] ;
+ if ( ! vp9_read ( r , prob [ LOW_VAL_CONTEXT_NODE ] ) ) {
+ if ( ! vp9_read ( r , prob [ TWO_CONTEXT_NODE ] ) ) {
+ WRITE_COEF_CONTINUE ( 2 , TWO_TOKEN ) ;
+ }
+ if ( ! vp9_read ( r , prob [ THREE_CONTEXT_NODE ] ) ) {
+ WRITE_COEF_CONTINUE ( 3 , THREE_TOKEN ) ;
+ }
+ WRITE_COEF_CONTINUE ( 4 , FOUR_TOKEN ) ;
+ }
+ if ( ! vp9_read ( r , prob [ HIGH_LOW_CONTEXT_NODE ] ) ) {
+ if ( ! vp9_read ( r , prob [ CAT_ONE_CONTEXT_NODE ] ) ) {
+ val = CAT1_MIN_VAL ;
+ ADJUST_COEF ( vp9_cat1_prob [ 0 ] , 0 ) ;
+ WRITE_COEF_CONTINUE ( val , CATEGORY1_TOKEN ) ;
+ }
+ val = CAT2_MIN_VAL ;
+ ADJUST_COEF ( vp9_cat2_prob [ 0 ] , 1 ) ;
+ ADJUST_COEF ( vp9_cat2_prob [ 1 ] , 0 ) ;
+ WRITE_COEF_CONTINUE ( val , CATEGORY2_TOKEN ) ;
+ }
+ if ( ! vp9_read ( r , prob [ CAT_THREEFOUR_CONTEXT_NODE ] ) ) {
+ if ( ! vp9_read ( r , prob [ CAT_THREE_CONTEXT_NODE ] ) ) {
+ val = CAT3_MIN_VAL ;
+ ADJUST_COEF ( vp9_cat3_prob [ 0 ] , 2 ) ;
+ ADJUST_COEF ( vp9_cat3_prob [ 1 ] , 1 ) ;
+ ADJUST_COEF ( vp9_cat3_prob [ 2 ] , 0 ) ;
+ WRITE_COEF_CONTINUE ( val , CATEGORY3_TOKEN ) ;
+ }
+ val = CAT4_MIN_VAL ;
+ ADJUST_COEF ( vp9_cat4_prob [ 0 ] , 3 ) ;
+ ADJUST_COEF ( vp9_cat4_prob [ 1 ] , 2 ) ;
+ ADJUST_COEF ( vp9_cat4_
+
+/* ... [Cắt gọn do vượt quá 3000 ký tự] */","static int http_RecvPostMessage ( http_parser_t * parser , SOCKINFO * info , char * filename , struct SendInstruction * Instr ) {\n num_read = sock_read ( info , Buf , sizeof ( Buf ) , & Timeout ) ;\n return ret_code ;\n}","static void spl_filesystem_object_free_storage ( void * object TSRMLS_DC ) {\n spl_filesystem_object * intern = ( spl_filesystem_object * ) object ;\n if ( intern -> file_name ) efree ( intern -> file_name ) ;\n efree ( object ) ;\n}","Partial","Partial","1","1","Partial","0","B","Demo B liên quan an ninh hơn (cùng sink thao tác chuỗi/con trỏ và giải phóng tài nguyên phân tích cú pháp header)."
+"8","-2614908340588220483","1","TEST_P ( GLES2DecoderTestWithCHROMIUMPathRendering , MatrixLoadfCHROMIUMImmediateValidArgs ) {
+ cmds : : MatrixLoadfCHROMIUMImmediate & cmd = * GetImmediateAs < cmds : : MatrixLoadfCHROMIUMImmediate > ( ) ;
+ SpecializedSetup < cmds : : MatrixLoadfCHROMIUMImmediate , 0 > ( true ) ;
+ GLfloat temp [ 16 ] = {
+ 0 , }
+ ;
+ cmd . Init ( GL_PATH_PROJECTION_CHROMIUM , & temp [ 0 ] ) ;
+ EXPECT_CALL ( * gl_ , MatrixLoadfEXT ( GL_PATH_PROJECTION_CHROMIUM , reinterpret_cast < GLfloat * > ( ImmediateDataAddress ( & cmd ) ) ) ) ;
+ EXPECT_EQ ( error : : kNoError , ExecuteImmediateCmd ( cmd , sizeof ( temp ) ) ) ;
+ EXPECT_EQ ( GL_NO_ERROR , GetGLError ( ) ) ;
+ }","void ff_write_quant_matrix ( PutBitContext * pb , uint16_t * matrix ) {\n int i ;\n if ( matrix ) {\n for ( i = 0 ; i < 64 ; i ++ ) put_bits ( pb , 8 , matrix [ ff_zigzag_direct [ i ] ] ) ;\n }\n else put_bits ( pb , 1 , 0 ) ;\n}","static void spl_filesystem_object_free_storage ( void * object TSRMLS_DC ) {\n spl_filesystem_object * intern = ( spl_filesystem_object * ) object ;\n if ( intern -> _path ) efree ( intern -> _path ) ;\n efree ( object ) ;\n}","1","1","1","0","0","0","A","Demo A liên quan an ninh hơn (cùng sink ghi bitstream và bổ sung guard if (matrix) kiểm tra con trỏ trước khi dereference)."
+"9","4620577553943347649","1","static int yop_paint_block ( YopDecContext * s , int tag ) {
+ if ( s -> src_end - s -> srcptr < paint_lut [ tag ] [ 3 ] ) {
+ av_log ( s -> avctx , AV_LOG_ERROR , ""Packet too small.\n"" ) ;
+ return AVERROR_INVALIDDATA ;
+ }
+ s -> dstptr [ 0 ] = s -> srcptr [ 0 ] ;
+ s -> dstptr [ 1 ] = s -> srcptr [ paint_lut [ tag ] [ 0 ] ] ;
+ s -> dstptr [ s -> frame . linesize [ 0 ] ] = s -> srcptr [ paint_lut [ tag ] [ 1 ] ] ;
+ s -> dstptr [ s -> frame . linesize [ 0 ] + 1 ] = s -> srcptr [ paint_lut [ tag ] [ 2 ] ] ;
+ s -> srcptr += paint_lut [ tag ] [ 3 ] ;
+ return 0 ;
+ }","static void spl_filesystem_object_free_storage ( void * object TSRMLS_DC ) {\n spl_filesystem_object * intern = ( spl_filesystem_object * ) object ;\n if ( intern -> _path ) efree ( intern -> _path ) ;\n efree ( object ) ;\n}","int virLogParseOutputs ( const char * src , virLogOutputPtr * * outputs ) {\n char * * strings = NULL ;\n if ( ! ( strings = virStringSplitCount ( src , "" "" , 0 , & count ) ) ) goto cleanup ;\n cleanup : virStringListFree ( strings ) ;\n return ret ;\n}","1","Partial","Partial","1","1","1","A","Demo A cung cấp mẫu đối chứng dọn dẹp bộ nhớ động tổng quát, minh họa cơ chế phòng ngừa rò rỉ bộ nhớ hữu ích."
+"10","2930500905204315787","1","static __always_inline __le32 __cpu_to_le32p ( const __u32 * p ) {
+ return ( __le32 ) * p ;
+ }","static void fz_drop_link_imp ( fz_context * ctx , fz_storable * storable ) {\n fz_icclink * link = ( fz_icclink * ) storable ;\n fz_cmm_fin_link ( ctx , link ) ;\n fz_free ( ctx , link ) ;\n}","static void spl_filesystem_object_free_storage ( void * object TSRMLS_DC ) {\n spl_filesystem_object * intern = ( spl_filesystem_object * ) object ;\n if ( intern -> _path ) efree ( intern -> _path ) ;\n efree ( object ) ;\n}","1","1","0","1","Partial","0","Neither","Cả hai demo đều chưa minh họa được điều kiện an ninh bảo vệ chống lại use-after-free khi refcount của link chưa đạt 0."
+"11","-8029592471297395650","1","static void decode_flush ( AVCodecContext * avctx ) {
+ KgvContext * const c = avctx -> priv_data ;
+ if ( c -> prev . data [ 0 ] ) avctx -> release_buffer ( avctx , & c -> prev ) ;
+ }","static void pk_transaction_class_init ( PkTransactionClass * klass ) {\n g_type_class_add_private ( klass , sizeof ( PkTransactionPrivate ) ) ;\n}","static void spl_filesystem_object_free_storage ( void * object TSRMLS_DC ) {\n spl_filesystem_object * intern = ( spl_filesystem_object * ) object ;\n if ( intern -> _path ) efree ( intern -> _path ) ;\n efree ( object ) ;\n}","0","0","0","0","0","0","Equal","Hai demo đều có đặc trưng cú pháp và bảo vệ an ninh ở mức độ tương đương khi so sánh với hàm parse descriptor."
+"12","-4078760840682683657","1","static void read_intra_frame_mode_info ( VP9_COMMON * const cm , MACROBLOCKD * const xd , int mi_row , int mi_col , vp9_reader * r ) {
+ MODE_INFO * const mi = xd -> mi [ 0 ] ;
+ MB_MODE_INFO * const mbmi = & mi -> mbmi ;
+ const MODE_INFO * above_mi = xd -> mi [ - cm -> mi_stride ] ;
+ const MODE_INFO * left_mi = xd -> left_available ? xd -> mi [ - 1 ] : NULL ;
+ const BLOCK_SIZE bsize = mbmi -> sb_type ;
+ int i ;
+ mbmi -> segment_id = read_intra_segment_id ( cm , xd , mi_row , mi_col , r ) ;
+ mbmi -> skip = read_skip ( cm , xd , mbmi -> segment_id , r ) ;
+ mbmi -> tx_size = read_tx_size ( cm , xd , cm -> tx_mode , bsize , 1 , r ) ;
+ mbmi -> ref_frame [ 0 ] = INTRA_FRAME ;
+ mbmi -> ref_frame [ 1 ] = NONE ;
+ switch ( bsize ) {
+ case BLOCK_4X4 : for ( i = 0 ;
+ i < 4 ;
+ ++ i ) mi -> bmi [ i ] . as_mode = read_intra_mode ( r , get_y_mode_probs ( mi , above_mi , left_mi , i ) ) ;
+ mbmi -> mode = mi -> bmi [ 3 ] . as_mode ;
+ break ;
+ case BLOCK_4X8 : mi -> bmi [ 0 ] . as_mode = mi -> bmi [ 2 ] . as_mode = read_intra_mode ( r , get_y_mode_probs ( mi , above_mi , left_mi , 0 ) ) ;
+ mi -> bmi [ 1 ] . as_mode = mi -> bmi [ 3 ] . as_mode = mbmi -> mode = read_intra_mode ( r , get_y_mode_probs ( mi , above_mi , left_mi , 1 ) ) ;
+ break ;
+ case BLOCK_8X4 : mi -> bmi [ 0 ] . as_mode = mi -> bmi [ 1 ] . as_mode = read_intra_mode ( r , get_y_mode_probs ( mi , above_mi , left_mi , 0 ) ) ;
+ mi -> bmi [ 2 ] . as_mode = mi -> bmi [ 3 ] . as_mode = mbmi -> mode = read_intra_mode ( r , get_y_mode_probs ( mi , above_mi , left_mi , 2 ) ) ;
+ break ;
+ default : mbmi -> mode = read_intra_mode ( r , get_y_mode_probs ( mi , above_mi , left_mi , 0 ) ) ;
+ }
+ mbmi -> uv_mode = read_intra_mode ( r , vp9_kf_uv_mode_prob [ mbmi -> mode ] ) ;
+ }","void ff_write_quant_matrix ( PutBitContext * pb , uint16_t * matrix ) {\n if ( matrix ) {\n put_bits ( pb , 1 , 1 ) ;\n }\n else put_bits ( pb , 1 , 0 ) ;\n}","static void spl_filesystem_object_free_storage ( void * object TSRMLS_DC ) {\n spl_filesystem_object * intern = ( spl_filesystem_object * ) object ;\n efree ( object ) ;\n}","1","1","1","0","0","0","A","Demo A liên quan an ninh hơn (cùng sink [bitwise_arithmetic, pointer_dereference]; cùng guard [null_pointer_check])."
+"13","-2971164434690241379","1","static int stp_print_mstp_bpdu ( netdissect_options * ndo , const struct stp_bpdu_ * stp_bpdu , u_int length ) {
+ const u_char * ptr ;
+ uint16_t v3len ;
+ uint16_t len ;
+ uint16_t msti ;
+ u_int offset ;
+ ptr = ( const u_char * ) stp_bpdu ;
+ ND_PRINT ( ( ndo , "", CIST Flags [%s], length %u"" , bittok2str ( stp_bpdu_flag_values , ""none"" , stp_bpdu -> flags ) , length ) ) ;
+ if ( ! ndo -> ndo_vflag ) {
+ return 1 ;
+ }
+ ND_PRINT ( ( ndo , ""\n\tport-role %s, "" , tok2str ( rstp_obj_port_role_values , ""Unknown"" , RSTP_EXTRACT_PORT_ROLE ( stp_bpdu -> flags ) ) ) ) ;
+ ND_TCHECK ( stp_bpdu -> root_path_cost ) ;
+ ND_PRINT ( ( ndo , ""CIST root-id %s, CIST ext-pathcost %u"" , stp_print_bridge_id ( ( const u_char * ) & stp_bpdu -> root_id ) , EXTRACT_32BITS ( & stp_bpdu -> root_path_cost ) ) ) ;
+ ND_TCHECK ( stp_bpdu -> bridge_id ) ;
+ ND_PRINT ( ( ndo , ""\n\tCIST regional-root-id %s, "" , stp_print_bridge_id ( ( const u_char * ) & stp_bpdu -> bridge_id ) ) ) ;
+ ND_TCHECK ( stp_bpdu -> port_id ) ;
+ ND_PRINT ( ( ndo , ""CIST port-id %04x,"" , EXTRACT_16BITS ( & stp_bpdu -> port_id ) ) ) ;
+ ND_TCHECK ( stp_bpdu -> forward_delay ) ;
+ ND_PRINT ( ( ndo , ""\n\tmessage-age %.2fs, max-age %.2fs"" "", hello-time %.2fs, forwarding-delay %.2fs"" , ( float ) EXTRACT_16BITS ( & stp_bpdu -> message_age ) / STP_TIME_BASE , ( float ) EXTRACT_16BITS ( & stp_bpdu -> max_age ) / STP_TIME_BASE , ( float ) EXTRACT_16BITS ( & stp_bpdu -> hello_time ) / STP_TIME_BASE , ( float ) EXTRACT_16BITS ( & stp_bpdu -> forward_delay ) / STP_TIME_BASE ) ) ;
+ ND_TCHECK_16BITS ( ptr + MST_BPDU_VER3_LEN_OFFSET ) ;
+ ND_PRINT ( ( ndo , ""\n\tv3len %d, "" , EXTRACT_16BITS ( ptr + MST_BPDU_VER3_LEN_OFFSET ) ) ) ;
+ ND_TCHECK_32BITS ( ptr + MST_BPDU_CONFIG_DIGEST_OFFSET + 12 ) ;
+ ND_PRINT ( ( ndo , ""MCID Name "" ) ) ;
+ if ( fn_printzp ( ndo , ptr + MST_BPDU_CONFIG_NAME_OFFSET , 32 , ndo -> ndo_snapend ) ) goto trunc ;
+ ND_PRINT ( ( ndo , "", rev %u,"" ""\n\t\tdigest %08x%08x%08x%08x, "" , EXTRACT_16BITS ( ptr + MST_BPDU_CONFIG_NAME_OFFSET + 32 ) , EXTRACT_32BITS ( ptr + MST_BPDU_CONFIG_DIGEST_OFFSET ) , EXTRACT_32BITS ( ptr + MST_BPDU_CONFIG_DIGEST_OFFSET + 4 ) , EXTRACT_32BITS ( ptr + MST_BPDU_CONFIG_DIGEST_OFFSET + 8 ) , EXTRACT_32BITS ( ptr + MST_BPDU_CONFIG_DIGEST_OFFSET + 12 ) ) ) ;
+ ND_TCHECK_32BITS ( ptr + MST_BPDU_CIST_INT_PATH_COST_OFFSET ) ;
+ ND_PRINT ( ( ndo , ""CIST int-root-pathcost %u,"" , EXTRACT_32BITS ( ptr + MST_BPDU_CIST_INT_PATH_COST_OFFSET ) ) ) ;
+ ND_TCHECK_BRIDGE_ID ( ptr + MST_BPDU_CIST_BRIDGE_ID_OFFSET ) ;
+ ND_PRINT ( ( ndo , ""\n\tCIST bridge-id %s, "" , stp_print_bridge_id ( ptr + MST_BPDU_CIST_BRIDGE_ID_OFFSET ) ) ) ;
+ ND_TCHECK ( ptr [ MST_BPDU_CIST_REMAIN_HOPS_OFFSET ] ) ;
+ ND_PRINT ( ( ndo , ""CIST remaining-hops %d"" , ptr [ MST_BPDU_CIST_REMAIN_HOPS_OFFSET ] ) ) ;
+ ND_TCHECK_16BITS ( ptr + MST_BPDU_VER3_LEN_OFFSET ) ;
+ v3len = EXTRACT_16BITS ( ptr + MST_BPDU_VER3_LEN_OFFSET ) ;
+ if ( v3len > MST_BPDU_CONFIG_INFO_LENGTH ) {
+ len = v3len - MST_BPDU_CONFIG_INFO_LENGTH ;
+ offset = MST_BPDU_MSTI_OF
+
+/* ... [Cắt gọn do vượt quá 3000 ký tự] */","void fz_fin_cached_color_converter ( fz_context * ctx , fz_color_converter * cc_ ) {\n if ( cc_ == NULL ) return ;\n cc = cc_ -> opaque ;\n if ( cc == NULL ) return ;\n fz_free ( ctx , cc ) ;\n}","static void spl_filesystem_object_free_storage ( void * object TSRMLS_DC ) {\n spl_filesystem_object * intern = ( spl_filesystem_object * ) object ;\n if ( intern -> _path ) efree ( intern -> _path ) ;\n efree ( object ) ;\n}","1","1","1","1","Partial","0","B","Demo B thể hiện cấu trúc phân cấp giải phóng đối tượng lưu trữ, cung cấp mẫu hình tương thích cho phân tích vòng đời tài nguyên."
+"14","1470723493451072803","1","static int decode_frame ( AVCodecContext * avctx , void * data , int * got_frame , AVPacket * avpkt ) {
+ const uint8_t * buf = avpkt -> data ;
+ int buf_size = avpkt -> size ;
+ VideoXLContext * const a = avctx -> priv_data ;
+ AVFrame * const p = & a -> pic ;
+ uint8_t * Y , * U , * V ;
+ int i , j , ret ;
+ int stride ;
+ uint32_t val ;
+ int y0 , y1 , y2 , y3 = 0 , c0 = 0 , c1 = 0 ;
+ if ( p -> data [ 0 ] ) avctx -> release_buffer ( avctx , p ) ;
+ p -> reference = 0 ;
+ if ( ( ret = ff_get_buffer ( avctx , p ) ) < 0 ) {
+ av_log ( avctx , AV_LOG_ERROR , ""get_buffer() failed\n"" ) ;
+ return ret ;
+ }
+ p -> pict_type = AV_PICTURE_TYPE_I ;
+ p -> key_frame = 1 ;
+ Y = a -> pic . data [ 0 ] ;
+ U = a -> pic . data [ 1 ] ;
+ V = a -> pic . data [ 2 ] ;
+ stride = avctx -> width - 4 ;
+ if ( buf_size < avctx -> width * avctx -> height ) {
+ av_log ( avctx , AV_LOG_ERROR , ""Packet is too small\n"" ) ;
+ return AVERROR_INVALIDDATA ;
+ }
+ for ( i = 0 ;
+ i < avctx -> height ;
+ i ++ ) {
+ buf += stride ;
+ for ( j = 0 ;
+ j < avctx -> width ;
+ j += 4 ) {
+ val = AV_RL32 ( buf ) ;
+ buf -= 4 ;
+ val = ( ( val >> 16 ) & 0xFFFF ) | ( ( val & 0xFFFF ) << 16 ) ;
+ if ( ! j ) y0 = ( val & 0x1F ) << 2 ;
+ else y0 = y3 + xl_table [ val & 0x1F ] ;
+ val >>= 5 ;
+ y1 = y0 + xl_table [ val & 0x1F ] ;
+ val >>= 5 ;
+ y2 = y1 + xl_table [ val & 0x1F ] ;
+ val >>= 6 ;
+ y3 = y2 + xl_table [ val & 0x1F ] ;
+ val >>= 5 ;
+ if ( ! j ) c0 = ( val & 0x1F ) << 2 ;
+ else c0 += xl_table [ val & 0x1F ] ;
+ val >>= 5 ;
+ if ( ! j ) c1 = ( val & 0x1F ) << 2 ;
+ else c1 += xl_table [ val & 0x1F ] ;
+ Y [ j + 0 ] = y0 << 1 ;
+ Y [ j + 1 ] = y1 << 1 ;
+ Y [ j + 2 ] = y2 << 1 ;
+ Y [ j + 3 ] = y3 << 1 ;
+ U [ j >> 2 ] = c0 << 1 ;
+ V [ j >> 2 ] = c1 << 1 ;
+ }
+ buf += avctx -> width + 4 ;
+ Y += a -> pic . linesize [ 0 ] ;
+ U += a -> pic . linesize [ 1 ] ;
+ V += a -> pic . linesize [ 2 ] ;
+ }
+ * got_frame = 1 ;
+ * ( AVFrame * ) data = a -> pic ;
+ return buf_size ;
+ }","void vp9_set_svc ( VP9_COMP * cpi , int use_svc ) {\n cpi -> use_svc = use_svc ;\n return ;\n}","static void spl_filesystem_object_free_storage ( void * object TSRMLS_DC ) {\n spl_filesystem_object * intern = ( spl_filesystem_object * ) object ;\n if ( intern -> _path ) efree ( intern -> _path ) ;\n efree ( object ) ;\n}","Partial","1","0","0","0","0","B","Demo B phản ánh phương thức giải phóng storage sau quá trình cấu hình, bổ trợ tốt cho việc đánh giá độ an toàn của chu trình cấp phát."
+"15","8952659721822029396","1","static int dvvideo_decode_frame ( AVCodecContext * avctx , void * data , int * got_frame , AVPacket * avpkt ) {
+ uint8_t * buf = avpkt -> data ;
+ int buf_size = avpkt -> size ;
+ DVVideoContext * s = avctx -> priv_data ;
+ const uint8_t * vsc_pack ;
+ int apt , is16_9 ;
+ s -> sys = avpriv_dv_frame_profile ( s -> sys , buf , buf_size ) ;
+ if ( ! s -> sys || buf_size < s -> sys -> frame_size || ff_dv_init_dynamic_tables ( s -> sys ) ) {
+ av_log ( avctx , AV_LOG_ERROR , ""could not find dv frame profile\n"" ) ;
+ return - 1 ;
+ }
+ if ( s -> picture . data [ 0 ] ) avctx -> release_buffer ( avctx , & s -> picture ) ;
+ s -> picture . reference = 0 ;
+ s -> picture . key_frame = 1 ;
+ s -> picture . pict_type = AV_PICTURE_TYPE_I ;
+ avctx -> pix_fmt = s -> sys -> pix_fmt ;
+ avctx -> time_base = s -> sys -> time_base ;
+ avcodec_set_dimensions ( avctx , s -> sys -> width , s -> sys -> height ) ;
+ if ( ff_get_buffer ( avctx , & s -> picture ) < 0 ) {
+ av_log ( avctx , AV_LOG_ERROR , ""get_buffer() failed\n"" ) ;
+ return - 1 ;
+ }
+ s -> picture . interlaced_frame = 1 ;
+ s -> picture . top_field_first = 0 ;
+ s -> buf = buf ;
+ avctx -> execute ( avctx , dv_decode_video_segment , s -> sys -> work_chunks , NULL , dv_work_pool_size ( s -> sys ) , sizeof ( DVwork_chunk ) ) ;
+ emms_c ( ) ;
+ * got_frame = 1 ;
+ * ( AVFrame * ) data = s -> picture ;
+ vsc_pack = buf + 80 * 5 + 48 + 5 ;
+ if ( * vsc_pack == dv_video_control ) {
+ apt = buf [ 4 ] & 0x07 ;
+ is16_9 = ( vsc_pack && ( ( vsc_pack [ 2 ] & 0x07 ) == 0x02 || ( ! apt && ( vsc_pack [ 2 ] & 0x07 ) == 0x07 ) ) ) ;
+ avctx -> sample_aspect_ratio = s -> sys -> sar [ is16_9 ] ;
+ }
+ return s -> sys -> frame_size ;
+ }","static void pk_transaction_class_init ( PkTransactionClass * klass ) {\n GObjectClass * object_class = G_OBJECT_CLASS ( klass ) ;\n object_class -> finalize = pk_transaction_finalize ;\n}","static void spl_filesystem_object_free_storage ( void * object TSRMLS_DC ) {\n spl_filesystem_object * intern = ( spl_filesystem_object * ) object ;\n if ( intern -> _path ) efree ( intern -> _path ) ;\n efree ( object ) ;\n}","0","Partial","0","1","0","0","Equal","Cả hai demo đều cung cấp ngữ nghĩa an ninh một phần: Demo A liên quan đến vòng đời khởi tạo/finalize của GObject, Demo B liên quan đến giải phóng bộ nhớ dynamic."
+"16","1286774465219423144","1","static int jbig2_decode_mmr_line ( Jbig2MmrCtx * mmr , const byte * ref , byte * dst ) {
+ int a0 = - 1 ;
+ int a1 , a2 , b1 , b2 ;
+ int c = 0 ;
+ while ( 1 ) {
+ uint32_t word = mmr -> word ;
+ if ( a0 >= mmr -> width ) break ;
+ if ( ( word >> ( 32 - 3 ) ) == 1 ) {
+ int white_run , black_run ;
+ jbig2_decode_mmr_consume ( mmr , 3 ) ;
+ if ( a0 == - 1 ) a0 = 0 ;
+ if ( c == 0 ) {
+ white_run = jbig2_decode_get_run ( mmr , jbig2_mmr_white_decode , 8 ) ;
+ black_run = jbig2_decode_get_run ( mmr , jbig2_mmr_black_decode , 7 ) ;
+ a1 = a0 + white_run ;
+ a2 = a1 + black_run ;
+ if ( a1 > mmr -> width ) a1 = mmr -> width ;
+ if ( a2 > mmr -> width ) a2 = mmr -> width ;
+ if ( a2 < a1 || a1 < 0 ) return - 1 ;
+ jbig2_set_bits ( dst , a1 , a2 ) ;
+ a0 = a2 ;
+ }
+ else {
+ black_run = jbig2_decode_get_run ( mmr , jbig2_mmr_black_decode , 7 ) ;
+ white_run = jbig2_decode_get_run ( mmr , jbig2_mmr_white_decode , 8 ) ;
+ a1 = a0 + black_run ;
+ a2 = a1 + white_run ;
+ if ( a1 > mmr -> width ) a1 = mmr -> width ;
+ if ( a2 > mmr -> width ) a2 = mmr -> width ;
+ if ( a1 < a0 || a0 < 0 ) return - 1 ;
+ jbig2_set_bits ( dst , a0 , a1 ) ;
+ a0 = a2 ;
+ }
+ }
+ else if ( ( word >> ( 32 - 4 ) ) == 1 ) {
+ jbig2_decode_mmr_consume ( mmr , 4 ) ;
+ b1 = jbig2_find_changing_element_of_color ( ref , a0 , mmr -> width , ! c ) ;
+ b2 = jbig2_find_changing_element ( ref , b1 , mmr -> width ) ;
+ if ( c ) {
+ if ( b2 < a0 || a0 < 0 ) return - 1 ;
+ jbig2_set_bits ( dst , a0 , b2 ) ;
+ }
+ a0 = b2 ;
+ }
+ else if ( ( word >> ( 32 - 1 ) ) == 1 ) {
+ jbig2_decode_mmr_consume ( mmr , 1 ) ;
+ b1 = jbig2_find_changing_element_of_color ( ref , a0 , mmr -> width , ! c ) ;
+ if ( c ) {
+ if ( b1 < a0 || a0 < 0 ) return - 1 ;
+ jbig2_set_bits ( dst , a0 , b1 ) ;
+ }
+ a0 = b1 ;
+ c = ! c ;
+ }
+ else if ( ( word >> ( 32 - 3 ) ) == 3 ) {
+ jbig2_decode_mmr_consume ( mmr , 3 ) ;
+ b1 = jbig2_find_changing_element_of_color ( ref , a0 , mmr -> width , ! c ) ;
+ if ( b1 + 1 > mmr -> width ) break ;
+ if ( c ) {
+ if ( b1 + 1 < a0 || a0 < 0 ) return - 1 ;
+ jbig2_set_bits ( dst , a0 , b1 + 1 ) ;
+ }
+ a0 = b1 + 1 ;
+ c = ! c ;
+ }
+ else if ( ( word >> ( 32 - 6 ) ) == 3 ) {
+ jbig2_decode_mmr_consume ( mmr , 6 ) ;
+ b1 = jbig2_find_changing_element_of_color ( ref , a0 , mmr -> width , ! c ) ;
+ if ( b1 + 2 > mmr -> width ) break ;
+ if ( c ) {
+ if ( b1 + 2 < a0 || a0 < 0 ) return - 1 ;
+ jbig2_set_bits ( dst , a0 , b1 + 2 ) ;
+ }
+ a0 = b1 + 2 ;
+ c = ! c ;
+ }
+ else if ( ( word >> ( 32 - 7 ) ) == 3 ) {
+ jbig2_decode_mmr_consume ( mmr , 7 ) ;
+ b1 = jbig2_find_changing_element_of_color ( ref , a0 , mmr -> width , ! c ) ;
+ if ( b1 + 3 > mmr -> width ) break ;
+ if ( c ) {
+ if ( b1 + 3 < a0 || a0 < 0 ) return - 1 ;
+ jbig2_set_bits ( dst , a0 , b1 + 3 ) ;
+ }
+ a0 = b1 + 3 ;
+ c = ! c ;
+ }
+ else if ( ( word >> ( 32 - 3 ) ) == 2 ) {
+ jbig2_decode_mmr_consume ( mmr , 3 ) ;
+ b1 = jbig2_find_changing_element_of_color ( ref , a0 , mmr -> width , ! c ) ;
+ if ( b1 - 1 < 0 ) break ;
+ if ( c ) {
+ if ( b1 - 1 < a0 || a0 < 0 ) return - 1 ;
+ jbig2_set_bits ( dst , a0 , b1 - 1 
+
+/* ... [Cắt gọn do vượt quá 3000 ký tự] */","void fz_fin_cached_color_converter ( fz_context * ctx , fz_color_converter * cc_ ) {\n if ( cc_ == NULL ) return ;\n fz_free ( ctx , cc ) ;\n}","static void spl_filesystem_object_free_storage ( void * object TSRMLS_DC ) {\n spl_filesystem_object * intern = ( spl_filesystem_object * ) object ;\n if ( intern -> oth_handler && intern -> oth_handler -> dtor ) {\n intern -> oth_handler -> dtor ( intern TSRMLS_CC ) ;\n }\n efree ( object ) ;\n}","Partial","Partial","1","1","Partial","1","B","Demo B liên quan an ninh hơn (cùng sink gọi callback dtor và giải phóng đối tượng qua con trỏ hàm)."
+"17","-16551315108292821","1","gcry_mpi_t gcry_sexp_nth_mpi ( gcry_sexp_t list , int number , int mpifmt ) {
+ const char * s ;
+ size_t n ;
+ gcry_mpi_t a ;
+ if ( ! mpifmt ) mpifmt = GCRYMPI_FMT_STD ;
+ s = sexp_nth_data ( list , number , & n ) ;
+ if ( ! s ) return NULL ;
+ if ( gcry_mpi_scan ( & a , mpifmt , s , n , NULL ) ) return NULL ;
+ return a ;
+ }","static void spl_filesystem_object_free_storage ( void * object TSRMLS_DC ) {\n spl_filesystem_object * intern = ( spl_filesystem_object * ) object ;\n efree ( object ) ;\n}","static int http_RecvPostMessage ( http_parser_t * parser , SOCKINFO * info , char * filename , struct SendInstruction * Instr ) {\n num_read = sock_read ( info , Buf , sizeof ( Buf ) , & Timeout ) ;\n return ret_code ;\n}","0","0","0","1","Partial","1","Equal","Demo A mang lại mẫu hình thu hồi bộ nhớ sau giao dịch, Demo B có cùng đối tượng SOCKINFO; mức độ liên quan an ninh tổng thể tương đương."
+"18","8425497811998776592","1","int petite_inflate2x_1to9 ( char * buf , uint32_t minrva , uint32_t bufsz , struct cli_exe_section * sections , unsigned int sectcount , uint32_t Imagebase , uint32_t pep , int desc , int version , uint32_t ResRva , uint32_t ResSize ) {
+ char * adjbuf = buf - minrva ;
+ char * packed = NULL ;
+ uint32_t thisrva = 0 , bottom = 0 , enc_ep = 0 , irva = 0 , workdone = 0 , grown = 0x355 , skew = 0x35 ;
+ int j = 0 , oob , mangled = 0 , check4resources = 0 ;
+ struct cli_exe_section * usects = NULL ;
+ void * tmpsct = NULL ;
+ if ( version == 2 ) packed = adjbuf + sections [ sectcount - 1 ] . rva + 0x1b8 ;
+ if ( version == 1 ) {
+ packed = adjbuf + sections [ sectcount - 1 ] . rva + 0x178 ;
+ grown = 0x323 ;
+ skew = 0x34 ;
+ }
+ while ( 1 ) {
+ char * ssrc , * ddst ;
+ uint32_t size , srva ;
+ int backbytes , oldback , backsize , addsize ;
+ if ( ! CLI_ISCONTAINED ( buf , bufsz , packed , 4 ) ) {
+ if ( usects ) free ( usects ) ;
+ return 1 ;
+ }
+ srva = cli_readint32 ( packed ) ;
+ if ( ! srva ) {
+ int t , upd = 1 ;
+ if ( j <= 0 ) return 1 ;
+ while ( upd ) {
+ upd = 0 ;
+ for ( t = 0 ;
+ t < j - 1 ;
+ t ++ ) {
+ uint32_t trva , trsz , tvsz ;
+ if ( usects [ t ] . rva <= usects [ t + 1 ] . rva ) continue ;
+ trva = usects [ t ] . rva ;
+ trsz = usects [ t ] . rsz ;
+ tvsz = usects [ t ] . vsz ;
+ usects [ t ] . rva = usects [ t + 1 ] . rva ;
+ usects [ t ] . rsz = usects [ t + 1 ] . rsz ;
+ usects [ t ] . vsz = usects [ t + 1 ] . vsz ;
+ usects [ t + 1 ] . rva = trva ;
+ usects [ t + 1 ] . rsz = trsz ;
+ usects [ t + 1 ] . vsz = tvsz ;
+ upd = 1 ;
+ }
+ }
+ for ( t = 0 ;
+ t < j - 1 ;
+ t ++ ) {
+ if ( usects [ t ] . vsz != usects [ t + 1 ] . rva - usects [ t ] . rva ) usects [ t ] . vsz = usects [ t + 1 ] . rva - usects [ t ] . rva ;
+ }
+ if ( enc_ep ) {
+ uint32_t virtaddr = pep + 5 + Imagebase , tmpep ;
+ int rndm = 0 , dummy = 1 ;
+ char * thunk = adjbuf + irva ;
+ char * imports ;
+ if ( version == 2 ) {
+ while ( dummy && CLI_ISCONTAINED ( buf , bufsz , thunk , 4 ) ) {
+ uint32_t api ;
+ if ( ! cli_readint32 ( thunk ) ) {
+ workdone = 1 ;
+ break ;
+ }
+ imports = adjbuf + cli_readint32 ( thunk ) ;
+ thunk += 4 ;
+ dummy = 0 ;
+ while ( CLI_ISCONTAINED ( buf , bufsz , imports , 4 ) ) {
+ dummy = 0 ;
+ imports += 4 ;
+ if ( ! ( api = cli_readint32 ( imports - 4 ) ) ) {
+ dummy = 1 ;
+ break ;
+ }
+ if ( ( api != ( api | 0x80000000 ) ) && mangled && -- rndm < 0 ) {
+ api = virtaddr ;
+ virtaddr += 5 ;
+ rndm = virtaddr & 7 ;
+ }
+ else {
+ api = 0xbff01337 ;
+ }
+ if ( sections [ sectcount - 1 ] . rva + Imagebase < api ) enc_ep -- ;
+ if ( api < virtaddr ) enc_ep -- ;
+ tmpep = ( enc_ep & 0xfffffff8 ) >> 3 & 0x1fffffff ;
+ enc_ep = ( enc_ep & 7 ) << 29 | tmpep ;
+ }
+ }
+ }
+ else workdone = 1 ;
+ enc_ep = pep + 5 + enc_ep ;
+ if ( workdone == 1 ) {
+ cli_dbgmsg ( ""Petite: Old EP: %x\n"" , enc_ep ) ;
+ }
+ else {
+ enc_ep = usects [ 0 ] . rva ;
+ cli_dbgmsg ( ""Petite: In troubles while attempting to decrypt old EP, using bogus %x\n"" , enc_ep ) ;
+ }
+ }
+ for ( t = 0 ;
+ t < j ;
+ t ++ ) {
+ usects [ t ] . raw = ( t > 0 ) ? ( usects [ t -
+
+/* ... [Cắt gọn do vượt quá 3000 ký tự] */","static int check_bits_for_superframe ( GetBitContext * orig_gb , WMAVoiceContext * s ) {\n init_get_bits ( gb , orig_gb -> buffer , orig_gb -> size_in_bits ) ;\n if ( get_bits_left ( gb ) < 14 ) return 1 ;\n return 0 ;\n}","static void spl_filesystem_object_free_storage ( void * object TSRMLS_DC ) {\n spl_filesystem_object * intern = ( spl_filesystem_object * ) object ;\n efree ( object ) ;\n}","1","Partial","1","0","0","0","A","Demo A liên quan an ninh hơn (cùng sink [bitwise_arithmetic, pointer_dereference]; cùng guard [numerical_bounds_check]; biến chung (orig_gb, gb))."
+"19","-755883256379441954","1","void vp9_ ## type ## _predictor_ ## size ## x ## size ## _c ( uint8_t * dst , ptrdiff_t stride , const uint8_t * above , const uint8_t * left ) {
+ type ## _predictor ( dst , stride , size , above , left ) ;
+ }
+ # define intra_pred_allsizes ( type ) intra_pred_sized ( type , 4 ) intra_pred_sized ( type , 8 ) intra_pred_sized ( type , 16 ) intra_pred_sized ( type , 32 ) static INLINE void d207_predictor ( uint8_t * dst , ptrdiff_t stride , int bs , const uint8_t * above , const uint8_t * left ) {
+ int r , c ;
+ ( void ) above ;
+ for ( r = 0 ;
+ r < bs - 1 ;
+ ++ r ) dst [ r * stride ] = ROUND_POWER_OF_TWO ( left [ r ] + left [ r + 1 ] , 1 ) ;
+ dst [ ( bs - 1 ) * stride ] = left [ bs - 1 ] ;
+ dst ++ ;
+ for ( r = 0 ;
+ r < bs - 2 ;
+ ++ r ) dst [ r * stride ] = ROUND_POWER_OF_TWO ( left [ r ] + left [ r + 1 ] * 2 + left [ r + 2 ] , 2 ) ;
+ dst [ ( bs - 2 ) * stride ] = ROUND_POWER_OF_TWO ( left [ bs - 2 ] + left [ bs - 1 ] * 3 , 2 ) ;
+ dst [ ( bs - 1 ) * stride ] = left [ bs - 1 ] ;
+ dst ++ ;
+ for ( c = 0 ;
+ c < bs - 2 ;
+ ++ c ) dst [ ( bs - 1 ) * stride + c ] = left [ bs - 1 ] ;
+ for ( r = bs - 2 ;
+ r >= 0 ;
+ -- r ) for ( c = 0 ;
+ c < bs - 2 ;
+ ++ c ) dst [ r * stride + c ] = dst [ ( r + 1 ) * stride + c - 2 ] ;
+ }
+ intra_pred_allsizes ( d207 ) static INLINE void d63_predictor ( uint8_t * dst , ptrdiff_t stride , int bs , const uint8_t * above , const uint8_t * left ) {
+ int r , c ;
+ ( void ) left ;
+ for ( r = 0 ;
+ r < bs ;
+ ++ r ) {
+ for ( c = 0 ;
+ c < bs ;
+ ++ c ) dst [ c ] = r & 1 ? ROUND_POWER_OF_TWO ( above [ r / 2 + c ] + above [ r / 2 + c + 1 ] * 2 + above [ r / 2 + c + 2 ] , 2 ) : ROUND_POWER_OF_TWO ( above [ r / 2 + c ] + above [ r / 2 + c + 1 ] , 1 ) ;
+ dst += stride ;
+ }
+ }
+ intra_pred_allsizes ( d63 ) static INLINE void d45_predictor ( uint8_t * dst , ptrdiff_t stride , int bs , const uint8_t * above , const uint8_t * left ) {
+ int r , c ;
+ ( void ) left ;
+ for ( r = 0 ;
+ r < bs ;
+ ++ r ) {
+ for ( c = 0 ;
+ c < bs ;
+ ++ c ) dst [ c ] = r + c + 2 < bs * 2 ? ROUND_POWER_OF_TWO ( above [ r + c ] + above [ r + c + 1 ] * 2 + above [ r + c + 2 ] , 2 ) : above [ bs * 2 - 1 ] ;
+ dst += stride ;
+ }
+ }
+ intra_pred_allsizes ( d45 ) static INLINE void d117_predictor ( uint8_t * dst , ptrdiff_t stride , int bs , const uint8_t * above , const uint8_t * left ) {
+ int r , c ;
+ for ( c = 0 ;
+ c < bs ;
+ c ++ ) dst [ c ] = ROUND_POWER_OF_TWO ( above [ c - 1 ] + above [ c ] , 1 ) ;
+ dst += stride ;
+ dst [ 0 ] = ROUND_POWER_OF_TWO ( left [ 0 ] + above [ - 1 ] * 2 + above [ 0 ] , 2 ) ;
+ for ( c = 1 ;
+ c < bs ;
+ c ++ ) dst [ c ] = ROUND_POWER_OF_TWO ( above [ c - 2 ] + above [ c - 1 ] * 2 + above [ c ] , 2 ) ;
+ dst += stride ;
+ dst [ 0 ] = ROUND_POWER_OF_TWO ( above [ - 1 ] + left [ 0 ] * 2 + left [ 1 ] , 2 ) ;
+ for ( r = 3 ;
+ r < bs ;
+ ++ r ) dst [ ( r - 2 ) * stride ] = ROUND_POWER_OF_TWO ( left [ r - 3 ] + left [ r - 2 ] * 2 + left [ r - 1 ] , 2 ) ;
+ for ( r = 2 ;
+ r < bs ;
+ ++ r ) {
+ for ( c = 1 ;
+ c < bs ;
+ c ++ ) dst [ c ] = dst [ - 2 * stride + c - 1 ] ;
+ dst 
+
+/* ... [Cắt gọn do vượt quá 3000 ký tự] */","static void spl_filesystem_object_free_storage ( void * object TSRMLS_DC ) {\n spl_filesystem_object * intern = ( spl_filesystem_object * ) object ;\n if ( intern -> _path ) efree ( intern -> _path ) ;\n efree ( object ) ;\n}","int virLogParseOutputs ( const char * src , virLogOutputPtr * * outputs ) {\n size_t noutputs = 0 ;\n if ( ! ( strings = virStringSplitCount ( src , "" "" , 0 , & count ) ) ) goto cleanup ;\n cleanup : virStringListFree ( strings ) ;\n return ret ;\n}","0","0","0","Partial","1","1","B","Demo B chia sẻ chung kiểu cấu trúc virLogOutputPtr và noutputs, phù hợp hơn về mặt biến và ngữ cảnh quản lý logging."
+"20","-4765077557530511796","1","static int ogg_read_header ( AVFormatContext * s ) {
+ struct ogg * ogg = s -> priv_data ;
+ int ret , i ;
+ ogg -> curidx = - 1 ;
+ do {
+ ret = ogg_packet ( s , NULL , NULL , NULL , NULL ) ;
+ if ( ret < 0 ) {
+ ogg_read_close ( s ) ;
+ return ret ;
+ }
+ }
+ while ( ! ogg -> headers ) ;
+ av_log ( s , AV_LOG_TRACE , ""found headers\n"" ) ;
+ for ( i = 0 ;
+ i < ogg -> nstreams ;
+ i ++ ) {
+ struct ogg_stream * os = ogg -> streams + i ;
+ if ( ogg -> streams [ i ] . header < 0 ) {
+ av_log ( s , AV_LOG_ERROR , ""Header parsing failed for stream %d\n"" , i ) ;
+ ogg -> streams [ i ] . codec = NULL ;
+ }
+ else if ( os -> codec && os -> nb_header < os -> codec -> nb_header ) {
+ av_log ( s , AV_LOG_WARNING , ""Headers mismatch for stream %d: "" ""expected %d received %d.\n"" , i , os -> codec -> nb_header , os -> nb_header ) ;
+ if ( s -> error_recognition & AV_EF_EXPLODE ) return AVERROR_INVALIDDATA ;
+ }
+ if ( os -> start_granule != OGG_NOGRANULE_VALUE ) os -> lastpts = s -> streams [ i ] -> start_time = ogg_gptopts ( s , i , os -> start_granule , NULL ) ;
+ }
+ ret = ogg_get_length ( s ) ;
+ if ( ret < 0 ) {
+ ogg_read_close ( s ) ;
+ return ret ;
+ }
+ return 0 ;
+ }","static void spl_filesystem_object_free_storage ( void * object TSRMLS_DC ) {\n spl_filesystem_object * intern = ( spl_filesystem_object * ) object ;\n efree ( object ) ;\n}","void ff_write_quant_matrix ( PutBitContext * pb , uint16_t * matrix ) {\n if ( matrix ) put_bits ( pb , 1 , 1 ) ;\n}","0","0","0","0","Partial","0","Neither","Cả hai demo đều không có guard hoặc sink tương đương về xử lý mảng trực tiếp cho Target."
+"21","1274314752608585941","1","IN_PROC_BROWSER_TEST_F ( SingleClientSessionsSyncTest , TimestampMatchesHistory ) {
+ ASSERT_TRUE ( SetupSync ( ) ) << ""SetupSync() failed."" ;
+ ASSERT_TRUE ( CheckInitialState ( 0 ) ) ;
+ const GURL url ( ""about:version"" ) ;
+ ScopedWindowMap windows ;
+ ASSERT_TRUE ( OpenTabAndGetLocalWindows ( 0 , url , windows . GetMutable ( ) ) ) ;
+ int found_navigations = 0 ;
+ for ( SessionWindowMap : : const_iterator it = windows . Get ( ) -> begin ( ) ;
+ it != windows . Get ( ) -> end ( ) ;
+ ++ it ) {
+ for ( std : : vector < sessions : : SessionTab * > : : const_iterator it2 = it -> second -> tabs . begin ( ) ;
+ it2 != it -> second -> tabs . end ( ) ;
+ ++ it2 ) {
+ for ( std : : vector < sessions : : SerializedNavigationEntry > : : const_iterator it3 = ( * it2 ) -> navigations . begin ( ) ;
+ it3 != ( * it2 ) -> navigations . end ( ) ;
+ ++ it3 ) {
+ const base : : Time timestamp = it3 -> timestamp ( ) ;
+ history : : URLRow virtual_row ;
+ ASSERT_TRUE ( GetUrlFromClient ( 0 , it3 -> virtual_url ( ) , & virtual_row ) ) ;
+ const base : : Time history_timestamp = virtual_row . last_visit ( ) ;
+ ASSERT_EQ ( timestamp , history_timestamp ) ;
+ ++ found_navigations ;
+ }
+ }
+ }
+ ASSERT_EQ ( 1 , found_navigations ) ;
+ }","static void pk_transaction_class_init ( PkTransactionClass * klass ) {\n object_class -> dispose = pk_transaction_dispose ;\n}","static void spl_filesystem_object_free_storage ( void * object TSRMLS_DC ) {\n spl_filesystem_object * intern = ( spl_filesystem_object * ) object ;\n if ( intern -> _path ) efree ( intern -> _path ) ;\n efree ( object ) ;\n}","Partial","Partial","0","Partial","0","Partial","Equal","Cả hai demo đều có sự tương đồng an ninh một phần về quản lý vòng đời đối tượng và thu hồi con trỏ."
+"22","-3569070884878445567","1","static int svq3_decode_frame ( AVCodecContext * avctx , void * data , int * got_frame , AVPacket * avpkt ) {
+ const uint8_t * buf = avpkt -> data ;
+ SVQ3Context * s = avctx -> priv_data ;
+ H264Context * h = & s -> h ;
+ int buf_size = avpkt -> size ;
+ int ret , m , i ;
+ if ( buf_size == 0 ) {
+ if ( s -> next_pic -> f . data [ 0 ] && ! h -> low_delay && ! s -> last_frame_output ) {
+ * ( AVFrame * ) data = s -> next_pic -> f ;
+ s -> last_frame_output = 1 ;
+ * got_frame = 1 ;
+ }
+ return 0 ;
+ }
+ init_get_bits ( & h -> gb , buf , 8 * buf_size ) ;
+ h -> mb_x = h -> mb_y = h -> mb_xy = 0 ;
+ if ( svq3_decode_slice_header ( avctx ) ) return - 1 ;
+ h -> pict_type = h -> slice_type ;
+ if ( h -> pict_type != AV_PICTURE_TYPE_B ) FFSWAP ( Picture * , s -> next_pic , s -> last_pic ) ;
+ if ( s -> cur_pic -> f . data [ 0 ] ) avctx -> release_buffer ( avctx , & s -> cur_pic -> f ) ;
+ s -> cur_pic -> f . pict_type = h -> pict_type ;
+ s -> cur_pic -> f . key_frame = ( h -> pict_type == AV_PICTURE_TYPE_I ) ;
+ ret = get_buffer ( avctx , s -> cur_pic ) ;
+ if ( ret < 0 ) return ret ;
+ h -> cur_pic_ptr = s -> cur_pic ;
+ h -> cur_pic = * s -> cur_pic ;
+ for ( i = 0 ;
+ i < 16 ;
+ i ++ ) {
+ h -> block_offset [ i ] = ( 4 * ( ( scan8 [ i ] - scan8 [ 0 ] ) & 7 ) ) + 4 * h -> linesize * ( ( scan8 [ i ] - scan8 [ 0 ] ) >> 3 ) ;
+ h -> block_offset [ 48 + i ] = ( 4 * ( ( scan8 [ i ] - scan8 [ 0 ] ) & 7 ) ) + 8 * h -> linesize * ( ( scan8 [ i ] - scan8 [ 0 ] ) >> 3 ) ;
+ }
+ for ( i = 0 ;
+ i < 16 ;
+ i ++ ) {
+ h -> block_offset [ 16 + i ] = h -> block_offset [ 32 + i ] = ( 4 * ( ( scan8 [ i ] - scan8 [ 0 ] ) & 7 ) ) + 4 * h -> uvlinesize * ( ( scan8 [ i ] - scan8 [ 0 ] ) >> 3 ) ;
+ h -> block_offset [ 48 + 16 + i ] = h -> block_offset [ 48 + 32 + i ] = ( 4 * ( ( scan8 [ i ] - scan8 [ 0 ] ) & 7 ) ) + 8 * h -> uvlinesize * ( ( scan8 [ i ] - scan8 [ 0 ] ) >> 3 ) ;
+ }
+ if ( h -> pict_type != AV_PICTURE_TYPE_I ) {
+ if ( ! s -> last_pic -> f . data [ 0 ] ) {
+ av_log ( avctx , AV_LOG_ERROR , ""Missing reference frame.\n"" ) ;
+ ret = get_buffer ( avctx , s -> last_pic ) ;
+ if ( ret < 0 ) return ret ;
+ memset ( s -> last_pic -> f . data [ 0 ] , 0 , avctx -> height * s -> last_pic -> f . linesize [ 0 ] ) ;
+ memset ( s -> last_pic -> f . data [ 1 ] , 0x80 , ( avctx -> height / 2 ) * s -> last_pic -> f . linesize [ 1 ] ) ;
+ memset ( s -> last_pic -> f . data [ 2 ] , 0x80 , ( avctx -> height / 2 ) * s -> last_pic -> f . linesize [ 2 ] ) ;
+ }
+ if ( h -> pict_type == AV_PICTURE_TYPE_B && ! s -> next_pic -> f . data [ 0 ] ) {
+ av_log ( avctx , AV_LOG_ERROR , ""Missing reference frame.\n"" ) ;
+ ret = get_buffer ( avctx , s -> next_pic ) ;
+ if ( ret < 0 ) return ret ;
+ memset ( s -> next_pic -> f . data [ 0 ] , 0 , avctx -> height * s -> next_pic -> f . linesize [ 0 ] ) ;
+ memset ( s -> next_pic -> f . data [ 1 ] , 0x80 , ( avctx -> height / 2 ) * s -> next_pic -> f . linesize [ 1 ] ) ;
+ memset ( s -> next_pic -> f . data [ 2 ] , 0x80 , ( avctx -> height / 2 ) * s -> next_pic -> f . linesize [ 2 ] ) ;
+ }
+ }
+ 
+
+/* ... [Cắt gọn do vượt quá 3000 ký tự] */","void fz_fin_cached_color_converter ( fz_context * ctx , fz_color_converter * cc_ ) {\n cc_ -> opaque = NULL ;\n fz_drop_hash_table ( ctx , cc -> hash ) ;\n fz_free ( ctx , cc ) ;\n}","static void spl_filesystem_object_free_storage ( void * object TSRMLS_DC ) {\n spl_filesystem_object * intern = ( spl_filesystem_object * ) object ;\n if ( intern -> _path ) efree ( intern -> _path ) ;\n efree ( object ) ;\n}","1","1","1","Partial","0","0","B","Demo B thể hiện cấu trúc mã nguồn giải phóng storage đa tầng, hữu ích cho việc đối chiếu rủi ro double-free."
+"23","2518148041181868265","1","char * irc_ctcp_dcc_filename_without_quotes ( const char * filename ) {
+ int length ;
+ length = strlen ( filename ) ;
+ if ( length > 0 ) {
+ if ( ( filename [ 0 ] == '\""' ) && ( filename [ length - 1 ] == '\""' ) ) return weechat_strndup ( filename + 1 , length - 2 ) ;
+ }
+ return strdup ( filename ) ;
+ }","static void spl_filesystem_object_free_storage ( void * object TSRMLS_DC ) {\n spl_filesystem_object * intern = ( spl_filesystem_object * ) object ;\n efree ( object ) ;\n}","static int http_RecvPostMessage ( http_parser_t * parser , SOCKINFO * info , char * filename , struct SendInstruction * Instr ) {\n num_read = sock_read ( info , Buf , sizeof ( Buf ) , & Timeout ) ;\n return ret_code ;\n}","0","0","0","1","Partial","1","A","Demo A minh họa cơ chế thu hồi bộ nhớ tổng thể, hỗ trợ kiểm tra an toàn sau khi truyền dữ liệu qua mạng."
+"24","-4055702019813176658","1","void proto_register_iax2 ( void ) {
+ static hf_register_info hf [ ] = {
+ {
+ & hf_iax2_packet_type , {
+ ""Packet type"" , ""iax2.packet_type"" , FT_UINT8 , BASE_DEC , VALS ( iax_packet_types ) , 0 , ""Full/minivoice/minivideo/trunk packet"" , HFILL }
+ }
+ , {
+ & hf_iax2_callno , {
+ ""Call identifier"" , ""iax2.call"" , FT_UINT32 , BASE_DEC , NULL , 0 , ""This is the identifier Wireshark assigns to identify this call."" "" It does not correspond to any real field in the protocol"" , HFILL }
+ }
+ , {
+ & hf_iax2_scallno , {
+ ""Source call"" , ""iax2.src_call"" , FT_UINT16 , BASE_DEC , NULL , 0x7FFF , ""src_call holds the number of this call at the packet source pbx"" , HFILL }
+ }
+ , {
+ & hf_iax2_dcallno , {
+ ""Destination call"" , ""iax2.dst_call"" , FT_UINT16 , BASE_DEC , NULL , 0x7FFF , ""dst_call holds the number of this call at the packet destination"" , HFILL }
+ }
+ , {
+ & hf_iax2_retransmission , {
+ ""Retransmission"" , ""iax2.retransmission"" , FT_BOOLEAN , 16 , NULL , 0x8000 , ""retransmission is set if this packet is a retransmission of an earlier failed packet"" , HFILL }
+ }
+ , {
+ & hf_iax2_ts , {
+ ""Timestamp"" , ""iax2.timestamp"" , FT_UINT32 , BASE_DEC , NULL , 0x0 , ""timestamp is the time, in ms after the start of this call, at which this packet was transmitted"" , HFILL }
+ }
+ , {
+ & hf_iax2_minits , {
+ ""Timestamp"" , ""iax2.timestamp"" , FT_UINT16 , BASE_DEC , NULL , 0x0 , ""timestamp is the time, in ms after the start of this call, at which this packet was transmitted"" , HFILL }
+ }
+ , {
+ & hf_iax2_minividts , {
+ ""Timestamp"" , ""iax2.timestamp"" , FT_UINT16 , BASE_DEC , NULL , 0x7FFF , ""timestamp is the time, in ms after the start of this call, at which this packet was transmitted"" , HFILL }
+ }
+ , {
+ & hf_iax2_absts , {
+ ""Absolute Time"" , ""iax2.abstime"" , FT_ABSOLUTE_TIME , ABSOLUTE_TIME_LOCAL , NULL , 0x0 , ""The absolute time of this packet (calculated by adding the IAX timestamp to the start time of this call)"" , HFILL }
+ }
+ , {
+ & hf_iax2_lateness , {
+ ""Lateness"" , ""iax2.lateness"" , FT_RELATIVE_TIME , BASE_NONE , NULL , 0x0 , ""The lateness of this packet compared to its timestamp"" , HFILL }
+ }
+ , {
+ & hf_iax2_minividmarker , {
+ ""Marker"" , ""iax2.video.marker"" , FT_UINT16 , BASE_DEC , NULL , 0x8000 , ""RTP end-of-frame marker"" , HFILL }
+ }
+ , {
+ & hf_iax2_oseqno , {
+ ""Outbound seq.no."" , ""iax2.oseqno"" , FT_UINT16 , BASE_DEC , NULL , 0x0 , ""oseqno is the sequence no of this packet. The first packet has oseqno==0,"" "" and subsequent packets increment the oseqno by 1"" , HFILL }
+ }
+ , {
+ & hf_iax2_iseqno , {
+ ""Inbound seq.no."" , ""iax2.iseqno"" , FT_UINT16 , BASE_DEC , NULL , 0x0 , ""iseqno is the sequence no of the last successfully received packet"" , HFILL }
+ }
+ , {
+ & hf_iax2_type , {
+ ""Type"" , ""iax2.type"" , FT_UINT8 , BASE_DEC | BASE_EXT_STRING , & iax_frame_types_ext , 0x0 , ""For full IAX2 frames, type is the type of frame"" , HFILL }
+ }
+ , {
+ & hf_iax2_csub , {
+ ""Unknown subclass"" , ""iax2.subclass"" , FT_UINT8 , BASE_DEC , NULL , 0x0 , ""Subclass of unknown type of full IAX2 frame"" , H
+
+/* ... [Cắt gọn do vượt quá 3000 ký tự] */","static void spl_filesystem_object_free_storage ( void * object TSRMLS_DC ) {\n spl_filesystem_object * intern = ( spl_filesystem_object * ) object ;\n efree ( object ) ;\n}","static int sunrast_decode_frame ( AVCodecContext * avctx , void * data , int * got_frame , AVPacket * avpkt ) {\n if ( avpkt -> size < 32 ) return AVERROR_INVALIDDATA ;\n if ( av_image_check_size ( w , h , 0 , avctx ) ) return AVERROR_INVALIDDATA ;\n}","0","0","0","1","1","1","B","Demo B liên quan an ninh hơn (cùng sink giải mã frame và cùng guard kiểm tra avpkt->size < 32)."
+"25","-4886619136962902359","1","TEST_F ( NativeBackendLibsecretTest , SomeKeyringAttributesAreMissing ) {
+ NativeBackendLibsecret backend ( 42 ) ;
+ VerifiedAdd ( & backend , form_google_ ) ;
+ EXPECT_EQ ( 1u , global_mock_libsecret_items -> size ( ) ) ;
+ ( * global_mock_libsecret_items ) [ 0 ] -> RemoveAttribute ( ""avatar_url"" ) ;
+ ( * global_mock_libsecret_items ) [ 0 ] -> RemoveAttribute ( ""ssl_valid"" ) ;
+ ScopedVector < autofill : : PasswordForm > form_list ;
+ EXPECT_TRUE ( backend . GetAutofillableLogins ( & form_list ) ) ;
+ EXPECT_EQ ( 1u , form_list . size ( ) ) ;
+ EXPECT_EQ ( GURL ( """" ) , form_list [ 0 ] -> icon_url ) ;
+ EXPECT_FALSE ( form_list [ 0 ] -> ssl_valid ) ;
+ }","static void spl_filesystem_object_free_storage ( void * object TSRMLS_DC ) {\n spl_filesystem_object * intern = ( spl_filesystem_object * ) object ;\n efree ( object ) ;\n}","static int check_bits_for_superframe ( GetBitContext * orig_gb , WMAVoiceContext * s ) {\n init_get_bits ( gb , orig_gb -> buffer , orig_gb -> size_in_bits ) ;\n if ( get_bits_left ( gb ) < 14 ) return 1 ;\n}","0","0","0","1","Partial","1","A","Demo A cung cấp kịch bản quản lý giải phóng bộ nhớ heap rõ ràng, hữu ích khi phân tích khả năng rò rỉ hoặc truy cập vùng nhớ."
+"26","-3819889754140204145","0","static void parse_keyUsage ( chunk_t blob , private_x509_cert_t * this ) {
+ enum {
+ KU_DIGITAL_SIGNATURE = 0 , KU_NON_REPUDIATION = 1 , KU_KEY_ENCIPHERMENT = 2 , KU_DATA_ENCIPHERMENT = 3 , KU_KEY_AGREEMENT = 4 , KU_KEY_CERT_SIGN = 5 , KU_CRL_SIGN = 6 , KU_ENCIPHER_ONLY = 7 , KU_DECIPHER_ONLY = 8 , }
+ ;
+ if ( asn1_unwrap ( & blob , & blob ) == ASN1_BIT_STRING && blob . len ) {
+ int bit , byte , unused = blob . ptr [ 0 ] ;
+ blob = chunk_skip ( blob , 1 ) ;
+ for ( byte = 0 ;
+ byte < blob . len ;
+ byte ++ ) {
+ for ( bit = 0 ;
+ bit < 8 ;
+ bit ++ ) {
+ if ( byte == blob . len - 1 && bit > ( 7 - unused ) ) {
+ break ;
+ }
+ if ( blob . ptr [ byte ] & 1 << ( 7 - bit ) ) {
+ switch ( byte * 8 + bit ) {
+ case KU_CRL_SIGN : this -> flags |= X509_CRL_SIGN ;
+ break ;
+ case KU_KEY_CERT_SIGN : case KU_DIGITAL_SIGNATURE : case KU_NON_REPUDIATION : case KU_KEY_ENCIPHERMENT : case KU_DATA_ENCIPHERMENT : case KU_KEY_AGREEMENT : case KU_ENCIPHER_ONLY : case KU_DECIPHER_ONLY : break ;
+ }
+ }
+ }
+ }
+ }
+ }","static void spl_filesystem_object_free_storage ( void * object TSRMLS_DC ) {\n spl_filesystem_object * intern = ( spl_filesystem_object * ) object ;\n if ( intern -> _path ) efree ( intern -> _path ) ;\n efree ( object ) ;\n}","int virLogParseOutputs ( const char * src , virLogOutputPtr * * outputs ) {\n if ( ! ( strings = virStringSplitCount ( src , "" "" , 0 , & count ) ) ) goto cleanup ;\n for ( i = 0 ; i < count ; i ++ ) {\n if ( ! ( output = virLogParseOutput ( strings [ i ] ) ) ) goto cleanup ;\n }\n cleanup : virStringListFree ( strings ) ;\n return ret ;\n}","1","Partial","1","1","1","1","A","Demo A liên quan an ninh hơn (cùng sink giải phóng tài nguyên khi lỗi và quản lý dọn dẹp bộ nhớ dynamic)."
+"27","-2607754285145856562","0","static struct isoent * isoent_find_child ( struct isoent * isoent , const char * child_name ) {
+ struct isoent * np ;
+ np = ( struct isoent * ) __archive_rb_tree_find_node ( & ( isoent -> rbtree ) , child_name ) ;
+ return ( np ) ;
+ }","static void spl_filesystem_object_free_storage ( void * object TSRMLS_DC ) {\n spl_filesystem_object * intern = ( spl_filesystem_object * ) object ;\n efree ( object ) ;\n}","void vp9_set_svc ( VP9_COMP * cpi , int use_svc ) {\n cpi -> use_svc = use_svc ;\n return ;\n}","0","0","0","Partial","1","0","Equal","Cả hai demo đều có sự tương đồng an ninh ở mức giới hạn: Demo A về giải phóng, Demo B về thiết lập trường cờ."
+"28","-4552633429382740307","0","unsigned int mpi_nlimb_hint_from_nbits ( unsigned int nbits ) {
+ return ( nbits + BITS_PER_MPI_LIMB - 1 ) / BITS_PER_MPI_LIMB ;
+ }","static void page_flush_tb ( void ) {\n int i ;\n for ( i = 0 ; i < V_L1_SIZE ; i ++ ) page_flush_tb_1 ( V_L1_SHIFT / L2_BITS - 1 , l1_map + i ) ;\n}","static void spl_filesystem_object_free_storage ( void * object TSRMLS_DC ) {\n spl_filesystem_object * intern = ( spl_filesystem_object * ) object ;\n efree ( object ) ;\n}","0","0","0","0","0","0","Neither","Cả hai demo đều không minh họa được guard kiểm tra giới hạn mảng translation buffer."
+"29","-2064332158282087279","0","static int astream_try_base64_decode_char ( struct attachment_istream_part * part , size_t pos , char chr ) {
+ switch ( part -> base64_state ) {
+ case BASE64_STATE_0 : if ( base64_is_valid_char ( chr ) ) part -> base64_state ++ ;
+ else if ( chr == '\r' ) part -> base64_state = BASE64_STATE_CR ;
+ else if ( chr == '\n' ) {
+ return astream_base64_decode_lf ( part ) ;
+ }
+ else {
+ return - 1 ;
+ }
+ break ;
+ case BASE64_STATE_1 : if ( ! base64_is_valid_char ( chr ) ) return - 1 ;
+ part -> base64_state ++ ;
+ break ;
+ case BASE64_STATE_2 : if ( base64_is_valid_char ( chr ) ) part -> base64_state ++ ;
+ else if ( chr == '=' ) part -> base64_state = BASE64_STATE_EOB ;
+ else return - 1 ;
+ break ;
+ case BASE64_STATE_3 : part -> base64_bytes = part -> temp_output -> offset + pos + 1 ;
+ if ( base64_is_valid_char ( chr ) ) {
+ part -> base64_state = BASE64_STATE_0 ;
+ part -> cur_base64_blocks ++ ;
+ }
+ else if ( chr == '=' ) {
+ part -> base64_state = BASE64_STATE_EOM ;
+ part -> cur_base64_blocks ++ ;
+ if ( part -> cur_base64_blocks > part -> base64_line_blocks && part -> base64_line_blocks > 0 ) {
+ return - 1 ;
+ }
+ return 0 ;
+ }
+ else {
+ return - 1 ;
+ }
+ break ;
+ case BASE64_STATE_CR : if ( chr != '\n' ) return - 1 ;
+ if ( ! part -> base64_have_crlf ) {
+ if ( part -> base64_line_blocks != 0 ) {
+ return - 1 ;
+ }
+ part -> base64_have_crlf = TRUE ;
+ }
+ return astream_base64_decode_lf ( part ) ;
+ case BASE64_STATE_EOB : if ( chr != '=' ) return - 1 ;
+ part -> base64_bytes = part -> temp_output -> offset + pos + 1 ;
+ part -> base64_state = BASE64_STATE_EOM ;
+ part -> cur_base64_blocks ++ ;
+ if ( part -> cur_base64_blocks > part -> base64_line_blocks && part -> base64_line_blocks > 0 ) {
+ return - 1 ;
+ }
+ return 0 ;
+ case BASE64_STATE_EOM : i_unreached ( ) ;
+ }
+ return 1 ;
+ }","static void spl_filesystem_object_free_storage ( void * object TSRMLS_DC ) {\n spl_filesystem_object * intern = ( spl_filesystem_object * ) object ;\n efree ( object ) ;\n}","static int fts_build_full_words ( struct fts_mail_build_context * ctx , const unsigned char * data , size_t size , bool last ) {\n if ( ctx -> word_buf != NULL && ctx -> word_buf -> used > 0 ) buffer_append ( ctx -> word_buf , data , i ) ;\n if ( fts_backend_update_build_more ( ctx -> update_ctx , data , i ) < 0 ) return - 1 ;\n return 0 ;\n}","0","0","0","1","1","1","Neither","Cả hai demo không cung cấp cơ chế phân định mới cho việc kiểm tra tràn buffer từ ngữ."
+"30","2687336064028423153","0","int evdns_server_request_drop ( struct evdns_server_request * _req ) {
+ struct server_request * req = TO_SERVER_REQUEST ( _req ) ;
+ server_request_free ( req ) ;
+ return 0 ;
+ }","static void spl_filesystem_object_free_storage ( void * object TSRMLS_DC ) {\n spl_filesystem_object * intern = ( spl_filesystem_object * ) object ;\n efree ( object ) ;\n}","static guint32 dissect_netb_receive_continue ( tvbuff_t * tvb , packet_info * pinfo _U_ , int offset , proto_tree * tree ) {\n nb_xmit_corrl ( tvb , offset , tree ) ;\n nb_remote_session ( tvb , offset , tree ) ;\n return 0 ;\n}","0","0","0","Partial","1","0","B","Demo B thể hiện cùng họ hàm mổ xẻ gói tin mạng NetBIOS, phù hợp ngữ cảnh hơn Demo A."
+"31","-3847447574854829409","0","static int32_t strcmpAfterPrefix ( const char * s1 , const char * s2 , int32_t * pPrefixLength ) {
+ int32_t pl = * pPrefixLength ;
+ int32_t cmp = 0 ;
+ s1 += pl ;
+ s2 += pl ;
+ for ( ;
+ ;
+ ) {
+ int32_t c1 = ( uint8_t ) * s1 ++ ;
+ int32_t c2 = ( uint8_t ) * s2 ++ ;
+ cmp = c1 - c2 ;
+ if ( cmp != 0 || c1 == 0 ) {
+ break ;
+ }
+ ++ pl ;
+ }
+ * pPrefixLength = pl ;
+ return cmp ;
+ }","static void page_flush_tb ( void ) {\n int i ;\n for ( i = 0 ; i < V_L1_SIZE ; i ++ ) page_flush_tb_1 ( V_L1_SHIFT / L2_BITS - 1 , l1_map + i ) ;\n}","static void spl_filesystem_object_free_storage ( void * object TSRMLS_DC ) {\n spl_filesystem_object * intern = ( spl_filesystem_object * ) object ;\n if ( intern -> _path ) efree ( intern -> _path ) ;\n efree ( object ) ;\n}","Partial","Partial","0","1","Partial","1","B","Demo B liên quan an ninh hơn (cùng sink giải phóng bộ nhớ dynamic; cùng guard gán NULL tránh con trỏ lơ lửng)."
+"32","-7777331401175181229","0","static void cmd_server_add_modify ( const char * data , gboolean add ) {
+ GHashTable * optlist ;
+ SERVER_SETUP_REC * rec ;
+ char * addr , * portstr , * password , * value , * chatnet ;
+ void * free_arg ;
+ int port ;
+ if ( ! cmd_get_params ( data , & free_arg , 3 | PARAM_FLAG_OPTIONS , ""server add"" , & optlist , & addr , & portstr , & password ) ) return ;
+ if ( * addr == '\0' ) cmd_param_error ( CMDERR_NOT_ENOUGH_PARAMS ) ;
+ value = g_hash_table_lookup ( optlist , ""port"" ) ;
+ if ( * portstr != '\0' ) port = atoi ( portstr ) ;
+ else if ( value != NULL && * value != '\0' ) port = atoi ( value ) ;
+ else if ( g_hash_table_lookup ( optlist , ""tls"" ) || g_hash_table_lookup ( optlist , ""ssl"" ) ) port = DEFAULT_SERVER_ADD_TLS_PORT ;
+ else port = DEFAULT_SERVER_ADD_PORT ;
+ chatnet = g_hash_table_lookup ( optlist , ""network"" ) ;
+ rec = server_setup_find ( addr , port , chatnet ) ;
+ if ( rec == NULL ) {
+ if ( add == FALSE ) {
+ printformat ( NULL , NULL , MSGLEVEL_CLIENTNOTICE , TXT_SETUPSERVER_NOT_FOUND , addr , port ) ;
+ cmd_params_free ( free_arg ) ;
+ return ;
+ }
+ rec = create_server_setup ( optlist ) ;
+ if ( rec == NULL ) {
+ cmd_params_free ( free_arg ) ;
+ return ;
+ }
+ rec -> address = g_strdup ( addr ) ;
+ rec -> port = port ;
+ }
+ else {
+ if ( * portstr != '\0' || g_hash_table_lookup ( optlist , ""port"" ) ) rec -> port = port ;
+ if ( * password != '\0' ) g_free_and_null ( rec -> password ) ;
+ if ( g_hash_table_lookup ( optlist , ""host"" ) ) {
+ g_free_and_null ( rec -> own_host ) ;
+ rec -> own_ip4 = rec -> own_ip6 = NULL ;
+ }
+ }
+ if ( g_hash_table_lookup ( optlist , ""6"" ) ) rec -> family = AF_INET6 ;
+ else if ( g_hash_table_lookup ( optlist , ""4"" ) ) rec -> family = AF_INET ;
+ if ( g_hash_table_lookup ( optlist , ""tls"" ) || g_hash_table_lookup ( optlist , ""ssl"" ) ) {
+ rec -> use_tls = TRUE ;
+ }
+ else if ( g_hash_table_lookup ( optlist , ""notls"" ) || g_hash_table_lookup ( optlist , ""nossl"" ) ) {
+ rec -> use_tls = FALSE ;
+ rec -> tls_verify = FALSE ;
+ }
+ value = g_hash_table_lookup ( optlist , ""tls_cert"" ) ;
+ if ( value == NULL ) value = g_hash_table_lookup ( optlist , ""ssl_cert"" ) ;
+ if ( value != NULL && * value != '\0' ) rec -> tls_cert = g_strdup ( value ) ;
+ value = g_hash_table_lookup ( optlist , ""tls_pkey"" ) ;
+ if ( value == NULL ) value = g_hash_table_lookup ( optlist , ""ssl_pkey"" ) ;
+ if ( value != NULL && * value != '\0' ) rec -> tls_pkey = g_strdup ( value ) ;
+ value = g_hash_table_lookup ( optlist , ""tls_pass"" ) ;
+ if ( value == NULL ) value = g_hash_table_lookup ( optlist , ""ssl_pass"" ) ;
+ if ( value != NULL && * value != '\0' ) rec -> tls_pass = g_strdup ( value ) ;
+ if ( g_hash_table_lookup ( optlist , ""tls_verify"" ) || g_hash_table_lookup ( optlist , ""ssl_verify"" ) ) rec -> tls_verify = TRUE ;
+ else if ( g_hash_table_lookup ( optlist , ""notls_verify"" ) || g_hash_table_lookup ( optlist , ""nossl_verify"" ) ) rec -> tls_verify = FALSE ;
+ value = g_hash_table_lookup ( optlist , ""tls_cafile"" ) ;
+ if ( value == NULL ) value = g_hash_table_lookup ( op
+
+/* ... [Cắt gọn do vượt quá 3000 ký tự] */","static void spl_filesystem_object_free_storage ( void * object TSRMLS_DC ) {\n spl_filesystem_object * intern = ( spl_filesystem_object * ) object ;\n efree ( object ) ;\n}","int virLogParseOutputs ( const char * src , virLogOutputPtr * * outputs ) {\n at = virLogFindOutput ( list , noutputs , output -> dest , output -> name ) ;\n if ( at >= 0 ) {\n virLogOutputFree ( list [ at ] ) ;\n VIR_DELETE_ELEMENT ( list , at , noutputs ) ;\n }\n return ret ;\n}","0","Partial","Partial","1","1","1","Equal","Cả hai demo đều có điểm tương đồng an ninh: Demo A dọn dẹp bộ nhớ đơn giản, Demo B dọn dẹp mảng phần tử log."
+"33","-5992472514718425579","0","static char * lxc_cgroup_find_abs_path ( const char * subsystem , const char * group , bool should_be_writable , const char * suffix ) {
+ struct cgroup_meta_data * meta_data ;
+ struct cgroup_hierarchy * h ;
+ struct cgroup_mount_point * mp ;
+ char * result ;
+ int saved_errno ;
+ meta_data = lxc_cgroup_load_meta ( ) ;
+ if ( ! meta_data ) return NULL ;
+ h = lxc_cgroup_find_hierarchy ( meta_data , subsystem ) ;
+ if ( ! h ) goto out_error ;
+ mp = lxc_cgroup_find_mount_point ( h , group , should_be_writable ) ;
+ if ( ! mp ) goto out_error ;
+ result = cgroup_to_absolute_path ( mp , group , suffix ) ;
+ if ( ! result ) goto out_error ;
+ lxc_cgroup_put_meta ( meta_data ) ;
+ return result ;
+ out_error : saved_errno = errno ;
+ lxc_cgroup_put_meta ( meta_data ) ;
+ errno = saved_errno ;
+ return NULL ;
+ }","static int fts_build_full_words ( struct fts_mail_build_context * ctx , const unsigned char * data , size_t size , bool last ) {\n if ( ctx -> word_buf == NULL ) ctx -> word_buf = buffer_create_dynamic ( default_pool , 128 ) ;\n buffer_append ( ctx -> word_buf , data + i , size - i ) ;\n return 0 ;\n}","static void spl_filesystem_object_free_storage ( void * object TSRMLS_DC ) {\n spl_filesystem_object * intern = ( spl_filesystem_object * ) object ;\n efree ( object ) ;\n}","1","1","1","0","0","0","Equal","Cả hai demo đều mang lại giá trị đối sánh bổ trợ: Demo A kiểm tra khởi tạo buffer, Demo B dọn dẹp tài nguyên."
+"34","-6856626433814917486","0","static gint dissect_capabilities ( tvbuff_t * tvb , packet_info * pinfo , proto_tree * tree , gint offset , gint * codec , gint * content_protection_type , guint32 * vendor_id , guint16 * vendor_codec , guint32 * configuration_offset , guint8 * configuration_length ) {
+ proto_item * pitem = NULL ;
+ proto_item * ptree = NULL ;
+ proto_tree * capabilities_tree ;
+ proto_item * capabilities_item ;
+ proto_tree * service_tree = NULL ;
+ proto_item * service_item = NULL ;
+ gint service_category = 0 ;
+ gint losc = 0 ;
+ gint recovery_type = 0 ;
+ gint maximum_recovery_window_size = 0 ;
+ gint maximum_number_of_media_packet_in_parity_code = 0 ;
+ gint media_type = 0 ;
+ gint media_codec_type = 0 ;
+ capabilities_item = proto_tree_add_item ( tree , hf_btavdtp_capabilities , tvb , offset , tvb_reported_length ( tvb ) - offset , ENC_NA ) ;
+ capabilities_tree = proto_item_add_subtree ( capabilities_item , ett_btavdtp_capabilities ) ;
+ if ( codec ) * codec = - 1 ;
+ if ( vendor_id ) * vendor_id = 0x003F ;
+ if ( vendor_codec ) * vendor_codec = 0 ;
+ if ( configuration_length ) * configuration_length = 0 ;
+ if ( configuration_offset ) * configuration_offset = 0 ;
+ while ( tvb_reported_length_remaining ( tvb , offset ) > 0 ) {
+ service_category = tvb_get_guint8 ( tvb , offset ) ;
+ losc = tvb_get_guint8 ( tvb , offset + 1 ) ;
+ service_item = proto_tree_add_none_format ( capabilities_tree , hf_btavdtp_service , tvb , offset , 2 + losc , ""Service: %s"" , val_to_str_const ( service_category , service_category_vals , ""RFD"" ) ) ;
+ service_tree = proto_item_add_subtree ( service_item , ett_btavdtp_service ) ;
+ proto_tree_add_item ( service_tree , hf_btavdtp_service_category , tvb , offset , 1 , ENC_NA ) ;
+ offset += 1 ;
+ proto_tree_add_item ( service_tree , hf_btavdtp_length_of_service_category , tvb , offset , 1 , ENC_NA ) ;
+ offset += 1 ;
+ switch ( service_category ) {
+ case SERVICE_CATEGORY_MEDIA_TRANSPORT : case SERVICE_CATEGORY_REPORTING : case SERVICE_CATEGORY_DELAY_REPORTING : break ;
+ case SERVICE_CATEGORY_RECOVERY : recovery_type = tvb_get_guint8 ( tvb , offset ) ;
+ pitem = proto_tree_add_item ( service_tree , hf_btavdtp_recovery_type , tvb , offset , 1 , ENC_NA ) ;
+ proto_item_append_text ( pitem , "" (%s)"" , val_to_str_const ( recovery_type , recovery_type_vals , ""RFD"" ) ) ;
+ offset += 1 ;
+ losc -= 1 ;
+ maximum_recovery_window_size = tvb_get_guint8 ( tvb , offset ) ;
+ pitem = proto_tree_add_item ( service_tree , hf_btavdtp_maximum_recovery_window_size , tvb , offset , 1 , ENC_NA ) ;
+ if ( maximum_recovery_window_size == 0x00 ) {
+ proto_item_append_text ( pitem , "" (Forbidden)"" ) ;
+ }
+ else if ( maximum_recovery_window_size >= 0x18 ) {
+ proto_item_append_text ( pitem , "" (Undocumented)"" ) ;
+ }
+ offset += 1 ;
+ losc -= 1 ;
+ maximum_number_of_media_packet_in_parity_code = tvb_get_guint8 ( tvb , offset ) ;
+ proto_tree_add_item ( service_tree , hf_btavdtp_maximum_number_of_media_packet_in_parity_code , tvb , offset , 1 , ENC_NA ) ;
+ pitem = proto_tree_add_item ( service_tree ,
+
+/* ... [Cắt gọn do vượt quá 3000 ký tự] */","void vp9_set_svc ( VP9_COMP * cpi , int use_svc ) {\n cpi -> use_svc = use_svc ;\n return ;\n}","static void spl_filesystem_object_free_storage ( void * object TSRMLS_DC ) {\n spl_filesystem_object * intern = ( spl_filesystem_object * ) object ;\n efree ( object ) ;\n}","Partial","1","0","0","0","0","Equal","Mức độ phù hợp ngữ nghĩa của Demo A và Demo B tương đương nhau trong việc kiểm tra cấu trúc encoder."
+"35","6393050609822897742","0","static void xhci_kick_epctx ( XHCIEPContext * epctx , unsigned int streamid ) {
+ XHCIState * xhci = epctx -> xhci ;
+ XHCIStreamContext * stctx ;
+ XHCITransfer * xfer ;
+ XHCIRing * ring ;
+ USBEndpoint * ep = NULL ;
+ uint64_t mfindex ;
+ int length ;
+ int i ;
+ trace_usb_xhci_ep_kick ( epctx -> slotid , epctx -> epid , streamid ) ;
+ assert ( ! epctx -> kick_active ) ;
+ if ( ! xhci -> slots [ epctx -> slotid - 1 ] . uport || ! xhci -> slots [ epctx -> slotid - 1 ] . uport -> dev || ! xhci -> slots [ epctx -> slotid - 1 ] . uport -> dev -> attached ) {
+ return ;
+ }
+ if ( epctx -> retry ) {
+ XHCITransfer * xfer = epctx -> retry ;
+ trace_usb_xhci_xfer_retry ( xfer ) ;
+ assert ( xfer -> running_retry ) ;
+ if ( xfer -> timed_xfer ) {
+ mfindex = xhci_mfindex_get ( xhci ) ;
+ xhci_check_intr_iso_kick ( xhci , xfer , epctx , mfindex ) ;
+ if ( xfer -> running_retry ) {
+ return ;
+ }
+ xfer -> timed_xfer = 0 ;
+ xfer -> running_retry = 1 ;
+ }
+ if ( xfer -> iso_xfer ) {
+ if ( xhci_setup_packet ( xfer ) < 0 ) {
+ return ;
+ }
+ usb_handle_packet ( xfer -> packet . ep -> dev , & xfer -> packet ) ;
+ assert ( xfer -> packet . status != USB_RET_NAK ) ;
+ xhci_try_complete_packet ( xfer ) ;
+ }
+ else {
+ if ( xhci_setup_packet ( xfer ) < 0 ) {
+ return ;
+ }
+ usb_handle_packet ( xfer -> packet . ep -> dev , & xfer -> packet ) ;
+ if ( xfer -> packet . status == USB_RET_NAK ) {
+ return ;
+ }
+ xhci_try_complete_packet ( xfer ) ;
+ }
+ assert ( ! xfer -> running_retry ) ;
+ if ( xfer -> complete ) {
+ xhci_ep_free_xfer ( epctx -> retry ) ;
+ }
+ epctx -> retry = NULL ;
+ }
+ if ( epctx -> state == EP_HALTED ) {
+ DPRINTF ( ""xhci: ep halted, not running schedule\n"" ) ;
+ return ;
+ }
+ if ( epctx -> nr_pstreams ) {
+ uint32_t err ;
+ stctx = xhci_find_stream ( epctx , streamid , & err ) ;
+ if ( stctx == NULL ) {
+ return ;
+ }
+ ring = & stctx -> ring ;
+ xhci_set_ep_state ( xhci , epctx , stctx , EP_RUNNING ) ;
+ }
+ else {
+ ring = & epctx -> ring ;
+ streamid = 0 ;
+ xhci_set_ep_state ( xhci , epctx , NULL , EP_RUNNING ) ;
+ }
+ assert ( ring -> dequeue != 0 ) ;
+ epctx -> kick_active ++ ;
+ while ( 1 ) {
+ length = xhci_ring_chain_length ( xhci , ring ) ;
+ if ( length <= 0 ) {
+ break ;
+ }
+ xfer = xhci_ep_alloc_xfer ( epctx , length ) ;
+ if ( xfer == NULL ) {
+ break ;
+ }
+ for ( i = 0 ;
+ i < length ;
+ i ++ ) {
+ TRBType type ;
+ type = xhci_ring_fetch ( xhci , ring , & xfer -> trbs [ i ] , NULL ) ;
+ assert ( type ) ;
+ }
+ xfer -> streamid = streamid ;
+ if ( epctx -> epid == 1 ) {
+ xhci_fire_ctl_transfer ( xhci , xfer ) ;
+ }
+ else {
+ xhci_fire_transfer ( xhci , xfer , epctx ) ;
+ }
+ if ( xfer -> complete ) {
+ xhci_ep_free_xfer ( xfer ) ;
+ xfer = NULL ;
+ }
+ if ( epctx -> state == EP_HALTED ) {
+ break ;
+ }
+ if ( xfer != NULL && xfer -> running_retry ) {
+ DPRINTF ( ""xhci: xfer nacked, stopping schedule\n"" ) ;
+ epctx -> retry = xfer ;
+ break ;
+ }
+ }
+ epctx -> kick_active -- ;
+ ep = xhci_epid_to_usbep ( epctx ) ;
+ if ( ep ) {
+ usb_device_flush_ep_queue ( ep -> dev , ep ) ;
+ }
+ }","void ff_write_quant_matrix ( PutBitContext * pb , uint16_t * matrix ) {\n if ( matrix ) put_bits ( pb , 1 , 1 ) ;\n else put_bits ( pb , 1 , 0 ) ;\n}","static void spl_filesystem_object_free_storage ( void * object TSRMLS_DC ) {\n spl_filesystem_object * intern = ( spl_filesystem_object * ) object ;\n efree ( object ) ;\n}","1","1","1","0","0","0","Neither","Cả hai demo không cung cấp thêm thông tin bảo vệ biên dữ liệu mới cho mảng ma trận."
+"36","-5357254031401749470","0","static int resume_error ( lua_State * L , const char * msg ) {
+ L -> top = L -> ci -> base ;
+ setsvalue2s ( L , L -> top , luaS_new ( L , msg ) ) ;
+ incr_top ( L ) ;
+ lua_unlock ( L ) ;
+ return LUA_ERRRUN ;
+ }","static void spl_filesystem_object_free_storage ( void * object TSRMLS_DC ) {\n spl_filesystem_object * intern = ( spl_filesystem_object * ) object ;\n if ( intern -> _path ) efree ( intern -> _path ) ;\n efree ( object ) ;\n}","static void page_flush_tb ( void ) {\n int i ;\n for ( i = 0 ; i < V_L1_SIZE ; i ++ ) page_flush_tb_1 ( V_L1_SHIFT / L2_BITS - 1 , l1_map + i ) ;\n}","1","Partial","1","Partial","Partial","0","A","Demo A liên quan an ninh hơn (cùng sink g_free/efree; cùng guard kiểm tra con trỏ và gán NULL)."
+"37","1760449185745615462","0","TSReturnCode TSMimeHdrFieldValueIntInsert ( TSMBuffer bufp , TSMLoc hdr , TSMLoc field , int idx , int value ) {
+ sdk_assert ( sdk_sanity_check_mbuffer ( bufp ) == TS_SUCCESS ) ;
+ sdk_assert ( ( sdk_sanity_check_mime_hdr_handle ( hdr ) == TS_SUCCESS ) || ( sdk_sanity_check_http_hdr_handle ( hdr ) == TS_SUCCESS ) ) ;
+ sdk_assert ( sdk_sanity_check_field_handle ( field , hdr ) == TS_SUCCESS ) ;
+ if ( ! isWriteable ( bufp ) ) {
+ return TS_ERROR ;
+ }
+ char tmp [ 16 ] ;
+ int len = mime_format_int ( tmp , value , sizeof ( tmp ) ) ;
+ TSMimeFieldValueInsert ( bufp , field , tmp , len , idx ) ;
+ return TS_SUCCESS ;
+ }","int virLogParseOutputs ( const char * src , virLogOutputPtr * * outputs ) {\n at = virLogFindOutput ( list , noutputs , output -> dest , output -> name ) ;\n if ( VIR_APPEND_ELEMENT ( list , noutputs , output ) < 0 ) goto cleanup ;\n}","static void spl_filesystem_object_free_storage ( void * object TSRMLS_DC ) {\n spl_filesystem_object * intern = ( spl_filesystem_object * ) object ;\n efree ( object ) ;\n}","1","1","1","0","0","0","B","Demo B thể hiện quy trình thu hồi bộ nhớ chi tiết, tương thích việc đối chiếu dọn dẹp tài nguyên."
+"38","-341028540041678099","0","static void endoutput ( FILE * fp ) {
+ if ( out_chars != 0 ) putc ( '\n' , fp ) ;
+ }","static void spl_filesystem_object_free_storage ( void * object TSRMLS_DC ) {\n spl_filesystem_object * intern = ( spl_filesystem_object * ) object ;\n efree ( object ) ;\n}","static guint32 dissect_netb_receive_continue ( tvbuff_t * tvb , packet_info * pinfo _U_ , int offset , proto_tree * tree ) {\n nb_remote_session ( tvb , offset , tree ) ;\n return 0 ;\n}","0","0","0","Partial","1","0","Equal","Hai demo có mức độ liên quan an ninh tương đương nhau trong việc hỗ trợ đánh giá Target."
+"39","8460430819945784394","0","static void _PPC_ioB_write ( target_phys_addr_t addr , uint32_t value ) {
+ }","static int fts_build_full_words ( struct fts_mail_build_context * ctx , const unsigned char * data , size_t size , bool last ) {\n for ( i = size ; i > 0 ; i -- ) if ( IS_WORD_WHITESPACE ( data [ i - 1 ] ) ) break ;\n return 0 ;\n}","static void spl_filesystem_object_free_storage ( void * object TSRMLS_DC ) {\n spl_filesystem_object * intern = ( spl_filesystem_object * ) object ;\n efree ( object ) ;\n}","1","1","0","0","0","0","B","Demo B thể hiện giải phóng vùng nhớ heap sau khi xử lý chuỗi, hữu ích hơn cho việc đối chiếu rò rỉ tài nguyên."
+"40","4976989049001279223","0","static char * http_str_store ( Arena * arena , const char * str , int length ) {
+ const char * wks ;
+ int idx = hdrtoken_tokenize ( str , length , & wks ) ;
+ if ( idx < 0 ) {
+ return arena -> str_store ( str , length ) ;
+ }
+ else {
+ return ( char * ) wks ;
+ }
+ }","static void spl_filesystem_object_free_storage ( void * object TSRMLS_DC ) {\n spl_filesystem_object * intern = ( spl_filesystem_object * ) object ;\n efree ( object ) ;\n}","static int sunrast_decode_frame ( AVCodecContext * avctx , void * data , int * got_frame , AVPacket * avpkt ) {\n if ( avpkt -> size < 32 ) return AVERROR_INVALIDDATA ;\n if ( av_image_check_size ( w , h , 0 , avctx ) ) return AVERROR_INVALIDDATA ;\n}","0","0","0","1","1","1","A","Demo A cung cấp mẫu giải phóng bộ nhớ dynamic an toàn, giúp đối chiếu toàn diện vòng đời đối tượng."
+"41","-7187272991279783781","0","static void apc_init ( hwaddr power_base , qemu_irq cpu_halt ) {
+ DeviceState * dev ;
+ SysBusDevice * s ;
+ dev = qdev_create ( NULL , ""apc"" ) ;
+ qdev_init_nofail ( dev ) ;
+ s = SYS_BUS_DEVICE ( dev ) ;
+ sysbus_mmio_map ( s , 0 , power_base ) ;
+ sysbus_connect_irq ( s , 0 , cpu_halt ) ;
+ }","static int kadmin_parse_policy_args ( int argc , char * argv [ ] , kadm5_policy_ent_t policy , long * mask , char * caller ) {\n if ( ++ i > argc - 2 ) return - 1 ;\n return 0 ;\n}","static void spl_filesystem_object_free_storage ( void * object TSRMLS_DC ) {\n spl_filesystem_object * intern = ( spl_filesystem_object * ) object ;\n efree ( object ) ;\n}","1","1","1","0","0","0","A","Demo A liên quan an ninh hơn (cùng guard kiểm tra biên số lượng tham số ++i > argc - 2)."
+"42","-7136186224744987223","0","char * Curl_checkProxyheaders ( const struct connectdata * conn , const char * thisheader ) {
+ struct curl_slist * head ;
+ size_t thislen = strlen ( thisheader ) ;
+ struct Curl_easy * data = conn -> data ;
+ for ( head = ( conn -> bits . proxy && data -> set . sep_headers ) ? data -> set . proxyheaders : data -> set . headers ;
+ head ;
+ head = head -> next ) {
+ if ( Curl_raw_nequal ( head -> data , thisheader , thislen ) ) return head -> data ;
+ }
+ return NULL ;
+ }","void ff_write_quant_matrix ( PutBitContext * pb , uint16_t * matrix ) {\n if ( matrix ) put_bits ( pb , 1 , 1 ) ;\n}","static void spl_filesystem_object_free_storage ( void * object TSRMLS_DC ) {\n spl_filesystem_object * intern = ( spl_filesystem_object * ) object ;\n efree ( object ) ;\n}","1","1","1","0","0","0","Neither","Cả hai demo đều không mang lại rào chắn an ninh mở rộng cho việc thao tác bộ đệm bit."
+"43","-4558261210024070448","0","static void xmlLinkDeallocator ( xmlListPtr l , xmlLinkPtr lk ) {
+ ( lk -> prev ) -> next = lk -> next ;
+ ( lk -> next ) -> prev = lk -> prev ;
+ if ( l -> linkDeallocator ) l -> linkDeallocator ( lk ) ;
+ xmlFree ( lk ) ;
+ }","static void spl_filesystem_object_free_storage ( void * object TSRMLS_DC ) {\n spl_filesystem_object * intern = ( spl_filesystem_object * ) object ;\n efree ( object ) ;\n}","static void page_flush_tb ( void ) {\n int i ;\n for ( i = 0 ; i < V_L1_SIZE ; i ++ ) page_flush_tb_1 ( V_L1_SHIFT / L2_BITS - 1 , l1_map + i ) ;\n}","0","0","0","0","0","0","Equal","Cả hai demo đều có mức độ liên quan an ninh tương đương nhau trong việc hỗ trợ duyệt trang dịch."
+"44","-1111775978048960297","0","TEST_F ( BrowsingDataRemoverImplTest , RemoveChannelIDLastHour ) {
+ RemoveChannelIDTester tester ( GetBrowserContext ( ) ) ;
+ base : : Time now = base : : Time : : Now ( ) ;
+ tester . AddChannelID ( kTestOrigin1 ) ;
+ tester . AddChannelIDWithTimes ( kTestOrigin2 , now - base : : TimeDelta : : FromHours ( 2 ) ) ;
+ EXPECT_EQ ( 0 , tester . ssl_config_changed_count ( ) ) ;
+ EXPECT_EQ ( 2 , tester . ChannelIDCount ( ) ) ;
+ BlockUntilBrowsingDataRemoved ( AnHourAgo ( ) , base : : Time : : Max ( ) , BrowsingDataRemover : : REMOVE_CHANNEL_IDS , false ) ;
+ EXPECT_EQ ( BrowsingDataRemover : : REMOVE_CHANNEL_IDS , GetRemovalMask ( ) ) ;
+ EXPECT_EQ ( BrowsingDataHelper : : UNPROTECTED_WEB , GetOriginTypeMask ( ) ) ;
+ EXPECT_EQ ( 1 , tester . ssl_config_changed_count ( ) ) ;
+ ASSERT_EQ ( 1 , tester . ChannelIDCount ( ) ) ;
+ net : : ChannelIDStore : : ChannelIDList channel_ids ;
+ tester . GetChannelIDList ( & channel_ids ) ;
+ ASSERT_EQ ( 1U , channel_ids . size ( ) ) ;
+ EXPECT_EQ ( kTestOrigin2 , channel_ids . front ( ) . server_identifier ( ) ) ;
+ }","static void spl_filesystem_object_free_storage ( void * object TSRMLS_DC ) {\n spl_filesystem_object * intern = ( spl_filesystem_object * ) object ;\n efree ( object ) ;\n}","static int http_RecvPostMessage ( http_parser_t * parser , SOCKINFO * info , char * filename , struct SendInstruction * Instr ) {\n if ( Instr && Instr -> IsVirtualFile ) virtualDirCallback . close ( Fp ) ;\n else fclose ( Fp ) ;\n return ret_code ;\n}","0","0","0","1","1","1","B","Demo B liên quan an ninh hơn (cùng sink đóng file và thao tác I/O tài nguyên mạng)."
+"45","8281630545066492937","0","static _Bool have_gcrypt ( void ) {
+ static _Bool result = 0 ;
+ static _Bool need_init = 1 ;
+ if ( ! need_init ) return ( result ) ;
+ need_init = 0 ;
+ # if HAVE_LIBGCRYPT # if GCRYPT_VERSION_NUMBER < 0x010600 if ( gcry_control ( GCRYCTL_SET_THREAD_CBS , & gcry_threads_pthread ) ) return ( 0 ) ;
+ # endif if ( ! gcry_check_version ( GCRYPT_VERSION ) ) return ( 0 ) ;
+ if ( ! gcry_control ( GCRYCTL_INIT_SECMEM , 32768 , 0 ) ) return ( 0 ) ;
+ gcry_control ( GCRYCTL_INITIALIZATION_FINISHED , 0 ) ;
+ result = 1 ;
+ return ( 1 ) ;
+ # else return ( 0 ) ;
+ # endif }","static void spl_filesystem_object_free_storage ( void * object TSRMLS_DC ) {\n spl_filesystem_object * intern = ( spl_filesystem_object * ) object ;\n efree ( object ) ;\n}","int virLogParseOutputs ( const char * src , virLogOutputPtr * * outputs ) {\n at = virLogFindOutput ( list , noutputs , output -> dest , output -> name ) ;\n if ( VIR_APPEND_ELEMENT ( list , noutputs , output ) < 0 ) goto cleanup ;\n}","1","1","1","0","0","0","B","Demo B phù hợp hơn về mặt thao tác danh sách log và xử lý lỗi phân tách chuỗi cấu hình."
+"46","5400542917484463750","0","vpx_codec_err_t vpx_svc_set_options ( SvcContext * svc_ctx , const char * options ) {
+ SvcInternal * const si = get_svc_internal ( svc_ctx ) ;
+ if ( svc_ctx == NULL || options == NULL || si == NULL ) {
+ return VPX_CODEC_INVALID_PARAM ;
+ }
+ strncpy ( si -> options , options , sizeof ( si -> options ) ) ;
+ si -> options [ sizeof ( si -> options ) - 1 ] = '\0' ;
+ return VPX_CODEC_OK ;
+ }","static void spl_filesystem_object_free_storage ( void * object TSRMLS_DC ) {\n spl_filesystem_object * intern = ( spl_filesystem_object * ) object ;\n efree ( object ) ;\n}","static guint32 dissect_netb_receive_continue ( tvbuff_t * tvb , packet_info * pinfo _U_ , int offset , proto_tree * tree ) {\n nb_local_session ( tvb , offset , tree ) ;\n return 0 ;\n}","0","0","0","Partial","1","0","Equal","Hai demo cung cấp ngữ nghĩa an ninh tương đương nhau cho hàm điều phối mổ xẻ nội bộ."
+"47","-2323311514228246061","0","IN_PROC_BROWSER_TEST_F ( DownloadExtensionTest , DownloadExtensionTest_OnDeterminingFilename_ParentDirInvalid ) {
+ ASSERT_TRUE ( StartEmbeddedTestServer ( ) ) ;
+ GoOnTheRecord ( ) ;
+ LoadExtension ( ""downloads_split"" ) ;
+ AddFilenameDeterminer ( ) ;
+ std : : string download_url = embedded_test_server ( ) -> GetURL ( ""/slow?0"" ) . spec ( ) ;
+ std : : unique_ptr < base : : Value > result ( RunFunctionAndReturnResult ( new DownloadsDownloadFunction ( ) , base : : StringPrintf ( ""[{
+\""url\"": \""%s\""}
+]"" , download_url . c_str ( ) ) ) ) ;
+ ASSERT_TRUE ( result . get ( ) ) ;
+ int result_id = - 1 ;
+ ASSERT_TRUE ( result -> GetAsInteger ( & result_id ) ) ;
+ DownloadItem * item = GetCurrentManager ( ) -> GetDownload ( result_id ) ;
+ ASSERT_TRUE ( item ) ;
+ ScopedCancellingItem canceller ( item ) ;
+ ASSERT_EQ ( download_url , item -> GetOriginalUrl ( ) . spec ( ) ) ;
+ ASSERT_TRUE ( WaitFor ( downloads : : OnCreated : : kEventName , base : : StringPrintf ( ""[{
+\""danger\"": \""safe\"","" "" \""incognito\"": false,"" "" \""id\"": %d,"" "" \""mime\"": \""text/plain\"","" "" \""paused\"": false,"" "" \""url\"": \""%s\""}
+]"" , result_id , download_url . c_str ( ) ) ) ) ;
+ ASSERT_TRUE ( WaitFor ( downloads : : OnDeterminingFilename : : kEventName , base : : StringPrintf ( ""[{
+\""id\"": %d,"" "" \""filename\"":\""slow.txt\""}
+]"" , result_id ) ) ) ;
+ ASSERT_TRUE ( item -> GetTargetFilePath ( ) . empty ( ) ) ;
+ ASSERT_EQ ( DownloadItem : : IN_PROGRESS , item -> GetState ( ) ) ;
+ std : : string error ;
+ ASSERT_FALSE ( ExtensionDownloadsEventRouter : : DetermineFilename ( browser ( ) -> profile ( ) , false , GetExtensionId ( ) , result_id , base : : FilePath ( FILE_PATH_LITERAL ( "".."" ) ) , downloads : : FILENAME_CONFLICT_ACTION_UNIQUIFY , & error ) ) ;
+ EXPECT_STREQ ( errors : : kInvalidFilename , error . c_str ( ) ) ;
+ ASSERT_TRUE ( WaitFor ( downloads : : OnChanged : : kEventName , base : : StringPrintf ( ""[{
+\""id\"": %d,"" "" \""filename\"": {
+"" "" \""previous\"": \""\"","" "" \""current\"": \""%s\""}
+}
+]"" , result_id , GetFilename ( ""slow.txt"" ) . c_str ( ) ) ) ) ;
+ ASSERT_TRUE ( WaitFor ( downloads : : OnChanged : : kEventName , base : : StringPrintf ( ""[{
+\""id\"": %d,"" "" \""state\"": {
+"" "" \""previous\"": \""in_progress\"","" "" \""current\"": \""complete\""}
+}
+]"" , result_id ) ) ) ;
+ }","static void pk_transaction_class_init ( PkTransactionClass * klass ) {\n g_type_class_add_private ( klass , sizeof ( PkTransactionPrivate ) ) ;\n}","static void spl_filesystem_object_free_storage ( void * object TSRMLS_DC ) {\n spl_filesystem_object * intern = ( spl_filesystem_object * ) object ;\n efree ( object ) ;\n}","0","Partial","0","1","0","0","Equal","Cả hai demo đều thể hiện một khía cạnh của quản lý bộ nhớ: Demo A về cấu trúc lớp GObject, Demo B về giải phóng bộ nhớ dynamic."
+"48","-704025756752474526","0","void PNGAPI png_set_sBIT ( png_structp png_ptr , png_infop info_ptr , png_color_8p sig_bit ) {
+ png_debug1 ( 1 , ""in %s storage function"" , ""sBIT"" ) ;
+ if ( png_ptr == NULL || info_ptr == NULL ) return ;
+ png_memcpy ( & ( info_ptr -> sig_bit ) , sig_bit , png_sizeof ( png_color_8 ) ) ;
+ info_ptr -> valid |= PNG_INFO_sBIT ;
+ }","static void spl_filesystem_object_free_storage ( void * object TSRMLS_DC ) {\n spl_filesystem_object * intern = ( spl_filesystem_object * ) object ;\n efree ( object ) ;\n}","static void page_flush_tb ( void ) {\n int i ;\n for ( i = 0 ; i < V_L1_SIZE ; i ++ ) page_flush_tb_1 ( V_L1_SHIFT / L2_BITS - 1 , l1_map + i ) ;\n}","0","0","0","0","0","0","Equal","Hai demo có mức độ tương đồng an ninh ngang nhau đối với logic lặp bảng trang."
+"49","-1315695702746584250","0","void proto_set_decoding ( const int proto_id , const gboolean enabled ) {
+ protocol_t * protocol ;
+ protocol = find_protocol_by_id ( proto_id ) ;
+ DISSECTOR_ASSERT ( protocol -> can_toggle ) ;
+ protocol -> is_enabled = enabled ;
+ }","static void spl_filesystem_object_free_storage ( void * object TSRMLS_DC ) {\n spl_filesystem_object * intern = ( spl_filesystem_object * ) object ;\n efree ( object ) ;\n}","static int fts_build_full_words ( struct fts_mail_build_context * ctx , const unsigned char * data , size_t size , bool last ) {\n buffer_set_used_size ( ctx -> word_buf , 0 ) ;\n return 0 ;\n}","0","0","0","Partial","1","0","B","Demo B thể hiện cùng thao tác quản lý độ dài buffer nội bộ của ngữ cảnh fts, phù hợp ngữ cảnh hơn Demo A."
+"50","-8115807672627724050","0","static int ts_lua_http_client_packet_mark_set ( lua_State * L ) {
+ int value ;
+ ts_lua_http_ctx * http_ctx ;
+ GET_HTTP_CONTEXT ( http_ctx , L ) ;
+ value = luaL_checkinteger ( L , 1 ) ;
+ TSDebug ( TS_LUA_DEBUG_TAG , ""client packet mark set"" ) ;
+ TSHttpTxnClientPacketMarkSet ( http_ctx -> txnp , value ) ;
+ return 0 ;
+ }","static void spl_filesystem_object_free_storage ( void * object TSRMLS_DC ) {\n spl_filesystem_object * intern = ( spl_filesystem_object * ) object ;\n efree ( object ) ;\n}","void ff_write_quant_matrix ( PutBitContext * pb , uint16_t * matrix ) {\n if ( matrix ) put_bits ( pb , 1 , 1 ) ;\n else put_bits ( pb , 1 , 0 ) ;\n}","0","0","0","1","1","1","A","Demo A cung cấp mẫu đối chiếu giải phóng con trỏ cấu trúc heap hữu ích, bổ trợ cho việc đánh giá xử lý con trỏ ma trận."

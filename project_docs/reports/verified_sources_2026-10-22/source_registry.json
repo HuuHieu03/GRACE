@@ -1,0 +1,530 @@
+{
+  "schema_version": 1,
+  "sources": {
+    "output/stage3/b3_vs_b2_comparison_report.json": {
+      "sha256": "5129435c4b95a284fc51d78aed36896271067160454ebc8cd2650c902d7178f7",
+      "bytes": 339983
+    },
+    "kaggle_notebooks/stage3_b3_vs_b2/downloaded_runs/Ver03_B3_vs_B2_Comparison/b3_vs_b2_comparison_report.json": {
+      "sha256": "5129435c4b95a284fc51d78aed36896271067160454ebc8cd2650c902d7178f7",
+      "bytes": 339983
+    },
+    "data/splits/devign_dev_clean_100_ids.json": {
+      "sha256": "10f78cb9cecc75abb625dd7da187c5e5443e3004a062a8707b0a4d6d05e986a3",
+      "bytes": 14267411
+    },
+    "kaggle_notebooks/stage3_b3_vs_b2/downloaded_runs/Ver03_B3_vs_B2_Comparison/grace-stage-3-b3-vs-b2-contrastive-demonstration.log": {
+      "sha256": "f2bba06adb1cd328765440b8b4cb969face75938a18845301e823d8320217401",
+      "bytes": 145589
+    },
+    "output/stage3/b3_vs_b2_comparison_report.csv": {
+      "sha256": "edea450522375ba7a9d63e4d9c54b5f4339fb6dbbde60a7c1f8d0e2b2427ec51",
+      "bytes": 354
+    },
+    "output/stage3/reveal_b3_vs_b2_comparison_report.json": {
+      "sha256": "0bf1442f4743e966c099e4554de9817772b0349947ae1c1dd5206dccbfc83761",
+      "bytes": 378344
+    },
+    "kaggle_notebooks/stage3_b3_vs_b2/downloaded_runs/Ver04_ReVeal_B3_vs_B2/reveal_b3_vs_b2_comparison_report.json": {
+      "sha256": "0bf1442f4743e966c099e4554de9817772b0349947ae1c1dd5206dccbfc83761",
+      "bytes": 378344
+    },
+    "data/splits/reveal_dev_clean_100_ids.json": {
+      "sha256": "54b1aa4c6f745333761a20140a8a388ba8c4349a085c5a6f284823cee8a03118",
+      "bytes": 20091040
+    },
+    "kaggle_notebooks/stage3_b3_vs_b2/downloaded_runs/Ver04_ReVeal_B3_vs_B2/grace-stage-3-b3-vs-b2-contrastive-demonstration.log": {
+      "sha256": "4dbd3c2edcbafd120f785ec7180dd6e8f6937518018ad06120bc78a15c389504",
+      "bytes": 397212
+    },
+    "output/stage3/reveal_b3_vs_b2_comparison_report.csv": {
+      "sha256": "abfac451f39f4ad3232fbd4a4300055a710c10f1ef39b105e9626166509cede4",
+      "bytes": 352
+    },
+    "output/stage3/ablation_nodiff_comparison_report.json": {
+      "sha256": "b5f3fb3532d7241fda4bd33bec523b871d4712eb42af01649e3a84e885db7e18",
+      "bytes": 342883
+    },
+    "kaggle_notebooks/stage3_b3_vs_b2/downloaded_runs/Ver05_Ablation_B3_NoDiff/ablation_nodiff_comparison_report.json": {
+      "sha256": "b5f3fb3532d7241fda4bd33bec523b871d4712eb42af01649e3a84e885db7e18",
+      "bytes": 342883
+    },
+    "kaggle_notebooks/stage3_b3_vs_b2/downloaded_runs/Ver05_Ablation_B3_NoDiff/grace-stage-3-b3-vs-b2-contrastive-demonstration.log": {
+      "sha256": "038339494a9dc0446ceac4c2131373976b444221c4bc581189f457d609f4507e",
+      "bytes": 308394
+    },
+    "output/stage3/ablation_nodiff_comparison_report.csv": {
+      "sha256": "292ff4080a9a79a9fb446a36216fc1aa4e5777a58cbe375886f5368fe307cbbe",
+      "bytes": 679
+    },
+    "output/stage2/label_flip/label_flip_test_report.json": {
+      "sha256": "5c5a986d1f90d9172169507bfb7715a56a9b1dddb8eaf89aa667dd1663ca4b39",
+      "bytes": 53960
+    },
+    "output/stage3/b3_vs_b2_comparison_summary.csv": {
+      "sha256": "dd29234f89e83c366fa41dd4c4a683537f028f74e3595230805db25267920dc0",
+      "bytes": 627
+    }
+  },
+  "runs": [
+    {
+      "run_id": "stage3_devign_ver03",
+      "dataset": "devign",
+      "source": "output/stage3/b3_vs_b2_comparison_report.json",
+      "archive_json_matches": true,
+      "metrics": {
+        "total_samples": 100,
+        "valid_samples": 100,
+        "invalid_samples": 0,
+        "invalid_rate": 0.0,
+        "accuracy": 0.46,
+        "precision": 0.5,
+        "recall": 0.6111,
+        "f1_score": 0.55,
+        "mcc": -0.1118,
+        "balanced_accuracy": 0.4469,
+        "predicted_vulnerable_rate": 0.66,
+        "confusion_matrix": {
+          "TP (True Positive)": 33,
+          "FP (False Positive - Alarm)": 33,
+          "TN (True Negative)": 13,
+          "FN (False Negative - Miss)": 21
+        },
+        "baselines": {
+          "always_vulnerable_f1": 0.7013,
+          "always_vulnerable_acc": 0.54,
+          "always_safe_f1": 0.0,
+          "always_safe_acc": 0.46
+        }
+      },
+      "support": "metrics_recomputed_from_per_id_predictions",
+      "raw_response": "unavailable_in_export",
+      "actual_prompt": "unavailable_in_export",
+      "b2_support": "reported_aggregate_only; not interchangeable with Stage2 baseline",
+      "reported_b2_metrics": {
+        "total_samples": 100,
+        "valid_samples": 100,
+        "invalid_samples": 0,
+        "invalid_rate": 0.0,
+        "accuracy": 0.47,
+        "precision": 0.5172,
+        "recall": 0.2778,
+        "f1_score": 0.3614,
+        "mcc": -0.0292,
+        "balanced_accuracy": 0.4867,
+        "predicted_vulnerable_rate": 0.29,
+        "confusion_matrix": {
+          "TP (True Positive)": 15,
+          "FP (False Positive - Alarm)": 14,
+          "TN (True Negative)": 32,
+          "FN (False Negative - Miss)": 39
+        },
+        "baselines": {
+          "always_vulnerable_f1": 0.7013,
+          "always_vulnerable_acc": 0.54,
+          "always_safe_f1": 0.0,
+          "always_safe_acc": 0.46
+        }
+      },
+      "reported_paired_ci": {
+        "n_resamples": 2000,
+        "delta_f1": {
+          "mean": 0.1883,
+          "ci_95": [
+            0.071,
+            0.3093
+          ],
+          "excludes_zero": true
+        },
+        "delta_mcc": {
+          "mean": -0.0812,
+          "ci_95": [
+            -0.2995,
+            0.1456
+          ],
+          "excludes_zero": false
+        },
+        "delta_balanced_accuracy": {
+          "mean": -0.0393,
+          "ci_95": [
+            -0.1429,
+            0.0669
+          ],
+          "excludes_zero": false
+        }
+      },
+      "paired_b2_statistics_support": "reported_only; B2 per-ID export unavailable",
+      "model_metadata": {
+        "experiment": "stage3_b3_vs_b2_comparison",
+        "contract": "evaluation_contract.yaml",
+        "dataset": "devign",
+        "dev_split_file": "/kaggle/working/GRACE/data/splits/devign_dev_clean_100_ids.json",
+        "model_name": "publishers/qwen/models/qwen3-coder-480b-a35b-instruct-maas",
+        "provider": "Vertex AI",
+        "seed": 42,
+        "temperature": 0.0,
+        "max_tokens": 256,
+        "strategy": "counterexample_pair",
+        "lambda_weight": 0.3,
+        "total_samples": 100,
+        "valid_samples": 100,
+        "use_mock": false
+      },
+      "quality_claim": "NOT_ESTABLISHED"
+    },
+    {
+      "run_id": "stage3_reveal_ver04",
+      "dataset": "reveal",
+      "source": "output/stage3/reveal_b3_vs_b2_comparison_report.json",
+      "archive_json_matches": true,
+      "metrics": {
+        "total_samples": 100,
+        "valid_samples": 100,
+        "invalid_samples": 0,
+        "invalid_rate": 0.0,
+        "accuracy": 0.59,
+        "precision": 0.6286,
+        "recall": 0.44,
+        "f1_score": 0.5176,
+        "mcc": 0.1887,
+        "balanced_accuracy": 0.59,
+        "predicted_vulnerable_rate": 0.35,
+        "confusion_matrix": {
+          "TP (True Positive)": 22,
+          "FP (False Positive - Alarm)": 13,
+          "TN (True Negative)": 37,
+          "FN (False Negative - Miss)": 28
+        },
+        "baselines": {
+          "always_vulnerable_f1": 0.6667,
+          "always_vulnerable_acc": 0.5,
+          "always_safe_f1": 0.0,
+          "always_safe_acc": 0.5
+        }
+      },
+      "support": "metrics_recomputed_from_per_id_predictions",
+      "raw_response": "unavailable_in_export",
+      "actual_prompt": "unavailable_in_export",
+      "b2_support": "reported_aggregate_only; not interchangeable with Stage2 baseline",
+      "reported_b2_metrics": {
+        "total_samples": 100,
+        "valid_samples": 100,
+        "invalid_samples": 0,
+        "invalid_rate": 0.0,
+        "accuracy": 0.56,
+        "precision": 0.6364,
+        "recall": 0.28,
+        "f1_score": 0.3889,
+        "mcc": 0.1448,
+        "balanced_accuracy": 0.56,
+        "predicted_vulnerable_rate": 0.22,
+        "confusion_matrix": {
+          "TP (True Positive)": 14,
+          "FP (False Positive - Alarm)": 8,
+          "TN (True Negative)": 42,
+          "FN (False Negative - Miss)": 36
+        },
+        "baselines": {
+          "always_vulnerable_f1": 0.6667,
+          "always_vulnerable_acc": 0.5,
+          "always_safe_f1": 0.0,
+          "always_safe_acc": 0.5
+        }
+      },
+      "reported_paired_ci": {
+        "n_resamples": 2000,
+        "delta_f1": {
+          "mean": 0.1293,
+          "ci_95": [
+            0.0107,
+            0.2476
+          ],
+          "excludes_zero": true
+        },
+        "delta_mcc": {
+          "mean": 0.0428,
+          "ci_95": [
+            -0.128,
+            0.2116
+          ],
+          "excludes_zero": false
+        },
+        "delta_balanced_accuracy": {
+          "mean": 0.0295,
+          "ci_95": [
+            -0.0468,
+            0.1075
+          ],
+          "excludes_zero": false
+        }
+      },
+      "paired_b2_statistics_support": "reported_only; B2 per-ID export unavailable",
+      "model_metadata": {
+        "experiment": "stage3_b3_vs_b2_comparison",
+        "contract": "evaluation_contract.yaml",
+        "dataset": "reveal",
+        "dev_split_file": "/kaggle/working/GRACE/data/splits/reveal_dev_clean_100_ids.json",
+        "model_name": "publishers/qwen/models/qwen3-coder-480b-a35b-instruct-maas",
+        "provider": "Vertex AI",
+        "seed": 42,
+        "temperature": 0.0,
+        "max_tokens": 256,
+        "strategy": "counterexample_pair",
+        "lambda_weight": 0.3,
+        "total_samples": 100,
+        "valid_samples": 100,
+        "use_mock": false
+      },
+      "quality_claim": "NOT_ESTABLISHED"
+    },
+    {
+      "run_id": "stage3_devign_nodiff_ver05",
+      "dataset": "devign",
+      "source": "output/stage3/ablation_nodiff_comparison_report.json",
+      "archive_json_matches": true,
+      "metrics": {
+        "total_samples": 100,
+        "valid_samples": 100,
+        "invalid_samples": 0,
+        "invalid_rate": 0.0,
+        "accuracy": 0.47,
+        "precision": 0.5091,
+        "recall": 0.5185,
+        "f1_score": 0.5138,
+        "mcc": -0.0686,
+        "balanced_accuracy": 0.4658,
+        "predicted_vulnerable_rate": 0.55,
+        "confusion_matrix": {
+          "TP (True Positive)": 28,
+          "FP (False Positive - Alarm)": 27,
+          "TN (True Negative)": 19,
+          "FN (False Negative - Miss)": 26
+        },
+        "baselines": {
+          "always_vulnerable_f1": 0.7013,
+          "always_vulnerable_acc": 0.54,
+          "always_safe_f1": 0.0,
+          "always_safe_acc": 0.46
+        }
+      },
+      "support": "metrics_recomputed_from_per_id_predictions",
+      "raw_response": "unavailable_in_export",
+      "actual_prompt": "unavailable_in_export",
+      "b2_support": "reported_aggregate_only; not interchangeable with Stage2 baseline",
+      "reported_b2_metrics": {
+        "total_samples": 100,
+        "valid_samples": 100,
+        "invalid_samples": 0,
+        "invalid_rate": 0.0,
+        "accuracy": 0.46,
+        "precision": 0.5,
+        "recall": 0.2593,
+        "f1_score": 0.3415,
+        "mcc": -0.05,
+        "balanced_accuracy": 0.4775,
+        "predicted_vulnerable_rate": 0.28,
+        "confusion_matrix": {
+          "TP (True Positive)": 14,
+          "FP (False Positive - Alarm)": 14,
+          "TN (True Negative)": 32,
+          "FN (False Negative - Miss)": 40
+        },
+        "baselines": {
+          "always_vulnerable_f1": 0.7013,
+          "always_vulnerable_acc": 0.54,
+          "always_safe_f1": 0.0,
+          "always_safe_acc": 0.46
+        }
+      },
+      "reported_paired_ci": {
+        "n_resamples": 2000,
+        "delta_f1": {
+          "mean": 0.1714,
+          "ci_95": [
+            0.0593,
+            0.2876
+          ],
+          "excludes_zero": true
+        },
+        "delta_mcc": {
+          "mean": -0.0192,
+          "ci_95": [
+            -0.2177,
+            0.1869
+          ],
+          "excludes_zero": false
+        },
+        "delta_balanced_accuracy": {
+          "mean": -0.0122,
+          "ci_95": [
+            -0.1062,
+            0.0853
+          ],
+          "excludes_zero": false
+        }
+      },
+      "paired_b2_statistics_support": "reported_only; B2 per-ID export unavailable",
+      "model_metadata": {
+        "experiment": "stage3_ablation_nodiff",
+        "contract": "evaluation_contract.yaml",
+        "dataset": "devign",
+        "dev_split_file": "/kaggle/working/GRACE/data/splits/devign_dev_clean_100_ids.json",
+        "model_name": "publishers/qwen/models/qwen3-coder-480b-a35b-instruct-maas",
+        "provider": "Vertex AI",
+        "seed": 42,
+        "temperature": 0.0,
+        "max_tokens": 256,
+        "strategy": "counterexample_pair",
+        "lambda_weight": 0.3,
+        "include_security_diff": false,
+        "total_samples": 100,
+        "valid_samples": 100,
+        "use_mock": false
+      },
+      "quality_claim": "NOT_ESTABLISHED"
+    },
+    {
+      "run_id": "stage2_devign_original_b2",
+      "dataset": "devign",
+      "source": "output/stage2/label_flip/label_flip_test_report.json",
+      "metrics": {
+        "total_samples": 100,
+        "valid_samples": 100,
+        "invalid_samples": 0,
+        "invalid_rate": 0.0,
+        "accuracy": 0.46,
+        "precision": 0.5,
+        "recall": 0.2593,
+        "f1_score": 0.3415,
+        "mcc": -0.05,
+        "balanced_accuracy": 0.4775,
+        "predicted_vulnerable_rate": 0.28,
+        "confusion_matrix": {
+          "TP (True Positive)": 14,
+          "FP (False Positive - Alarm)": 14,
+          "TN (True Negative)": 32,
+          "FN (False Negative - Miss)": 40
+        },
+        "baselines": {
+          "always_vulnerable_f1": 0.7013,
+          "always_vulnerable_acc": 0.54,
+          "always_safe_f1": 0.0,
+          "always_safe_acc": 0.46
+        }
+      },
+      "support": "metrics_recomputed_and_raw_reparsed",
+      "raw_response": "available_300_responses",
+      "actual_prompt": "unavailable_in_export",
+      "quality_claim": "NOT_ESTABLISHED"
+    }
+  ],
+  "historical_tables": [
+    {
+      "path": "output/stage3/b3_vs_b2_comparison_report.csv",
+      "status": "consistent_with_json",
+      "mismatches": []
+    },
+    {
+      "path": "output/stage3/reveal_b3_vs_b2_comparison_report.csv",
+      "status": "consistent_with_json",
+      "mismatches": []
+    },
+    {
+      "path": "output/stage3/ablation_nodiff_comparison_report.csv",
+      "status": "consistent_with_json",
+      "mismatches": []
+    },
+    {
+      "path": "output/stage3/b3_vs_b2_comparison_summary.csv",
+      "status": "EXCLUDED_CONFLICT",
+      "mismatches": [
+        {
+          "metric": "accuracy",
+          "column": "B2_Baseline",
+          "csv_value": "0.4600",
+          "json_value": 0.47
+        },
+        {
+          "metric": "accuracy",
+          "column": "B3_Contrastive",
+          "csv_value": "0.6800",
+          "json_value": 0.46
+        },
+        {
+          "metric": "precision",
+          "column": "B2_Baseline",
+          "csv_value": "0.5000",
+          "json_value": 0.5172
+        },
+        {
+          "metric": "precision",
+          "column": "B3_Contrastive",
+          "csv_value": "0.7273",
+          "json_value": 0.5
+        },
+        {
+          "metric": "recall",
+          "column": "B2_Baseline",
+          "csv_value": "0.2593",
+          "json_value": 0.2778
+        },
+        {
+          "metric": "recall",
+          "column": "B3_Contrastive",
+          "csv_value": "0.5926",
+          "json_value": 0.6111
+        },
+        {
+          "metric": "f1_score",
+          "column": "B2_Baseline",
+          "csv_value": "0.3415",
+          "json_value": 0.3614
+        },
+        {
+          "metric": "f1_score",
+          "column": "B3_Contrastive",
+          "csv_value": "0.6531",
+          "json_value": 0.55
+        },
+        {
+          "metric": "mcc",
+          "column": "B2_Baseline",
+          "csv_value": "-0.0500",
+          "json_value": -0.0292
+        },
+        {
+          "metric": "mcc",
+          "column": "B3_Contrastive",
+          "csv_value": "0.3644",
+          "json_value": -0.1118
+        },
+        {
+          "metric": "balanced_accuracy",
+          "column": "B2_Baseline",
+          "csv_value": "0.4775",
+          "json_value": 0.4867
+        },
+        {
+          "metric": "balanced_accuracy",
+          "column": "B3_Contrastive",
+          "csv_value": "0.6877",
+          "json_value": 0.4469
+        },
+        {
+          "metric": "predicted_vulnerable_rate",
+          "column": "B2_Baseline",
+          "csv_value": "0.2800",
+          "json_value": 0.29
+        },
+        {
+          "metric": "predicted_vulnerable_rate",
+          "column": "B3_Contrastive",
+          "csv_value": "0.4400",
+          "json_value": 0.66
+        }
+      ],
+      "reason": "No independently traceable run backing the conflicting summary has been established."
+    }
+  ],
+  "policy": "Preserve historical artifacts. Use regenerated metrics with explicit evidence scope; no positive improvement or independent human-review claims."
+}

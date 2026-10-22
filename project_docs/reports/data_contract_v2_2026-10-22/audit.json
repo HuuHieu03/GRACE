@@ -1,0 +1,69 @@
+[
+  {
+    "dataset": "devign",
+    "train_rows": 21854,
+    "unique_function_uids": 21854,
+    "legacy_unique_train_ids": 21854,
+    "actual_target_labels": {
+      "1": 54,
+      "0": 46
+    },
+    "historical_metadata_labels": {
+      "1": 50,
+      "0": 50
+    },
+    "overlaps": [],
+    "policy": "Keep all historical rows/labels; quarantine overlapping targets in future evaluation. No relabeling or replacement samples.",
+    "source_verification": {
+      "EXACT_CANONICAL_TEXT": 21954
+    },
+    "near_clone_audit": "PENDING",
+    "dataset_revision": "local input SHA256 snapshots; upstream revision not independently verified"
+  },
+  {
+    "dataset": "reveal",
+    "train_rows": 18187,
+    "unique_function_uids": 18187,
+    "legacy_unique_train_ids": 1017,
+    "actual_target_labels": {
+      "1": 50,
+      "0": 50
+    },
+    "historical_metadata_labels": {
+      "1": 50,
+      "0": 50
+    },
+    "overlaps": [
+      {
+        "query_uid": "reveal:validation:368f33dc0bf8c38a82ccf4ee7c5602db49ba74a6790b4f55ccc0589b86328b25",
+        "legacy_query_id": "-16551315108292821",
+        "query_target": 1,
+        "train_matches": [
+          {
+            "uid": "reveal:train:6bed2e6a7235fdb86a30f2d093dc5e9d8e78aec8752b9e5970efe83fa40f263e",
+            "target": 0,
+            "exact_code": true
+          }
+        ]
+      },
+      {
+        "query_uid": "reveal:validation:4687337037403ba68ca7a94f2361b05d22d6b13d275c327e8f56a4084680fe3c",
+        "legacy_query_id": "3728341105073176576",
+        "query_target": 1,
+        "train_matches": [
+          {
+            "uid": "reveal:train:9dbbe8b598fe8484639e49d1a65e94596faea279799fc7666452452fa88c705a",
+            "target": 0,
+            "exact_code": true
+          }
+        ]
+      }
+    ],
+    "policy": "Keep all historical rows/labels; quarantine overlapping targets in future evaluation. No relabeling or replacement samples.",
+    "source_verification": {
+      "EXACT_CANONICAL_TEXT": 18287
+    },
+    "near_clone_audit": "PENDING",
+    "dataset_revision": "local input SHA256 snapshots; upstream revision not independently verified"
+  }
+]

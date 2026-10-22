@@ -28,11 +28,12 @@ if sys.stderr.encoding != "utf-8":
 # Đảm bảo import được từ src
 sys.path.insert(0, str(Path(__file__).parent.resolve()))
 
-from evaluator import parse_llm_prediction
+from evaluator import parse_llm_prediction, parse_strict_binary
 from metrics import compute_classification_metrics, print_metrics_summary
+from record_schema import normalize_records
 
 
-def load_records_from_file(file_path: Path) -> List[Dict[str, Any]]:
+def load_records_from_file(file_path: Path, condition="original", arm=None) -> List[Dict[str, Any]]:
     """Tự động nhận diện định dạng JSON, JSONL hoặc CSV để nạp records."""
     file_path = Path(file_path)
     if not file_path.exists():
@@ -66,13 +67,8 @@ def load_records_from_file(file_path: Path) -> List[Dict[str, Any]]:
     else:
         with open(file_path, "r", encoding="utf-8") as f:
             data = json.load(f)
-            if isinstance(data, list):
-                records = data
-            elif isinstance(data, dict):
-                records = data.get("detailed_predictions", [])
-                if not records and "results" in data:
-                    records = data.get("results", [])
-    return records
+            return normalize_records(data, condition=condition, arm=arm)
+    return normalize_records(records, condition=condition, arm=arm)
 
 
 def audit_and_reparse(records: List[Dict[str, Any]], run_name: str = "Audit Run") -> Dict[str, Any]:
@@ -89,6 +85,7 @@ def audit_and_reparse(records: List[Dict[str, Any]], run_name: str = "Audit Run"
     changed_1_to_0 = 0
     changed_to_invalid = 0
     invalid_count = 0
+    raw_unavailable_count = 0
 
     parse_method_dist: Dict[str, int] = {}
     changes_by_ground_truth: Dict[str, int] = {
@@ -103,7 +100,7 @@ def audit_and_reparse(records: List[Dict[str, Any]], run_name: str = "Audit Run"
     for r in records:
         gt = r.get("target")
         if gt is None:
-            continue
+            raise ValueError("Missing ground truth in audit record")
         y_true.append(int(gt))
 
         old_pred = r.get("prediction")
@@ -115,7 +112,15 @@ def audit_and_reparse(records: List[Dict[str, Any]], run_name: str = "Audit Run"
         if not raw_resp and "raw_response" in r:
             raw_resp = r.get("raw_response", "")
 
-        new_pred, method, is_valid = parse_llm_prediction(raw_resp)
+        raw_available = r.get("raw_response_available", any(k in r and r[k] is not None for k in ["llm_raw_response", "raw_response"]))
+        if raw_available:
+            if r.get("parser_policy") == "strict_binary_v1":
+                new_pred, method, is_valid = parse_strict_binary(raw_resp, r.get("finish_reason"))
+            else:
+                new_pred, method, is_valid = parse_llm_prediction(raw_resp)
+        else:
+            raw_unavailable_count += 1
+            new_pred, method, is_valid = old_pred, "Unavailable: Raw Response Not Stored; Prediction Unverified", old_pred in (0, 1)
         new_preds.append(new_pred)
 
         parse_method_dist[method] = parse_method_dist.get(method, 0) + 1
@@ -146,6 +151,7 @@ def audit_and_reparse(records: List[Dict[str, Any]], run_name: str = "Audit Run"
         rec_copy["prediction"] = new_pred
         rec_copy["new_parse_method"] = method
         rec_copy["is_valid"] = is_valid
+        rec_copy["reparse_performed"] = raw_available
         reparsed_records.append(rec_copy)
 
     metrics_before = compute_classification_metrics(y_true, old_preds)
@@ -159,6 +165,8 @@ def audit_and_reparse(records: List[Dict[str, Any]], run_name: str = "Audit Run"
         "changed_1_to_0": changed_1_to_0,
         "changed_to_invalid": changed_to_invalid,
         "invalid_count": invalid_count,
+        "raw_unavailable_count": raw_unavailable_count,
+        "reparsed_count": len(reparsed_records) - raw_unavailable_count,
         "parse_method_distribution": parse_method_dist,
         "changes_by_ground_truth": changes_by_ground_truth,
         "metrics_before": metrics_before,
@@ -174,6 +182,7 @@ def print_audit_report(report: Dict[str, Any]):
     print(f"  BÁO CÁO ĐỐI SOÁT & REPARSE KẾT QUẢ CŨ: [{report['run_name']}]")
     print("=" * 75)
     print(f"[*] Tổng số mẫu kiểm tra: {report['total_records']}")
+    print(f"[*] Raw không còn truy xuất được (không reparse): {report.get('raw_unavailable_count', 0)}")
     print(f"[*] Tổng số mẫu bị đổi nhãn: {report['label_changed_count']} ({(report['label_changed_count']/report['total_records']*100 if report['total_records']>0 else 0):.2f}%)")
     print(f"    - Thay đổi từ 0 -> 1: {report['changed_0_to_1']}")
     print(f"    - Thay đổi từ 1 -> 0: {report['changed_1_to_0']}")
@@ -203,16 +212,47 @@ def print_audit_report(report: Dict[str, Any]):
     print("=" * 75 + "\n")
 
 
+def align_to_split(records, split_meta):
+    """Require exact IDs and labels; never collapse filenames to numeric aliases."""
+    rows = split_meta.get("sample_details", split_meta.get("rows", []))
+    if rows:
+        expected = {}
+        for row in rows:
+            uid = str(row.get("function_uid", row.get("id")))
+            if uid in expected:
+                raise ValueError("Duplicate ID in canonical split")
+            expected[uid] = row["target"]
+        if "sample_ids" in split_meta and set(map(str, split_meta["sample_ids"])) != set(expected):
+            raise ValueError("Split sample_ids differs from actual sample_details")
+    else:
+        expected = {str(k): None for k in split_meta["sample_ids"]}
+        if len(expected) != len(split_meta["sample_ids"]):
+            raise ValueError("Duplicate ID in canonical split")
+    actual = [str(r["id"]) for r in records]
+    if len(actual) != len(set(actual)) or set(actual) != set(expected):
+        raise ValueError("Record IDs must match the complete canonical split exactly")
+    if any(expected[str(r["id"])] is not None and expected[str(r["id"])] != r["target"] for r in records):
+        raise ValueError("Record labels disagree with canonical split")
+    return records
+
+
 def main():
     parser = argparse.ArgumentParser(description="GRACE Unified Common Evaluator & Audit Reparse Tool")
     parser.add_argument("--input", type=str, required=True, help="Đường dẫn file kết quả (.json, .jsonl hoặc .csv)")
     parser.add_argument("--split_ids", type=str, default=None, help="Đường dẫn file split IDs chuẩn (ví dụ data/splits/devign_test_ids.json)")
     parser.add_argument("--run_name", type=str, default="Evaluation Run", help="Tên phiên chạy đánh giá")
     parser.add_argument("--reparse", action="store_true", help="Thực hiện reparse lại raw response của LLM bằng parser mới")
+    parser.add_argument("--condition", default="original", help="Chọn một condition, mặc định original; không gộp các lần gọi làm tăng mẫu số")
+    parser.add_argument("--arm", default=None, help="Chọn b2/b3 hoặc arm của run mới")
     parser.add_argument("--save_reparsed", type=str, default=None, help="Đường dẫn lưu file json sau reparse (optional)")
     args = parser.parse_args()
 
-    records = load_records_from_file(Path(args.input))
+    records = load_records_from_file(Path(args.input), condition=args.condition, arm=args.arm)
+    arms = {r.get("arm") for r in records}
+    if len(arms) > 1:
+        parser.error("Input has multiple arms; specify --arm to avoid pooling different methods")
+    if not records:
+        parser.error("No per-ID records matched the selected arm/condition")
     print(f"\n[*] Đã nạp {len(records)} mẫu từ: {args.input}")
 
     # Lọc theo canonical split nếu được cung cấp
@@ -222,31 +262,10 @@ def main():
             with open(split_path, "r", encoding="utf-8") as f:
                 split_meta = json.load(f)
             
-            raw_canonical_ids = split_meta.get("sample_ids", [])
-            # Tập ID gốc và tập ID chuẩn hóa (ví dụ trích xuất số nếu có dạng id_10000_...)
-            canonical_lookup = set()
-            for cid in raw_canonical_ids:
-                cid_str = str(cid)
-                canonical_lookup.add(cid_str)
-                if cid_str.startswith("id_") and "_" in cid_str:
-                    parts = cid_str.split("_")
-                    if len(parts) > 1 and parts[1].isdigit():
-                        canonical_lookup.add(parts[1])
-
-            filtered_records = []
-            for r in records:
-                rid = str(r.get("id"))
-                if rid in canonical_lookup:
-                    filtered_records.append(r)
-                elif rid.startswith("id_") and "_" in rid:
-                    parts = rid.split("_")
-                    if len(parts) > 1 and parts[1] in canonical_lookup:
-                        filtered_records.append(r)
-
-            print(f"[*] Khớp với Canonical Split [{split_meta.get('split_name')}]: {len(filtered_records)} / {len(raw_canonical_ids)} mẫu (Độ phủ: {len(filtered_records)/len(raw_canonical_ids):.2%})")
-            records = filtered_records
+            records = align_to_split(records, split_meta)
+            print(f"[*] Canonical split khớp toàn bộ {len(records)} IDs/labels.")
         else:
-            print(f"[!] Cảnh báo: Không tìm thấy file split {args.split_ids}. Giữ nguyên toàn bộ {len(records)} mẫu.")
+            parser.error(f"Canonical split file missing: {args.split_ids}")
 
     if args.reparse:
         report = audit_and_reparse(records, run_name=args.run_name)

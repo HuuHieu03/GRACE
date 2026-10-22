@@ -1,0 +1,50 @@
+[
+  {
+    "path": "data/manifests/function_uid_v2/devign_train.json",
+    "sha256": "a9bebca8c4d5123a512c1e04b81e7f1a897f230ce1fe877b4358f2b168fcf63e",
+    "bytes": 15084269,
+    "rows": 21854,
+    "ordered_identity_sha256": "126700656bb35f36ece95b3ccdcd0fcfe0e0f0ef1a98aa0c799722b9df7a4aa5",
+    "label_counts": {
+      "0": 11836,
+      "1": 10018
+    },
+    "metadata_layout_variants": 8
+  },
+  {
+    "path": "data/manifests/function_uid_v2/devign_validation.json",
+    "sha256": "3c586a0d313577be0cc55670ba78aa8c3464e1b8c194970ac29c7ec2fd6417e5",
+    "bytes": 71852,
+    "rows": 100,
+    "ordered_identity_sha256": "6fb8448cd6a42bc44ddc70fa4eeea027cfac2d51e3c72d6309d298c8b7b7acde",
+    "label_counts": {
+      "1": 54,
+      "0": 46
+    },
+    "metadata_layout_variants": 0
+  },
+  {
+    "path": "data/manifests/function_uid_v2/reveal_train.json",
+    "sha256": "c651e0da6a2bc6a01f5852ee29c00265bf0ff669f17f64dc2f47326603c18384",
+    "bytes": 12832248,
+    "rows": 18187,
+    "ordered_identity_sha256": "73552f3dd0e86376aa29fc12c76d1e644cc5fe16ea0a5db7527c26d7e0145791",
+    "label_counts": {
+      "0": 16387,
+      "1": 1800
+    },
+    "metadata_layout_variants": 0
+  },
+  {
+    "path": "data/manifests/function_uid_v2/reveal_validation.json",
+    "sha256": "72c4aadefed12fa51d817c03c7df22c37c31666d9426b182678ac664a893a324",
+    "bytes": 73494,
+    "rows": 100,
+    "ordered_identity_sha256": "c85239025ca87015174c507f49e57fe4035f66bf83c4c8934320c3f83eed8158",
+    "label_counts": {
+      "1": 50,
+      "0": 50
+    },
+    "metadata_layout_variants": 0
+  }
+]

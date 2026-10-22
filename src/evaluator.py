@@ -141,6 +141,24 @@ def parse_llm_prediction(response_text: str) -> Tuple[Optional[int], str, bool]:
     return None, "Invalid: Unparseable LLM Response", False
 
 
+def parse_strict_binary(response_text, finish_reason=None):
+    """Predeclared parser for new runs; legacy semantic parsing stays separate."""
+    if finish_reason == "length":
+        return None, "Invalid: Truncated Completion", False
+    if isinstance(response_text, str) and response_text.strip() in ("0", "1"):
+        return int(response_text.strip()), "Strict Binary v1", True
+    return None, "Invalid: Expected Single Binary Character", False
+
+
+def make_request_payload(inference, prompt):
+    payload = {"model": LLMEvaluator.format_model_for_vertex(inference["model"]) if inference["provider"] == "Vertex AI" else inference["model"],
+               "messages": [{"role": "user", "content": prompt}], "temperature": inference["temperature"],
+               "max_tokens": inference["max_tokens"], "stream": False}
+    if inference["provider"] == "Vertex AI":
+        payload["seed"] = inference["seed"]
+    return payload
+
+
 class CheckpointManager:
     """
     Trình quản lý lưu vết theo dòng (JSONL Checkpointing) tại `config.checkpoint_dir`.
@@ -248,9 +266,17 @@ class LLMEvaluator:
         provider: Optional[str] = None,
         use_mock: bool = False,
         project_id: Optional[str] = None,
-        location: Optional[str] = None
+        location: Optional[str] = None,
+        temperature: float = 0.0,
+        max_tokens: int = 256,
+        seed: int = 42
     ):
         self.use_mock = use_mock
+        self.temperature = temperature
+        self.max_tokens = max_tokens
+        self.seed = seed
+        self.trace_callback = None
+        self.last_generation_metadata = None
         self.client = None
         self.credentials = None
         self.project_id = project_id or os.getenv("VERTEX_PROJECT_ID") or config.vertex_project_id
@@ -298,7 +324,7 @@ class LLMEvaluator:
             )
         import openai
         logger.info(f"Kết nối tới API FPT: {base_url} với model {self.model_name}...")
-        self.client = openai.OpenAI(api_key=api_key, base_url=base_url)
+        self.client = openai.OpenAI(api_key=api_key, base_url=base_url, max_retries=0)
 
     def _init_vertex_client(self):
         """Khởi tạo kết nối tới Vertex AI Model-as-a-Service endpoint với Service Account credentials."""
@@ -336,7 +362,8 @@ class LLMEvaluator:
         logger.info(f"Kết nối tới Vertex AI MaaS endpoint: {base_url} với model {vertex_model} (gốc: {self.model_name})...")
         self.client = openai.OpenAI(
             base_url=base_url,
-            api_key=self.credentials.token
+            api_key=self.credentials.token,
+            max_retries=0
         )
 
     @staticmethod
@@ -363,12 +390,40 @@ class LLMEvaluator:
             self.credentials.refresh(Request())
         return self.credentials.token
 
+    def build_request_payload(self, prompt: str) -> Dict[str, Any]:
+        """Public SDK arguments only; never credentials or authorization headers."""
+        return make_request_payload({"model": self.model_name, "provider": self.provider,
+                                     "temperature": self.temperature, "max_tokens": self.max_tokens, "seed": self.seed}, prompt)
+
+    def _trace(self, event):
+        if self.trace_callback is not None:
+            self.trace_callback(event)
+
+    @staticmethod
+    def _plain_response(value):
+        if value is None or isinstance(value, (str, int, float, bool)):
+            return value
+        if isinstance(value, dict):
+            return {str(k): LLMEvaluator._plain_response(v) for k, v in value.items()}
+        if isinstance(value, (list, tuple)):
+            return [LLMEvaluator._plain_response(v) for v in value]
+        if hasattr(value, "model_dump"):
+            plain = value.model_dump(mode="json")
+            if isinstance(plain, dict):
+                return LLMEvaluator._plain_response(plain)
+        return None
+
     def generate_response(self, prompt: str) -> str:
-        """Hàm thực thi Suy nghĩ & Trả về phản hồi (Inference / Generation)."""
+        """Capture exact SDK payload/response when a durable trace is attached."""
+        payload = self.build_request_payload(prompt)
+        self.last_generation_metadata = {"request_payload": payload, "mode": "mock" if self.use_mock else "real"}
         if self.use_mock:
             time.sleep(0.02) # Giả lập thời gian xử lý AI
             is_risky = any(k in prompt.lower() for k in ["strcpy", "gets", "sprintf", "bad_", "vuln", "overflow", "leak"])
             pred = 1 if is_risky else 0
+            self._trace({"event": "mock_request", "payload": payload})
+            self.last_generation_metadata.update(raw_content=str(pred), finish_reason="mock", usage=None)
+            self._trace({"event": "mock_response", "raw_content": str(pred), "finish_reason": "mock", "usage": None})
             return str(pred)
 
         if self.provider == "Vertex AI":
@@ -376,46 +431,23 @@ class LLMEvaluator:
             token = self.get_access_token()
             self.client.api_key = token
 
-            req_model = self.format_model_for_vertex(self.model_name)
-
-            response = self.client.chat.completions.create(
-                model=req_model,
-                messages=[{"role": "user", "content": prompt}],
-                temperature=0.0,
-                max_tokens=256,
-                seed=42,
-                stream=False
-            )
-            choice_msg = response.choices[0].message
-            content = choice_msg.content
-            if not content:
-                reasoning = getattr(choice_msg, "reasoning_content", None)
-                if reasoning:
-                    content = reasoning
-                else:
-                    logger.warning("Vertex AI trả về content=None và không có reasoning_content.")
-                    return ""
-            return content.strip()
-
-        # Chạy thực thi Inference trên API FPT / OpenAI-compatible
-        response = self.client.chat.completions.create(
-            model=self.model_name,
-            messages=[{"role": "user", "content": prompt}],
-            temperature=0.0,
-            max_tokens=256,
-            stream=False
-        )
-        choice_msg = response.choices[0].message
-        content = choice_msg.content
-        if not content:
-            # Kiểm tra trường reasoning_content đối với các mô hình suy luận
-            reasoning = getattr(choice_msg, "reasoning_content", None)
-            if reasoning:
-                content = reasoning
-            else:
-                logger.warning("FPT AI trả về content=None và không có reasoning_content.")
-                return ""
-        return content.strip()
+        # This event is fsynced by the verified runner before the SDK call.
+        self._trace({"event": "sdk_request", "payload": payload})
+        response = self.client.chat.completions.create(**payload)
+        choice = response.choices[0]
+        content = choice.message.content
+        metadata = {
+            "event": "sdk_response", "raw_content": content,
+            "reasoning_content": self._plain_response(getattr(choice.message, "reasoning_content", None)),
+            "finish_reason": self._plain_response(getattr(choice, "finish_reason", None)),
+            "usage": self._plain_response(getattr(response, "usage", None)),
+            "response_id": self._plain_response(getattr(response, "id", None)),
+            "raw_completion": self._plain_response(response),
+        }
+        self.last_generation_metadata.update(metadata)
+        self._trace(metadata)
+        # Reasoning is retained as evidence, never substituted for final output.
+        return content.strip() if isinstance(content, str) else ""
 
     def evaluate_dataset(
         self,

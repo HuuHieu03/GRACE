@@ -1,3 +1,6 @@
+> **Trạng thái hiện tại — 22/10/2026:** dùng [báo cáo tiến độ đã đối soát](project_docs/reports/bao_cao_tien_do_da_doi_soat_20261022.md) và [protocol mới](project_docs/reports/verified_protocol_2026-10-22/report.md).
+> Chưa đủ bằng chứng nghiệm thu cải tiến/chấm mù độc lập. Mô tả và các tuyên bố “Fully Verified/đột phá” bên dưới là nội dung lịch sử, không phải kết luận hiện được xác nhận.
+
 ---
 project: "GRACE: Vulnerability-Aware Contrastive Demonstration Retrieval"
 author: "Nguyễn Hữu Hiếu"

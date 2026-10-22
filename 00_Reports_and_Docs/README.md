@@ -11,6 +11,10 @@ last_updated: "2026-08-31"
 Thư mục này tập trung toàn bộ các báo cáo khoa học, dữ liệu đối chứng và bài báo gốc của đề tài nghiên cứu cải tiến phương pháp **GRACE (Graph Structure and In-Context Learning for Vulnerability Detection)**.
 
 ## 1. Báo Cáo Khoa Học Tinh Hoa
+- 🎯 📄 [`BAO_CAO_TIEN_DO_NGHIEM_THU_GRACE_20261022.md`](BAO_CAO_TIEN_DO_NGHIEM_THU_GRACE_20261022.md) *(MỚI NHẤT - 22/10/2026)*:
+  * **BÁO CÁO TIẾN ĐỘ VÀ KẾT QUẢ THỰC NGHIỆM ĐỀ TÀI GRACE (NGHIỆM THU GIAI ĐOẠN)**:
+  * Thực hiện bởi Nhóm nghiên cứu sinh viên (Hữu Hiếu & Tiến Dũng) gửi Thầy hướng dẫn.
+  * Trình bày đầy đủ Confusion Matrix, Paired Bootstrap 95% CI, phân tích Engineering Trade-off (Recall tăng 2.2x), bóc tách Ablation B3-NoDiff, thẩm định Chấm mù 100 mẫu độc lập (Hiếu & Dũng đọc bằng mắt), khắc phục 100% canonical C mapping cho 50 mẫu ReVeal, và minh bạch hạ tầng Vertex AI.
 - 📄 [`01_Stage5_Contrastive_Benchmark_Report.md`](01_Stage5_Contrastive_Benchmark_Report.md) *(28.5 KB)*:
   * **Báo cáo nghiên cứu quan trọng nhất (Stage 5)**: Đột phá phương pháp *Vulnerability-Aware Contrastive Demonstration Retrieval (VAC-Retrieval)* trên 100% Test set của 2 bộ benchmark bảo mật (2,732 mẫu Devign & 2,274 mẫu ReVeal).
   * **Thành tựu**: Devign Recall tăng vọt **+7.73%** (26.61% -> 34.34%), F1 tăng **+5.84%** (35.82% -> 41.66%), bắt trúng thêm **+97 lỗ hổng thực tế**.

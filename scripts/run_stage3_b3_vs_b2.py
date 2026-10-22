@@ -423,6 +423,12 @@ def run_stage3_experiment(
     """
     Thực thi toàn bộ quy trình thí nghiệm Đợt 3 (So sánh B3 vs B2).
     """
+    if not use_mock:
+        raise RuntimeError(
+            "Legacy Stage3 real inference is retired because B2/raw/prompt evidence was not exported. "
+            "Use scripts/run_verified_experiment.py with a validated frozen v2 plan. "
+            "Existing historical reports remain unchanged; --use_mock is for regression tests only."
+        )
     print(f"\n[*] Bắt đầu Thí nghiệm Đợt 3 (B3 vs B2) trên tập: {dev_split_file}")
     
     # 1. Nạp tập Dev sạch
