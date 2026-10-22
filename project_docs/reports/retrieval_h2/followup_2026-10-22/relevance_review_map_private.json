@@ -1,0 +1,502 @@
+[
+  {
+    "review_id": "H2R-001",
+    "query_id": "Q-00036",
+    "candidate_id": "T-06683"
+  },
+  {
+    "review_id": "H2R-002",
+    "query_id": "Q-00010",
+    "candidate_id": "T-11662"
+  },
+  {
+    "review_id": "H2R-003",
+    "query_id": "Q-00032",
+    "candidate_id": "T-16125"
+  },
+  {
+    "review_id": "H2R-004",
+    "query_id": "Q-00041",
+    "candidate_id": "T-08501"
+  },
+  {
+    "review_id": "H2R-005",
+    "query_id": "Q-00011",
+    "candidate_id": "T-09934"
+  },
+  {
+    "review_id": "H2R-006",
+    "query_id": "Q-00096",
+    "candidate_id": "T-00163"
+  },
+  {
+    "review_id": "H2R-007",
+    "query_id": "Q-00029",
+    "candidate_id": "T-08135"
+  },
+  {
+    "review_id": "H2R-008",
+    "query_id": "Q-00072",
+    "candidate_id": "T-17899"
+  },
+  {
+    "review_id": "H2R-009",
+    "query_id": "Q-00044",
+    "candidate_id": "T-08313"
+  },
+  {
+    "review_id": "H2R-010",
+    "query_id": "Q-00039",
+    "candidate_id": "T-07187"
+  },
+  {
+    "review_id": "H2R-011",
+    "query_id": "Q-00038",
+    "candidate_id": "T-19371"
+  },
+  {
+    "review_id": "H2R-012",
+    "query_id": "Q-00043",
+    "candidate_id": "T-17472"
+  },
+  {
+    "review_id": "H2R-013",
+    "query_id": "Q-00062",
+    "candidate_id": "T-12321"
+  },
+  {
+    "review_id": "H2R-014",
+    "query_id": "Q-00051",
+    "candidate_id": "T-02899"
+  },
+  {
+    "review_id": "H2R-015",
+    "query_id": "Q-00089",
+    "candidate_id": "T-21438"
+  },
+  {
+    "review_id": "H2R-016",
+    "query_id": "Q-00087",
+    "candidate_id": "T-16639"
+  },
+  {
+    "review_id": "H2R-017",
+    "query_id": "Q-00035",
+    "candidate_id": "T-15255"
+  },
+  {
+    "review_id": "H2R-018",
+    "query_id": "Q-00099",
+    "candidate_id": "T-08035"
+  },
+  {
+    "review_id": "H2R-019",
+    "query_id": "Q-00047",
+    "candidate_id": "T-20236"
+  },
+  {
+    "review_id": "H2R-020",
+    "query_id": "Q-00056",
+    "candidate_id": "T-11926"
+  },
+  {
+    "review_id": "H2R-021",
+    "query_id": "Q-00053",
+    "candidate_id": "T-16907"
+  },
+  {
+    "review_id": "H2R-022",
+    "query_id": "Q-00002",
+    "candidate_id": "T-13755"
+  },
+  {
+    "review_id": "H2R-023",
+    "query_id": "Q-00018",
+    "candidate_id": "T-12716"
+  },
+  {
+    "review_id": "H2R-024",
+    "query_id": "Q-00092",
+    "candidate_id": "T-14649"
+  },
+  {
+    "review_id": "H2R-025",
+    "query_id": "Q-00021",
+    "candidate_id": "T-18733"
+  },
+  {
+    "review_id": "H2R-026",
+    "query_id": "Q-00050",
+    "candidate_id": "T-10948"
+  },
+  {
+    "review_id": "H2R-027",
+    "query_id": "Q-00016",
+    "candidate_id": "T-20259"
+  },
+  {
+    "review_id": "H2R-028",
+    "query_id": "Q-00065",
+    "candidate_id": "T-10618"
+  },
+  {
+    "review_id": "H2R-029",
+    "query_id": "Q-00067",
+    "candidate_id": "T-08814"
+  },
+  {
+    "review_id": "H2R-030",
+    "query_id": "Q-00042",
+    "candidate_id": "T-20003"
+  },
+  {
+    "review_id": "H2R-031",
+    "query_id": "Q-00090",
+    "candidate_id": "T-15398"
+  },
+  {
+    "review_id": "H2R-032",
+    "query_id": "Q-00060",
+    "candidate_id": "T-18824"
+  },
+  {
+    "review_id": "H2R-033",
+    "query_id": "Q-00074",
+    "candidate_id": "T-15982"
+  },
+  {
+    "review_id": "H2R-034",
+    "query_id": "Q-00013",
+    "candidate_id": "T-01416"
+  },
+  {
+    "review_id": "H2R-035",
+    "query_id": "Q-00057",
+    "candidate_id": "T-20756"
+  },
+  {
+    "review_id": "H2R-036",
+    "query_id": "Q-00083",
+    "candidate_id": "T-03102"
+  },
+  {
+    "review_id": "H2R-037",
+    "query_id": "Q-00055",
+    "candidate_id": "T-12138"
+  },
+  {
+    "review_id": "H2R-038",
+    "query_id": "Q-00024",
+    "candidate_id": "T-13075"
+  },
+  {
+    "review_id": "H2R-039",
+    "query_id": "Q-00063",
+    "candidate_id": "T-11566"
+  },
+  {
+    "review_id": "H2R-040",
+    "query_id": "Q-00004",
+    "candidate_id": "T-16853"
+  },
+  {
+    "review_id": "H2R-041",
+    "query_id": "Q-00084",
+    "candidate_id": "T-00686"
+  },
+  {
+    "review_id": "H2R-042",
+    "query_id": "Q-00034",
+    "candidate_id": "T-04659"
+  },
+  {
+    "review_id": "H2R-043",
+    "query_id": "Q-00081",
+    "candidate_id": "T-05268"
+  },
+  {
+    "review_id": "H2R-044",
+    "query_id": "Q-00009",
+    "candidate_id": "T-04085"
+  },
+  {
+    "review_id": "H2R-045",
+    "query_id": "Q-00003",
+    "candidate_id": "T-09738"
+  },
+  {
+    "review_id": "H2R-046",
+    "query_id": "Q-00093",
+    "candidate_id": "T-12462"
+  },
+  {
+    "review_id": "H2R-047",
+    "query_id": "Q-00052",
+    "candidate_id": "T-09946"
+  },
+  {
+    "review_id": "H2R-048",
+    "query_id": "Q-00006",
+    "candidate_id": "T-05325"
+  },
+  {
+    "review_id": "H2R-049",
+    "query_id": "Q-00027",
+    "candidate_id": "T-18275"
+  },
+  {
+    "review_id": "H2R-050",
+    "query_id": "Q-00049",
+    "candidate_id": "T-00224"
+  },
+  {
+    "review_id": "H2R-051",
+    "query_id": "Q-00085",
+    "candidate_id": "T-13704"
+  },
+  {
+    "review_id": "H2R-052",
+    "query_id": "Q-00077",
+    "candidate_id": "T-01702"
+  },
+  {
+    "review_id": "H2R-053",
+    "query_id": "Q-00012",
+    "candidate_id": "T-17043"
+  },
+  {
+    "review_id": "H2R-054",
+    "query_id": "Q-00054",
+    "candidate_id": "T-09433"
+  },
+  {
+    "review_id": "H2R-055",
+    "query_id": "Q-00069",
+    "candidate_id": "T-06505"
+  },
+  {
+    "review_id": "H2R-056",
+    "query_id": "Q-00022",
+    "candidate_id": "T-06110"
+  },
+  {
+    "review_id": "H2R-057",
+    "query_id": "Q-00098",
+    "candidate_id": "T-16424"
+  },
+  {
+    "review_id": "H2R-058",
+    "query_id": "Q-00033",
+    "candidate_id": "T-02535"
+  },
+  {
+    "review_id": "H2R-059",
+    "query_id": "Q-00073",
+    "candidate_id": "T-02650"
+  },
+  {
+    "review_id": "H2R-060",
+    "query_id": "Q-00097",
+    "candidate_id": "T-04313"
+  },
+  {
+    "review_id": "H2R-061",
+    "query_id": "Q-00095",
+    "candidate_id": "T-12493"
+  },
+  {
+    "review_id": "H2R-062",
+    "query_id": "Q-00064",
+    "candidate_id": "T-15598"
+  },
+  {
+    "review_id": "H2R-063",
+    "query_id": "Q-00005",
+    "candidate_id": "T-13444"
+  },
+  {
+    "review_id": "H2R-064",
+    "query_id": "Q-00059",
+    "candidate_id": "T-18310"
+  },
+  {
+    "review_id": "H2R-065",
+    "query_id": "Q-00079",
+    "candidate_id": "T-13896"
+  },
+  {
+    "review_id": "H2R-066",
+    "query_id": "Q-00071",
+    "candidate_id": "T-07073"
+  },
+  {
+    "review_id": "H2R-067",
+    "query_id": "Q-00068",
+    "candidate_id": "T-19865"
+  },
+  {
+    "review_id": "H2R-068",
+    "query_id": "Q-00100",
+    "candidate_id": "T-07233"
+  },
+  {
+    "review_id": "H2R-069",
+    "query_id": "Q-00061",
+    "candidate_id": "T-07384"
+  },
+  {
+    "review_id": "H2R-070",
+    "query_id": "Q-00045",
+    "candidate_id": "T-14305"
+  },
+  {
+    "review_id": "H2R-071",
+    "query_id": "Q-00019",
+    "candidate_id": "T-10552"
+  },
+  {
+    "review_id": "H2R-072",
+    "query_id": "Q-00048",
+    "candidate_id": "T-01911"
+  },
+  {
+    "review_id": "H2R-073",
+    "query_id": "Q-00078",
+    "candidate_id": "T-01290"
+  },
+  {
+    "review_id": "H2R-074",
+    "query_id": "Q-00091",
+    "candidate_id": "T-10054"
+  },
+  {
+    "review_id": "H2R-075",
+    "query_id": "Q-00058",
+    "candidate_id": "T-15857"
+  },
+  {
+    "review_id": "H2R-076",
+    "query_id": "Q-00076",
+    "candidate_id": "T-20200"
+  },
+  {
+    "review_id": "H2R-077",
+    "query_id": "Q-00028",
+    "candidate_id": "T-01374"
+  },
+  {
+    "review_id": "H2R-078",
+    "query_id": "Q-00015",
+    "candidate_id": "T-04165"
+  },
+  {
+    "review_id": "H2R-079",
+    "query_id": "Q-00066",
+    "candidate_id": "T-13643"
+  },
+  {
+    "review_id": "H2R-080",
+    "query_id": "Q-00020",
+    "candidate_id": "T-15319"
+  },
+  {
+    "review_id": "H2R-081",
+    "query_id": "Q-00086",
+    "candidate_id": "T-09781"
+  },
+  {
+    "review_id": "H2R-082",
+    "query_id": "Q-00014",
+    "candidate_id": "T-07108"
+  },
+  {
+    "review_id": "H2R-083",
+    "query_id": "Q-00080",
+    "candidate_id": "T-03174"
+  },
+  {
+    "review_id": "H2R-084",
+    "query_id": "Q-00082",
+    "candidate_id": "T-00043"
+  },
+  {
+    "review_id": "H2R-085",
+    "query_id": "Q-00040",
+    "candidate_id": "T-18249"
+  },
+  {
+    "review_id": "H2R-086",
+    "query_id": "Q-00025",
+    "candidate_id": "T-00438"
+  },
+  {
+    "review_id": "H2R-087",
+    "query_id": "Q-00026",
+    "candidate_id": "T-07368"
+  },
+  {
+    "review_id": "H2R-088",
+    "query_id": "Q-00008",
+    "candidate_id": "T-19389"
+  },
+  {
+    "review_id": "H2R-089",
+    "query_id": "Q-00017",
+    "candidate_id": "T-01394"
+  },
+  {
+    "review_id": "H2R-090",
+    "query_id": "Q-00070",
+    "candidate_id": "T-09888"
+  },
+  {
+    "review_id": "H2R-091",
+    "query_id": "Q-00001",
+    "candidate_id": "T-14453"
+  },
+  {
+    "review_id": "H2R-092",
+    "query_id": "Q-00094",
+    "candidate_id": "T-05531"
+  },
+  {
+    "review_id": "H2R-093",
+    "query_id": "Q-00030",
+    "candidate_id": "T-07192"
+  },
+  {
+    "review_id": "H2R-094",
+    "query_id": "Q-00031",
+    "candidate_id": "T-04202"
+  },
+  {
+    "review_id": "H2R-095",
+    "query_id": "Q-00007",
+    "candidate_id": "T-07141"
+  },
+  {
+    "review_id": "H2R-096",
+    "query_id": "Q-00023",
+    "candidate_id": "T-05881"
+  },
+  {
+    "review_id": "H2R-097",
+    "query_id": "Q-00037",
+    "candidate_id": "T-06577"
+  },
+  {
+    "review_id": "H2R-098",
+    "query_id": "Q-00075",
+    "candidate_id": "T-13566"
+  },
+  {
+    "review_id": "H2R-099",
+    "query_id": "Q-00046",
+    "candidate_id": "T-20433"
+  },
+  {
+    "review_id": "H2R-100",
+    "query_id": "Q-00088",
+    "candidate_id": "T-05191"
+  }
+]

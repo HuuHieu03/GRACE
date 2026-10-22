@@ -1,0 +1,152 @@
+[
+  {
+    "sample_idx": 26,
+    "role": "target",
+    "source_id": "id_914_label_False_qemu.c",
+    "path": "project_docs/reports/blind_review_full_context/sample_26_target.c",
+    "sha256": "9d28aeaf172b4015c1bb66dffee40b7f70fc5c17b3b59e0fa1796edb86b03778",
+    "characters": 3885,
+    "lines": 249,
+    "original_snippet_is_prefix": true
+  },
+  {
+    "sample_idx": 26,
+    "role": "demo_A",
+    "source_id": "id_10024_label_False_qemu.c",
+    "path": "project_docs/reports/blind_review_full_context/sample_26_demo_A.c",
+    "sha256": "21d7d3503c9658c4895d08ed523645bf5748a8099c4537a3a4b762089c8f3df5",
+    "characters": 2018,
+    "lines": 123,
+    "original_snippet_is_prefix": true
+  },
+  {
+    "sample_idx": 26,
+    "role": "demo_B",
+    "source_id": "id_9946_label_False_qemu.c",
+    "path": "project_docs/reports/blind_review_full_context/sample_26_demo_B.c",
+    "sha256": "34e6e2c77abc25fa83ce6dd9cae677f17404afce7252ef433a276ee3a1d23f66",
+    "characters": 1076,
+    "lines": 93,
+    "original_snippet_is_prefix": true
+  },
+  {
+    "sample_idx": 28,
+    "role": "target",
+    "source_id": "id_420_label_False_FFmpeg.c",
+    "path": "project_docs/reports/blind_review_full_context/sample_28_target.c",
+    "sha256": "b7c77e06c0ebb266c8b30f2daf9a0d4fd4a3dc5a05b117a0d6eb7ffa94b28289",
+    "characters": 893,
+    "lines": 57,
+    "original_snippet_is_prefix": true
+  },
+  {
+    "sample_idx": 28,
+    "role": "demo_A",
+    "source_id": "id_9970_label_False_qemu.c",
+    "path": "project_docs/reports/blind_review_full_context/sample_28_demo_A.c",
+    "sha256": "fc61e9a8b27d058546c5e6f84f19972e29d8baef4d74040f046e9c21cc79fa02",
+    "characters": 4525,
+    "lines": 299,
+    "original_snippet_is_prefix": true
+  },
+  {
+    "sample_idx": 28,
+    "role": "demo_B",
+    "source_id": "id_9940_label_False_FFmpeg.c",
+    "path": "project_docs/reports/blind_review_full_context/sample_28_demo_B.c",
+    "sha256": "b05cb5c336a9292a6769d1a319fea043c3ee7375d517247877350f5fc5af7ef9",
+    "characters": 1743,
+    "lines": 101,
+    "original_snippet_is_prefix": true
+  },
+  {
+    "sample_idx": 34,
+    "role": "target",
+    "source_id": "id_1076_label_False_FFmpeg.c",
+    "path": "project_docs/reports/blind_review_full_context/sample_34_target.c",
+    "sha256": "f39edc26b04230f9682b724c1691a3a1c9f41989f1455a88f0d48cf7c452d4e7",
+    "characters": 8957,
+    "lines": 505,
+    "original_snippet_is_prefix": true
+  },
+  {
+    "sample_idx": 34,
+    "role": "demo_A",
+    "source_id": "id_9946_label_False_qemu.c",
+    "path": "project_docs/reports/blind_review_full_context/sample_34_demo_A.c",
+    "sha256": "34e6e2c77abc25fa83ce6dd9cae677f17404afce7252ef433a276ee3a1d23f66",
+    "characters": 1076,
+    "lines": 93,
+    "original_snippet_is_prefix": true
+  },
+  {
+    "sample_idx": 34,
+    "role": "demo_B",
+    "source_id": "id_9940_label_False_FFmpeg.c",
+    "path": "project_docs/reports/blind_review_full_context/sample_34_demo_B.c",
+    "sha256": "b05cb5c336a9292a6769d1a319fea043c3ee7375d517247877350f5fc5af7ef9",
+    "characters": 1743,
+    "lines": 101,
+    "original_snippet_is_prefix": true
+  },
+  {
+    "sample_idx": 39,
+    "role": "target",
+    "source_id": "id_1021_label_True_FFmpeg.c",
+    "path": "project_docs/reports/blind_review_full_context/sample_39_target.c",
+    "sha256": "8ebe4f558c8baab10ac095274ad7ce444087eae24a8c3ecc3f80b4349c465d99",
+    "characters": 1738,
+    "lines": 71,
+    "original_snippet_is_prefix": true
+  },
+  {
+    "sample_idx": 39,
+    "role": "demo_A",
+    "source_id": "id_1002_label_True_FFmpeg.c",
+    "path": "project_docs/reports/blind_review_full_context/sample_39_demo_A.c",
+    "sha256": "31a46a4f8eedfbc2cc3af6879007ad9ae47242e4e7ca22db9281463455fe543f",
+    "characters": 660,
+    "lines": 31,
+    "original_snippet_is_prefix": true
+  },
+  {
+    "sample_idx": 39,
+    "role": "demo_B",
+    "source_id": "id_9947_label_False_qemu.c",
+    "path": "project_docs/reports/blind_review_full_context/sample_39_demo_B.c",
+    "sha256": "74ca43738f0fb28c707387010bdbd42554ac5963acc373ef743422fc4a8c01d9",
+    "characters": 441,
+    "lines": 31,
+    "original_snippet_is_prefix": true
+  },
+  {
+    "sample_idx": 50,
+    "role": "target",
+    "source_id": "id_578_label_True_FFmpeg.c",
+    "path": "project_docs/reports/blind_review_full_context/sample_50_target.c",
+    "sha256": "63ed20d5bdabfb5849aa3e44429bc53bb84960e1a496c595a4756805c668fff6",
+    "characters": 4762,
+    "lines": 281,
+    "original_snippet_is_prefix": true
+  },
+  {
+    "sample_idx": 50,
+    "role": "demo_A",
+    "source_id": "id_10033_label_False_qemu.c",
+    "path": "project_docs/reports/blind_review_full_context/sample_50_demo_A.c",
+    "sha256": "e73a59c78e356e6b83f03bea3801f5da72039a820d66fb8bd2dbc4dcf2fca7eb",
+    "characters": 2101,
+    "lines": 107,
+    "original_snippet_is_prefix": true
+  },
+  {
+    "sample_idx": 50,
+    "role": "demo_B",
+    "source_id": "id_1000_label_True_qemu.c",
+    "path": "project_docs/reports/blind_review_full_context/sample_50_demo_B.c",
+    "sha256": "99c46cb72915451cb17b163acab1cb391aa9ccab9902700883e2a38f5f2cbef1",
+    "characters": 725,
+    "lines": 47,
+    "original_snippet_is_prefix": true
+  }
+]

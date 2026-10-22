@@ -1,0 +1,120 @@
+{
+  "provenance": "Selected code inspections by Codex; technical notes, not independent human ballots or vulnerability ground truth.",
+  "selection": "Purposive cases covering format-family-only matches and distinct Unknown failure mechanisms; no population error-rate inference.",
+  "cases": [
+    {
+      "query_id": "Q-00007",
+      "issue": "same_format_API_different_output_role",
+      "query_anchor": "fprintf(stderr,",
+      "demo_anchor": "fprintf(f,",
+      "note": "Query builds a GDB syscall packet using snprintf and direct writes into buf; fprintf reports a bad format. Demo writes a PPM header to an opened image file. Shared format_string evidence does not establish comparable buffer roles or bounds guards."
+    },
+    {
+      "query_id": "Q-00015",
+      "issue": "positive_control_format_match_can_be_relevant",
+      "query_anchor": "EHCI doesn't handle 16-bit writes to MMIO",
+      "demo_anchor": "EHCI doesn't handle byte writes to MMIO",
+      "note": "Both functions reject unsupported EHCI MMIO write widths by logging and exit(1). This is a useful counterexample to automatically discarding every format-only match. No independent relevance score is assigned."
+    },
+    {
+      "query_id": "Q-00018",
+      "issue": "same_format_family_different_table_role",
+      "query_anchor": "register_insn(env->opcodes, opc)",
+      "demo_anchor": "is_indirect_opcode(handler)",
+      "note": "Query creates/registers an opcode table, with error/debug output; demo traverses and prints existing instruction tables. Shared printf is weak evidence for operation and guard comparability."
+    },
+    {
+      "query_id": "Q-00069",
+      "issue": "same_network_domain_different_resource_protocol",
+      "query_anchor": "connect(sock, addr->ai_addr, addr->ai_addrlen)",
+      "demo_anchor": "IP_ADD_MEMBERSHIP",
+      "note": "Query establishes an outgoing connection with EINTR/nonblocking handling; demo binds a multicast socket and joins a group. Both are socket code but shared fprintf does not validate equivalent resource lifecycle or guards."
+    },
+    {
+      "query_id": "Q-00071",
+      "issue": "error_logging_matches_across_different_domains",
+      "query_anchor": "new_video_stream",
+      "demo_anchor": "monitor_init(chr, flags)",
+      "note": "Query dispatches creation of media streams; demo initializes a QEMU monitor/chardev. Error reporting through fprintf is the only shared active family, so relevance requires closer review."
+    },
+    {
+      "query_id": "Q-00049",
+      "issue": "API_overlap_is_not_family_overlap",
+      "query_anchor": "g_free(arg)",
+      "demo_anchor": "free(arg)",
+      "note": "Although fprintf is the only identical recognized API, pointer_free is also shared through different APIs. Both functions reorder alarm_timers. Do not misclassify this pair as format-family-only."
+    },
+    {
+      "query_id": "Q-00003",
+      "issue": "assertions_and_direct_indexed_state_updates",
+      "query_anchor": "s->entries[arch][key].data = data",
+      "note": "Unknown sites are assertions; the body also updates indexed entry fields. Assertions must not be promoted to memory sinks simply to increase call-based coverage. Effective guard semantics are not established."
+    },
+    {
+      "query_id": "Q-00017",
+      "issue": "assertion_is_not_evidence_of_missing_wrapper",
+      "query_anchor": "return 0x1 << prop->bitnr",
+      "note": "The function asserts a property type and returns a bit mask. Its sole Unknown assert does not imply an unregistered alloc/copy/free helper. This may be outside the current call-sink coverage scope."
+    },
+    {
+      "query_id": "Q-00039",
+      "issue": "direct_buffer_access_not_represented_by_API_registry",
+      "query_anchor": "*output++ = *src++",
+      "note": "The decoder reads and writes through pointers and casted output pointers. It also uses AV_RL16/AV_RL32 and logging. Resolving wrapper names alone cannot cover its direct memory operations; no guard-effectiveness or vulnerability judgment is made."
+    },
+    {
+      "query_id": "Q-00040",
+      "issue": "macro_decorated_function_name_and_direct_array_update",
+      "query_anchor": "RENAME(vertical_compose53iL0)",
+      "note": "RENAME appears in the function declaration; the body updates b1[i] using b0[i] and b2[i]. RENAME must not become a global sink API."
+    },
+    {
+      "query_id": "Q-00045",
+      "issue": "declaration_misidentified_as_unknown_call",
+      "query_anchor": "uint8_t (*layout_map)[3]",
+      "note": "The scanner reports uint8_t(...) from an array-pointer parameter declaration. This is not a runtime function call. The body has indexed reads and writes to *current."
+    },
+    {
+      "query_id": "Q-00062",
+      "issue": "locally_defined_macro_has_field_assignment_semantics",
+      "query_anchor": "#define COPY(a) bak->a= src->a",
+      "note": "The 22 COPY sites expand to field assignments, including pointer-valued fields. This does not establish a bulk buffer copy or deep copy. A global COPY -> buffer_write rule would conflate unrelated macros."
+    },
+    {
+      "query_id": "Q-00075",
+      "issue": "indexed_function_pointer_call_not_captured",
+      "query_anchor": "s->dsp.mct_decode[tile->codsty[0].transform](src[0], src[1], src[2], csize)",
+      "note": "The inventory contains av_log, but this indexed function-pointer invocation is not represented. The name-before-parenthesis scanner cannot resolve this indirect operation. Its actual callee and contract remain unknown."
+    },
+    {
+      "query_id": "Q-00076",
+      "issue": "symbol_selection_macro_is_not_runtime_conversion",
+      "query_anchor": "rgb15to16          = RENAME(rgb15to16)",
+      "note": "RENAME chooses function symbols for pointer assignments, under unresolved build conditions. Its presence does not mean any corresponding pixel conversion is executed here."
+    },
+    {
+      "query_id": "Q-00078",
+      "issue": "inline_assembly_and_direct_C_fallback",
+      "query_anchor": "dst[i]=",
+      "note": "The code has inline assembly in one build branch and direct dst/src indexing in the fallback. RENAME, MANGLE and ASMALIGN are not substitutes for modeling those operations or resolving build configuration."
+    },
+    {
+      "query_id": "Q-00094",
+      "issue": "assembly_macro_contract_unresolved",
+      "query_anchor": "WRITEBGR24(%%REGb, 8280(%5), %%REGBP)",
+      "note": "Pixel-writing assembly macros appear inside inline asm. Their definitions and register/operand roles are not present in this function. An exact-name memory rule requires additional contract evidence."
+    },
+    {
+      "query_id": "Q-00097",
+      "issue": "logging_only_unknown_with_direct_bookkeeping_write",
+      "query_anchor": "ram_pages_to_update[nb_ram_pages_to_update++] = ram_addr",
+      "note": "Unknown LOG_INT is diagnostic logging; direct array-based dirty-page bookkeeping occurs separately. Treating the logging macro as a sink would not model that operation."
+    },
+    {
+      "query_id": "Q-00098",
+      "issue": "assembly_operands_contain_memory_read_write",
+      "query_anchor": ":\"=m\"(*p)",
+      "note": "Inline assembly declares an output memory operand and input pixel operands. MOVQ_ZERO/JUMPALIGN do not describe the memory contract by themselves; current callsite evidence does not represent asm memory effects."
+    }
+  ]
+}

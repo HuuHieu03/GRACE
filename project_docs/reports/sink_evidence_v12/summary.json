@@ -1,0 +1,82 @@
+{
+  "date": "2026-10-21",
+  "experiment": "E1.2 inactive-preprocessor evidence regression",
+  "E12_source_sha256": "319f18a3e53eb36987cb6798253805949c8ce3c7ee44571703beb2cafe8ad336",
+  "E11_source_sha256": "69f3a10307ea9e2478cbc5d64c3051396c4ae0d72e77038571f796c025716fee",
+  "E1_source_sha256": "be2e988e1d8c5af85fd50a27488725bdc745286bfd112a59a5599e92d9783345",
+  "datasets": {
+    "h1_dev50": {
+      "samples": 50,
+      "annotated_sites": 67,
+      "metrics": {
+        "E11_callsite": {
+          "tp": 67,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0
+        },
+        "E12_callsite": {
+          "tp": 67,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0
+        },
+        "E12_family_callsite": {
+          "tp": 67,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0
+        }
+      },
+      "previously_true_sites_lost": [],
+      "removed_recognized_sites": 0,
+      "retained_conditional_recognized_sites": 0,
+      "packet_sha256": "e98de2645c108a61922dce989224a8403ef1378e8ae6a23def0cab5761191826",
+      "annotation_sha256": "a0ef94ce7921f6b3ff51355db5c2576207b31a38da97732f64a7f856adaebfad",
+      "scope": "Development regression: these inputs informed E1.2; not new held-out validation"
+    },
+    "v11_dev50": {
+      "samples": 50,
+      "annotated_sites": 101,
+      "metrics": {
+        "E11_callsite": {
+          "tp": 62,
+          "fp": 3,
+          "fn": 39,
+          "precision": 0.953846,
+          "recall": 0.613861
+        },
+        "E12_callsite": {
+          "tp": 62,
+          "fp": 0,
+          "fn": 39,
+          "precision": 1.0,
+          "recall": 0.613861
+        },
+        "E12_family_callsite": {
+          "tp": 62,
+          "fp": 0,
+          "fn": 39,
+          "precision": 1.0,
+          "recall": 0.613861
+        }
+      },
+      "previously_true_sites_lost": [],
+      "removed_recognized_sites": 3,
+      "retained_conditional_recognized_sites": 6,
+      "packet_sha256": "6a6fe131a1e74104c9617a0a3226d3e2055cb3d62b431f44307a7b18f8e10d7a",
+      "annotation_sha256": "25137c88c1acac26ac8bd135543ac9ac31b99c4e542d8ac95b11183b244fdbb6",
+      "scope": "Development regression: these inputs informed E1.2; not new held-out validation"
+    }
+  },
+  "annotation_independent": false,
+  "production_changed": false,
+  "LLM_calls": 0,
+  "runtime_guards_assessed": false,
+  "build_configuration_supplied": false,
+  "conditional_policy": "Keep potentially active sites with explicit conditional metadata; only proven-dead regions are masked.",
+  "limits": "Partial boolean preprocessor evaluator; unsupported arithmetic/macros/build conditions remain unknown; does not resolve #include or macro expansion."
+}

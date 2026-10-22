@@ -1,0 +1,78 @@
+{
+  "date": "2026-10-21",
+  "samples": 50,
+  "annotation_type": "Technical source review by Codex; exploratory, not independent human ground truth",
+  "review_exposure": "Reviewer had previously inspected E1 implementation and some E1 predictions. Annotation is not blind to the method.",
+  "annotation_independent": false,
+  "scope": "Direct calls and explicitly identified allocation/free/copy/formatted-stdio/block/file-IO operations plus named wrappers supported by local caller context. Raw array/asm accesses and unresolved codecs/macros/helpers are separately noted and excluded from callsite recall. A true operation is not a vulnerability.",
+  "gold_callsite_count": 67,
+  "gold_positive_samples": 20,
+  "incomplete_input_samples": [
+    "H1-049"
+  ],
+  "metrics": {
+    "E0_API": {
+      "tp": 10,
+      "fp": 3,
+      "fn": 37,
+      "precision": 0.769231,
+      "recall": 0.212766
+    },
+    "E1_API": {
+      "tp": 21,
+      "fp": 0,
+      "fn": 26,
+      "precision": 1.0,
+      "recall": 0.446809
+    },
+    "E1_callsite": {
+      "tp": 33,
+      "fp": 0,
+      "fn": 34,
+      "precision": 1.0,
+      "recall": 0.492537
+    },
+    "E1_family_callsite": {
+      "tp": 33,
+      "fp": 0,
+      "fn": 34,
+      "precision": 1.0,
+      "recall": 0.492537
+    }
+  },
+  "E1_missed_callsite_count": 34,
+  "E1_missed_API_names": [
+    "av_fast_padded_malloc",
+    "av_frame_alloc",
+    "av_free_packet",
+    "av_metadata_free",
+    "av_realloc",
+    "av_strlcat",
+    "avformat_free_context",
+    "bytestream2_get_byte",
+    "close",
+    "fchmod",
+    "fchownat",
+    "ff_thread_get_buffer",
+    "g_new",
+    "g_strdup",
+    "openat",
+    "qemu_get_be32s",
+    "qemu_get_sbe32s",
+    "qemu_iovec_from_buf",
+    "qemu_mallocz",
+    "tcg_malloc",
+    "url_close",
+    "url_close_dyn_buf",
+    "url_fclose",
+    "url_fopen",
+    "virtio_scsi_free_req"
+  ],
+  "E1_source_frozen_sha256": "be2e988e1d8c5af85fd50a27488725bdc745286bfd112a59a5599e92d9783345",
+  "annotation_specs_sha256": "eec549e4a7718a0edc98bd34a421a9024df370198adf2fcd2d425af960ede845",
+  "strict_H2_gate": "NOT_PASSED: independent semantic annotation audit remains unverified; real-code FN must be assessed",
+  "interpretation": "Exploratory scored technical review, not independently validated real-code accuracy. Unknown calls that are annotated positive count as FN, not dropped.",
+  "unit_notes": "E0/E1 API metrics use unique API names per sample; E1 callsite includes repeated syntactic sites and exact offsets. No TN/accuracy for unenumerated negative sites.",
+  "production_changed": false,
+  "LLM_calls": 0
+}

@@ -1,0 +1,46 @@
+﻿dataset,opaque_id,error_type,api_name,family,start,end,expression,status
+v11_dev50,E11-001,FN,qemu_try_blockalign,alloc,82,111,"qemu_try_blockalign(bs, size)",Unknown
+v11_dev50,E11-002,FN,kvm_vm_ioctl,io_sink,199,242,"kvm_vm_ioctl(s, KVM_HAS_DEVICE_ATTR, &attr)",Unknown
+v11_dev50,E11-004,FN,avio_open_dyn_buf,io_open,3018,3053,avio_open_dyn_buf(&ts_st->amux->pb),Unknown
+v11_dev50,E11-004,FN,avio_close_dyn_buf,io_close,3224,3266,"avio_close_dyn_buf(ts_st->amux->pb, &data)",Unknown
+v11_dev50,E11-004,FN,avio_close_dyn_buf,io_close,3416,3458,"avio_close_dyn_buf(ts_st->amux->pb, &data)",Unknown
+v11_dev50,E11-006,FN,scsi_free_scsi_task,pointer_free,459,484,scsi_free_scsi_task(task),Unknown
+v11_dev50,E11-006,FN,scsi_free_scsi_task,pointer_free,871,896,scsi_free_scsi_task(task),Unknown
+v11_dev50,E11-009,FN,g_ptr_array_new_with_free_func,alloc,270,316,g_ptr_array_new_with_free_func(crs_range_free),Unknown
+v11_dev50,E11-009,FN,g_ptr_array_new_with_free_func,alloc,346,392,g_ptr_array_new_with_free_func(crs_range_free),Unknown
+v11_dev50,E11-009,FN,g_ptr_array_free,pointer_free,8495,8528,"g_ptr_array_free(io_ranges, true)",Unknown
+v11_dev50,E11-009,FN,g_ptr_array_free,pointer_free,8535,8569,"g_ptr_array_free(mem_ranges, true)",Unknown
+v11_dev50,E11-009,FN,g_array_append_vals,buffer_write,14063,14127,"g_array_append_vals(table_data, dsdt->buf->data, dsdt->buf->len)",Unknown
+v11_dev50,E11-014,FN,FF_ALLOCZ_OR_GOTO,alloc,2274,2363,"FF_ALLOCZ_OR_GOTO(ctx->m.avctx, ctx->slice_size, ctx->m.mb_height*sizeof(uint32_t), fail)",Unknown
+v11_dev50,E11-014,FN,FF_ALLOCZ_OR_GOTO,alloc,2370,2459,"FF_ALLOCZ_OR_GOTO(ctx->m.avctx, ctx->slice_offs, ctx->m.mb_height*sizeof(uint32_t), fail)",Unknown
+v11_dev50,E11-014,FN,FF_ALLOCZ_OR_GOTO,alloc,2466,2555,"FF_ALLOCZ_OR_GOTO(ctx->m.avctx, ctx->mb_bits,    ctx->m.mb_num   *sizeof(uint16_t), fail)",Unknown
+v11_dev50,E11-014,FN,FF_ALLOCZ_OR_GOTO,alloc,2562,2651,"FF_ALLOCZ_OR_GOTO(ctx->m.avctx, ctx->mb_qscale,  ctx->m.mb_num   *sizeof(uint8_t),  fail)",Unknown
+v11_dev50,E11-015,FN,qemu_memalign,alloc,641,677,"qemu_memalign(512, nb_sectors * 512)",Unknown
+v11_dev50,E11-015,FN,qemu_iovec_to_buffer,buffer_write,738,777,"qemu_iovec_to_buffer(s->iov, s->bounce)",Unknown
+v11_dev50,E11-015,FN,bdrv_aio_write,block_write,799,913,"bdrv_aio_write(bs, sector_num, s->bounce, nb_sectors,
+
+                                  bdrv_aio_rw_vector_cb, s)",Unknown
+v11_dev50,E11-015,FN,bdrv_aio_read,block_read,949,1061,"bdrv_aio_read(bs, sector_num, s->bounce, nb_sectors,
+
+                                 bdrv_aio_rw_vector_cb, s)",Unknown
+v11_dev50,E11-023,FN,av_dict_free,pointer_free,996,1018,av_dict_free(&options),Unknown
+v11_dev50,E11-023,FN,av_dict_free,pointer_free,1236,1258,av_dict_free(&options),Unknown
+v11_dev50,E11-023,FN,ffurl_close,io_close,1265,1284,ffurl_close(old_hd),Unknown
+v11_dev50,E11-031,FN,bytestream_get_le32,buffer_read,5465,5488,bytestream_get_le32(pp),Unknown
+v11_dev50,E11-035,FN,pci_dma_read,buffer_read,1777,1825,"pci_dma_read(&s->dev, base, &desc, sizeof(desc))",Unknown
+v11_dev50,E11-035,FN,pci_dma_write,buffer_write,2186,2314,"pci_dma_write(&s->dev, le64_to_cpu(desc.buffer_addr),
+
+                              buf + desc_offset + vlan_offset, copy_size)",Unknown
+v11_dev50,E11-035,FN,pci_dma_write,buffer_write,2915,2964,"pci_dma_write(&s->dev, base, &desc, sizeof(desc))",Unknown
+v11_dev50,E11-037,FN,bdrv_co_preadv,block_read,404,456,"bdrv_co_preadv(bs->file, offset, bytes, qiov, flags)",Unknown
+v11_dev50,E11-040,FN,ldl,buffer_read,282,294,ldl(ssp + 8),Unknown
+v11_dev50,E11-040,FN,ldl,buffer_read,314,326,ldl(ssp + 4),Unknown
+v11_dev50,E11-040,FN,ldl,buffer_read,356,364,ldl(ssp),Unknown
+v11_dev50,E11-040,FN,lduw,buffer_read,434,447,lduw(ssp + 4),Unknown
+v11_dev50,E11-040,FN,lduw,buffer_read,467,480,lduw(ssp + 2),Unknown
+v11_dev50,E11-040,FN,lduw,buffer_read,501,510,lduw(ssp),Unknown
+v11_dev50,E11-045,FN,qemu_blockalign,alloc,663,696,"qemu_blockalign(s->bs, len_bytes)",Unknown
+v11_dev50,E11-045,FN,bdrv_pwritev,block_write,1135,1175,"bdrv_pwritev(s->bs->file, offset, &qiov)",Unknown
+v11_dev50,E11-045,FN,bdrv_flush,io_flush,1336,1353,bdrv_flush(s->bs),Unknown
+v11_dev50,E11-045,FN,qemu_vfree,pointer_free,1472,1493,qemu_vfree(new_table),Unknown
+v11_dev50,E11-050,FN,safe_ioctl,io_sink,2149,2187,"safe_ioctl(fd, ie->host_cmd, buf_temp)",Unknown

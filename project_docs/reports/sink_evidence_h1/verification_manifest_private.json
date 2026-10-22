@@ -1,0 +1,256 @@
+{
+  "purpose": "H1 real-code annotation pending; dev samples previously used in B2/B3, not untouched test",
+  "reviewed_50_excluded": true,
+  "samples": [
+    {
+      "opaque_id": "H1-001",
+      "source_id": "id_1003_label_True_FFmpeg.c",
+      "code_sha256": "ac09ac1863553c6592bb61303e3c779d08ff9b6b88136563d20b07378f2c6a6b"
+    },
+    {
+      "opaque_id": "H1-002",
+      "source_id": "id_1033_label_True_qemu.c",
+      "code_sha256": "932e326c7cdcd7f4cb65fc504441ce7a40a3a8e757a95e1506584b4ecdb63f06"
+    },
+    {
+      "opaque_id": "H1-003",
+      "source_id": "id_1042_label_True_FFmpeg.c",
+      "code_sha256": "a9c6024d00c14d22f9c259e1b5cfcf7e4d856d1cb75008f0782f16bc90c60f51"
+    },
+    {
+      "opaque_id": "H1-004",
+      "source_id": "id_1075_label_False_qemu.c",
+      "code_sha256": "25d7ce5e428027bdca799a40e620164d7894a8cb4d9bd410239d53c86eaa20d5"
+    },
+    {
+      "opaque_id": "H1-005",
+      "source_id": "id_127_label_False_FFmpeg.c",
+      "code_sha256": "b97ee21af5fa171932994cecfaabd893bda2bea7d272004fb876092be05d43ec"
+    },
+    {
+      "opaque_id": "H1-006",
+      "source_id": "id_155_label_True_qemu.c",
+      "code_sha256": "a4ab882a57be91251ef89b565e7daa0e7ad5b1af92c89bcee09922268cc2fbf4"
+    },
+    {
+      "opaque_id": "H1-007",
+      "source_id": "id_15_label_True_qemu.c",
+      "code_sha256": "798997fbda98856487ba5ea9f6ecbd8ebb75d1372a6f213fcf49f891fdb8522b"
+    },
+    {
+      "opaque_id": "H1-008",
+      "source_id": "id_161_label_True_qemu.c",
+      "code_sha256": "39140f75723deedd93f351960e4699548195cc174bf80312e031d60068e664e7"
+    },
+    {
+      "opaque_id": "H1-009",
+      "source_id": "id_174_label_False_qemu.c",
+      "code_sha256": "e49157cb8967ac3f0a6f22039aae3ddbc69f63de899ea01015a57706df81cb1d"
+    },
+    {
+      "opaque_id": "H1-010",
+      "source_id": "id_253_label_False_FFmpeg.c",
+      "code_sha256": "c7c574ec8473382faed12d6f9df029c2278b13b740a1a9b026f0453b8b4a454d"
+    },
+    {
+      "opaque_id": "H1-011",
+      "source_id": "id_268_label_True_FFmpeg.c",
+      "code_sha256": "ef2a44abfd09ba118a0e067d877f9f563284c8ee86e2becfdbd96341b9f3da1e"
+    },
+    {
+      "opaque_id": "H1-012",
+      "source_id": "id_300_label_False_qemu.c",
+      "code_sha256": "6a3b1c179db80140da68c49b0c9227dd068ed695e07d6c7feb66eb778533455f"
+    },
+    {
+      "opaque_id": "H1-013",
+      "source_id": "id_301_label_False_qemu.c",
+      "code_sha256": "6c8946529ef0857f4c25d1ac352ce63009f1fe14ef5f90f24473290acc25a9b2"
+    },
+    {
+      "opaque_id": "H1-014",
+      "source_id": "id_319_label_False_qemu.c",
+      "code_sha256": "c4584137a4bc5fff989764e5e01332f230d1f0a33066b91e83092543af699e38"
+    },
+    {
+      "opaque_id": "H1-015",
+      "source_id": "id_342_label_True_FFmpeg.c",
+      "code_sha256": "45f6fd6cd8478543a73b297a69dafc92173eeb5882067b7d890080fc0ebe7967"
+    },
+    {
+      "opaque_id": "H1-016",
+      "source_id": "id_345_label_True_qemu.c",
+      "code_sha256": "e64b0cdb643efd3bbf00d5ca05a4a8b9f57a8f3977a77c614d317c175d02aacb"
+    },
+    {
+      "opaque_id": "H1-017",
+      "source_id": "id_346_label_True_qemu.c",
+      "code_sha256": "498223860d66eb10fa633a55cf894924ba023ce3ffd45b6dd241b2567b8b7764"
+    },
+    {
+      "opaque_id": "H1-018",
+      "source_id": "id_354_label_True_qemu.c",
+      "code_sha256": "d37b1a7816c1bb40cc1687d706ce47b4f29fc60696856395e45950acc58e69a5"
+    },
+    {
+      "opaque_id": "H1-019",
+      "source_id": "id_355_label_True_FFmpeg.c",
+      "code_sha256": "8def01e9706c276613e93797ce701d737a5a0ad804b560479f5caf81a3f04330"
+    },
+    {
+      "opaque_id": "H1-020",
+      "source_id": "id_368_label_True_FFmpeg.c",
+      "code_sha256": "76b91755200362719c9dd86da96fa43cb3bc2e5f630b85994b957fdea435b396"
+    },
+    {
+      "opaque_id": "H1-021",
+      "source_id": "id_378_label_True_qemu.c",
+      "code_sha256": "87f1b4abe1516ffd0d0b8288ba71119a4580d1f0e073454b5470001d70e1e969"
+    },
+    {
+      "opaque_id": "H1-022",
+      "source_id": "id_390_label_True_qemu.c",
+      "code_sha256": "dcd5fab56e8f053af218167c314fc763b3c7d2593ba9893d7dddac8e6511f800"
+    },
+    {
+      "opaque_id": "H1-023",
+      "source_id": "id_427_label_True_qemu.c",
+      "code_sha256": "0b961abb38d6088007a9293987578ef7c073b2359a9a8b3873aed17d52e9b7cc"
+    },
+    {
+      "opaque_id": "H1-024",
+      "source_id": "id_443_label_True_FFmpeg.c",
+      "code_sha256": "1bdcb9f2783f4f5cd441a429aa7152e5b41f46758497706875b53c4e30788f94"
+    },
+    {
+      "opaque_id": "H1-025",
+      "source_id": "id_446_label_True_FFmpeg.c",
+      "code_sha256": "be83b55708de602782824c1f74aa73448ad648b2efe3f5b58934fc9e19b94521"
+    },
+    {
+      "opaque_id": "H1-026",
+      "source_id": "id_449_label_True_qemu.c",
+      "code_sha256": "e2a6b4a3541d2cf82bd387be7d89cb19e11f5a1358c611282456de5b04ac73af"
+    },
+    {
+      "opaque_id": "H1-027",
+      "source_id": "id_452_label_False_FFmpeg.c",
+      "code_sha256": "e33dc5fa5baf086ef6cabef781d7d9a43a792647e36a5fb707481a2a26cb5ab9"
+    },
+    {
+      "opaque_id": "H1-028",
+      "source_id": "id_526_label_True_qemu.c",
+      "code_sha256": "5b5f55842dd9a84a345336d45031520090cb8e4ca9c594d7ec17c23154f58c6c"
+    },
+    {
+      "opaque_id": "H1-029",
+      "source_id": "id_534_label_False_FFmpeg.c",
+      "code_sha256": "3881650ba7de6e15b64039e42f1b6577162b733c050612f08e9f8ab9ba10bd1a"
+    },
+    {
+      "opaque_id": "H1-030",
+      "source_id": "id_583_label_False_FFmpeg.c",
+      "code_sha256": "82af42af611c874ee260c7e11f72513a438bc0a1ed451f2ea0d1e001c9a67c42"
+    },
+    {
+      "opaque_id": "H1-031",
+      "source_id": "id_62_label_False_qemu.c",
+      "code_sha256": "86246453698a135a9d19929263c351b38683376cf9eeb5ad098e18f0fbc98de3"
+    },
+    {
+      "opaque_id": "H1-032",
+      "source_id": "id_646_label_True_FFmpeg.c",
+      "code_sha256": "597a7242547d9d1e9faa035b2e3721f8ac52aeff94693d4e7f5820129eeba352"
+    },
+    {
+      "opaque_id": "H1-033",
+      "source_id": "id_653_label_False_FFmpeg.c",
+      "code_sha256": "f734484a08c60529637f01b9ed6c20f9f23a38fbe3e6f0468902d8e075bec529"
+    },
+    {
+      "opaque_id": "H1-034",
+      "source_id": "id_668_label_False_FFmpeg.c",
+      "code_sha256": "a5babcbae67ef05a105bd1bec78e4985425c581287f9a1375f7299167a39bef4"
+    },
+    {
+      "opaque_id": "H1-035",
+      "source_id": "id_691_label_False_FFmpeg.c",
+      "code_sha256": "53dc9d5e87724e95e01510538388751baf1de45812340f85332d6340d1207531"
+    },
+    {
+      "opaque_id": "H1-036",
+      "source_id": "id_696_label_True_qemu.c",
+      "code_sha256": "c7ff7e5f32137fd33815636bc1d40e3f39a0b5e32f08a13650f643cbb7b3773e"
+    },
+    {
+      "opaque_id": "H1-037",
+      "source_id": "id_712_label_True_qemu.c",
+      "code_sha256": "7c64783f6113f4a2a82c361bcfdeb58d75f4538ff16ff95adaafd378a15c4154"
+    },
+    {
+      "opaque_id": "H1-038",
+      "source_id": "id_71_label_False_qemu.c",
+      "code_sha256": "df35e99fb0d0030c65086c5374d7218c1fb5e384350ee1aeb4552cc99bb4c12a"
+    },
+    {
+      "opaque_id": "H1-039",
+      "source_id": "id_734_label_False_FFmpeg.c",
+      "code_sha256": "c4d718f2ac05446d69857c06a8450430a186f03cc22b3fb9fd6e020c2b9f01ba"
+    },
+    {
+      "opaque_id": "H1-040",
+      "source_id": "id_757_label_False_FFmpeg.c",
+      "code_sha256": "963beaa17dcffaa007bc58e3f037aae088322223945510afa9b3b0c779c79207"
+    },
+    {
+      "opaque_id": "H1-041",
+      "source_id": "id_768_label_True_FFmpeg.c",
+      "code_sha256": "7fc5c53d401f2e175457fc472cf5af8340ffd0a11fc5a9fbff71fbd7b9d429ad"
+    },
+    {
+      "opaque_id": "H1-042",
+      "source_id": "id_771_label_True_FFmpeg.c",
+      "code_sha256": "c70daebea135e1688676920713c70cb845c4d050b2805c33bf5f69412145325c"
+    },
+    {
+      "opaque_id": "H1-043",
+      "source_id": "id_772_label_True_FFmpeg.c",
+      "code_sha256": "32b5858b75b0169af149f4b99f5b8d4fb0bcb9d115626df6d156ab577bd44f54"
+    },
+    {
+      "opaque_id": "H1-044",
+      "source_id": "id_795_label_False_FFmpeg.c",
+      "code_sha256": "01495d888ca54a304efb5f91ad78b01e56b035ca8bd6eba43eebb8ff9a29444f"
+    },
+    {
+      "opaque_id": "H1-045",
+      "source_id": "id_838_label_True_FFmpeg.c",
+      "code_sha256": "f68f9557d9668ca62db79a1fe38cbe9f4ac325b5622369cce9ceccf58344c8cc"
+    },
+    {
+      "opaque_id": "H1-046",
+      "source_id": "id_850_label_True_FFmpeg.c",
+      "code_sha256": "6bf7a0f9139e7cd17f5714ad1df8e61d10199aa1e751c9a07046e086b5dc7dd6"
+    },
+    {
+      "opaque_id": "H1-047",
+      "source_id": "id_867_label_False_FFmpeg.c",
+      "code_sha256": "55ebbca4679009b8dfcdcde9e8c5a1a293bcb8932494bc5a94c07e75a820f914"
+    },
+    {
+      "opaque_id": "H1-048",
+      "source_id": "id_882_label_False_qemu.c",
+      "code_sha256": "c48776448d2a5aaa64da092c7ba68b98156e05c3dd2582bad48c7156805f5e54"
+    },
+    {
+      "opaque_id": "H1-049",
+      "source_id": "id_8_label_True_qemu.c",
+      "code_sha256": "5d95f1489aa0697366d3f10f70bec12a8f20ba8619c4a62d91807c7e2d51cce2"
+    },
+    {
+      "opaque_id": "H1-050",
+      "source_id": "id_979_label_False_qemu.c",
+      "code_sha256": "4fafe17953c37c22800b66ef4d84b61edad3bf6b8683ddd7e1f90d35ce7dcb1f"
+    }
+  ]
+}

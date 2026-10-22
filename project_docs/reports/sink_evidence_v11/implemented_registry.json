@@ -1,0 +1,177 @@
+[
+  {
+    "api_name": "av_fast_padded_malloc",
+    "family": "alloc",
+    "implementation_status": "IMPLEMENTED_IN_EXPERIMENTAL_E11",
+    "basis": "H1 technical caller-context annotation",
+    "semantic_validation": "NOT_INDEPENDENTLY_AUDITED"
+  },
+  {
+    "api_name": "av_frame_alloc",
+    "family": "alloc",
+    "implementation_status": "IMPLEMENTED_IN_EXPERIMENTAL_E11",
+    "basis": "H1 technical caller-context annotation",
+    "semantic_validation": "NOT_INDEPENDENTLY_AUDITED"
+  },
+  {
+    "api_name": "av_free_packet",
+    "family": "pointer_free",
+    "implementation_status": "IMPLEMENTED_IN_EXPERIMENTAL_E11",
+    "basis": "H1 technical caller-context annotation",
+    "semantic_validation": "NOT_INDEPENDENTLY_AUDITED"
+  },
+  {
+    "api_name": "av_metadata_free",
+    "family": "pointer_free",
+    "implementation_status": "IMPLEMENTED_IN_EXPERIMENTAL_E11",
+    "basis": "H1 technical caller-context annotation",
+    "semantic_validation": "NOT_INDEPENDENTLY_AUDITED"
+  },
+  {
+    "api_name": "av_realloc",
+    "family": "alloc",
+    "implementation_status": "IMPLEMENTED_IN_EXPERIMENTAL_E11",
+    "basis": "H1 technical caller-context annotation",
+    "semantic_validation": "NOT_INDEPENDENTLY_AUDITED"
+  },
+  {
+    "api_name": "av_strlcat",
+    "family": "buffer_write",
+    "implementation_status": "IMPLEMENTED_IN_EXPERIMENTAL_E11",
+    "basis": "H1 technical caller-context annotation",
+    "semantic_validation": "NOT_INDEPENDENTLY_AUDITED"
+  },
+  {
+    "api_name": "avformat_free_context",
+    "family": "pointer_free",
+    "implementation_status": "IMPLEMENTED_IN_EXPERIMENTAL_E11",
+    "basis": "H1 technical caller-context annotation",
+    "semantic_validation": "NOT_INDEPENDENTLY_AUDITED"
+  },
+  {
+    "api_name": "bytestream2_get_byte",
+    "family": "buffer_read",
+    "implementation_status": "IMPLEMENTED_IN_EXPERIMENTAL_E11",
+    "basis": "H1 technical caller-context annotation",
+    "semantic_validation": "NOT_INDEPENDENTLY_AUDITED"
+  },
+  {
+    "api_name": "close",
+    "family": "io_close",
+    "implementation_status": "IMPLEMENTED_IN_EXPERIMENTAL_E11",
+    "basis": "H1 technical caller-context annotation",
+    "semantic_validation": "NOT_INDEPENDENTLY_AUDITED"
+  },
+  {
+    "api_name": "fchmod",
+    "family": "filesystem_metadata_write",
+    "implementation_status": "IMPLEMENTED_IN_EXPERIMENTAL_E11",
+    "basis": "H1 technical caller-context annotation",
+    "semantic_validation": "NOT_INDEPENDENTLY_AUDITED"
+  },
+  {
+    "api_name": "fchownat",
+    "family": "filesystem_metadata_write",
+    "implementation_status": "IMPLEMENTED_IN_EXPERIMENTAL_E11",
+    "basis": "H1 technical caller-context annotation",
+    "semantic_validation": "NOT_INDEPENDENTLY_AUDITED"
+  },
+  {
+    "api_name": "ff_thread_get_buffer",
+    "family": "alloc",
+    "implementation_status": "IMPLEMENTED_IN_EXPERIMENTAL_E11",
+    "basis": "H1 technical caller-context annotation",
+    "semantic_validation": "NOT_INDEPENDENTLY_AUDITED"
+  },
+  {
+    "api_name": "g_new",
+    "family": "alloc",
+    "implementation_status": "IMPLEMENTED_IN_EXPERIMENTAL_E11",
+    "basis": "H1 technical caller-context annotation",
+    "semantic_validation": "NOT_INDEPENDENTLY_AUDITED"
+  },
+  {
+    "api_name": "g_strdup",
+    "family": "alloc",
+    "implementation_status": "IMPLEMENTED_IN_EXPERIMENTAL_E11",
+    "basis": "H1 technical caller-context annotation",
+    "semantic_validation": "NOT_INDEPENDENTLY_AUDITED"
+  },
+  {
+    "api_name": "openat",
+    "family": "io_open",
+    "implementation_status": "IMPLEMENTED_IN_EXPERIMENTAL_E11",
+    "basis": "H1 technical caller-context annotation",
+    "semantic_validation": "NOT_INDEPENDENTLY_AUDITED"
+  },
+  {
+    "api_name": "qemu_get_be32s",
+    "family": "buffer_read",
+    "implementation_status": "IMPLEMENTED_IN_EXPERIMENTAL_E11",
+    "basis": "H1 technical caller-context annotation",
+    "semantic_validation": "NOT_INDEPENDENTLY_AUDITED"
+  },
+  {
+    "api_name": "qemu_get_sbe32s",
+    "family": "buffer_read",
+    "implementation_status": "IMPLEMENTED_IN_EXPERIMENTAL_E11",
+    "basis": "H1 technical caller-context annotation",
+    "semantic_validation": "NOT_INDEPENDENTLY_AUDITED"
+  },
+  {
+    "api_name": "qemu_iovec_from_buf",
+    "family": "buffer_write",
+    "implementation_status": "IMPLEMENTED_IN_EXPERIMENTAL_E11",
+    "basis": "H1 technical caller-context annotation",
+    "semantic_validation": "NOT_INDEPENDENTLY_AUDITED"
+  },
+  {
+    "api_name": "qemu_mallocz",
+    "family": "alloc",
+    "implementation_status": "IMPLEMENTED_IN_EXPERIMENTAL_E11",
+    "basis": "H1 technical caller-context annotation",
+    "semantic_validation": "NOT_INDEPENDENTLY_AUDITED"
+  },
+  {
+    "api_name": "tcg_malloc",
+    "family": "alloc",
+    "implementation_status": "IMPLEMENTED_IN_EXPERIMENTAL_E11",
+    "basis": "H1 technical caller-context annotation",
+    "semantic_validation": "NOT_INDEPENDENTLY_AUDITED"
+  },
+  {
+    "api_name": "url_close",
+    "family": "io_close",
+    "implementation_status": "IMPLEMENTED_IN_EXPERIMENTAL_E11",
+    "basis": "H1 technical caller-context annotation",
+    "semantic_validation": "NOT_INDEPENDENTLY_AUDITED"
+  },
+  {
+    "api_name": "url_close_dyn_buf",
+    "family": "io_close",
+    "implementation_status": "IMPLEMENTED_IN_EXPERIMENTAL_E11",
+    "basis": "H1 technical caller-context annotation",
+    "semantic_validation": "NOT_INDEPENDENTLY_AUDITED"
+  },
+  {
+    "api_name": "url_fclose",
+    "family": "io_close",
+    "implementation_status": "IMPLEMENTED_IN_EXPERIMENTAL_E11",
+    "basis": "H1 technical caller-context annotation",
+    "semantic_validation": "NOT_INDEPENDENTLY_AUDITED"
+  },
+  {
+    "api_name": "url_fopen",
+    "family": "io_open",
+    "implementation_status": "IMPLEMENTED_IN_EXPERIMENTAL_E11",
+    "basis": "H1 technical caller-context annotation",
+    "semantic_validation": "NOT_INDEPENDENTLY_AUDITED"
+  },
+  {
+    "api_name": "virtio_scsi_free_req",
+    "family": "pointer_free",
+    "implementation_status": "IMPLEMENTED_IN_EXPERIMENTAL_E11",
+    "basis": "H1 technical caller-context annotation",
+    "semantic_validation": "NOT_INDEPENDENTLY_AUDITED"
+  }
+]

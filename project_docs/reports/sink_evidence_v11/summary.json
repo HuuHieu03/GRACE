@@ -1,0 +1,61 @@
+{
+  "date": "2026-10-21",
+  "experiment": "E1.1 exact wrapper extension",
+  "new_exact_name_rules": 25,
+  "registry_sha256": "8c941ad0446e2f9a55aa576e2842aef80ff53bd0e8492d6d8cb033bd76db1991",
+  "frozen_E1_source_sha256": "be2e988e1d8c5af85fd50a27488725bdc745286bfd112a59a5599e92d9783345",
+  "development_regression": {
+    "samples": 50,
+    "annotated_sites": 67,
+    "promoted_unknown_sites": 34,
+    "metrics": {
+      "E1_API": {
+        "tp": 21,
+        "fp": 0,
+        "fn": 26,
+        "precision": 1.0,
+        "recall": 0.446809
+      },
+      "E11_API": {
+        "tp": 47,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1.0,
+        "recall": 1.0
+      },
+      "E1_callsite": {
+        "tp": 33,
+        "fp": 0,
+        "fn": 34,
+        "precision": 1.0,
+        "recall": 0.492537
+      },
+      "E11_callsite": {
+        "tp": 67,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1.0,
+        "recall": 1.0
+      },
+      "E11_family_callsite": {
+        "tp": 67,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1.0,
+        "recall": 1.0
+      }
+    },
+    "independent_validation": false,
+    "scope": "These annotations informed the 25 rules; scores are in-sample regression only."
+  },
+  "fresh_dev50": {
+    "samples": 50,
+    "excluded_previous_dev100": true,
+    "predictions_written": false,
+    "annotation_status": "PENDING",
+    "scope": "Fresh dev relative to H1 reviewed 100; no final test or train-clean claim"
+  },
+  "production_changed": false,
+  "LLM_calls": 0,
+  "strict_H2_gate": "NOT_PASSED: fresh-dev annotation, semantic audit and shared CodeT5 candidate archive still required."
+}

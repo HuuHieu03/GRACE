@@ -1,0 +1,14 @@
+{
+  "checks": {
+    "technical_case_anchors_validated": 18,
+    "packet_cases": 100,
+    "label_score_policy_metadata_absent": true,
+    "independent_scores_created": 0
+  },
+  "sha256": {
+    "relevance_review_packet.json": "b589d67a121de3a97e6bf7fab042c7229c0bcae493006ad2f53e8fbab0b61cd4",
+    "relevance_review_packet.md": "5ee36f601e88ecbac860a6f9b124ac97b50631aff9f8a558c06e018fba7ca7db",
+    "rubric.md": "eef1e6cd71386f382d79ed9a7ffec0b364f25719cad90bafe4832dac9cd251bd",
+    "technical_case_notes.json": "c2d7c9edc11e254b72c6de904d9fa102bb578af8347979100c34148148eb5720"
+  }
+}

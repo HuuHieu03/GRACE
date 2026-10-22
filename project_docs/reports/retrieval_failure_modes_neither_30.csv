@@ -1,0 +1,4922 @@
+﻿sample_idx,target_id,target_mechanism,primary_failure_mode,classification_reason,secondary_context_limit,baseline_demo_id,security_aware_demo_id,same_demo_id,target_code,demo_A_code,demo_B_code,code_evidence,pipeline_stage_attribution
+1,id_235_label_False_qemu.c,physical_memory_read,OPERATION_MISMATCH,"Demo không tái hiện đủ cụ thể thao tác/dòng dữ liệu của target; cùng domain, token hoặc pointer operation chưa đủ.",False,id_9945_label_False_qemu.c,id_9952_label_False_qemu.c,False,"uint32_t lduw_be_phys(target_phys_addr_t addr)
+
+{
+
+    return lduw_phys_internal(addr, DEVICE_BIG_ENDIAN);
+
+}","void sysbus_mmio_map_overlap(SysBusDevice *dev, int n, hwaddr addr,
+
+                             unsigned priority)
+
+{
+
+    sysbus_mmio_map_common(dev, n, addr, true, priority);
+
+}","void OPPROTO op_addw_ESI_T0(void)
+
+{
+
+    ESI = (ESI & ~0xffff) | ((ESI + T0) & 0xffff);
+
+}","Target gọi lduw_phys_internal(addr, DEVICE_BIG_ENDIAN); A chỉ map MMIO bằng sysbus_mmio_map_common, B cộng thanh ghi ESI. Không thấy cùng thao tác đọc hay guard kiểm tra addr.",UNKNOWN: complete shared candidate ranking not archived
+3,id_396_label_True_qemu.c,reference_lifetime_during_recursive_drain,OPERATION_MISMATCH,"Demo không tái hiện đủ cụ thể thao tác/dòng dữ liệu của target; cùng domain, token hoặc pointer operation chưa đủ.",False,id_10024_label_False_qemu.c,id_1001_label_True_qemu.c,False,"static bool bdrv_drain_recurse(BlockDriverState *bs, bool begin)
+
+{
+
+    BdrvChild *child, *tmp;
+
+    bool waited;
+
+
+
+    /* Ensure any pending metadata writes are submitted to bs->file.  */
+
+    bdrv_drain_invoke(bs, begin);
+
+
+
+    /* Wait for drained requests to finish */
+
+    waited = BDRV_POLL_WHILE(bs, atomic_read(&bs->in_flight) > 0);
+
+
+
+    QLIST_FOREACH_SAFE(child, &bs->children, next, tmp) {
+
+        BlockDriverState *bs = child->bs;
+
+        bool in_main_loop =
+
+            qemu_get_current_aio_context() == qemu_get_aio_context();
+
+        assert(bs->refcnt > 0);
+
+        if (in_main_loop) {
+
+            /* In case the recursive bdrv_drain_recurse processes a
+
+             * block_job_defer_to_main_loop BH and modifies the graph,
+
+             * let's hold a reference to bs until we are done.
+
+             *
+
+             * IOThread doesn't have such a BH, and it is not safe to call
+
+             * bdrv_unref without BQL, so skip doing it there.
+
+             */
+
+            bdrv_ref(bs);
+
+        }
+
+        waited |= bdrv_drain_recurse(bs, begin);
+
+        if (in_main_loop) {
+
+            bdrv_unref(bs);
+
+        }
+
+    }
+
+
+
+    return waited;
+
+}","static void cpu_common_initfn(Object *obj)
+
+{
+
+    CPUState *cpu = CPU(obj);
+
+    CPUClass *cc = CPU_GET_CLASS(obj);
+
+
+
+    cpu->cpu_index = UNASSIGNED_CPU_INDEX;
+
+    cpu->gdb_num_regs = cpu->gdb_num_g_regs = cc->gdb_num_core_regs;
+
+    /* *-user doesn't have configurable SMP topology */
+
+    /* the default value is changed by qemu_init_vcpu() for softmmu */
+
+    cpu->nr_cores = 1;
+
+    cpu->nr_threads = 1;
+
+
+
+    qemu_mutex_init(&cpu->work_mutex);
+
+    QTAILQ_INIT(&cpu->breakpoints);
+
+    QTAILQ_INIT(&cpu->watchpoints);
+
+
+
+    cpu->trace_dstate = bitmap_new(trace_get_vcpu_event_count());
+
+
+
+    cpu_exec_initfn(cpu);
+
+}","static int qcow_read_extensions(BlockDriverState *bs, uint64_t start_offset,
+
+                                uint64_t end_offset)
+
+{
+
+    BDRVQcowState *s = bs->opaque;
+
+    QCowExtension ext;
+
+    uint64_t offset;
+
+
+
+#ifdef DEBUG_EXT
+
+    printf(""qcow_read_extensions: start=%ld end=%ld\n"", start_offset, end_offset);
+
+#endif
+
+    offset = start_offset;
+
+    while (offset < end_offset) {
+
+
+
+#ifdef DEBUG_EXT
+
+        /* Sanity check */
+
+        if (offset > s->cluster_size)
+
+            printf(""qcow_handle_extension: suspicious offset %lu\n"", offset);
+
+
+
+        printf(""attemting to read extended header in offset %lu\n"", offset);
+
+#endif
+
+
+
+        if (bdrv_pread(s->hd, offset, &ext, sizeof(ext)) != sizeof(ext)) {
+
+            fprintf(stderr, ""qcow_handle_extension: ERROR: pread fail from offset %llu\n"",
+
+                    (unsigned long long)offset);
+
+            return 1;
+
+        }
+
+        be32_to_cpus(&ext.magic);
+
+        be32_to_cpus(&ext.len);
+
+        offset += sizeof(ext);
+
+#ifdef DEBUG_EXT
+
+        printf(""ext.magic = 0x%x\n"", ext.magic);
+
+#endif
+
+        switch (ext.magic) {
+
+        case QCOW_EXT_MAGIC_END:
+
+            return 0;
+
+
+
+        case QCOW_EXT_MAGIC_BACKING_FORMAT:
+
+            if (ext.len >= sizeof(bs->backing_format)) {
+
+                fprintf(stderr, ""ERROR: ext_backing_format: len=%u too large""
+
+                        "" (>=%zu)\n"",
+
+                        ext.len, sizeof(bs->backing_format));
+
+                return 2;
+
+            }
+
+            if (bdrv_pread(s->hd, offset , bs->backing_format,
+
+                           ext.len) != ext.len)
+
+                return 3;
+
+            bs->backing_format[ext.len] = '\0';
+
+#ifdef DEBUG_EXT
+
+            printf(""Qcow2: Got format extension %s\n"", bs->backing_format);
+
+#endif
+
+            offse
+
+/* ... [Cắt gọn do vượt quá 1800 ký tự] */","Target giữ reference bằng bdrv_ref/bdrv_unref quanh đệ quy và assert(bs->refcnt > 0). A khởi tạo CPU; B đọc extension bằng bdrv_pread, cùng BlockDriverState nhưng không minh họa vòng đời reference hay đồng bộ drain.",UNKNOWN: complete shared candidate ranking not archived
+4,id_747_label_True_FFmpeg.c,pixel_dimension_alignment,OPERATION_MISMATCH,"Demo không tái hiện đủ cụ thể thao tác/dòng dữ liệu của target; cùng domain, token hoặc pointer operation chưa đủ.",False,id_10021_label_False_qemu.c,id_1002_label_True_FFmpeg.c,False,"void avcodec_align_dimensions2(AVCodecContext *s, int *width, int *height, int linesize_align[4]){
+
+    int w_align= 1;
+
+    int h_align= 1;
+
+
+
+    switch(s->pix_fmt){
+
+    case PIX_FMT_YUV420P:
+
+    case PIX_FMT_YUYV422:
+
+    case PIX_FMT_UYVY422:
+
+    case PIX_FMT_YUV422P:
+
+    case PIX_FMT_YUV440P:
+
+    case PIX_FMT_YUV444P:
+
+    case PIX_FMT_GRAY8:
+
+    case PIX_FMT_GRAY16BE:
+
+    case PIX_FMT_GRAY16LE:
+
+    case PIX_FMT_YUVJ420P:
+
+    case PIX_FMT_YUVJ422P:
+
+    case PIX_FMT_YUVJ440P:
+
+    case PIX_FMT_YUVJ444P:
+
+    case PIX_FMT_YUVA420P:
+
+    case PIX_FMT_YUV420P9LE:
+
+    case PIX_FMT_YUV420P9BE:
+
+    case PIX_FMT_YUV420P10LE:
+
+    case PIX_FMT_YUV420P10BE:
+
+    case PIX_FMT_YUV422P10LE:
+
+    case PIX_FMT_YUV422P10BE:
+
+
+
+
+
+        w_align= 16; //FIXME check for non mpeg style codecs and use less alignment
+
+        h_align= 16;
+
+        if(s->codec_id == CODEC_ID_MPEG2VIDEO || s->codec_id == CODEC_ID_MJPEG || s->codec_id == CODEC_ID_AMV || s->codec_id == CODEC_ID_THP || s->codec_id == CODEC_ID_H264)
+
+            h_align= 32; // interlaced is rounded up to 2 MBs
+
+        break;
+
+    case PIX_FMT_YUV411P:
+
+    case PIX_FMT_UYYVYY411:
+
+        w_align=32;
+
+        h_align=8;
+
+        break;
+
+    case PIX_FMT_YUV410P:
+
+        if(s->codec_id == CODEC_ID_SVQ1){
+
+            w_align=64;
+
+            h_align=64;
+
+        }
+
+    case PIX_FMT_RGB555:
+
+        if(s->codec_id == CODEC_ID_RPZA){
+
+            w_align=4;
+
+            h_align=4;
+
+        }
+
+    case PIX_FMT_PAL8:
+
+    case PIX_FMT_BGR8:
+
+    case PIX_FMT_RGB8:
+
+        if(s->codec_id == CODEC_ID_SMC){
+
+            w_align=4;
+
+            h_align=4;
+
+        }
+
+        break;
+
+    case PIX_FMT_BGR24:
+
+        if((s->codec_id == CODEC_ID_MSZH) || (s->codec_id == CODEC_ID_ZLIB)){
+
+            w_align=4;
+
+            h_align=4;
+
+        }
+
+        break;
+
+    default:
+
+        w_align= 1;
+
+        h_align= 1;
+
+        break;
+
+    }
+
+
+
+    *width = FFALIGN(*width , w_align);
+
+    *height= FFALIGN(*height, h_align);
+
+    if(s->codec_id == CODEC_ID_H264 || s->lowres)
+
+        *height+=2; // some of the optimized chroma MC reads one line too much
+
+                    // which is also done in mpeg decoders with lowres > 0
+
+
+
+    linesize_align[0] =
+
+    linesize_align[1] =
+
+    linesize_align[2] =
+
+    linesize_align[3] = STRIDE_ALIGN;
+
+//STRIDE_ALIGN is 8 for SSE* but this does not work for SVQ1 chroma planes
+
+//we could change STRIDE_ALIGN to 16 for x86/sse but it would increase the
+
+//picture size unneccessarily in some cases. The solution here is not
+
+//pretty and better ideas are welcome!
+
+#if HAVE_MMX
+
+    if(s->codec_id == CODEC_ID_SVQ1 || s->codec_id == CODEC_ID_VP5 ||
+
+       s->codec_id == CODEC_ID_VP6 || s->codec_id == CODEC_ID_VP6F ||
+
+       s->codec_id == CODEC_ID_VP6A) {
+
+        linesize_align[0] =
+
+        linesize_align[1] =
+
+        linesize_align[2] = 16;
+
+    }
+
+#endif
+
+}","static void connex_init(ram_addr_t ram_size, int vga_ram_size,
+
+                const char *boot_device,
+
+                const char *kernel_filename, const char *kernel_cmdline,
+
+                const char *initrd_filename, const char *cpu_model)
+
+{
+
+    struct pxa2xx_state_s *cpu;
+
+    int index;
+
+
+
+    uint32_t connex_rom = 0x01000000;
+
+    uint32_t connex_ram = 0x04000000;
+
+
+
+    if (ram_size < (connex_ram + connex_rom + PXA2XX_INTERNAL_SIZE)) {
+
+        fprintf(stderr, ""This platform requires %i bytes of memory\n"",
+
+                connex_ram + connex_rom + PXA2XX_INTERNAL_SIZE);
+
+        exit(1);
+
+    }
+
+
+
+    cpu = pxa255_init(connex_ram);
+
+
+
+    index = drive_get_index(IF_PFLASH, 0, 0);
+
+    if (index == -1) {
+
+        fprintf(stderr, ""A flash image must be given with the ""
+
+                ""'pflash' parameter\n"");
+
+        exit(1);
+
+    }
+
+
+
+    if (!pflash_cfi01_register(0x00000000, qemu_ram_alloc(connex_rom),
+
+            drives_table[index].bdrv, sector_len, connex_rom / sector_len,
+
+            2, 0, 0, 0, 0)) {
+
+        fprintf(stderr, ""qemu: Error registering flash memory.\n"");
+
+        exit(1);
+
+    }
+
+
+
+    cpu->env->regs[15] = 0x00000000;
+
+
+
+    /* Interrupt line of NIC is connected to GPIO line 36 */
+
+    smc91c111_init(&nd_table[0], 0x04000300,
+
+                    pxa2xx_gpio_in_get(cpu->gpio)[36]);
+
+}","static void read_sbr_single_channel_element(AACContext *ac,
+
+                                            SpectralBandReplication *sbr,
+
+                                            GetBitContext *gb)
+
+{
+
+    if (get_bits1(gb)) // bs_data_extra
+
+        skip_bits(gb, 4); // bs_reserved
+
+
+
+    read_sbr_grid(ac, sbr, gb, &sbr->data[0]);
+
+    read_sbr_dtdf(sbr, gb, &sbr->data[0]);
+
+    read_sbr_invf(sbr, gb, &sbr->data[0]);
+
+    read_sbr_envelope(sbr, gb, &sbr->data[0], 0);
+
+    read_sbr_noise(sbr, gb, &sbr->data[0], 0);
+
+
+
+    if ((sbr->data[0].bs_add_harmonic_flag = get_bits1(gb)))
+
+        get_bits1_vector(gb, sbr->data[0].bs_add_harmonic, sbr->n[1]);
+
+}","Target FFALIGN(*width, w_align), FFALIGN(*height, h_align) và ghi linesize_align. A kiểm tra dung lượng RAM, B đọc SBR bitstream; không demo nào thể hiện cơ chế căn chỉnh kích thước pixel của target.",UNKNOWN: complete shared candidate ranking not archived
+5,id_521_label_True_qemu.c,sector_range_validation,GUARD_ROLE_MISMATCH,"Điểm phân biệt chính là vai trò biến hoặc guard: miền sector, kết quả lookup, giới hạn append, shift width hoặc parity; demo thiếu quan hệ tương ứng.",False,id_9972_label_False_qemu.c,id_1001_label_True_qemu.c,False,"static int bdrv_rd_badreq_sectors(BlockDriverState *bs,
+
+                                  int64_t sector_num, int nb_sectors)
+
+{
+
+    return
+
+        nb_sectors < 0 ||
+
+        sector_num < 0 ||
+
+        nb_sectors > bs->total_sectors ||
+
+        sector_num > bs->total_sectors - nb_sectors;
+
+}","static int sh_pci_host_init(PCIDevice *d)
+
+{
+
+    pci_config_set_vendor_id(d->config, PCI_VENDOR_ID_HITACHI);
+
+    pci_config_set_device_id(d->config, PCI_DEVICE_ID_HITACHI_SH7751R);
+
+    pci_set_word(d->config + PCI_COMMAND, PCI_COMMAND_WAIT);
+
+    pci_set_word(d->config + PCI_STATUS, PCI_STATUS_CAP_LIST |
+
+                 PCI_STATUS_FAST_BACK | PCI_STATUS_DEVSEL_MEDIUM);
+
+    return 0;
+
+}","static void cpu_common_initfn(Object *obj)
+
+{
+
+    CPUState *cpu = CPU(obj);
+
+    CPUClass *cc = CPU_GET_CLASS(obj);
+
+
+
+    cpu->cpu_index = UNASSIGNED_CPU_INDEX;
+
+    cpu->gdb_num_regs = cpu->gdb_num_g_regs = cc->gdb_num_core_regs;
+
+    /* *-user doesn't have configurable SMP topology */
+
+    /* the default value is changed by qemu_init_vcpu() for softmmu */
+
+    cpu->nr_cores = 1;
+
+    cpu->nr_threads = 1;
+
+
+
+    qemu_mutex_init(&cpu->work_mutex);
+
+    QTAILQ_INIT(&cpu->breakpoints);
+
+    QTAILQ_INIT(&cpu->watchpoints);
+
+
+
+    cpu->trace_dstate = bitmap_new(trace_get_vcpu_event_count());
+
+
+
+    cpu_exec_initfn(cpu);
+
+}","Target kiểm tra sector_num > bs->total_sectors - nb_sectors và số sector âm. A ghi PCI config, B khởi tạo CPU; đều thiếu quan hệ sector/count/total và guard miền truy cập.",UNKNOWN: complete shared candidate ranking not archived
+6,id_298_label_False_qemu.c,timer_notification,OPERATION_MISMATCH,"Demo không tái hiện đủ cụ thể thao tác/dòng dữ liệu của target; cùng domain, token hoặc pointer operation chưa đủ.",False,id_9942_label_False_qemu.c,id_10019_label_False_qemu.c,False,"static void timerlist_rearm(QEMUTimerList *timer_list)
+
+{
+
+    /* Interrupt execution to force deadline recalculation.  */
+
+    if (timer_list->clock->type == QEMU_CLOCK_VIRTUAL) {
+
+        qemu_start_warp_timer();
+
+    }
+
+    timerlist_notify(timer_list);
+
+}","void virtio_queue_notify(VirtIODevice *vdev, int n)
+
+{
+
+    if (n < VIRTIO_PCI_QUEUE_MAX && vdev->vq[n].vring.desc) {
+
+        trace_virtio_queue_notify(vdev, n, &vdev->vq[n]);
+
+        vdev->vq[n].handle_output(vdev, &vdev->vq[n]);
+
+    }
+
+}","static void spapr_phb_vfio_instance_init(Object *obj)
+
+{
+
+    error_report(""spapr-pci-vfio-host-bridge is deprecated"");
+
+}",timerlist_notify và queue callback chỉ cùng dispatch. Không có cùng thao tác hay guard clock/queue; error_report của B cũng không phù hợp.,UNKNOWN: complete shared candidate ranking not archived
+7,id_143_label_True_qemu.c,stub_without_executed_sink,NO_MATCHING_REFERENCE_FOR_SMALL_TARGET,Target là stub hoặc phép toán tối giản; không có demo minh họa cùng thao tác/tiền điều kiện để lựa chọn.,True,id_10030_label_False_qemu.c,id_1000_label_True_qemu.c,False,"struct vhost_net *vhost_net_init(VLANClientState *backend, int devfd,
+
+                                 bool force)
+
+{
+
+
+    return NULL;
+
+}","static void bdrv_sync_complete(void *opaque, int ret)
+
+{
+
+    /* do nothing. Masters do not directly interact with the backing store,
+
+     * only the working copy so no mutexing required.
+
+     */
+
+}","int socket_dgram(SocketAddress *remote, SocketAddress *local, Error **errp)
+
+{
+
+    QemuOpts *opts;
+
+    int fd;
+
+
+
+    opts = qemu_opts_create_nofail(&socket_optslist);
+
+    switch (remote->kind) {
+
+    case SOCKET_ADDRESS_KIND_INET:
+
+        qemu_opt_set(opts, ""host"", remote->inet->host);
+
+        qemu_opt_set(opts, ""port"", remote->inet->port);
+
+        if (local) {
+
+            qemu_opt_set(opts, ""localaddr"", local->inet->host);
+
+            qemu_opt_set(opts, ""localport"", local->inet->port);
+
+        }
+
+        fd = inet_dgram_opts(opts, errp);
+
+        break;
+
+
+
+    default:
+
+        error_setg(errp, ""socket type unsupported for datagram"");
+
+        return -1;
+
+    }
+
+    qemu_opts_del(opts);
+
+    return fd;
+
+}","Target là stub chỉ return NULL, không có sink/biến được sử dụng hay guard để đối chiếu. A là callback rỗng; B tạo socket datagram. Không lấy việc cùng ít code làm bằng chứng bảo mật.",UNKNOWN: complete shared candidate ranking not archived
+9,id_863_label_True_FFmpeg.c,library_load_allocation_cleanup,OPERATION_MISMATCH,"Demo không tái hiện đủ cụ thể thao tác/dòng dữ liệu của target; cùng domain, token hoặc pointer operation chưa đủ.",False,id_9946_label_False_qemu.c,id_1000_label_True_qemu.c,False,"static av_cold OMXContext *omx_init(void *logctx, const char *libname, const char *prefix)
+
+{
+
+    static const char * const libnames[] = {
+
+        ""libOMX_Core.so"",
+
+        ""libOmxCore.so"",
+
+        NULL
+
+    };
+
+    const char* const* nameptr;
+
+    int ret = AVERROR_ENCODER_NOT_FOUND;
+
+    OMXContext *omx_context;
+
+
+
+    omx_context = av_mallocz(sizeof(*omx_context));
+
+    if (!omx_context)
+
+        return NULL;
+
+    if (libname) {
+
+        ret = omx_try_load(omx_context, logctx, libname, prefix);
+
+        if (ret < 0) {
+
+            av_free(omx_context);
+
+            return NULL;
+
+        }
+
+    } else {
+
+        for (nameptr = libnames; *nameptr; nameptr++)
+
+            if (!(ret = omx_try_load(omx_context, logctx, *nameptr, prefix)))
+
+                break;
+
+        if (!*nameptr) {
+
+            av_free(omx_context);
+
+            return NULL;
+
+        }
+
+    }
+
+
+
+    omx_context->ptr_Init();
+
+    return omx_context;
+
+}","int socket_dgram(SocketAddress *remote, SocketAddress *local, Error **errp)
+
+{
+
+    QemuOpts *opts;
+
+    int fd;
+
+
+
+    opts = qemu_opts_create_nofail(&socket_optslist);
+
+    switch (remote->kind) {
+
+    case SOCKET_ADDRESS_KIND_INET:
+
+        qemu_opt_set(opts, ""host"", remote->inet->host);
+
+        qemu_opt_set(opts, ""port"", remote->inet->port);
+
+        if (local) {
+
+            qemu_opt_set(opts, ""localaddr"", local->inet->host);
+
+            qemu_opt_set(opts, ""localport"", local->inet->port);
+
+        }
+
+        fd = inet_dgram_opts(opts, errp);
+
+        break;
+
+
+
+    default:
+
+        error_setg(errp, ""socket type unsupported for datagram"");
+
+        return -1;
+
+    }
+
+    qemu_opts_del(opts);
+
+    return fd;
+
+}","static int tpm_passthrough_test_tpmdev(int fd)
+
+{
+
+    struct tpm_req_hdr req = {
+
+        .tag = cpu_to_be16(TPM_TAG_RQU_COMMAND),
+
+        .len = cpu_to_be32(sizeof(req)),
+
+        .ordinal = cpu_to_be32(TPM_ORD_GetTicks),
+
+    };
+
+    struct tpm_resp_hdr *resp;
+
+    fd_set readfds;
+
+    int n;
+
+    struct timeval tv = {
+
+        .tv_sec = 1,
+
+        .tv_usec = 0,
+
+    };
+
+    unsigned char buf[1024];
+
+
+
+    n = write(fd, &req, sizeof(req));
+
+    if (n < 0) {
+
+        return errno;
+
+    }
+
+    if (n != sizeof(req)) {
+
+        return EFAULT;
+
+    }
+
+
+
+    FD_ZERO(&readfds);
+
+    FD_SET(fd, &readfds);
+
+
+
+    /* wait for a second */
+
+    n = select(fd + 1, &readfds, NULL, NULL, &tv);
+
+    if (n != 1) {
+
+        return errno;
+
+    }
+
+
+
+    n = read(fd, &buf, sizeof(buf));
+
+    if (n < sizeof(struct tpm_resp_hdr)) {
+
+        return EFAULT;
+
+    }
+
+
+
+    resp = (struct tpm_resp_hdr *)buf;
+
+    /* check the header */
+
+    if (be16_to_cpu(resp->tag) != TPM_TAG_RSP_COMMAND ||
+
+        be32_to_cpu(resp->len) != n) {
+
+        return EBADMSG;
+
+    }
+
+
+
+    return 0;
+
+}","Target av_mallocz, if(!omx_context), av_free khi omx_try_load thất bại và ptr_Init. A có qemu_opts_del nhưng khác vòng đời thư viện/heap; B kiểm tra số byte read/write TPM. Không demo nào mô tả load thư viện và giải phóng context khi lỗi.",UNKNOWN: complete shared candidate ranking not archived
+10,id_782_label_True_qemu.c,heap_and_file_cleanup,OPERATION_MISMATCH,"Demo không tái hiện đủ cụ thể thao tác/dòng dữ liệu của target; cùng domain, token hoặc pointer operation chưa đủ.",False,id_9971_label_False_qemu.c,id_1001_label_True_qemu.c,False,"static void vvfat_close(BlockDriverState *bs)
+
+{
+
+    BDRVVVFATState *s = bs->opaque;
+
+
+
+    vvfat_close_current_file(s);
+
+    array_free(&(s->fat));
+
+    array_free(&(s->directory));
+
+    array_free(&(s->mapping));
+
+    if(s->cluster_buffer)
+
+        free(s->cluster_buffer);
+
+}","static void curl_multi_read(void *arg)
+
+{
+
+    CURLState *s = (CURLState *)arg;
+
+
+
+    aio_context_acquire(s->s->aio_context);
+
+    curl_multi_do_locked(s);
+
+    curl_multi_check_completion(s->s);
+
+    aio_context_release(s->s->aio_context);
+
+}","static void cpu_common_initfn(Object *obj)
+
+{
+
+    CPUState *cpu = CPU(obj);
+
+    CPUClass *cc = CPU_GET_CLASS(obj);
+
+
+
+    cpu->cpu_index = UNASSIGNED_CPU_INDEX;
+
+    cpu->gdb_num_regs = cpu->gdb_num_g_regs = cc->gdb_num_core_regs;
+
+    /* *-user doesn't have configurable SMP topology */
+
+    /* the default value is changed by qemu_init_vcpu() for softmmu */
+
+    cpu->nr_cores = 1;
+
+    cpu->nr_threads = 1;
+
+
+
+    qemu_mutex_init(&cpu->work_mutex);
+
+    QTAILQ_INIT(&cpu->breakpoints);
+
+    QTAILQ_INIT(&cpu->watchpoints);
+
+
+
+    cpu->trace_dstate = bitmap_new(trace_get_vcpu_event_count());
+
+
+
+    cpu_exec_initfn(cpu);
+
+}","Target vvfat_close_current_file, array_free và if(s->cluster_buffer) free. A acquire/release khóa AIO; B bitmap_new khởi tạo tài nguyên. B chỉ liên quan cấp phát ở mức chung, không cùng đường cleanup/free.",UNKNOWN: complete shared candidate ranking not archived
+12,id_536_label_True_qemu.c,device_tree_property_update,GUARD_ROLE_MISMATCH,"Điểm phân biệt chính là vai trò biến hoặc guard: miền sector, kết quả lookup, giới hạn append, shift width hoặc parity; demo thiếu quan hệ tương ứng.",False,id_9958_label_False_qemu.c,id_1001_label_True_qemu.c,False,"int qemu_devtree_setprop(void *fdt, const char *node_path,
+
+                         const char *property, void *val_array, int size)
+
+{
+
+    int offset;
+
+
+
+    offset = fdt_path_offset(fdt, node_path);
+
+    if (offset < 0)
+
+        return offset;
+
+
+
+    return fdt_setprop(fdt, offset, property, val_array, size);
+
+}","BdrvChild *bdrv_root_attach_child(BlockDriverState *child_bs,
+
+                                  const char *child_name,
+
+                                  const BdrvChildRole *child_role,
+
+                                  uint64_t perm, uint64_t shared_perm,
+
+                                  void *opaque, Error **errp)
+
+{
+
+    BdrvChild *child;
+
+    int ret;
+
+
+
+    ret = bdrv_check_update_perm(child_bs, perm, shared_perm, NULL, errp);
+
+    if (ret < 0) {
+
+        return NULL;
+
+    }
+
+
+
+    child = g_new(BdrvChild, 1);
+
+    *child = (BdrvChild) {
+
+        .bs             = NULL,
+
+        .name           = g_strdup(child_name),
+
+        .role           = child_role,
+
+        .perm           = perm,
+
+        .shared_perm    = shared_perm,
+
+        .opaque         = opaque,
+
+    };
+
+
+
+    bdrv_replace_child(child, child_bs);
+
+
+
+    return child;
+
+}","static void cpu_common_initfn(Object *obj)
+
+{
+
+    CPUState *cpu = CPU(obj);
+
+    CPUClass *cc = CPU_GET_CLASS(obj);
+
+
+
+    cpu->cpu_index = UNASSIGNED_CPU_INDEX;
+
+    cpu->gdb_num_regs = cpu->gdb_num_g_regs = cc->gdb_num_core_regs;
+
+    /* *-user doesn't have configurable SMP topology */
+
+    /* the default value is changed by qemu_init_vcpu() for softmmu */
+
+    cpu->nr_cores = 1;
+
+    cpu->nr_threads = 1;
+
+
+
+    qemu_mutex_init(&cpu->work_mutex);
+
+    QTAILQ_INIT(&cpu->breakpoints);
+
+    QTAILQ_INIT(&cpu->watchpoints);
+
+
+
+    cpu->trace_dstate = bitmap_new(trace_get_vcpu_event_count());
+
+
+
+    cpu_exec_initfn(cpu);
+
+}",fdt_path_offset -> fdt_setprop khác permission-check -> block attach. Chỉ cùng if(ret < 0) không đủ để chọn A.,UNKNOWN: complete shared candidate ranking not archived
+13,id_1065_label_False_FFmpeg.c,pixel_SIMD_load_store,OPERATION_MISMATCH,"Demo không tái hiện đủ cụ thể thao tác/dòng dữ liệu của target; cùng domain, token hoặc pointer operation chưa đủ.",True,id_9954_label_False_qemu.c,id_10030_label_False_qemu.c,False,"static void put_no_rnd_pixels_y2_mmx( UINT8  *block, const UINT8 *pixels, int line_size, int h)
+
+{
+
+  UINT8  *p;
+
+  const UINT8 *pix;
+
+  p = block;
+
+  pix = pixels;
+
+  MOVQ_ZERO(mm7);
+
+  JUMPALIGN();
+
+  do {
+
+    __asm __volatile(
+
+	""movq	%1, %%mm0\n\t""
+
+	""movq	%2, %%mm1\n\t""
+
+	""movq	%%mm0, %%mm2\n\t""
+
+	""movq	%%mm1, %%mm3\n\t""
+
+	""punpcklbw %%mm7, %%mm0\n\t""
+
+	""punpcklbw %%mm7, %%mm1\n\t""
+
+	""punpckhbw %%mm7, %%mm2\n\t""
+
+	""punpckhbw %%mm7, %%mm3\n\t""
+
+	""paddusw %%mm1, %%mm0\n\t""
+
+	""paddusw %%mm3, %%mm2\n\t""
+
+	""psrlw	$1, %%mm0\n\t""
+
+	""psrlw	$1, %%mm2\n\t""
+
+	""packuswb  %%mm2, %%mm0\n\t""
+
+	""movq	%%mm0, %0\n\t""
+
+	:""=m""(*p)
+
+	:""m""(*pix),
+
+	 ""m""(*(pix+line_size))
+
+	:""memory"");
+
+   pix += line_size;
+
+   p +=   line_size;
+
+  } while(--h);
+
+}","static unsigned int dec_move_pm(DisasContext *dc)
+
+{
+
+	TCGv t0;
+
+	int memsize;
+
+
+
+	memsize = preg_sizes[dc->op2];
+
+
+
+	DIS(fprintf (logfile, ""move.%c $p%u, [$r%u%s\n"",
+
+		     memsize_char(memsize), 
+
+		     dc->op2, dc->op1, dc->postinc ? ""+]"" : ""]""));
+
+
+
+	/* prepare store. Address in T0, value in T1.  */
+
+	if (dc->op2 == PR_CCS)
+
+		cris_evaluate_flags(dc);
+
+	t0 = tcg_temp_new(TCG_TYPE_TL);
+
+	t_gen_mov_TN_preg(t0, dc->op2);
+
+	cris_flush_cc_state(dc);
+
+	gen_store(dc, cpu_R[dc->op1], t0, memsize);
+
+	tcg_temp_free(t0);
+
+
+
+	cris_cc_mask(dc, 0);
+
+	if (dc->postinc)
+
+		tcg_gen_addi_tl(cpu_R[dc->op1], cpu_R[dc->op1], memsize);
+
+	return 2;
+
+}","static void bdrv_sync_complete(void *opaque, int ret)
+
+{
+
+    /* do nothing. Masters do not directly interact with the backing store,
+
+     * only the working copy so no mutexing required.
+
+     */
+
+}",Target movq đọc/ghi pixel thật; A gen_store sinh mã guest store. Cùng chữ store/address chưa chứng minh cùng cơ chế bộ đệm hoặc guard stride; B rỗng.,UNKNOWN: complete shared candidate ranking not archived
+14,id_292_label_False_qemu.c,MMIO_offset_dispatch,OPERATION_MISMATCH,"Demo không tái hiện đủ cụ thể thao tác/dòng dữ liệu của target; cùng domain, token hoặc pointer operation chưa đủ.",False,id_10025_label_False_qemu.c,id_9946_label_False_qemu.c,False,"static uint64_t sp804_read(void *opaque, target_phys_addr_t offset,
+
+                           unsigned size)
+
+{
+
+    sp804_state *s = (sp804_state *)opaque;
+
+
+
+    if (offset < 0x20) {
+
+        return arm_timer_read(s->timer[0], offset);
+
+    }
+
+    if (offset < 0x40) {
+
+        return arm_timer_read(s->timer[1], offset - 0x20);
+
+    }
+
+
+
+    /* TimerPeriphID */
+
+    if (offset >= 0xfe0 && offset <= 0xffc) {
+
+        return sp804_ids[(offset - 0xfe0) >> 2];
+
+    }
+
+
+
+    switch (offset) {
+
+    /* Integration Test control registers, which we won't support */
+
+    case 0xf00: /* TimerITCR */
+
+    case 0xf04: /* TimerITOP (strictly write only but..) */
+
+        return 0;
+
+    }
+
+
+
+    hw_error(""%s: Bad offset %x\n"", __func__, (int)offset);
+
+    return 0;
+
+}","int armv7m_nvic_acknowledge_irq(void *opaque)
+
+{
+
+    nvic_state *s = (nvic_state *)opaque;
+
+    uint32_t irq;
+
+
+
+    irq = gic_acknowledge_irq(&s->gic, 0);
+
+    if (irq == 1023)
+
+        hw_error(""Interrupt but no vector\n"");
+
+    if (irq >= 32)
+
+        irq -= 16;
+
+    return irq;
+
+}","static int tpm_passthrough_test_tpmdev(int fd)
+
+{
+
+    struct tpm_req_hdr req = {
+
+        .tag = cpu_to_be16(TPM_TAG_RQU_COMMAND),
+
+        .len = cpu_to_be32(sizeof(req)),
+
+        .ordinal = cpu_to_be32(TPM_ORD_GetTicks),
+
+    };
+
+    struct tpm_resp_hdr *resp;
+
+    fd_set readfds;
+
+    int n;
+
+    struct timeval tv = {
+
+        .tv_sec = 1,
+
+        .tv_usec = 0,
+
+    };
+
+    unsigned char buf[1024];
+
+
+
+    n = write(fd, &req, sizeof(req));
+
+    if (n < 0) {
+
+        return errno;
+
+    }
+
+    if (n != sizeof(req)) {
+
+        return EFAULT;
+
+    }
+
+
+
+    FD_ZERO(&readfds);
+
+    FD_SET(fd, &readfds);
+
+
+
+    /* wait for a second */
+
+    n = select(fd + 1, &readfds, NULL, NULL, &tv);
+
+    if (n != 1) {
+
+        return errno;
+
+    }
+
+
+
+    n = read(fd, &buf, sizeof(buf));
+
+    if (n < sizeof(struct tpm_resp_hdr)) {
+
+        return EFAULT;
+
+    }
+
+
+
+    resp = (struct tpm_resp_hdr *)buf;
+
+    /* check the header */
+
+    if (be16_to_cpu(resp->tag) != TPM_TAG_RSP_COMMAND ||
+
+        be32_to_cpu(resp->len) != n) {
+
+        return EBADMSG;
+
+    }
+
+
+
+    return 0;
+
+}",Target dispatch MMIO offset và đọc bảng ID; A acknowledge IRQ rồi kiểm tra sentinel 1023. Cùng thiết bị/báo lỗi chưa đủ; B TPM read-size cũng khác vai trò.,UNKNOWN: complete shared candidate ranking not archived
+15,id_713_label_True_FFmpeg.c,stream_creation_after_index_check,OPERATION_MISMATCH,"Demo không tái hiện đủ cụ thể thao tác/dòng dữ liệu của target; cùng domain, token hoặc pointer operation chưa đủ.",False,id_9958_label_False_qemu.c,id_1000_label_True_qemu.c,False,"static int opt_new_stream(const char *opt, const char *arg)
+
+{
+
+    AVFormatContext *oc;
+
+    if (nb_output_files <= 0) {
+
+        fprintf(stderr, ""At least one output file must be specified\n"");
+
+        ffmpeg_exit(1);
+
+    }
+
+    oc = output_files[nb_output_files - 1];
+
+
+
+    if      (!strcmp(opt, ""newvideo""   )) new_video_stream   (oc);
+
+    else if (!strcmp(opt, ""newaudio""   )) new_audio_stream   (oc);
+
+    else if (!strcmp(opt, ""newsubtitle"")) new_subtitle_stream(oc);
+
+    else av_assert0(0);
+
+    return 0;
+
+}","BdrvChild *bdrv_root_attach_child(BlockDriverState *child_bs,
+
+                                  const char *child_name,
+
+                                  const BdrvChildRole *child_role,
+
+                                  uint64_t perm, uint64_t shared_perm,
+
+                                  void *opaque, Error **errp)
+
+{
+
+    BdrvChild *child;
+
+    int ret;
+
+
+
+    ret = bdrv_check_update_perm(child_bs, perm, shared_perm, NULL, errp);
+
+    if (ret < 0) {
+
+        return NULL;
+
+    }
+
+
+
+    child = g_new(BdrvChild, 1);
+
+    *child = (BdrvChild) {
+
+        .bs             = NULL,
+
+        .name           = g_strdup(child_name),
+
+        .role           = child_role,
+
+        .perm           = perm,
+
+        .shared_perm    = shared_perm,
+
+        .opaque         = opaque,
+
+    };
+
+
+
+    bdrv_replace_child(child, child_bs);
+
+
+
+    return child;
+
+}","int socket_dgram(SocketAddress *remote, SocketAddress *local, Error **errp)
+
+{
+
+    QemuOpts *opts;
+
+    int fd;
+
+
+
+    opts = qemu_opts_create_nofail(&socket_optslist);
+
+    switch (remote->kind) {
+
+    case SOCKET_ADDRESS_KIND_INET:
+
+        qemu_opt_set(opts, ""host"", remote->inet->host);
+
+        qemu_opt_set(opts, ""port"", remote->inet->port);
+
+        if (local) {
+
+            qemu_opt_set(opts, ""localaddr"", local->inet->host);
+
+            qemu_opt_set(opts, ""localport"", local->inet->port);
+
+        }
+
+        fd = inet_dgram_opts(opts, errp);
+
+        break;
+
+
+
+    default:
+
+        error_setg(errp, ""socket type unsupported for datagram"");
+
+        return -1;
+
+    }
+
+    qemu_opts_del(opts);
+
+    return fd;
+
+}","Target kiểm tra nb_output_files trước output_files[index] và tạo stream. A permission-check/attach, B socket-kind dispatch không minh họa cùng count/index guard.",UNKNOWN: complete shared candidate ranking not archived
+19,id_1064_label_False_qemu.c,bounded_page_update_append,GUARD_ROLE_MISMATCH,"Điểm phân biệt chính là vai trò biến hoặc guard: miền sector, kết quả lookup, giới hạn append, shift width hoặc parity; demo thiếu quan hệ tương ứng.",False,id_10030_label_False_qemu.c,id_9966_label_False_FFmpeg.c,False,"void kqemu_set_notdirty(CPUState *env, ram_addr_t ram_addr)
+
+{
+
+    LOG_INT(""kqemu_set_notdirty: addr=%08lx\n"", 
+
+                (unsigned long)ram_addr);
+
+    /* we only track transitions to dirty state */
+
+    if (phys_ram_dirty[ram_addr >> TARGET_PAGE_BITS] != 0xff)
+
+        return;
+
+    if (nb_ram_pages_to_update >= KQEMU_MAX_RAM_PAGES_TO_UPDATE)
+
+        nb_ram_pages_to_update = KQEMU_RAM_PAGES_UPDATE_ALL;
+
+    else
+
+        ram_pages_to_update[nb_ram_pages_to_update++] = ram_addr;
+
+}","static void reanalyze(MpegTSContext *ts) {
+
+    AVIOContext *pb = ts->stream->pb;
+
+    int64_t pos = avio_tell(pb);
+
+    if(pos < 0)
+
+        return;
+
+    pos += ts->raw_packet_size - ts->pos47_full;
+
+    if (pos == TS_PACKET_SIZE) {
+
+        ts->size_stat[0] ++;
+
+    } else if (pos == TS_DVHS_PACKET_SIZE) {
+
+        ts->size_stat[1] ++;
+
+    } else if (pos == TS_FEC_PACKET_SIZE) {
+
+        ts->size_stat[2] ++;
+
+    }
+
+
+
+    ts->size_stat_count ++;
+
+    if(ts->size_stat_count > SIZE_STAT_THRESHOLD) {
+
+        int newsize = 0;
+
+        if (ts->size_stat[0] > SIZE_STAT_THRESHOLD) {
+
+            newsize = TS_PACKET_SIZE;
+
+        } else if (ts->size_stat[1] > SIZE_STAT_THRESHOLD) {
+
+            newsize = TS_DVHS_PACKET_SIZE;
+
+        } else if (ts->size_stat[2] > SIZE_STAT_THRESHOLD) {
+
+            newsize = TS_FEC_PACKET_SIZE;
+
+        }
+
+        if (newsize) {
+
+            av_log(ts->stream, AV_LOG_WARNING, ""changing packet size to %d\n"", newsize);
+
+            ts->raw_packet_size = newsize;
+
+        }
+
+        ts->size_stat_count = 0;
+
+        memset(ts->size_stat, 0, sizeof(ts->size_stat));
+
+    }
+
+}","static void bdrv_sync_complete(void *opaque, int ret)
+
+{
+
+    /* do nothing. Masters do not directly interact with the backing store,
+
+     * only the working copy so no mutexing required.
+
+     */
+
+}","Target chặn append ram_pages_to_update[index++] khi đầy; A reset size_stat theo threshold, không bảo vệ append cùng vai trò. B rỗng.",UNKNOWN: complete shared candidate ranking not archived
+20,id_51_label_False_qemu.c,SCSI_request_lifetime,OPERATION_MISMATCH,"Demo không tái hiện đủ cụ thể thao tác/dòng dữ liệu của target; cùng domain, token hoặc pointer operation chưa đủ.",False,id_9966_label_False_FFmpeg.c,id_9954_label_False_qemu.c,False,"static void do_busid_cmd(ESPState *s, uint8_t *buf, uint8_t busid)
+
+{
+
+    int32_t datalen;
+
+    int lun;
+
+
+
+    DPRINTF(""do_busid_cmd: busid 0x%x\n"", busid);
+
+    lun = busid & 7;
+
+    s->current_req = scsi_req_new(s->current_dev, 0, lun, NULL);
+
+    datalen = scsi_req_enqueue(s->current_req, buf);
+
+    s->ti_size = datalen;
+
+    if (datalen != 0) {
+
+        s->rregs[ESP_RSTAT] = STAT_TC;
+
+        s->dma_left = 0;
+
+        s->dma_counter = 0;
+
+        if (datalen > 0) {
+
+            s->rregs[ESP_RSTAT] |= STAT_DI;
+
+        } else {
+
+            s->rregs[ESP_RSTAT] |= STAT_DO;
+
+        }
+
+        scsi_req_continue(s->current_req);
+
+    }
+
+    s->rregs[ESP_RINTR] = INTR_BS | INTR_FC;
+
+    s->rregs[ESP_RSEQ] = SEQ_CD;
+
+    esp_raise_irq(s);
+
+}","static unsigned int dec_move_pm(DisasContext *dc)
+
+{
+
+	TCGv t0;
+
+	int memsize;
+
+
+
+	memsize = preg_sizes[dc->op2];
+
+
+
+	DIS(fprintf (logfile, ""move.%c $p%u, [$r%u%s\n"",
+
+		     memsize_char(memsize), 
+
+		     dc->op2, dc->op1, dc->postinc ? ""+]"" : ""]""));
+
+
+
+	/* prepare store. Address in T0, value in T1.  */
+
+	if (dc->op2 == PR_CCS)
+
+		cris_evaluate_flags(dc);
+
+	t0 = tcg_temp_new(TCG_TYPE_TL);
+
+	t_gen_mov_TN_preg(t0, dc->op2);
+
+	cris_flush_cc_state(dc);
+
+	gen_store(dc, cpu_R[dc->op1], t0, memsize);
+
+	tcg_temp_free(t0);
+
+
+
+	cris_cc_mask(dc, 0);
+
+	if (dc->postinc)
+
+		tcg_gen_addi_tl(cpu_R[dc->op1], cpu_R[dc->op1], memsize);
+
+	return 2;
+
+}","static void reanalyze(MpegTSContext *ts) {
+
+    AVIOContext *pb = ts->stream->pb;
+
+    int64_t pos = avio_tell(pb);
+
+    if(pos < 0)
+
+        return;
+
+    pos += ts->raw_packet_size - ts->pos47_full;
+
+    if (pos == TS_PACKET_SIZE) {
+
+        ts->size_stat[0] ++;
+
+    } else if (pos == TS_DVHS_PACKET_SIZE) {
+
+        ts->size_stat[1] ++;
+
+    } else if (pos == TS_FEC_PACKET_SIZE) {
+
+        ts->size_stat[2] ++;
+
+    }
+
+
+
+    ts->size_stat_count ++;
+
+    if(ts->size_stat_count > SIZE_STAT_THRESHOLD) {
+
+        int newsize = 0;
+
+        if (ts->size_stat[0] > SIZE_STAT_THRESHOLD) {
+
+            newsize = TS_PACKET_SIZE;
+
+        } else if (ts->size_stat[1] > SIZE_STAT_THRESHOLD) {
+
+            newsize = TS_DVHS_PACKET_SIZE;
+
+        } else if (ts->size_stat[2] > SIZE_STAT_THRESHOLD) {
+
+            newsize = TS_FEC_PACKET_SIZE;
+
+        }
+
+        if (newsize) {
+
+            av_log(ts->stream, AV_LOG_WARNING, ""changing packet size to %d\n"", newsize);
+
+            ts->raw_packet_size = newsize;
+
+        }
+
+        ts->size_stat_count = 0;
+
+        memset(ts->size_stat, 0, sizeof(ts->size_stat));
+
+    }
+
+}","Target scsi_req_new/enqueue/continue rồi cập nhật thanh ghi IRQ. A gen_store sinh mã CPU, B reanalyze đếm packet; không cùng SCSI request lifetime hay kiểm tra kết quả cấp phát. Việc cùng cập nhật state chưa đủ.",UNKNOWN: complete shared candidate ranking not archived
+23,id_125_label_True_FFmpeg.c,count_overflow_before_allocation_read,OPERATION_MISMATCH,"Demo không tái hiện đủ cụ thể thao tác/dòng dữ liệu của target; cùng domain, token hoặc pointer operation chưa đủ.",False,id_9958_label_False_qemu.c,id_1000_label_True_qemu.c,False,"static int mxf_read_content_storage(MXFContext *mxf, ByteIOContext *pb, int tag)
+
+{
+
+    switch (tag) {
+
+    case 0x1901:
+
+        mxf->packages_count = get_be32(pb);
+
+        if (mxf->packages_count >= UINT_MAX / sizeof(UID))
+
+            return -1;
+
+        mxf->packages_refs = av_malloc(mxf->packages_count * sizeof(UID));
+
+        if (!mxf->packages_refs)
+
+            return -1;
+
+        url_fskip(pb, 4); /* useless size of objects, always 16 according to specs */
+
+        get_buffer(pb, (uint8_t *)mxf->packages_refs, mxf->packages_count * sizeof(UID));
+
+        break;
+
+    }
+
+    return 0;
+
+}","int socket_dgram(SocketAddress *remote, SocketAddress *local, Error **errp)
+
+{
+
+    QemuOpts *opts;
+
+    int fd;
+
+
+
+    opts = qemu_opts_create_nofail(&socket_optslist);
+
+    switch (remote->kind) {
+
+    case SOCKET_ADDRESS_KIND_INET:
+
+        qemu_opt_set(opts, ""host"", remote->inet->host);
+
+        qemu_opt_set(opts, ""port"", remote->inet->port);
+
+        if (local) {
+
+            qemu_opt_set(opts, ""localaddr"", local->inet->host);
+
+            qemu_opt_set(opts, ""localport"", local->inet->port);
+
+        }
+
+        fd = inet_dgram_opts(opts, errp);
+
+        break;
+
+
+
+    default:
+
+        error_setg(errp, ""socket type unsupported for datagram"");
+
+        return -1;
+
+    }
+
+    qemu_opts_del(opts);
+
+    return fd;
+
+}","BdrvChild *bdrv_root_attach_child(BlockDriverState *child_bs,
+
+                                  const char *child_name,
+
+                                  const BdrvChildRole *child_role,
+
+                                  uint64_t perm, uint64_t shared_perm,
+
+                                  void *opaque, Error **errp)
+
+{
+
+    BdrvChild *child;
+
+    int ret;
+
+
+
+    ret = bdrv_check_update_perm(child_bs, perm, shared_perm, NULL, errp);
+
+    if (ret < 0) {
+
+        return NULL;
+
+    }
+
+
+
+    child = g_new(BdrvChild, 1);
+
+    *child = (BdrvChild) {
+
+        .bs             = NULL,
+
+        .name           = g_strdup(child_name),
+
+        .role           = child_role,
+
+        .perm           = perm,
+
+        .shared_perm    = shared_perm,
+
+        .opaque         = opaque,
+
+    };
+
+
+
+    bdrv_replace_child(child, child_bs);
+
+
+
+    return child;
+
+}","Target packages_count >= UINT_MAX/sizeof(UID) chặn overflow trước av_malloc và get_buffer; if(!packages_refs) kiểm tra cấp phát. B g_new/g_strdup chỉ gần cấp phát, thiếu size-derived allocation và overflow guard; A socket không phù hợp.",UNKNOWN: complete shared candidate ranking not archived
+24,id_162_label_True_qemu.c,integer_shift_width,GUARD_ROLE_MISMATCH,"Điểm phân biệt chính là vai trò biến hoặc guard: miền sector, kết quả lookup, giới hạn append, shift width hoặc parity; demo thiếu quan hệ tương ứng.",False,id_10027_label_False_qemu.c,id_1001_label_True_qemu.c,False,"static uint64_t qdev_get_prop_mask64(Property *prop)
+
+{
+
+    assert(prop->info == &qdev_prop_bit);
+
+    return 0x1 << prop->bitnr;
+
+}","static void cpu_common_initfn(Object *obj)
+
+{
+
+    CPUState *cpu = CPU(obj);
+
+    CPUClass *cc = CPU_GET_CLASS(obj);
+
+
+
+    cpu->cpu_index = UNASSIGNED_CPU_INDEX;
+
+    cpu->gdb_num_regs = cpu->gdb_num_g_regs = cc->gdb_num_core_regs;
+
+    /* *-user doesn't have configurable SMP topology */
+
+    /* the default value is changed by qemu_init_vcpu() for softmmu */
+
+    cpu->nr_cores = 1;
+
+    cpu->nr_threads = 1;
+
+
+
+    qemu_mutex_init(&cpu->work_mutex);
+
+    QTAILQ_INIT(&cpu->breakpoints);
+
+    QTAILQ_INIT(&cpu->watchpoints);
+
+
+
+    cpu->trace_dstate = bitmap_new(trace_get_vcpu_event_count());
+
+
+
+    cpu_exec_initfn(cpu);
+
+}","static FlatView *address_space_get_flatview(AddressSpace *as)
+
+{
+
+    FlatView *view;
+
+
+
+    qemu_mutex_lock(&flat_view_mutex);
+
+    view = as->current_map;
+
+    flatview_ref(view);
+
+    qemu_mutex_unlock(&flat_view_mutex);
+
+    return view;
+
+}","Target return 0x1 << prop->bitnr cần xét độ rộng toán hạng/shift. A khởi tạo CPU, B khóa/ref FlatView; không có biến shift hay guard bitnr tương ứng. assert(prop->info...) không giới hạn bitnr.",UNKNOWN: complete shared candidate ranking not archived
+25,id_815_label_False_qemu.c,callback_buffer_contract,OPERATION_MISMATCH,"Demo không tái hiện đủ cụ thể thao tác/dòng dữ liệu của target; cùng domain, token hoặc pointer operation chưa đủ.",True,id_9972_label_False_qemu.c,id_10019_label_False_qemu.c,False,"static void monitor_readline(const char *prompt, int is_password,
+
+                             char *buf, int buf_size)
+
+{
+
+    readline_start(prompt, is_password, monitor_readline_cb, NULL);
+
+    readline_show_prompt();
+
+    monitor_readline_buf = buf;
+
+    monitor_readline_buf_size = buf_size;
+
+    monitor_readline_started = 1;
+
+    while (monitor_readline_started) {
+
+        main_loop_wait(10);
+
+    }
+
+}","static void spapr_phb_vfio_instance_init(Object *obj)
+
+{
+
+    error_report(""spapr-pci-vfio-host-bridge is deprecated"");
+
+}","static int sh_pci_host_init(PCIDevice *d)
+
+{
+
+    pci_config_set_vendor_id(d->config, PCI_VENDOR_ID_HITACHI);
+
+    pci_config_set_device_id(d->config, PCI_DEVICE_ID_HITACHI_SH7751R);
+
+    pci_set_word(d->config + PCI_COMMAND, PCI_COMMAND_WAIT);
+
+    pci_set_word(d->config + PCI_STATUS, PCI_STATUS_CAP_LIST |
+
+                 PCI_STATUS_FAST_BACK | PCI_STATUS_DEVSEL_MEDIUM);
+
+    return 0;
+
+}","Target lưu buf/buf_size cho callback monitor_readline_cb và chờ main_loop_wait. A chỉ error_report, B ghi PCI config. Code callback không có trong snippet nên chưa xác định guard của thao tác ghi buffer.",UNKNOWN: complete shared candidate ranking not archived
+26,id_914_label_False_qemu.c,masked_register_write_DMA_IRQ,OPERATION_MISMATCH,"Demo không tái hiện đủ cụ thể thao tác/dòng dữ liệu của target; cùng domain, token hoặc pointer operation chưa đủ.",True,id_10024_label_False_qemu.c,id_9946_label_False_qemu.c,False,"static void cs_write (void *opaque, target_phys_addr_t addr,
+
+                      uint64_t val64, unsigned size)
+
+{
+
+    CSState *s = opaque;
+
+    uint32_t saddr, iaddr, val;
+
+
+
+    saddr = addr;
+
+    val = val64;
+
+
+
+    switch (saddr) {
+
+    case Index_Address:
+
+        if (!(s->regs[Index_Address] & MCE) && (val & MCE)
+
+            && (s->dregs[Interface_Configuration] & (3 << 3)))
+
+            s->aci_counter = conf.aci_counter;
+
+
+
+        s->regs[Index_Address] = val & ~(1 << 7);
+
+        break;
+
+
+
+    case Index_Data:
+
+        if (!(s->dregs[MODE_And_ID] & MODE2))
+
+            iaddr = s->regs[Index_Address] & 0x0f;
+
+        else
+
+            iaddr = s->regs[Index_Address] & 0x1f;
+
+
+
+        switch (iaddr) {
+
+        case RESERVED:
+
+        case RESERVED_2:
+
+        case RESERVED_3:
+
+            lwarn (""attempt to write %#x to reserved indirect register %d\n"",
+
+                   val, iaddr);
+
+            break;
+
+
+
+        case FS_And_Playback_Data_Format:
+
+            if (s->regs[Index_Address] & MCE) {
+
+                cs_reset_voices (s, val);
+
+            }
+
+            else {
+
+                if (s->dregs[Alternate_Feature_Status] & PMCE) {
+
+                    val = (val & ~0x0f) | (s->dregs[iaddr] & 0x0f);
+
+                    cs_reset_voices (s, val);
+
+                }
+
+                else {
+
+                    lwarn (""[P]MCE(%#x, %#x) is not set, val=%#x\n"",
+
+                           s->regs[Index_Address],
+
+                           s->dregs[Alternate_Feature_Status],
+
+                           val);
+
+                    break;
+
+                }
+
+            }
+
+            s->dregs[iaddr] = val;
+
+            break;
+
+
+
+        case Interface_Configuration:
+
+            val &= ~(1 << 5);   /* D5 is reserved */
+
+            s->dregs[iaddr] = val;
+
+            if (val & PPIO) {
+
+                lwarn (""PIO is not supported (%#x)\n"", val);
+
+                break;
+
+            }
+
+            if (val & PEN) {
+
+                if (!s->dma_running) {
+
+                    cs_reset_voices (s, s->dregs[FS_And_Playback_Data_Format]);
+
+                }
+
+            }
+
+            else {
+
+                if (s->dma_running) {
+
+                    DMA_release_DREQ (s->dma);
+
+                    AUD_set_active_out (s->voice, 0);
+
+                    s->dma_running = 0;
+
+                }
+
+            }
+
+            break;
+
+
+
+        case Error_Status_And_Initialization:
+
+            lwarn (""attempt to write to read only register %d\n"", iaddr);
+
+            break;
+
+
+
+        case MODE_And_ID:
+
+            dolog (""val=%#x\n"", val);
+
+            if (val & MODE2)
+
+                s->dregs[iaddr] |= MODE2;
+
+            else
+
+                s->dregs[iaddr] &= ~MODE2;
+
+            break;
+
+
+
+        case Alternate_Feature_Enable_I:
+
+            if (val & TE)
+
+                lerr (""timer is not yet supported\n"");
+
+            s->dregs[iaddr] = val;
+
+            break;
+
+
+
+        case Alternate_Feature_Status:
+
+            if ((s->dregs[iaddr] & P
+
+/* ... [Cắt gọn do vượt quá 3000 ký tự] */","static int qcow_read_extensions(BlockDriverState *bs, uint64_t start_offset,
+
+                                uint64_t end_offset)
+
+{
+
+    BDRVQcowState *s = bs->opaque;
+
+    QCowExtension ext;
+
+    uint64_t offset;
+
+
+
+#ifdef DEBUG_EXT
+
+    printf(""qcow_read_extensions: start=%ld end=%ld\n"", start_offset, end_offset);
+
+#endif
+
+    offset = start_offset;
+
+    while (offset < end_offset) {
+
+
+
+#ifdef DEBUG_EXT
+
+        /* Sanity check */
+
+        if (offset > s->cluster_size)
+
+            printf(""qcow_handle_extension: suspicious offset %lu\n"", offset);
+
+
+
+        printf(""attemting to read extended header in offset %lu\n"", offset);
+
+#endif
+
+
+
+        if (bdrv_pread(s->hd, offset, &ext, sizeof(ext)) != sizeof(ext)) {
+
+            fprintf(stderr, ""qcow_handle_extension: ERROR: pread fail from offset %llu\n"",
+
+                    (unsigned long long)offset);
+
+            return 1;
+
+        }
+
+        be32_to_cpus(&ext.magic);
+
+        be32_to_cpus(&ext.len);
+
+        offset += sizeof(ext);
+
+#ifdef DEBUG_EXT
+
+        printf(""ext.magic = 0x%x\n"", ext.magic);
+
+#endif
+
+        switch (ext.magic) {
+
+        case QCOW_EXT_MAGIC_END:
+
+            return 0;
+
+
+
+        case QCOW_EXT_MAGIC_BACKING_FORMAT:
+
+            if (ext.len >= sizeof(bs->backing_format)) {
+
+                fprintf(stderr, ""ERROR: ext_backing_format: len=%u too large""
+
+                        "" (>=%zu)\n"",
+
+                        ext.len, sizeof(bs->backing_format));
+
+                return 2;
+
+            }
+
+            if (bdrv_pread(s->hd, offset , bs->backing_format,
+
+                           ext.len) != ext.len)
+
+                return 3;
+
+            bs->backing_format[ext.len] = '\0';
+
+#ifdef DEBUG_EXT
+
+            printf(""Qcow2: Got format extension %s\n"", bs->backing_format);
+
+#endif
+
+            offse
+
+/* ... [Cắt gọn do vượt quá 1800 ký tự] */","static int tpm_passthrough_test_tpmdev(int fd)
+
+{
+
+    struct tpm_req_hdr req = {
+
+        .tag = cpu_to_be16(TPM_TAG_RQU_COMMAND),
+
+        .len = cpu_to_be32(sizeof(req)),
+
+        .ordinal = cpu_to_be32(TPM_ORD_GetTicks),
+
+    };
+
+    struct tpm_resp_hdr *resp;
+
+    fd_set readfds;
+
+    int n;
+
+    struct timeval tv = {
+
+        .tv_sec = 1,
+
+        .tv_usec = 0,
+
+    };
+
+    unsigned char buf[1024];
+
+
+
+    n = write(fd, &req, sizeof(req));
+
+    if (n < 0) {
+
+        return errno;
+
+    }
+
+    if (n != sizeof(req)) {
+
+        return EFAULT;
+
+    }
+
+
+
+    FD_ZERO(&readfds);
+
+    FD_SET(fd, &readfds);
+
+
+
+    /* wait for a second */
+
+    n = select(fd + 1, &readfds, NULL, NULL, &tv);
+
+    if (n != 1) {
+
+        return errno;
+
+    }
+
+
+
+    n = read(fd, &buf, sizeof(buf));
+
+    if (n < sizeof(struct tpm_resp_hdr)) {
+
+        return EFAULT;
+
+    }
+
+
+
+    resp = (struct tpm_resp_hdr *)buf;
+
+    /* check the header */
+
+    if (be16_to_cpu(resp->tag) != TPM_TAG_RSP_COMMAND ||
+
+        be32_to_cpu(resp->len) != n) {
+
+        return EBADMSG;
+
+    }
+
+
+
+    return 0;
+
+}","Đã đọc hết cs_write và qcow_read_extensions. Target chọn thanh ghi bằng mask 0x0f/0x1f, ghi dregs[iaddr] và điều khiển DMA/IRQ; A guard ext.len trước đọc chuỗi backing_format, B size-check phản hồi TPM. Không có demo cùng mask/register-write mechanism. Không kết luận dregs đủ lớn vì thiếu định nghĩa CSState.",UNKNOWN: complete shared candidate ranking not archived
+28,id_420_label_False_FFmpeg.c,audio_channel_layout_parity,GUARD_ROLE_MISMATCH,"Điểm phân biệt chính là vai trò biến hoặc guard: miền sector, kết quả lookup, giới hạn append, shift width hoặc parity; demo thiếu quan hệ tương ứng.",True,id_9940_label_False_FFmpeg.c,id_9970_label_False_qemu.c,False,"static int count_paired_channels(uint8_t (*layout_map)[3], int tags, int pos, int *current) {
+
+    int num_pos_channels = 0;
+
+    int first_cpe = 0;
+
+    int sce_parity = 0;
+
+    int i;
+
+    for (i = *current; i < tags; i++) {
+
+        if (layout_map[i][2] != pos)
+
+            break;
+
+        if (layout_map[i][0] == TYPE_CPE) {
+
+            if (sce_parity) {
+
+                if (pos == AAC_CHANNEL_FRONT || !first_cpe) {
+
+                    sce_parity = 0;
+
+                } else {
+
+                    return -1;
+
+                }
+
+            }
+
+            num_pos_channels += 2;
+
+            first_cpe = 1;
+
+        } else {
+
+            num_pos_channels++;
+
+            sce_parity ^= 1;
+
+        }
+
+    }
+
+    if (sce_parity &&
+
+        ((pos == AAC_CHANNEL_FRONT && first_cpe) || pos == AAC_CHANNEL_SIDE))
+
+            return -1;
+
+    *current = i;
+
+    return num_pos_channels;
+
+}","int tcg_gen_code(TCGContext *s, TranslationBlock *tb)
+
+{
+
+    int i, oi, oi_next, num_insns;
+
+
+
+#ifdef CONFIG_PROFILER
+
+    {
+
+        int n;
+
+
+
+        n = s->gen_last_op_idx + 1;
+
+        s->op_count += n;
+
+        if (n > s->op_count_max) {
+
+            s->op_count_max = n;
+
+        }
+
+
+
+        n = s->nb_temps;
+
+        s->temp_count += n;
+
+        if (n > s->temp_count_max) {
+
+            s->temp_count_max = n;
+
+        }
+
+    }
+
+#endif
+
+
+
+#ifdef DEBUG_DISAS
+
+    if (unlikely(qemu_loglevel_mask(CPU_LOG_TB_OP)
+
+                 && qemu_log_in_addr_range(tb->pc))) {
+
+        qemu_log(""OP:\n"");
+
+        tcg_dump_ops(s);
+
+        qemu_log(""\n"");
+
+    }
+
+#endif
+
+
+
+#ifdef CONFIG_PROFILER
+
+    s->opt_time -= profile_getclock();
+
+#endif
+
+
+
+#ifdef USE_TCG_OPTIMIZATIONS
+
+    tcg_optimize(s);
+
+#endif
+
+
+
+#ifdef CONFIG_PROFILER
+
+    s->opt_time += profile_getclock();
+
+    s->la_time -= profile_getclock();
+
+#endif
+
+
+
+    tcg_liveness_analysis(s);
+
+
+
+#ifdef CONFIG_PROFILER
+
+    s->la_time += profile_getclock();
+
+#endif
+
+
+
+#ifdef DEBUG_DISAS
+
+    if (unlikely(qemu_loglevel_mask(CPU_LOG_TB_OP_OPT)
+
+                 && qemu_log_in_addr_range(tb->pc))) {
+
+        qemu_log(""OP after optimization and liveness analysis:\n"");
+
+        tcg_dump_ops(s);
+
+        qemu_log(""\n"");
+
+    }
+
+#endif
+
+
+
+    tcg_reg_alloc_start(s);
+
+
+
+    s->code_buf = tb->tc_ptr;
+
+    s->code_ptr = tb->tc_ptr;
+
+
+
+    tcg_out_tb_init(s);
+
+
+
+    num_insns = -1;
+
+    for (oi = s->gen_first_op_idx; oi >= 0; oi = oi_next) {
+
+        TCGOp * const op = &s->gen_op_buf[oi];
+
+        TCGArg * const args = &s->gen_opparam_buf[op->args];
+
+        TCGOpcode opc = op->opc;
+
+        const TCGOpDef *def = &tcg_op_defs[opc];
+
+        uint16_t dead_args = s->op_dead_args[oi];
+
+        uint8_t sync_args = s->op_sync_args[oi];
+
+
+
+  
+
+/* ... [Cắt gọn do vượt quá 1800 ký tự] */","static int decode_wdlt(GetByteContext *gb, uint8_t *frame, int width, int height)
+
+{
+
+    const uint8_t *frame_end   = frame + width * height;
+
+    uint8_t *line_ptr;
+
+    int count, i, v, lines, segments;
+
+
+
+    lines = bytestream2_get_le16(gb);
+
+    if (lines > height)
+
+        return -1;
+
+
+
+    while (lines--) {
+
+        if (bytestream2_get_bytes_left(gb) < 2)
+
+            return -1;
+
+        segments = bytestream2_get_le16u(gb);
+
+        while ((segments & 0xC000) == 0xC000) {
+
+            unsigned delta = -((int16_t)segments * width);
+
+            if (frame_end - frame <= delta)
+
+                return -1;
+
+            frame    += delta;
+
+            segments = bytestream2_get_le16(gb);
+
+        }
+
+        if (segments & 0x8000) {
+
+            frame[width - 1] = segments & 0xFF;
+
+            segments = bytestream2_get_le16(gb);
+
+        }
+
+        line_ptr = frame;
+
+        frame += width;
+
+        while (segments--) {
+
+            if (frame - line_ptr <= bytestream2_peek_byte(gb))
+
+                return -1;
+
+            line_ptr += bytestream2_get_byte(gb);
+
+            count = (int8_t)bytestream2_get_byte(gb);
+
+            if (count >= 0) {
+
+                if (frame - line_ptr < count * 2)
+
+                    return -1;
+
+                if (bytestream2_get_buffer(gb, line_ptr, count * 2) != count * 2)
+
+                    return -1;
+
+                line_ptr += count * 2;
+
+            } else {
+
+                count = -count;
+
+                if (frame - line_ptr < count * 2)
+
+                    return -1;
+
+                v = bytestream2_get_le16(gb);
+
+                for (i = 0; i < count; i++)
+
+                    bytestream_put_le16(&line_ptr, v);
+
+            }
+
+        }
+
+    }
+
+
+
+    return 0;
+
+}","Đã đọc hết tcg_gen_code: có code_ptr > code_gen_highwater sau sinh mã. Target kiểm tra thứ tự/parity layout_map channel, B kiểm tra byte-count/frame-write. Cả hai demo không tái hiện parity/channel-layout, guard bộ đệm chung chưa đủ.",UNKNOWN: complete shared candidate ranking not archived
+29,id_10_label_True_qemu.c,signed_integer_subtraction,NO_MATCHING_REFERENCE_FOR_SMALL_TARGET,Target là stub hoặc phép toán tối giản; không có demo minh họa cùng thao tác/tiền điều kiện để lựa chọn.,False,id_10030_label_False_qemu.c,id_1001_label_True_qemu.c,False,"static inline int64_t sub64(const int64_t a, const int64_t b)
+
+{
+
+	return a - b;
+
+}","static void bdrv_sync_complete(void *opaque, int ret)
+
+{
+
+    /* do nothing. Masters do not directly interact with the backing store,
+
+     * only the working copy so no mutexing required.
+
+     */
+
+}","static void cpu_common_initfn(Object *obj)
+
+{
+
+    CPUState *cpu = CPU(obj);
+
+    CPUClass *cc = CPU_GET_CLASS(obj);
+
+
+
+    cpu->cpu_index = UNASSIGNED_CPU_INDEX;
+
+    cpu->gdb_num_regs = cpu->gdb_num_g_regs = cc->gdb_num_core_regs;
+
+    /* *-user doesn't have configurable SMP topology */
+
+    /* the default value is changed by qemu_init_vcpu() for softmmu */
+
+    cpu->nr_cores = 1;
+
+    cpu->nr_threads = 1;
+
+
+
+    qemu_mutex_init(&cpu->work_mutex);
+
+    QTAILQ_INIT(&cpu->breakpoints);
+
+    QTAILQ_INIT(&cpu->watchpoints);
+
+
+
+    cpu->trace_dstate = bitmap_new(trace_get_vcpu_event_count());
+
+
+
+    cpu_exec_initfn(cpu);
+
+}","Target chỉ return a - b trên int64_t, cần xét signed arithmetic và precondition. A callback rỗng, B khởi tạo CPU; không demo nào có phép trừ tương ứng hay bằng chứng kiểm tra overflow.",UNKNOWN: complete shared candidate ranking not archived
+31,id_682_label_True_FFmpeg.c,seek_callback_and_fallback,OPERATION_MISMATCH,"Demo không tái hiện đủ cụ thể thao tác/dòng dữ liệu của target; cùng domain, token hoặc pointer operation chưa đủ.",False,id_9958_label_False_qemu.c,id_1000_label_True_qemu.c,False,"int av_seek_frame(AVFormatContext *s, int stream_index, int64_t timestamp, int flags)
+
+{
+
+    int ret;
+
+    AVStream *st;
+
+
+
+    ff_read_frame_flush(s);
+
+
+
+    if(flags & AVSEEK_FLAG_BYTE)
+
+        return av_seek_frame_byte(s, stream_index, timestamp, flags);
+
+
+
+    if(stream_index < 0){
+
+        stream_index= av_find_default_stream_index(s);
+
+        if(stream_index < 0)
+
+            return -1;
+
+
+
+        st= s->streams[stream_index];
+
+       /* timestamp for default must be expressed in AV_TIME_BASE units */
+
+        timestamp = av_rescale(timestamp, st->time_base.den, AV_TIME_BASE * (int64_t)st->time_base.num);
+
+    }
+
+
+
+    /* first, we try the format specific seek */
+
+    if (s->iformat->read_seek)
+
+        ret = s->iformat->read_seek(s, stream_index, timestamp, flags);
+
+    else
+
+        ret = -1;
+
+    if (ret >= 0) {
+
+        return 0;
+
+    }
+
+
+
+    if(s->iformat->read_timestamp)
+
+        return av_seek_frame_binary(s, stream_index, timestamp, flags);
+
+    else
+
+        return av_seek_frame_generic(s, stream_index, timestamp, flags);
+
+}","int socket_dgram(SocketAddress *remote, SocketAddress *local, Error **errp)
+
+{
+
+    QemuOpts *opts;
+
+    int fd;
+
+
+
+    opts = qemu_opts_create_nofail(&socket_optslist);
+
+    switch (remote->kind) {
+
+    case SOCKET_ADDRESS_KIND_INET:
+
+        qemu_opt_set(opts, ""host"", remote->inet->host);
+
+        qemu_opt_set(opts, ""port"", remote->inet->port);
+
+        if (local) {
+
+            qemu_opt_set(opts, ""localaddr"", local->inet->host);
+
+            qemu_opt_set(opts, ""localport"", local->inet->port);
+
+        }
+
+        fd = inet_dgram_opts(opts, errp);
+
+        break;
+
+
+
+    default:
+
+        error_setg(errp, ""socket type unsupported for datagram"");
+
+        return -1;
+
+    }
+
+    qemu_opts_del(opts);
+
+    return fd;
+
+}","BdrvChild *bdrv_root_attach_child(BlockDriverState *child_bs,
+
+                                  const char *child_name,
+
+                                  const BdrvChildRole *child_role,
+
+                                  uint64_t perm, uint64_t shared_perm,
+
+                                  void *opaque, Error **errp)
+
+{
+
+    BdrvChild *child;
+
+    int ret;
+
+
+
+    ret = bdrv_check_update_perm(child_bs, perm, shared_perm, NULL, errp);
+
+    if (ret < 0) {
+
+        return NULL;
+
+    }
+
+
+
+    child = g_new(BdrvChild, 1);
+
+    *child = (BdrvChild) {
+
+        .bs             = NULL,
+
+        .name           = g_strdup(child_name),
+
+        .role           = child_role,
+
+        .perm           = perm,
+
+        .shared_perm    = shared_perm,
+
+        .opaque         = opaque,
+
+    };
+
+
+
+    bdrv_replace_child(child, child_bs);
+
+
+
+    return child;
+
+}","Target chọn read_seek/read_timestamp callback, stream_index và ret trước fallback seek. A socket kind dispatch, B permission ret check chỉ giống điều khiển lỗi chung; đều không thể hiện seek/stream_index/timestamp hay callback capability guard tương ứng.",UNKNOWN: complete shared candidate ranking not archived
+36,id_754_label_False_FFmpeg.c,H264_parameter_set_validation,OPERATION_MISMATCH,"Demo không tái hiện đủ cụ thể thao tác/dòng dữ liệu của target; cùng domain, token hoặc pointer operation chưa đủ.",True,id_9960_label_False_qemu.c,id_9970_label_False_qemu.c,False,"static int h264_slice_header_parse(H264Context *h, H264SliceContext *sl,
+
+                                   const H2645NAL *nal)
+
+{
+
+    const SPS *sps;
+
+    const PPS *pps;
+
+    int ret;
+
+    unsigned int slice_type, tmp, i;
+
+    int field_pic_flag, bottom_field_flag;
+
+    int frame_num, droppable, picture_structure;
+
+    int mb_aff_frame = 0;
+
+
+
+    sl->first_mb_addr = get_ue_golomb(&sl->gb);
+
+
+
+    if (sl->first_mb_addr == 0) { // FIXME better field boundary detection
+
+        if (h->current_slice && h->cur_pic_ptr && FIELD_PICTURE(h)) {
+
+            ff_h264_field_end(h, sl, 1);
+
+        }
+
+
+
+        h->current_slice = 0;
+
+        if (!h->first_field) {
+
+            if (h->cur_pic_ptr && !h->droppable) {
+
+                ff_thread_report_progress(&h->cur_pic_ptr->tf, INT_MAX,
+
+                                          h->picture_structure == PICT_BOTTOM_FIELD);
+
+            }
+
+            h->cur_pic_ptr = NULL;
+
+        }
+
+    }
+
+
+
+    slice_type = get_ue_golomb_31(&sl->gb);
+
+    if (slice_type > 9) {
+
+        av_log(h->avctx, AV_LOG_ERROR,
+
+               ""slice type %d too large at %d\n"",
+
+               slice_type, sl->first_mb_addr);
+
+        return AVERROR_INVALIDDATA;
+
+    }
+
+    if (slice_type > 4) {
+
+        slice_type -= 5;
+
+        sl->slice_type_fixed = 1;
+
+    } else
+
+        sl->slice_type_fixed = 0;
+
+
+
+    slice_type         = ff_h264_golomb_to_pict_type[slice_type];
+
+    sl->slice_type     = slice_type;
+
+    sl->slice_type_nos = slice_type & 3;
+
+
+
+    if (nal->type  == NAL_IDR_SLICE &&
+
+        sl->slice_type_nos != AV_PICTURE_TYPE_I) {
+
+        av_log(h->avctx, AV_LOG_ERROR, ""A non-intra slice in an IDR NAL unit.\n"");
+
+        return AVERROR_INVALIDDATA;
+
+    }
+
+
+
+    sl->pps_id = get_ue_golomb(&sl->gb);
+
+    if (sl->pps_id >= MAX_PPS_COUNT) {
+
+        av_log(h->avctx, AV_LOG_ERROR, ""pps_id %u out of range\n"", sl->pps_id);
+
+        return AVERROR_INVALIDDATA;
+
+    }
+
+    if (!h->ps.pps_list[sl->pps_id]) {
+
+        av_log(h->avctx, AV_LOG_ERROR,
+
+               ""non-existing PPS %u referenced\n"",
+
+               sl->pps_id);
+
+        return AVERROR_INVALIDDATA;
+
+    }
+
+    if (h->current_slice > 0 &&
+
+        h->ps.pps != (const PPS*)h->ps.pps_list[sl->pps_id]->data) {
+
+        av_log(h->avctx, AV_LOG_ERROR, ""PPS changed between slices\n"");
+
+        return AVERROR_INVALIDDATA;
+
+    }
+
+    pps = (const PPS*)h->ps.pps_list[sl->pps_id]->data;
+
+
+
+    if (!h->ps.sps_list[pps->sps_id]) {
+
+        av_log(h->avctx, AV_LOG_ERROR,
+
+               ""non-existing SPS %u referenced\n"", pps->sps_id);
+
+        return AVERROR_INVALIDDATA;
+
+    }
+
+    sps = (const SPS*)h->ps.sps_list[pps->sps_id]->data;
+
+
+
+    frame_num = get_bits(&sl->gb, sps->log2_max_frame_num);
+
+    if (!h->setup_finished)
+
+        h->poc.frame_num = frame_num;
+
+
+
+    sl->mb_mbaff       = 0;
+
+
+
+    droppable = nal->ref_idc == 0;
+
+    if (sps->frame_mbs_only_flag) {
+
+        picture_structure = PICT_FRAME;
+
+    } else {
+
+        field_pic_flag = get_bits1(&sl->gb);
+
+        i
+
+/* ... [Cắt gọn do vượt quá 3000 ký tự] */","long do_sigreturn(CPUSH4State *regs)
+
+{
+
+    struct target_sigframe *frame;
+
+    abi_ulong frame_addr;
+
+    sigset_t blocked;
+
+    target_sigset_t target_set;
+
+    target_ulong r0;
+
+    int i;
+
+    int err = 0;
+
+
+
+#if defined(DEBUG_SIGNAL)
+
+    fprintf(stderr, ""do_sigreturn\n"");
+
+#endif
+
+    frame_addr = regs->gregs[15];
+
+    if (!lock_user_struct(VERIFY_READ, frame, frame_addr, 1))
+
+   	goto badframe;
+
+
+
+    err |= __get_user(target_set.sig[0], &frame->sc.oldmask);
+
+    for(i = 1; i < TARGET_NSIG_WORDS; i++) {
+
+        err |= (__get_user(target_set.sig[i], &frame->extramask[i - 1]));
+
+    }
+
+
+
+    if (err)
+
+        goto badframe;
+
+
+
+    target_to_host_sigset_internal(&blocked, &target_set);
+
+    sigprocmask(SIG_SETMASK, &blocked, NULL);
+
+
+
+    if (restore_sigcontext(regs, &frame->sc, &r0))
+
+        goto badframe;
+
+
+
+    unlock_user_struct(frame, frame_addr, 0);
+
+    return r0;
+
+
+
+badframe:
+
+    unlock_user_struct(frame, frame_addr, 0);
+
+    force_sig(TARGET_SIGSEGV);
+
+    return 0;
+
+}","int tcg_gen_code(TCGContext *s, TranslationBlock *tb)
+
+{
+
+    int i, oi, oi_next, num_insns;
+
+
+
+#ifdef CONFIG_PROFILER
+
+    {
+
+        int n;
+
+
+
+        n = s->gen_last_op_idx + 1;
+
+        s->op_count += n;
+
+        if (n > s->op_count_max) {
+
+            s->op_count_max = n;
+
+        }
+
+
+
+        n = s->nb_temps;
+
+        s->temp_count += n;
+
+        if (n > s->temp_count_max) {
+
+            s->temp_count_max = n;
+
+        }
+
+    }
+
+#endif
+
+
+
+#ifdef DEBUG_DISAS
+
+    if (unlikely(qemu_loglevel_mask(CPU_LOG_TB_OP)
+
+                 && qemu_log_in_addr_range(tb->pc))) {
+
+        qemu_log(""OP:\n"");
+
+        tcg_dump_ops(s);
+
+        qemu_log(""\n"");
+
+    }
+
+#endif
+
+
+
+#ifdef CONFIG_PROFILER
+
+    s->opt_time -= profile_getclock();
+
+#endif
+
+
+
+#ifdef USE_TCG_OPTIMIZATIONS
+
+    tcg_optimize(s);
+
+#endif
+
+
+
+#ifdef CONFIG_PROFILER
+
+    s->opt_time += profile_getclock();
+
+    s->la_time -= profile_getclock();
+
+#endif
+
+
+
+    tcg_liveness_analysis(s);
+
+
+
+#ifdef CONFIG_PROFILER
+
+    s->la_time += profile_getclock();
+
+#endif
+
+
+
+#ifdef DEBUG_DISAS
+
+    if (unlikely(qemu_loglevel_mask(CPU_LOG_TB_OP_OPT)
+
+                 && qemu_log_in_addr_range(tb->pc))) {
+
+        qemu_log(""OP after optimization and liveness analysis:\n"");
+
+        tcg_dump_ops(s);
+
+        qemu_log(""\n"");
+
+    }
+
+#endif
+
+
+
+    tcg_reg_alloc_start(s);
+
+
+
+    s->code_buf = tb->tc_ptr;
+
+    s->code_ptr = tb->tc_ptr;
+
+
+
+    tcg_out_tb_init(s);
+
+
+
+    num_insns = -1;
+
+    for (oi = s->gen_first_op_idx; oi >= 0; oi = oi_next) {
+
+        TCGOp * const op = &s->gen_op_buf[oi];
+
+        TCGArg * const args = &s->gen_opparam_buf[op->args];
+
+        TCGOpcode opc = op->opc;
+
+        const TCGOpDef *def = &tcg_op_defs[opc];
+
+        uint16_t dead_args = s->op_dead_args[oi];
+
+        uint8_t sync_args = s->op_sync_args[oi];
+
+
+
+  
+
+/* ... [Cắt gọn do vượt quá 1800 ký tự] */","Target kiểm tra slice_type/pps_id và PPS/SPS trong parser H264. A lock_user_struct/restore signal context, B codegen opcode tables: chỉ cùng validation dữ liệu/lookup chung, khác vai trò parser và điều kiện lỗi. Không ưu tiên A chỉ vì có goto badframe.",UNKNOWN: complete shared candidate ranking not archived
+39,id_1021_label_True_FFmpeg.c,SIMD_color_conversion_store,OPERATION_MISMATCH,"Demo không tái hiện đủ cụ thể thao tác/dòng dữ liệu của target; cùng domain, token hoặc pointer operation chưa đủ.",True,id_9947_label_False_qemu.c,id_1002_label_True_FFmpeg.c,False,"static void RENAME(yuv2bgr24_1)(SwsContext *c, const int16_t *buf0,
+
+                                const int16_t *ubuf[2], const int16_t *bguf[2],
+
+                                const int16_t *abuf0, uint8_t *dest,
+
+                                int dstW, int uvalpha, int y)
+
+{
+
+    const int16_t *ubuf0 = ubuf[0], *ubuf1 = ubuf[1];
+
+    const int16_t *buf1= buf0; //FIXME needed for RGB1/BGR1
+
+
+
+    if (uvalpha < 2048) { // note this is not correct (shifts chrominance by 0.5 pixels) but it is a bit faster
+
+        __asm__ volatile(
+
+            ""mov %%""REG_b"", ""ESP_OFFSET""(%5)        \n\t""
+
+            ""mov        %4, %%""REG_b""               \n\t""
+
+            ""push %%""REG_BP""                        \n\t""
+
+            YSCALEYUV2RGB1(%%REGBP, %5)
+
+            ""pxor    %%mm7, %%mm7                   \n\t""
+
+            WRITEBGR24(%%REGb, 8280(%5), %%REGBP)
+
+            ""pop %%""REG_BP""                         \n\t""
+
+            ""mov ""ESP_OFFSET""(%5), %%""REG_b""        \n\t""
+
+            :: ""c"" (buf0), ""d"" (buf1), ""S"" (ubuf0), ""D"" (ubuf1), ""m"" (dest),
+
+               ""a"" (&c->redDither)
+
+        );
+
+    } else {
+
+        __asm__ volatile(
+
+            ""mov %%""REG_b"", ""ESP_OFFSET""(%5)        \n\t""
+
+            ""mov        %4, %%""REG_b""               \n\t""
+
+            ""push %%""REG_BP""                        \n\t""
+
+            YSCALEYUV2RGB1b(%%REGBP, %5)
+
+            ""pxor    %%mm7, %%mm7                   \n\t""
+
+            WRITEBGR24(%%REGb, 8280(%5), %%REGBP)
+
+            ""pop %%""REG_BP""                         \n\t""
+
+            ""mov ""ESP_OFFSET""(%5), %%""REG_b""        \n\t""
+
+            :: ""c"" (buf0), ""d"" (buf1), ""S"" (ubuf0), ""D"" (ubuf1), ""m"" (dest),
+
+               ""a"" (&c->redDither)
+
+        );
+
+    }
+
+}","static void read_sbr_single_channel_element(AACContext *ac,
+
+                                            SpectralBandReplication *sbr,
+
+                                            GetBitContext *gb)
+
+{
+
+    if (get_bits1(gb)) // bs_data_extra
+
+        skip_bits(gb, 4); // bs_reserved
+
+
+
+    read_sbr_grid(ac, sbr, gb, &sbr->data[0]);
+
+    read_sbr_dtdf(sbr, gb, &sbr->data[0]);
+
+    read_sbr_invf(sbr, gb, &sbr->data[0]);
+
+    read_sbr_envelope(sbr, gb, &sbr->data[0], 0);
+
+    read_sbr_noise(sbr, gb, &sbr->data[0], 0);
+
+
+
+    if ((sbr->data[0].bs_add_harmonic_flag = get_bits1(gb)))
+
+        get_bits1_vector(gb, sbr->data[0].bs_add_harmonic, sbr->n[1]);
+
+}","static int tight_palette_insert(QDict *palette, uint32_t rgb, int bpp, int max)
+
+{
+
+    uint8_t key[6];
+
+    int idx = qdict_size(palette);
+
+    bool present;
+
+
+
+    tight_palette_rgb2buf(rgb, bpp, key);
+
+    present = qdict_haskey(palette, (char *)key);
+
+    if (idx >= max && !present) {
+
+        return 0;
+
+    }
+
+    if (!present) {
+
+        qdict_put(palette, (char *)key, qint_from_int(idx));
+
+    }
+
+    return qdict_size(palette);
+
+}","Đã có toàn bộ hàm yuv2bgr24_1, nhưng thiếu body WRITEBGR24/YSCALE và hợp đồng padding. A SBR bit flags, B palette dictionary capacity không cùng asm pixel-store/stride. Có thể chọn Neither về relevance; guard của target vẫn Unknown, không suy diễn vulnerability.",UNKNOWN: complete shared candidate ranking not archived
+40,id_1018_label_True_FFmpeg.c,HEVC_decode_and_frame_lifetime,OPERATION_MISMATCH,"Demo không tái hiện đủ cụ thể thao tác/dòng dữ liệu của target; cùng domain, token hoặc pointer operation chưa đủ.",False,id_10009_label_False_qemu.c,id_1002_label_True_FFmpeg.c,False,"static int hevc_decode_frame(AVCodecContext *avctx, void *data, int *got_output,
+
+                             AVPacket *avpkt)
+
+{
+
+    int ret;
+
+    int new_extradata_size;
+
+    uint8_t *new_extradata;
+
+    HEVCContext *s = avctx->priv_data;
+
+
+
+    if (!avpkt->size) {
+
+        ret = ff_hevc_output_frame(s, data, 1);
+
+        if (ret < 0)
+
+            return ret;
+
+
+
+        *got_output = ret;
+
+        return 0;
+
+    }
+
+
+
+    new_extradata = av_packet_get_side_data(avpkt, AV_PKT_DATA_NEW_EXTRADATA,
+
+                                            &new_extradata_size);
+
+    if (new_extradata && new_extradata_size > 0) {
+
+        ret = hevc_decode_extradata(s, new_extradata, new_extradata_size);
+
+        if (ret < 0)
+
+            return ret;
+
+    }
+
+
+
+    s->ref = NULL;
+
+    ret    = decode_nal_units(s, avpkt->data, avpkt->size);
+
+    if (ret < 0)
+
+        return ret;
+
+
+
+    if (avctx->hwaccel) {
+
+        if (s->ref && (ret = avctx->hwaccel->end_frame(avctx)) < 0) {
+
+            av_log(avctx, AV_LOG_ERROR,
+
+                   ""hardware accelerator failed to decode picture\n"");
+
+            ff_hevc_unref_frame(s, s->ref, ~0);
+
+            return ret;
+
+        }
+
+    } else {
+
+        /* verify the SEI checksum */
+
+        if (avctx->err_recognition & AV_EF_CRCCHECK && s->is_decoded &&
+
+            s->sei.picture_hash.is_md5) {
+
+            ret = verify_md5(s, s->ref->frame);
+
+            if (ret < 0 && avctx->err_recognition & AV_EF_EXPLODE) {
+
+                ff_hevc_unref_frame(s, s->ref, ~0);
+
+                return ret;
+
+            }
+
+        }
+
+    }
+
+    s->sei.picture_hash.is_md5 = 0;
+
+
+
+    if (s->is_decoded) {
+
+        av_log(avctx, AV_LOG_DEBUG, ""Decoded frame with POC %d.\n"", s->poc);
+
+        s->is_decoded = 0;
+
+    }
+
+
+
+    if (s->output_frame->buf[0]) {
+
+        av_frame_move_ref(data, s->output_frame);
+
+        *got_output = 1;
+
+    }
+
+
+
+    return avpkt->size;
+
+}","static int write_elf64_load(DumpState *s, MemoryMapping *memory_mapping,
+
+                            int phdr_index, hwaddr offset)
+
+{
+
+    Elf64_Phdr phdr;
+
+    int ret;
+
+    int endian = s->dump_info.d_endian;
+
+
+
+    memset(&phdr, 0, sizeof(Elf64_Phdr));
+
+    phdr.p_type = cpu_convert_to_target32(PT_LOAD, endian);
+
+    phdr.p_offset = cpu_convert_to_target64(offset, endian);
+
+    phdr.p_paddr = cpu_convert_to_target64(memory_mapping->phys_addr, endian);
+
+    if (offset == -1) {
+
+        /* When the memory is not stored into vmcore, offset will be -1 */
+
+        phdr.p_filesz = 0;
+
+    } else {
+
+        phdr.p_filesz = cpu_convert_to_target64(memory_mapping->length, endian);
+
+    }
+
+    phdr.p_memsz = cpu_convert_to_target64(memory_mapping->length, endian);
+
+    phdr.p_vaddr = cpu_convert_to_target64(memory_mapping->virt_addr, endian);
+
+
+
+    ret = fd_write_vmcore(&phdr, sizeof(Elf64_Phdr), s);
+
+    if (ret < 0) {
+
+        dump_error(s, ""dump: failed to write program header table.\n"");
+
+        return -1;
+
+    }
+
+
+
+    return 0;
+
+}","static void read_sbr_single_channel_element(AACContext *ac,
+
+                                            SpectralBandReplication *sbr,
+
+                                            GetBitContext *gb)
+
+{
+
+    if (get_bits1(gb)) // bs_data_extra
+
+        skip_bits(gb, 4); // bs_reserved
+
+
+
+    read_sbr_grid(ac, sbr, gb, &sbr->data[0]);
+
+    read_sbr_dtdf(sbr, gb, &sbr->data[0]);
+
+    read_sbr_invf(sbr, gb, &sbr->data[0]);
+
+    read_sbr_envelope(sbr, gb, &sbr->data[0], 0);
+
+    read_sbr_noise(sbr, gb, &sbr->data[0], 0);
+
+
+
+    if ((sbr->data[0].bs_add_harmonic_flag = get_bits1(gb)))
+
+        get_bits1_vector(gb, sbr->data[0].bs_add_harmonic, sbr->n[1]);
+
+}",Target HEVC NAL decode và ref/output-frame lifecycle khác SBR flag parser và ELF writer. Cùng multimedia hoặc if(ret<0) chưa đủ để coi demo tương ứng cơ chế.,UNKNOWN: complete shared candidate ranking not archived
+43,id_137_label_False_FFmpeg.c,pixel_kernel_padding_stride,OPERATION_MISMATCH,"Demo không tái hiện đủ cụ thể thao tác/dòng dữ liệu của target; cùng domain, token hoặc pointer operation chưa đủ.",True,id_10019_label_False_qemu.c,id_10032_label_False_qemu.c,False,"void ff_put_h264_qpel16_mc31_msa(uint8_t *dst, const uint8_t *src,
+
+                                 ptrdiff_t stride)
+
+{
+
+    avc_luma_hv_qrt_16w_msa(src - 2,
+
+                            src - (stride * 2) +
+
+                            sizeof(uint8_t), stride, dst, stride, 16);
+
+}","static void spapr_phb_vfio_instance_init(Object *obj)
+
+{
+
+    error_report(""spapr-pci-vfio-host-bridge is deprecated"");
+
+}","static void vtd_address_space_unmap(VTDAddressSpace *as, IOMMUNotifier *n)
+
+{
+
+    IOMMUTLBEntry entry;
+
+    hwaddr size;
+
+    hwaddr start = n->start;
+
+    hwaddr end = n->end;
+
+
+
+    /*
+
+     * Note: all the codes in this function has a assumption that IOVA
+
+     * bits are no more than VTD_MGAW bits (which is restricted by
+
+     * VT-d spec), otherwise we need to consider overflow of 64 bits.
+
+     */
+
+
+
+    if (end > VTD_ADDRESS_SIZE(VTD_HOST_ADDRESS_WIDTH)) {
+
+        /*
+
+         * Don't need to unmap regions that is bigger than the whole
+
+         * VT-d supported address space size
+
+         */
+
+        end = VTD_ADDRESS_SIZE(VTD_HOST_ADDRESS_WIDTH);
+
+    }
+
+
+
+    assert(start <= end);
+
+    size = end - start;
+
+
+
+    if (ctpop64(size) != 1) {
+
+        /*
+
+         * This size cannot format a correct mask. Let's enlarge it to
+
+         * suite the minimum available mask.
+
+         */
+
+        int n = 64 - clz64(size);
+
+        if (n > VTD_MGAW) {
+
+            /* should not happen, but in case it happens, limit it */
+
+            n = VTD_MGAW;
+
+        }
+
+        size = 1ULL << n;
+
+    }
+
+
+
+    entry.target_as = &address_space_memory;
+
+    /* Adjust iova for the size */
+
+    entry.iova = n->start & ~(size - 1);
+
+    /* This field is meaningless for unmap */
+
+    entry.translated_addr = 0;
+
+    entry.perm = IOMMU_NONE;
+
+    entry.addr_mask = size - 1;
+
+
+
+    trace_vtd_as_unmap_whole(pci_bus_num(as->bus),
+
+                             VTD_PCI_SLOT(as->devfn),
+
+                             VTD_PCI_FUNC(as->devfn),
+
+                             entry.iova, size);
+
+
+
+    memory_region_notify_one(n, &entry);
+
+}","Target src-2 và src-(stride*2)+sizeof(uint8_t) truyền kernel pixel; A error_report, B unmap IOVA. B chỉ cùng khái niệm offset, khác buffer pixel và không minh họa prepadding/stride; cần hợp đồng kernel/caller để xác định guard.",UNKNOWN: complete shared candidate ranking not archived
+45,id_498_label_False_qemu.c,port_IO_request_count_size,OPERATION_MISMATCH,"Demo không tái hiện đủ cụ thể thao tác/dòng dữ liệu của target; cùng domain, token hoặc pointer operation chưa đủ.",False,id_9965_label_False_qemu.c,id_9965_label_False_qemu.c,True,"static void cpu_ioreq_pio(ioreq_t *req)
+
+{
+
+    int i;
+
+
+
+    if (req->dir == IOREQ_READ) {
+
+        if (!req->data_is_ptr) {
+
+            req->data = do_inp(req->addr, req->size);
+
+        } else {
+
+            uint32_t tmp;
+
+
+
+            for (i = 0; i < req->count; i++) {
+
+                tmp = do_inp(req->addr, req->size);
+
+                write_phys_req_item(req->data, req, i, &tmp);
+
+            }
+
+        }
+
+    } else if (req->dir == IOREQ_WRITE) {
+
+        if (!req->data_is_ptr) {
+
+            do_outp(req->addr, req->size, req->data);
+
+        } else {
+
+            for (i = 0; i < req->count; i++) {
+
+                uint32_t tmp = 0;
+
+
+
+                read_phys_req_item(req->data, req, i, &tmp);
+
+                do_outp(req->addr, req->size, tmp);
+
+            }
+
+        }
+
+    }
+
+}","static void parse_type_int64(Visitor *v, const char *name, int64_t *obj,
+
+                             Error **errp)
+
+{
+
+    StringInputVisitor *siv = to_siv(v);
+
+
+
+    if (!siv->string) {
+
+        error_setg(errp, QERR_INVALID_PARAMETER_TYPE, name ? name : ""null"",
+
+                   ""integer"");
+
+        return;
+
+    }
+
+
+
+    if (parse_str(siv, name, errp) < 0) {
+
+        return;
+
+    }
+
+
+
+    if (!siv->ranges) {
+
+        goto error;
+
+    }
+
+
+
+    if (!siv->cur_range) {
+
+        Range *r;
+
+
+
+        siv->cur_range = g_list_first(siv->ranges);
+
+        if (!siv->cur_range) {
+
+            goto error;
+
+        }
+
+
+
+        r = siv->cur_range->data;
+
+        if (!r) {
+
+            goto error;
+
+        }
+
+
+
+        siv->cur = r->begin;
+
+    }
+
+
+
+    *obj = siv->cur;
+
+    siv->cur++;
+
+    return;
+
+
+
+error:
+
+    error_setg(errp, QERR_INVALID_PARAMETER_VALUE, name ? name : ""null"",
+
+               ""an int64 value or range"");
+
+}","static void parse_type_int64(Visitor *v, const char *name, int64_t *obj,
+
+                             Error **errp)
+
+{
+
+    StringInputVisitor *siv = to_siv(v);
+
+
+
+    if (!siv->string) {
+
+        error_setg(errp, QERR_INVALID_PARAMETER_TYPE, name ? name : ""null"",
+
+                   ""integer"");
+
+        return;
+
+    }
+
+
+
+    if (parse_str(siv, name, errp) < 0) {
+
+        return;
+
+    }
+
+
+
+    if (!siv->ranges) {
+
+        goto error;
+
+    }
+
+
+
+    if (!siv->cur_range) {
+
+        Range *r;
+
+
+
+        siv->cur_range = g_list_first(siv->ranges);
+
+        if (!siv->cur_range) {
+
+            goto error;
+
+        }
+
+
+
+        r = siv->cur_range->data;
+
+        if (!r) {
+
+            goto error;
+
+        }
+
+
+
+        siv->cur = r->begin;
+
+    }
+
+
+
+    *obj = siv->cur;
+
+    siv->cur++;
+
+    return;
+
+
+
+error:
+
+    error_setg(errp, QERR_INVALID_PARAMETER_VALUE, name ? name : ""null"",
+
+               ""an int64 value or range"");
+
+}","A/B giống hệt parse_type_int64, kiểm tra string/ranges trước ghi *obj. Target do_inp/do_outp và read/write_phys_req_item theo req->count/size; khác port I/O, không demo cùng bound request. Chọn Neither vì cả hai không phù hợp, dù giống nhau.",UNKNOWN: complete shared candidate ranking not archived
+46,id_854_label_False_FFmpeg.c,pixel_kernel_stride_pointer_step,OPERATION_MISMATCH,"Demo không tái hiện đủ cụ thể thao tác/dòng dữ liệu của target; cùng domain, token hoặc pointer operation chưa đủ.",True,id_9958_label_False_qemu.c,id_10032_label_False_qemu.c,False,"static void avc_luma_midh_qrt_and_aver_dst_8w_msa(const uint8_t *src,
+
+                                                  int32_t src_stride,
+
+                                                  uint8_t *dst,
+
+                                                  int32_t dst_stride,
+
+                                                  int32_t height,
+
+                                                  uint8_t horiz_offset)
+
+{
+
+    uint32_t multiple8_cnt;
+
+
+
+    for (multiple8_cnt = 2; multiple8_cnt--;) {
+
+        avc_luma_midh_qrt_and_aver_dst_4w_msa(src, src_stride, dst, dst_stride,
+
+                                              height, horiz_offset);
+
+
+
+        src += 4;
+
+        dst += 4;
+
+    }
+
+}","BdrvChild *bdrv_root_attach_child(BlockDriverState *child_bs,
+
+                                  const char *child_name,
+
+                                  const BdrvChildRole *child_role,
+
+                                  uint64_t perm, uint64_t shared_perm,
+
+                                  void *opaque, Error **errp)
+
+{
+
+    BdrvChild *child;
+
+    int ret;
+
+
+
+    ret = bdrv_check_update_perm(child_bs, perm, shared_perm, NULL, errp);
+
+    if (ret < 0) {
+
+        return NULL;
+
+    }
+
+
+
+    child = g_new(BdrvChild, 1);
+
+    *child = (BdrvChild) {
+
+        .bs             = NULL,
+
+        .name           = g_strdup(child_name),
+
+        .role           = child_role,
+
+        .perm           = perm,
+
+        .shared_perm    = shared_perm,
+
+        .opaque         = opaque,
+
+    };
+
+
+
+    bdrv_replace_child(child, child_bs);
+
+
+
+    return child;
+
+}","static void vtd_address_space_unmap(VTDAddressSpace *as, IOMMUNotifier *n)
+
+{
+
+    IOMMUTLBEntry entry;
+
+    hwaddr size;
+
+    hwaddr start = n->start;
+
+    hwaddr end = n->end;
+
+
+
+    /*
+
+     * Note: all the codes in this function has a assumption that IOVA
+
+     * bits are no more than VTD_MGAW bits (which is restricted by
+
+     * VT-d spec), otherwise we need to consider overflow of 64 bits.
+
+     */
+
+
+
+    if (end > VTD_ADDRESS_SIZE(VTD_HOST_ADDRESS_WIDTH)) {
+
+        /*
+
+         * Don't need to unmap regions that is bigger than the whole
+
+         * VT-d supported address space size
+
+         */
+
+        end = VTD_ADDRESS_SIZE(VTD_HOST_ADDRESS_WIDTH);
+
+    }
+
+
+
+    assert(start <= end);
+
+    size = end - start;
+
+
+
+    if (ctpop64(size) != 1) {
+
+        /*
+
+         * This size cannot format a correct mask. Let's enlarge it to
+
+         * suite the minimum available mask.
+
+         */
+
+        int n = 64 - clz64(size);
+
+        if (n > VTD_MGAW) {
+
+            /* should not happen, but in case it happens, limit it */
+
+            n = VTD_MGAW;
+
+        }
+
+        size = 1ULL << n;
+
+    }
+
+
+
+    entry.target_as = &address_space_memory;
+
+    /* Adjust iova for the size */
+
+    entry.iova = n->start & ~(size - 1);
+
+    /* This field is meaningless for unmap */
+
+    entry.translated_addr = 0;
+
+    entry.perm = IOMMU_NONE;
+
+    entry.addr_mask = size - 1;
+
+
+
+    trace_vtd_as_unmap_whole(pci_bus_num(as->bus),
+
+                             VTD_PCI_SLOT(as->devfn),
+
+                             VTD_PCI_FUNC(as->devfn),
+
+                             entry.iova, size);
+
+
+
+    memory_region_notify_one(n, &entry);
+
+}","Target gọi kernel pixel 4w hai lần rồi src+=4,dst+=4. A attach child kiểm tra quyền, B điều chỉnh IOVA/size trước unmap; không có cùng thao tác/stride buffer pixel. Kiểm tra end/start của IOMMU không phải guard chiều rộng ảnh.",UNKNOWN: complete shared candidate ranking not archived
+47,id_859_label_True_qemu.c,path_xattr_errno_cleanup,OPERATION_MISMATCH,"Demo không tái hiện đủ cụ thể thao tác/dòng dữ liệu của target; cùng domain, token hoặc pointer operation chưa đủ.",False,id_9958_label_False_qemu.c,id_1001_label_True_qemu.c,False,"static int mp_pacl_removexattr(FsContext *ctx,
+
+                               const char *path, const char *name)
+
+{
+
+    int ret;
+
+    char *buffer;
+
+
+
+    buffer = rpath(ctx, path);
+
+    ret  = lremovexattr(buffer, MAP_ACL_ACCESS);
+
+    if (ret == -1 && errno == ENODATA) {
+
+        /*
+
+         * We don't get ENODATA error when trying to remove a
+
+         * posix acl that is not present. So don't throw the error
+
+         * even in case of mapped security model
+
+         */
+
+        errno = 0;
+
+        ret = 0;
+
+    }
+
+    g_free(buffer);
+
+    return ret;
+
+}","static void cpu_common_initfn(Object *obj)
+
+{
+
+    CPUState *cpu = CPU(obj);
+
+    CPUClass *cc = CPU_GET_CLASS(obj);
+
+
+
+    cpu->cpu_index = UNASSIGNED_CPU_INDEX;
+
+    cpu->gdb_num_regs = cpu->gdb_num_g_regs = cc->gdb_num_core_regs;
+
+    /* *-user doesn't have configurable SMP topology */
+
+    /* the default value is changed by qemu_init_vcpu() for softmmu */
+
+    cpu->nr_cores = 1;
+
+    cpu->nr_threads = 1;
+
+
+
+    qemu_mutex_init(&cpu->work_mutex);
+
+    QTAILQ_INIT(&cpu->breakpoints);
+
+    QTAILQ_INIT(&cpu->watchpoints);
+
+
+
+    cpu->trace_dstate = bitmap_new(trace_get_vcpu_event_count());
+
+
+
+    cpu_exec_initfn(cpu);
+
+}","BdrvChild *bdrv_root_attach_child(BlockDriverState *child_bs,
+
+                                  const char *child_name,
+
+                                  const BdrvChildRole *child_role,
+
+                                  uint64_t perm, uint64_t shared_perm,
+
+                                  void *opaque, Error **errp)
+
+{
+
+    BdrvChild *child;
+
+    int ret;
+
+
+
+    ret = bdrv_check_update_perm(child_bs, perm, shared_perm, NULL, errp);
+
+    if (ret < 0) {
+
+        return NULL;
+
+    }
+
+
+
+    child = g_new(BdrvChild, 1);
+
+    *child = (BdrvChild) {
+
+        .bs             = NULL,
+
+        .name           = g_strdup(child_name),
+
+        .role           = child_role,
+
+        .perm           = perm,
+
+        .shared_perm    = shared_perm,
+
+        .opaque         = opaque,
+
+    };
+
+
+
+    bdrv_replace_child(child, child_bs);
+
+
+
+    return child;
+
+}","Target rpath tạo buffer đường dẫn, lremovexattr, chuẩn hóa errno ENODATA rồi g_free(buffer). A khởi tạo CPU, B tạo/gắn block child; chỉ B có cấp phát chung, không path/xattr hay xử lý errno/cleanup tương ứng.",UNKNOWN: complete shared candidate ranking not archived
+48,id_166_label_False_qemu.c,opcode_table_registration,OPERATION_MISMATCH,"Demo không tái hiện đủ cụ thể thao tác/dòng dữ liệu của target; cùng domain, token hoặc pointer operation chưa đủ.",False,id_996_label_False_FFmpeg.c,id_10024_label_False_qemu.c,False,"static int create_ppc_opcodes (CPUPPCState *env, ppc_def_t *def)
+
+{
+
+    opcode_t *opc, *start, *end;
+
+
+
+    fill_new_table(env->opcodes, 0x40);
+
+#if defined(PPC_DUMP_CPU)
+
+    printf(""* PowerPC instructions for PVR %08x: %s flags %016"" PRIx64
+
+           "" %08x\n"",
+
+           def->pvr, def->name, def->insns_flags, def->flags);
+
+#endif
+
+    if (&opc_start < &opc_end) {
+
+        start = &opc_start;
+
+        end = &opc_end;
+
+    } else {
+
+        start = &opc_end;
+
+        end = &opc_start;
+
+    }
+
+    for (opc = start + 1; opc != end; opc++) {
+
+        if ((opc->handler.type & def->insns_flags) != 0) {
+
+            if (register_insn(env->opcodes, opc) < 0) {
+
+                printf(""*** ERROR initializing PowerPC instruction ""
+
+                       ""0x%02x 0x%02x 0x%02x\n"", opc->opc1, opc->opc2,
+
+                       opc->opc3);
+
+                return -1;
+
+            }
+
+#if defined(PPC_DUMP_CPU)
+
+            if (opc1 != 0x00) {
+
+                if (opc->opc3 == 0xFF) {
+
+                    if (opc->opc2 == 0xFF) {
+
+                        printf("" %02x -- -- (%2d ----) : %s\n"",
+
+                               opc->opc1, opc->opc1, opc->oname);
+
+                    } else {
+
+                        printf("" %02x %02x -- (%2d %4d) : %s\n"",
+
+                               opc->opc1, opc->opc2, opc->opc1, opc->opc2,
+
+                               opc->oname);
+
+                    }
+
+                } else {
+
+                    printf("" %02x %02x %02x (%2d %4d) : %s\n"",
+
+                           opc->opc1, opc->opc2, opc->opc3,
+
+                           opc->opc1, (opc->opc3 << 5) | opc->opc2,
+
+                           opc->oname);
+
+                }
+
+            }
+
+#endif
+
+        }
+
+    }
+
+    fix_opcode_tables(env->opcodes);
+
+    fflush(stdout);
+
+    fflush(stderr);
+
+
+
+    return 0;
+
+}","int ff_xvmc_field_start(MpegEncContext*s, AVCodecContext *avctx)
+
+{
+
+    struct xvmc_pixfmt_render *last, *next, *render = (struct xvmc_pixfmt_render*)s->current_picture.data[2];
+
+    const int mb_block_count = 4 + (1 << s->chroma_format);
+
+
+
+    assert(avctx);
+
+    if (!render || render->magic_id != AV_XVMC_RENDER_MAGIC ||
+
+        !render->data_blocks || !render->mv_blocks){
+
+        av_log(avctx, AV_LOG_ERROR,
+
+               ""Render token doesn't look as expected.\n"");
+
+        return -1; // make sure that this is a render packet
+
+    }
+
+
+
+    render->picture_structure = s->picture_structure;
+
+    render->flags             = s->first_field ? 0 : XVMC_SECOND_FIELD;
+
+
+
+    if (render->filled_mv_blocks_num) {
+
+        av_log(avctx, AV_LOG_ERROR,
+
+               ""Rendering surface contains %i unprocessed blocks.\n"",
+
+               render->filled_mv_blocks_num);
+
+        return -1;
+
+    }
+
+    if (render->total_number_of_mv_blocks   < 1 ||
+
+        render->total_number_of_data_blocks < mb_block_count) {
+
+        av_log(avctx, AV_LOG_ERROR,
+
+               ""Rendering surface doesn't provide enough block structures to work with.\n"");
+
+        return -1;
+
+    }
+
+    if (render->total_number_of_mv_blocks   < 1 ||
+
+        render->total_number_of_data_blocks < mb_block_count) {
+
+        av_log(avctx, AV_LOG_ERROR,
+
+               ""Rendering surface doesn't provide enough block structures to work with.\n"");
+
+        return -1;
+
+    }
+
+
+
+    render->p_future_surface = NULL;
+
+    render->p_past_surface   = NULL;
+
+
+
+    switch(s->pict_type) {
+
+        case  FF_I_TYPE:
+
+            return 0; // no prediction from other frames
+
+        case  FF_B_TYPE:
+
+            next = (struct xvmc_pixfmt_render*)s->next_picture.data[2];
+
+            if (!next)
+
+                return -1;
+
+    
+
+/* ... [Cắt gọn do vượt quá 1800 ký tự] */","static int qcow_read_extensions(BlockDriverState *bs, uint64_t start_offset,
+
+                                uint64_t end_offset)
+
+{
+
+    BDRVQcowState *s = bs->opaque;
+
+    QCowExtension ext;
+
+    uint64_t offset;
+
+
+
+#ifdef DEBUG_EXT
+
+    printf(""qcow_read_extensions: start=%ld end=%ld\n"", start_offset, end_offset);
+
+#endif
+
+    offset = start_offset;
+
+    while (offset < end_offset) {
+
+
+
+#ifdef DEBUG_EXT
+
+        /* Sanity check */
+
+        if (offset > s->cluster_size)
+
+            printf(""qcow_handle_extension: suspicious offset %lu\n"", offset);
+
+
+
+        printf(""attemting to read extended header in offset %lu\n"", offset);
+
+#endif
+
+
+
+        if (bdrv_pread(s->hd, offset, &ext, sizeof(ext)) != sizeof(ext)) {
+
+            fprintf(stderr, ""qcow_handle_extension: ERROR: pread fail from offset %llu\n"",
+
+                    (unsigned long long)offset);
+
+            return 1;
+
+        }
+
+        be32_to_cpus(&ext.magic);
+
+        be32_to_cpus(&ext.len);
+
+        offset += sizeof(ext);
+
+#ifdef DEBUG_EXT
+
+        printf(""ext.magic = 0x%x\n"", ext.magic);
+
+#endif
+
+        switch (ext.magic) {
+
+        case QCOW_EXT_MAGIC_END:
+
+            return 0;
+
+
+
+        case QCOW_EXT_MAGIC_BACKING_FORMAT:
+
+            if (ext.len >= sizeof(bs->backing_format)) {
+
+                fprintf(stderr, ""ERROR: ext_backing_format: len=%u too large""
+
+                        "" (>=%zu)\n"",
+
+                        ext.len, sizeof(bs->backing_format));
+
+                return 2;
+
+            }
+
+            if (bdrv_pread(s->hd, offset , bs->backing_format,
+
+                           ext.len) != ext.len)
+
+                return 3;
+
+            bs->backing_format[ext.len] = '\0';
+
+#ifdef DEBUG_EXT
+
+            printf(""Qcow2: Got format extension %s\n"", bs->backing_format);
+
+#endif
+
+            offse
+
+/* ... [Cắt gọn do vượt quá 1800 ký tự] */","Target register_insn trong bảng opcode; A validate render surface, B parse QCOW extension. Cùng return lỗi/validation chung không đủ để xếp hai demo là phù hợp tương đương.",UNKNOWN: complete shared candidate ranking not archived
+50,id_578_label_True_FFmpeg.c,TTA_Rice_filter_channel_index,OPERATION_MISMATCH,"Demo không tái hiện đủ cụ thể thao tác/dòng dữ liệu của target; cùng domain, token hoặc pointer operation chưa đủ.",True,id_10033_label_False_qemu.c,id_1000_label_True_qemu.c,False,"static int tta_decode_frame(AVCodecContext *avctx,
+
+        void *data, int *data_size,
+
+        AVPacket *avpkt)
+
+{
+
+    const uint8_t *buf = avpkt->data;
+
+    int buf_size = avpkt->size;
+
+    TTAContext *s = avctx->priv_data;
+
+    int i;
+
+
+
+    init_get_bits(&s->gb, buf, buf_size*8);
+
+    {
+
+        int32_t predictors[s->channels];
+
+        TTAFilter filters[s->channels];
+
+        TTARice rices[s->channels];
+
+        int cur_chan = 0, framelen = s->frame_length;
+
+        int32_t *p;
+
+
+
+        // FIXME: seeking
+
+        s->total_frames--;
+
+        if (!s->total_frames && s->last_frame_length)
+
+            framelen = s->last_frame_length;
+
+
+
+        // init per channel states
+
+        for (i = 0; i < s->channels; i++) {
+
+            predictors[i] = 0;
+
+            ttafilter_init(&(filters[i]), ttafilter_configs[s->bps-1][0], ttafilter_configs[s->bps-1][1]);
+
+            rice_init(&(rices[i]), 10, 10);
+
+        }
+
+
+
+        for (p = s->decode_buffer; p < s->decode_buffer + (framelen * s->channels); p++) {
+
+            int32_t *predictor = &(predictors[cur_chan]);
+
+            TTAFilter *filter = &(filters[cur_chan]);
+
+            TTARice *rice = &(rices[cur_chan]);
+
+            uint32_t unary, depth, k;
+
+            int32_t value;
+
+
+
+            unary = tta_get_unary(&s->gb);
+
+
+
+            if (unary == 0) {
+
+                depth = 0;
+
+                k = rice->k0;
+
+            } else {
+
+                depth = 1;
+
+                k = rice->k1;
+
+                unary--;
+
+            }
+
+
+
+            if (k)
+
+                value = (unary << k) + get_bits(&s->gb, k);
+
+            else
+
+                value = unary;
+
+
+
+            // FIXME: copy paste from original
+
+            switch (depth) {
+
+            case 1:
+
+                rice->sum1 += value - (rice->sum1 >> 4);
+
+                if (rice->k1 > 0 && rice->sum1 < shift_16[rice->k1])
+
+                    rice->k1--;
+
+                else if(rice->sum1 > shift_16[rice->k1 + 1])
+
+                    rice->k1++;
+
+                value += shift_1[rice->k0];
+
+            default:
+
+                rice->sum0 += value - (rice->sum0 >> 4);
+
+                if (rice->k0 > 0 && rice->sum0 < shift_16[rice->k0])
+
+                    rice->k0--;
+
+                else if(rice->sum0 > shift_16[rice->k0 + 1])
+
+                    rice->k0++;
+
+            }
+
+
+
+            // extract coded value
+
+#define UNFOLD(x) (((x)&1) ? (++(x)>>1) : (-(x)>>1))
+
+            *p = UNFOLD(value);
+
+
+
+            // run hybrid filter
+
+            ttafilter_process(filter, p, 0);
+
+
+
+            // fixed order prediction
+
+#define PRED(x, k) (int32_t)((((uint64_t)x << k) - x) >> k)
+
+            switch (s->bps) {
+
+                case 1: *p += PRED(*predictor, 4); break;
+
+                case 2:
+
+                case 3: *p += PRED(*predictor, 5); break;
+
+                case 4: *p += *predictor; break;
+
+            }
+
+            *predictor = *p;
+
+
+
+#if 0
+
+            // extract 32bit float from last two int samples
+
+           
+
+/* ... [Cắt gọn do vượt quá 3000 ký tự] */","static int megasas_ld_get_info_submit(SCSIDevice *sdev, int lun,
+
+                                      MegasasCmd *cmd)
+
+{
+
+    struct mfi_ld_info *info = cmd->iov_buf;
+
+    size_t dcmd_size = sizeof(struct mfi_ld_info);
+
+    uint8_t cdb[6];
+
+    SCSIRequest *req;
+
+    ssize_t len, resid;
+
+    BlockConf *conf = &sdev->conf;
+
+    uint16_t sdev_id = ((sdev->id & 0xFF) >> 8) | (lun & 0xFF);
+
+    uint64_t ld_size;
+
+
+
+    if (!cmd->iov_buf) {
+
+        cmd->iov_buf = g_malloc(dcmd_size);
+
+        memset(cmd->iov_buf, 0x0, dcmd_size);
+
+        info = cmd->iov_buf;
+
+        megasas_setup_inquiry(cdb, 0x83, sizeof(info->vpd_page83));
+
+        req = scsi_req_new(sdev, cmd->index, lun, cdb, cmd);
+
+        if (!req) {
+
+            trace_megasas_dcmd_req_alloc_failed(cmd->index,
+
+                                                ""LD get info vpd inquiry"");
+
+            g_free(cmd->iov_buf);
+
+            cmd->iov_buf = NULL;
+
+            return MFI_STAT_FLASH_ALLOC_FAIL;
+
+        }
+
+        trace_megasas_dcmd_internal_submit(cmd->index,
+
+                                           ""LD get info vpd inquiry"", lun);
+
+        len = scsi_req_enqueue(req);
+
+        if (len > 0) {
+
+            cmd->iov_size = len;
+
+            scsi_req_continue(req);
+
+        }
+
+        return MFI_STAT_INVALID_STATUS;
+
+    }
+
+
+
+    info->ld_config.params.state = MFI_LD_STATE_OPTIMAL;
+
+    info->ld_config.properties.ld.v.target_id = lun;
+
+    info->ld_config.params.stripe_size = 3;
+
+    info->ld_config.params.num_drives = 1;
+
+    info->ld_config.params.is_consistent = 1;
+
+    /* Logical device size is in blocks */
+
+    bdrv_get_geometry(conf->bs, &ld_size);
+
+    info->size = cpu_to_le64(ld_size);
+
+    memset(info->ld_config.span, 0, sizeof(info->ld_config.span));
+
+    info->ld_config.span[0].start_block = 0;
+
+
+
+/* ... [Cắt gọn do vượt quá 1800 ký tự] */","int socket_dgram(SocketAddress *remote, SocketAddress *local, Error **errp)
+
+{
+
+    QemuOpts *opts;
+
+    int fd;
+
+
+
+    opts = qemu_opts_create_nofail(&socket_optslist);
+
+    switch (remote->kind) {
+
+    case SOCKET_ADDRESS_KIND_INET:
+
+        qemu_opt_set(opts, ""host"", remote->inet->host);
+
+        qemu_opt_set(opts, ""port"", remote->inet->port);
+
+        if (local) {
+
+            qemu_opt_set(opts, ""localaddr"", local->inet->host);
+
+            qemu_opt_set(opts, ""localport"", local->inet->port);
+
+        }
+
+        fd = inet_dgram_opts(opts, errp);
+
+        break;
+
+
+
+    default:
+
+        error_setg(errp, ""socket type unsupported for datagram"");
+
+        return -1;
+
+    }
+
+    qemu_opts_del(opts);
+
+    return fd;
+
+}","Đã đọc hết TTA: ghi output samples, cur_chan và Rice k0/k1/shift_16, skip CRC; đoạn overread-check chỉ là comment. A SCSI buffer, B socket options không minh họa cơ chế Rice/filter/index này. Không suy ra lỗ hổng chỉ từ comment; thiếu hợp đồng channels/k và capacity.",UNKNOWN: complete shared candidate ranking not archived

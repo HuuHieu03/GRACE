@@ -1,0 +1,1376 @@
+{
+  "annotation_type": "Technical source review by Codex; not independent human ground truth",
+  "scope": "Same operational callsite scope as H1: explicitly identifiable allocation/free/copy/formatted-stdio/block/file IO and named caller-supported wrappers/macros. Raw array/asm and unresolved compound helpers are outside scored scope, not safe/no-sink. Conditional compilation branches are represented as a union, except explicit #if 0 sites are excluded.",
+  "review_exposure": "Reviewer knows E1/E1.1 rules and prior H1 results. Fresh50 predictions were not read before writing these specifications. No target labels or original filenames used for annotations.",
+  "independent": false,
+  "samples": [
+    {
+      "opaque_id": "E11-001",
+      "code_sha256": "f8be1912c69f3e13da26485b829b87647348d1c6d8dcd247e540abf326b117f9",
+      "context_status": "FUNCTION_TEXT_AVAILABLE",
+      "callsite_annotations": [
+        {
+          "api_name": "qemu_try_blockalign",
+          "family": "alloc",
+          "start": 82,
+          "end": 111,
+          "line": 5,
+          "expression": "qemu_try_blockalign(bs, size)",
+          "evidence": "Pointer acquired with requested size, checked then zeroed. Aligned-allocation classification supported by caller data use; helper contract not independently audited."
+        },
+        {
+          "api_name": "memset",
+          "family": "buffer_write",
+          "start": 140,
+          "end": 160,
+          "line": 11,
+          "expression": "memset(mem, 0, size)",
+          "evidence": "Pointer acquired with requested size, checked then zeroed. Aligned-allocation classification supported by caller data use; helper contract not independently audited."
+        }
+      ],
+      "excluded_callsite_annotations": [],
+      "review_notes": "Pointer acquired with requested size, checked then zeroed. Aligned-allocation classification supported by caller data use; helper contract not independently audited."
+    },
+    {
+      "opaque_id": "E11-002",
+      "code_sha256": "1d3ff4ee65f9d9d6b2e7ab08c86ea9ab04f81a0f5520cf524ef991d84b67e8fe",
+      "context_status": "FUNCTION_TEXT_AVAILABLE",
+      "callsite_annotations": [
+        {
+          "api_name": "kvm_vm_ioctl",
+          "family": "io_sink",
+          "start": 199,
+          "end": 242,
+          "line": 15,
+          "expression": "kvm_vm_ioctl(s, KVM_HAS_DEVICE_ATTR, &attr)",
+          "evidence": "VM control operation with device attribute pointer, explicitly wrapped ioctl; success/side effects not inferred."
+        }
+      ],
+      "excluded_callsite_annotations": [],
+      "review_notes": "VM control operation with device attribute pointer, explicitly wrapped ioctl; success/side effects not inferred."
+    },
+    {
+      "opaque_id": "E11-003",
+      "code_sha256": "0f45bbc5676b748c8f2c5e791c84efe0f94400756c5bf29a0ce519df32c932c0",
+      "context_status": "FUNCTION_TEXT_AVAILABLE",
+      "callsite_annotations": [],
+      "excluded_callsite_annotations": [],
+      "review_notes": "Guest TLB invalidate/fill helpers. No established host allocation/copy/file call; helper bodies unresolved."
+    },
+    {
+      "opaque_id": "E11-004",
+      "code_sha256": "4ad5fe325bb5cc203b2f5d380c282e642843ce2558ad6858972dc366b1501915",
+      "context_status": "FUNCTION_TEXT_AVAILABLE",
+      "callsite_annotations": [
+        {
+          "api_name": "av_malloc",
+          "family": "alloc",
+          "start": 1980,
+          "end": 2004,
+          "line": 105,
+          "expression": "av_malloc(pkt->size + 6)",
+          "evidence": "Allocate/copy H264 prefix buffer; AAC dynamic stream opened/closed and acquired data freed on four syntactic branches. av_write_frame/mpegts_write_pes are unresolved compound muxer operations; AV_RB/WB macros not scored as expanded calls."
+        },
+        {
+          "api_name": "memcpy",
+          "family": "buffer_write",
+          "start": 2084,
+          "end": 2122,
+          "line": 111,
+          "expression": "memcpy(data + 6, pkt->data, pkt->size)",
+          "evidence": "Allocate/copy H264 prefix buffer; AAC dynamic stream opened/closed and acquired data freed on four syntactic branches. av_write_frame/mpegts_write_pes are unresolved compound muxer operations; AV_RB/WB macros not scored as expanded calls."
+        },
+        {
+          "api_name": "avio_open_dyn_buf",
+          "family": "io_open",
+          "start": 3018,
+          "end": 3053,
+          "line": 163,
+          "expression": "avio_open_dyn_buf(&ts_st->amux->pb)",
+          "evidence": "Allocate/copy H264 prefix buffer; AAC dynamic stream opened/closed and acquired data freed on four syntactic branches. av_write_frame/mpegts_write_pes are unresolved compound muxer operations; AV_RB/WB macros not scored as expanded calls."
+        },
+        {
+          "api_name": "avio_close_dyn_buf",
+          "family": "io_close",
+          "start": 3224,
+          "end": 3266,
+          "line": 175,
+          "expression": "avio_close_dyn_buf(ts_st->amux->pb, &data)",
+          "evidence": "Allocate/copy H264 prefix buffer; AAC dynamic stream opened/closed and acquired data freed on four syntactic branches. av_write_frame/mpegts_write_pes are unresolved compound muxer operations; AV_RB/WB macros not scored as expanded calls."
+        },
+        {
+          "api_name": "av_free",
+          "family": "pointer_free",
+          "start": 3326,
+          "end": 3339,
+          "line": 179,
+          "expression": "av_free(data)",
+          "evidence": "Allocate/copy H264 prefix buffer; AAC dynamic stream opened/closed and acquired data freed on four syntactic branches. av_write_frame/mpegts_write_pes are unresolved compound muxer operations; AV_RB/WB macros not scored as expanded calls."
+        },
+        {
+          "api_name": "avio_close_dyn_buf",
+          "family": "io_close",
+          "start": 3416,
+          "end": 3458,
+          "line": 185,
+          "expression": "avio_close_dyn_buf(ts_st->amux->pb, &data)",
+          "evidence": "Allocate/copy H264 prefix buffer; AAC dynamic stream opened/closed and acquired data freed on four syntactic branches. av_write_frame/mpegts_write_pes are unresolved compound muxer operations; AV_RB/WB macros not scored as expanded calls."
+        },
+        {
+          "api_name": "av_free",
+          "family": "pointer_free",
+          "start": 3792,
+          "end": 3805,
+          "line": 205,
+          "expression": "av_free(data)",
+          "evidence": "Allocate/copy H264 prefix buffer; AAC dynamic stream opened/closed and acquired data freed on four syntactic branches. av_write_frame/mpegts_write_pes are unresolved compound muxer operations; AV_RB/WB macros not scored as expanded calls."
+        },
+        {
+          "api_name": "av_free",
+          "family": "pointer_free",
+          "start": 4373,
+          "end": 4386,
+          "line": 233,
+          "expression": "av_free(data)",
+          "evidence": "Allocate/copy H264 prefix buffer; AAC dynamic stream opened/closed and acquired data freed on four syntactic branches. av_write_frame/mpegts_write_pes are unresolved compound muxer operations; AV_RB/WB macros not scored as expanded calls."
+        },
+        {
+          "api_name": "memcpy",
+          "family": "buffer_write",
+          "start": 4596,
+          "end": 4651,
+          "line": 255,
+          "expression": "memcpy(ts_st->payload + ts_st->payload_size, buf, size)",
+          "evidence": "Allocate/copy H264 prefix buffer; AAC dynamic stream opened/closed and acquired data freed on four syntactic branches. av_write_frame/mpegts_write_pes are unresolved compound muxer operations; AV_RB/WB macros not scored as expanded calls."
+        },
+        {
+          "api_name": "av_free",
+          "family": "pointer_free",
+          "start": 4694,
+          "end": 4707,
+          "line": 261,
+          "expression": "av_free(data)",
+          "evidence": "Allocate/copy H264 prefix buffer; AAC dynamic stream opened/closed and acquired data freed on four syntactic branches. av_write_frame/mpegts_write_pes are unresolved compound muxer operations; AV_RB/WB macros not scored as expanded calls."
+        }
+      ],
+      "excluded_callsite_annotations": [],
+      "review_notes": "Allocate/copy H264 prefix buffer; AAC dynamic stream opened/closed and acquired data freed on four syntactic branches. av_write_frame/mpegts_write_pes are unresolved compound muxer operations; AV_RB/WB macros not scored as expanded calls."
+    },
+    {
+      "opaque_id": "E11-005",
+      "code_sha256": "25b2e68796f0d5030b8e2ef7fa62168095a2447bd24394c7a2f075d81f89f8db",
+      "context_status": "FUNCTION_TEXT_AVAILABLE",
+      "callsite_annotations": [],
+      "excluded_callsite_annotations": [],
+      "review_notes": "SD DMA/ADMA and card-transfer helpers operate via state. Their data/IO contracts are unresolved; not claiming no DMA operation."
+    },
+    {
+      "opaque_id": "E11-006",
+      "code_sha256": "d1dfbbe6e3d2d999e93293b7bcd8eac886a7caa4251d0441370a354a02a893e0",
+      "context_status": "FUNCTION_TEXT_AVAILABLE",
+      "callsite_annotations": [
+        {
+          "api_name": "scsi_free_scsi_task",
+          "family": "pointer_free",
+          "start": 459,
+          "end": 484,
+          "line": 23,
+          "expression": "scsi_free_scsi_task(task)",
+          "evidence": "Task released before retry and on failure cleanup. Inquiry IO remains compound/unresolved; two free sites regardless of runtime branches."
+        },
+        {
+          "api_name": "scsi_free_scsi_task",
+          "family": "pointer_free",
+          "start": 871,
+          "end": 896,
+          "line": 53,
+          "expression": "scsi_free_scsi_task(task)",
+          "evidence": "Task released before retry and on failure cleanup. Inquiry IO remains compound/unresolved; two free sites regardless of runtime branches."
+        }
+      ],
+      "excluded_callsite_annotations": [],
+      "review_notes": "Task released before retry and on failure cleanup. Inquiry IO remains compound/unresolved; two free sites regardless of runtime branches."
+    },
+    {
+      "opaque_id": "E11-007",
+      "code_sha256": "0e69bb26788f2b810e569bf3f4b38e501ec9341e9555c2eeae84cebb6128b26f",
+      "context_status": "FUNCTION_TEXT_AVAILABLE",
+      "callsite_annotations": [],
+      "excluded_callsite_annotations": [],
+      "review_notes": "SCSI send_command/read_data/write_data are indirect member callbacks, not free read/write APIs. IRQ state updates are not direct file IO calls."
+    },
+    {
+      "opaque_id": "E11-008",
+      "code_sha256": "7e5184466ae1a5a4680866bb9f723141eb5936805f7928f41dcf67432fea2295",
+      "context_status": "FUNCTION_TEXT_AVAILABLE",
+      "callsite_annotations": [],
+      "excluded_callsite_annotations": [],
+      "review_notes": "Device availability checks, diagnostics and reset-handler registration. No direct scoped sink API; string DMA write does not create write()."
+    },
+    {
+      "opaque_id": "E11-009",
+      "code_sha256": "964a8e7be34fac1aa2ed42c04c6ff6ecbefc734f2bde7352c81ba7ee87518419",
+      "context_status": "FUNCTION_TEXT_AVAILABLE",
+      "callsite_annotations": [
+        {
+          "api_name": "g_ptr_array_new_with_free_func",
+          "family": "alloc",
+          "start": 270,
+          "end": 316,
+          "line": 13,
+          "expression": "g_ptr_array_new_with_free_func(crs_range_free)",
+          "evidence": "Two range arrays allocated and freed; explicit table-data append copies dsdt buffer/length. AML builders, allocator lifetime and guest AML operations remain unresolved compound helpers rather than all being labeled host memory IO."
+        },
+        {
+          "api_name": "g_ptr_array_new_with_free_func",
+          "family": "alloc",
+          "start": 346,
+          "end": 392,
+          "line": 15,
+          "expression": "g_ptr_array_new_with_free_func(crs_range_free)",
+          "evidence": "Two range arrays allocated and freed; explicit table-data append copies dsdt buffer/length. AML builders, allocator lifetime and guest AML operations remain unresolved compound helpers rather than all being labeled host memory IO."
+        },
+        {
+          "api_name": "g_ptr_array_free",
+          "family": "pointer_free",
+          "start": 8495,
+          "end": 8528,
+          "line": 409,
+          "expression": "g_ptr_array_free(io_ranges, true)",
+          "evidence": "Two range arrays allocated and freed; explicit table-data append copies dsdt buffer/length. AML builders, allocator lifetime and guest AML operations remain unresolved compound helpers rather than all being labeled host memory IO."
+        },
+        {
+          "api_name": "g_ptr_array_free",
+          "family": "pointer_free",
+          "start": 8535,
+          "end": 8569,
+          "line": 411,
+          "expression": "g_ptr_array_free(mem_ranges, true)",
+          "evidence": "Two range arrays allocated and freed; explicit table-data append copies dsdt buffer/length. AML builders, allocator lifetime and guest AML operations remain unresolved compound helpers rather than all being labeled host memory IO."
+        },
+        {
+          "api_name": "g_array_append_vals",
+          "family": "buffer_write",
+          "start": 14063,
+          "end": 14127,
+          "line": 697,
+          "expression": "g_array_append_vals(table_data, dsdt->buf->data, dsdt->buf->len)",
+          "evidence": "Two range arrays allocated and freed; explicit table-data append copies dsdt buffer/length. AML builders, allocator lifetime and guest AML operations remain unresolved compound helpers rather than all being labeled host memory IO."
+        }
+      ],
+      "excluded_callsite_annotations": [],
+      "review_notes": "Two range arrays allocated and freed; explicit table-data append copies dsdt buffer/length. AML builders, allocator lifetime and guest AML operations remain unresolved compound helpers rather than all being labeled host memory IO."
+    },
+    {
+      "opaque_id": "E11-010",
+      "code_sha256": "55566ebcc8374bd15badc561e89db947d9c8cd42ec720d76349205e76dbbda77",
+      "context_status": "FUNCTION_TEXT_AVAILABLE",
+      "callsite_annotations": [
+        {
+          "api_name": "g_free",
+          "family": "pointer_free",
+          "start": 1102,
+          "end": 1113,
+          "line": 73,
+          "expression": "g_free(str)",
+          "evidence": "String freed after enum conversion. Visitor constructors/cleanup/visit_free are unresolved object-lifecycle APIs; no additional assumed free effects."
+        }
+      ],
+      "excluded_callsite_annotations": [],
+      "review_notes": "String freed after enum conversion. Visitor constructors/cleanup/visit_free are unresolved object-lifecycle APIs; no additional assumed free effects."
+    },
+    {
+      "opaque_id": "E11-011",
+      "code_sha256": "b595f19f551042636bd9972433c2c9dda92dec9dd21e1caa8c17d612c8ba8b1c",
+      "context_status": "FUNCTION_TEXT_AVAILABLE",
+      "callsite_annotations": [],
+      "excluded_callsite_annotations": [],
+      "review_notes": "Class casts and assignment of callbacks, not callback invocation or direct memory API calls."
+    },
+    {
+      "opaque_id": "E11-012",
+      "code_sha256": "10c46bd2addeca0fc025d0e752349cb95f230c4ff99629b10d0a44791cc3d66f",
+      "context_status": "FUNCTION_TEXT_AVAILABLE",
+      "callsite_annotations": [],
+      "excluded_callsite_annotations": [],
+      "review_notes": "Scalar numeric conversion and packing helpers, no scoped memory/file call."
+    },
+    {
+      "opaque_id": "E11-013",
+      "code_sha256": "de9ca52291a6087055000cdfd03b4f22eed3c5b39850d33d141c6f0001ec53bf",
+      "context_status": "FUNCTION_TEXT_AVAILABLE",
+      "callsite_annotations": [
+        {
+          "api_name": "av_malloc",
+          "family": "alloc",
+          "start": 200,
+          "end": 259,
+          "line": 11,
+          "expression": "av_malloc(DCA_XLL_PBR_BUFFER_MAX + DCA_BUFFER_PADDING_SIZE)",
+          "evidence": "Explicit allocation into pbr_buffer with size and null check, then size-controlled copy. Annotation does not certify guard adequacy."
+        },
+        {
+          "api_name": "memcpy",
+          "family": "buffer_write",
+          "start": 302,
+          "end": 335,
+          "line": 17,
+          "expression": "memcpy(s->pbr_buffer, data, size)",
+          "evidence": "Explicit allocation into pbr_buffer with size and null check, then size-controlled copy. Annotation does not certify guard adequacy."
+        }
+      ],
+      "excluded_callsite_annotations": [],
+      "review_notes": "Explicit allocation into pbr_buffer with size and null check, then size-controlled copy. Annotation does not certify guard adequacy."
+    },
+    {
+      "opaque_id": "E11-014",
+      "code_sha256": "967040babcab54f730a24c4fcb9d6c83f77c8d6028ab11d5a4113dc8d31a69d1",
+      "context_status": "FUNCTION_TEXT_AVAILABLE",
+      "callsite_annotations": [
+        {
+          "api_name": "FF_ALLOCZ_OR_GOTO",
+          "family": "alloc",
+          "start": 2274,
+          "end": 2363,
+          "line": 153,
+          "expression": "FF_ALLOCZ_OR_GOTO(ctx->m.avctx, ctx->slice_size, ctx->m.mb_height*sizeof(uint32_t), fail)",
+          "evidence": "Four explicit allocation macros with output buffer/size/failure-label roles plus thread-context allocation and copy. Macro allocation family supported by usage but body unavailable; codec init helpers remain unresolved."
+        },
+        {
+          "api_name": "FF_ALLOCZ_OR_GOTO",
+          "family": "alloc",
+          "start": 2370,
+          "end": 2459,
+          "line": 155,
+          "expression": "FF_ALLOCZ_OR_GOTO(ctx->m.avctx, ctx->slice_offs, ctx->m.mb_height*sizeof(uint32_t), fail)",
+          "evidence": "Four explicit allocation macros with output buffer/size/failure-label roles plus thread-context allocation and copy. Macro allocation family supported by usage but body unavailable; codec init helpers remain unresolved."
+        },
+        {
+          "api_name": "FF_ALLOCZ_OR_GOTO",
+          "family": "alloc",
+          "start": 2466,
+          "end": 2555,
+          "line": 157,
+          "expression": "FF_ALLOCZ_OR_GOTO(ctx->m.avctx, ctx->mb_bits,    ctx->m.mb_num   *sizeof(uint16_t), fail)",
+          "evidence": "Four explicit allocation macros with output buffer/size/failure-label roles plus thread-context allocation and copy. Macro allocation family supported by usage but body unavailable; codec init helpers remain unresolved."
+        },
+        {
+          "api_name": "FF_ALLOCZ_OR_GOTO",
+          "family": "alloc",
+          "start": 2562,
+          "end": 2651,
+          "line": 159,
+          "expression": "FF_ALLOCZ_OR_GOTO(ctx->m.avctx, ctx->mb_qscale,  ctx->m.mb_num   *sizeof(uint8_t),  fail)",
+          "evidence": "Four explicit allocation macros with output buffer/size/failure-label roles plus thread-context allocation and copy. Macro allocation family supported by usage but body unavailable; codec init helpers remain unresolved."
+        },
+        {
+          "api_name": "av_malloc",
+          "family": "alloc",
+          "start": 3019,
+          "end": 3053,
+          "line": 185,
+          "expression": "av_malloc(sizeof(DNXHDEncContext))",
+          "evidence": "Four explicit allocation macros with output buffer/size/failure-label roles plus thread-context allocation and copy. Macro allocation family supported by usage but body unavailable; codec init helpers remain unresolved."
+        },
+        {
+          "api_name": "memcpy",
+          "family": "buffer_write",
+          "start": 3064,
+          "end": 3116,
+          "line": 187,
+          "expression": "memcpy(ctx->thread[i], ctx, sizeof(DNXHDEncContext))",
+          "evidence": "Four explicit allocation macros with output buffer/size/failure-label roles plus thread-context allocation and copy. Macro allocation family supported by usage but body unavailable; codec init helpers remain unresolved."
+        }
+      ],
+      "excluded_callsite_annotations": [],
+      "review_notes": "Four explicit allocation macros with output buffer/size/failure-label roles plus thread-context allocation and copy. Macro allocation family supported by usage but body unavailable; codec init helpers remain unresolved."
+    },
+    {
+      "opaque_id": "E11-015",
+      "code_sha256": "2302c4033ab5fc5ace517fa47347341a510621ff155bfea38bc7837c9f6abccf",
+      "context_status": "FUNCTION_TEXT_AVAILABLE",
+      "callsite_annotations": [
+        {
+          "api_name": "qemu_mallocz",
+          "family": "alloc",
+          "start": 488,
+          "end": 512,
+          "line": 19,
+          "expression": "qemu_mallocz(sizeof(*s))",
+          "evidence": "State/bounce allocations, vector-to-bounce copy and alternate async block-write/read with sector/count/buffer. qemu_aio_get pool ownership unresolved."
+        },
+        {
+          "api_name": "qemu_memalign",
+          "family": "alloc",
+          "start": 641,
+          "end": 677,
+          "line": 29,
+          "expression": "qemu_memalign(512, nb_sectors * 512)",
+          "evidence": "State/bounce allocations, vector-to-bounce copy and alternate async block-write/read with sector/count/buffer. qemu_aio_get pool ownership unresolved."
+        },
+        {
+          "api_name": "qemu_iovec_to_buffer",
+          "family": "buffer_write",
+          "start": 738,
+          "end": 777,
+          "line": 35,
+          "expression": "qemu_iovec_to_buffer(s->iov, s->bounce)",
+          "evidence": "State/bounce allocations, vector-to-bounce copy and alternate async block-write/read with sector/count/buffer. qemu_aio_get pool ownership unresolved."
+        },
+        {
+          "api_name": "bdrv_aio_write",
+          "family": "block_write",
+          "start": 799,
+          "end": 913,
+          "line": 37,
+          "expression": "bdrv_aio_write(bs, sector_num, s->bounce, nb_sectors,\n\n                                  bdrv_aio_rw_vector_cb, s)",
+          "evidence": "State/bounce allocations, vector-to-bounce copy and alternate async block-write/read with sector/count/buffer. qemu_aio_get pool ownership unresolved."
+        },
+        {
+          "api_name": "bdrv_aio_read",
+          "family": "block_read",
+          "start": 949,
+          "end": 1061,
+          "line": 43,
+          "expression": "bdrv_aio_read(bs, sector_num, s->bounce, nb_sectors,\n\n                                 bdrv_aio_rw_vector_cb, s)",
+          "evidence": "State/bounce allocations, vector-to-bounce copy and alternate async block-write/read with sector/count/buffer. qemu_aio_get pool ownership unresolved."
+        }
+      ],
+      "excluded_callsite_annotations": [],
+      "review_notes": "State/bounce allocations, vector-to-bounce copy and alternate async block-write/read with sector/count/buffer. qemu_aio_get pool ownership unresolved."
+    },
+    {
+      "opaque_id": "E11-016",
+      "code_sha256": "eef0c09a3f3535e21051636a1f464361f68f2a19332fb03bade9ca38a6cd5637",
+      "context_status": "FUNCTION_TEXT_AVAILABLE",
+      "callsite_annotations": [],
+      "excluded_callsite_annotations": [],
+      "review_notes": "VP8 initialization/codec decode/alpha decode are unresolved compound calls. Packet field assignments alone are not allocation."
+    },
+    {
+      "opaque_id": "E11-017",
+      "code_sha256": "ce76176a0c16de3e977274b1728bbf10d8ec1143861c4ecee04196076d4f0bbf",
+      "context_status": "FUNCTION_TEXT_AVAILABLE",
+      "callsite_annotations": [
+        {
+          "api_name": "alloca",
+          "family": "alloc",
+          "start": 431,
+          "end": 446,
+          "line": 29,
+          "expression": "alloca(addrlen)",
+          "evidence": "Socket address stack allocation and two alternate outgoing socket API calls. User-lock helpers and sockaddr conversion not expanded; do not infer safety from len guard."
+        },
+        {
+          "api_name": "sendto",
+          "family": "io_sink",
+          "start": 535,
+          "end": 582,
+          "line": 33,
+          "expression": "sendto(fd, host_msg, len, flags, addr, addrlen)",
+          "evidence": "Socket address stack allocation and two alternate outgoing socket API calls. User-lock helpers and sockaddr conversion not expanded; do not infer safety from len guard."
+        },
+        {
+          "api_name": "send",
+          "family": "io_sink",
+          "start": 624,
+          "end": 654,
+          "line": 37,
+          "expression": "send(fd, host_msg, len, flags)",
+          "evidence": "Socket address stack allocation and two alternate outgoing socket API calls. User-lock helpers and sockaddr conversion not expanded; do not infer safety from len guard."
+        }
+      ],
+      "excluded_callsite_annotations": [],
+      "review_notes": "Socket address stack allocation and two alternate outgoing socket API calls. User-lock helpers and sockaddr conversion not expanded; do not infer safety from len guard."
+    },
+    {
+      "opaque_id": "E11-018",
+      "code_sha256": "5c61a6d4b46c4ff23945613daa7d78185374336b2763f06fc2cf7ba6adaee973",
+      "context_status": "FUNCTION_TEXT_AVAILABLE",
+      "callsite_annotations": [],
+      "excluded_callsite_annotations": [],
+      "review_notes": "Timestamp arithmetic, sort/swap and parser metadata helpers. av_log wrappers and commented logging are not standard read/write APIs."
+    },
+    {
+      "opaque_id": "E11-019",
+      "code_sha256": "79a66e71113688b74213dd8aa347a5760c9b0617d61e2c857b2af306d6bc8d6f",
+      "context_status": "FUNCTION_TEXT_AVAILABLE",
+      "callsite_annotations": [],
+      "excluded_callsite_annotations": [],
+      "review_notes": "Float classification/conversion/exception helpers, no scoped host memory/IO call."
+    },
+    {
+      "opaque_id": "E11-020",
+      "code_sha256": "9065cf96f6ee8b23c1398530fefd1a20ec00db72d0a940e40705f44c96dccaf6",
+      "context_status": "FUNCTION_TEXT_AVAILABLE",
+      "callsite_annotations": [],
+      "excluded_callsite_annotations": [],
+      "review_notes": "Replay serialization put helpers have no supplied stream/backend implementation. Retain as unresolved compound serialization; do not infer file-write backend solely from put names."
+    },
+    {
+      "opaque_id": "E11-021",
+      "code_sha256": "b5dacbff3130e5218969f4816ad8c0735694307affe072e5225a987625b1e757",
+      "context_status": "FUNCTION_TEXT_AVAILABLE",
+      "callsite_annotations": [
+        {
+          "api_name": "memset",
+          "family": "buffer_write",
+          "start": 300,
+          "end": 345,
+          "line": 19,
+          "expression": "memset(decouple_tab, 0, sizeof(decouple_tab))",
+          "evidence": "Four direct zeroing sites. mono_decode/decouple and raw array writes outside scored resolved-call scope."
+        },
+        {
+          "api_name": "memset",
+          "family": "buffer_write",
+          "start": 352,
+          "end": 399,
+          "line": 21,
+          "expression": "memset(decode_buffer, 0, sizeof(decode_buffer))",
+          "evidence": "Four direct zeroing sites. mono_decode/decouple and raw array writes outside scored resolved-call scope."
+        },
+        {
+          "api_name": "memset",
+          "family": "buffer_write",
+          "start": 457,
+          "end": 498,
+          "line": 27,
+          "expression": "memset(mlt_buffer1,0, 1024*sizeof(float))",
+          "evidence": "Four direct zeroing sites. mono_decode/decouple and raw array writes outside scored resolved-call scope."
+        },
+        {
+          "api_name": "memset",
+          "family": "buffer_write",
+          "start": 505,
+          "end": 546,
+          "line": 29,
+          "expression": "memset(mlt_buffer2,0, 1024*sizeof(float))",
+          "evidence": "Four direct zeroing sites. mono_decode/decouple and raw array writes outside scored resolved-call scope."
+        }
+      ],
+      "excluded_callsite_annotations": [],
+      "review_notes": "Four direct zeroing sites. mono_decode/decouple and raw array writes outside scored resolved-call scope."
+    },
+    {
+      "opaque_id": "E11-022",
+      "code_sha256": "e0e09d1f67c75902cce061f057a80d2e3979dd95963c3852be19ce9ff71d98c1",
+      "context_status": "FUNCTION_TEXT_AVAILABLE",
+      "callsite_annotations": [],
+      "excluded_callsite_annotations": [],
+      "review_notes": "Returns address of indexed clock object; no callsite."
+    },
+    {
+      "opaque_id": "E11-023",
+      "code_sha256": "811b77b3b8225af8f73066731720746a0b993f67af10ced88264cb0ffe10baf1",
+      "context_status": "FUNCTION_TEXT_AVAILABLE",
+      "callsite_annotations": [
+        {
+          "api_name": "memcpy",
+          "family": "buffer_write",
+          "start": 642,
+          "end": 683,
+          "line": 37,
+          "expression": "memcpy(old_buf, s->buf_ptr, old_buf_size)",
+          "evidence": "Save/restore buffer copies, options cleanup on success/failure and old URL handle close. av_dict_copy/http_open_cnx compound contracts unresolved."
+        },
+        {
+          "api_name": "av_dict_free",
+          "family": "pointer_free",
+          "start": 996,
+          "end": 1018,
+          "line": 59,
+          "expression": "av_dict_free(&options)",
+          "evidence": "Save/restore buffer copies, options cleanup on success/failure and old URL handle close. av_dict_copy/http_open_cnx compound contracts unresolved."
+        },
+        {
+          "api_name": "memcpy",
+          "family": "buffer_write",
+          "start": 1029,
+          "end": 1069,
+          "line": 61,
+          "expression": "memcpy(s->buffer, old_buf, old_buf_size)",
+          "evidence": "Save/restore buffer copies, options cleanup on success/failure and old URL handle close. av_dict_copy/http_open_cnx compound contracts unresolved."
+        },
+        {
+          "api_name": "av_dict_free",
+          "family": "pointer_free",
+          "start": 1236,
+          "end": 1258,
+          "line": 75,
+          "expression": "av_dict_free(&options)",
+          "evidence": "Save/restore buffer copies, options cleanup on success/failure and old URL handle close. av_dict_copy/http_open_cnx compound contracts unresolved."
+        },
+        {
+          "api_name": "ffurl_close",
+          "family": "io_close",
+          "start": 1265,
+          "end": 1284,
+          "line": 77,
+          "expression": "ffurl_close(old_hd)",
+          "evidence": "Save/restore buffer copies, options cleanup on success/failure and old URL handle close. av_dict_copy/http_open_cnx compound contracts unresolved."
+        }
+      ],
+      "excluded_callsite_annotations": [],
+      "review_notes": "Save/restore buffer copies, options cleanup on success/failure and old URL handle close. av_dict_copy/http_open_cnx compound contracts unresolved."
+    },
+    {
+      "opaque_id": "E11-024",
+      "code_sha256": "52a42cfe92be3a784b619ff61ea7ad6bd059b45c421d3ecb479ee5de571e6f9c",
+      "context_status": "FUNCTION_TEXT_AVAILABLE",
+      "callsite_annotations": [],
+      "excluded_callsite_annotations": [],
+      "review_notes": "MMIO register fields and indirect bdata_read callback. read text in diagnostic literals does not imply read() call."
+    },
+    {
+      "opaque_id": "E11-025",
+      "code_sha256": "8c0a4bffc95594c1dc6709203913d758483ef45d99dc6c9d10fd16e976ef2f0f",
+      "context_status": "FUNCTION_TEXT_AVAILABLE",
+      "callsite_annotations": [
+        {
+          "api_name": "calloc",
+          "family": "alloc",
+          "start": 94,
+          "end": 119,
+          "line": 9,
+          "expression": "calloc(sizeof(char *), 1)",
+          "evidence": "Initial pointer-vector allocation and growth. qemu_strsep parsing unresolved; array stores not callsite evidence."
+        },
+        {
+          "api_name": "realloc",
+          "family": "alloc",
+          "start": 269,
+          "end": 307,
+          "line": 23,
+          "expression": "realloc(rval, sizeof(*rval) * (c + 1))",
+          "evidence": "Initial pointer-vector allocation and growth. qemu_strsep parsing unresolved; array stores not callsite evidence."
+        }
+      ],
+      "excluded_callsite_annotations": [],
+      "review_notes": "Initial pointer-vector allocation and growth. qemu_strsep parsing unresolved; array stores not callsite evidence."
+    },
+    {
+      "opaque_id": "E11-026",
+      "code_sha256": "f34ce4cb569c5dbafd1cc3b0dd5d4c8b613d131ff6d38bc714a03066f32cca39",
+      "context_status": "FUNCTION_TEXT_AVAILABLE",
+      "callsite_annotations": [],
+      "excluded_callsite_annotations": [],
+      "review_notes": "Empty no-op function body; no calls."
+    },
+    {
+      "opaque_id": "E11-027",
+      "code_sha256": "970edb46b12dfa40ac9901c4a80b9d5bdef954533ee8dda1dac3cd894622b8cf",
+      "context_status": "FUNCTION_TEXT_AVAILABLE",
+      "callsite_annotations": [],
+      "excluded_callsite_annotations": [],
+      "review_notes": "Display lock/update and queue helpers unresolved. free() only occurs in comment about potential client lifetime; not a visible direct free call."
+    },
+    {
+      "opaque_id": "E11-028",
+      "code_sha256": "766abc385853bfc2511a445eaf18be9239f5dc76333e53e846bd5bd41037f7e3",
+      "context_status": "FUNCTION_TEXT_AVAILABLE",
+      "callsite_annotations": [
+        {
+          "api_name": "memcpy",
+          "family": "buffer_write",
+          "start": 547,
+          "end": 566,
+          "line": 27,
+          "expression": "memcpy(iv, src, 16)",
+          "evidence": "Two alternate IV update copies. AES addkey/crypt helpers and raw block writes are compound/unresolved in callsite scoring."
+        },
+        {
+          "api_name": "memcpy",
+          "family": "buffer_write",
+          "start": 877,
+          "end": 896,
+          "line": 45,
+          "expression": "memcpy(iv, dst, 16)",
+          "evidence": "Two alternate IV update copies. AES addkey/crypt helpers and raw block writes are compound/unresolved in callsite scoring."
+        }
+      ],
+      "excluded_callsite_annotations": [],
+      "review_notes": "Two alternate IV update copies. AES addkey/crypt helpers and raw block writes are compound/unresolved in callsite scoring."
+    },
+    {
+      "opaque_id": "E11-029",
+      "code_sha256": "3a20f3978bc67251e1f4891e33d6d4eef7b9e9674b388d205d104ca64c435410",
+      "context_status": "FUNCTION_TEXT_AVAILABLE",
+      "callsite_annotations": [],
+      "excluded_callsite_annotations": [],
+      "review_notes": "Timer state reads and IRQ helper. read words in comments/format literals are not read() calls."
+    },
+    {
+      "opaque_id": "E11-030",
+      "code_sha256": "d8df3338c2ba892fd79942e1c826e6a196e3e5ba3b17c4179d5977fba43017fb",
+      "context_status": "FUNCTION_TEXT_AVAILABLE",
+      "callsite_annotations": [
+        {
+          "api_name": "g_free",
+          "family": "pointer_free",
+          "start": 199,
+          "end": 219,
+          "line": 19,
+          "expression": "g_free(vs->password)",
+          "evidence": "Password cleanup before resetting pointer and auth mode; family is deallocation, not proof of secure authentication behavior."
+        }
+      ],
+      "excluded_callsite_annotations": [],
+      "review_notes": "Password cleanup before resetting pointer and auth mode; family is deallocation, not proof of secure authentication behavior."
+    },
+    {
+      "opaque_id": "E11-031",
+      "code_sha256": "3114e7b2fde13d6ccb50768e9a13687556681844d602f849129df5c64183e5c8",
+      "context_status": "FUNCTION_TEXT_AVAILABLE",
+      "callsite_annotations": [
+        {
+          "api_name": "av_malloc",
+          "family": "alloc",
+          "start": 4210,
+          "end": 4253,
+          "line": 179,
+          "expression": "av_malloc(4 + FF_INPUT_BUFFER_PADDING_SIZE)",
+          "evidence": "Extradata allocation/copy and explicit little-endian read from advancing byte pointer. get8/get16 and metadata/decoder helpers have unresolved contracts; memcmp is comparison outside current sink family scope."
+        },
+        {
+          "api_name": "memcpy",
+          "family": "buffer_write",
+          "start": 4361,
+          "end": 4397,
+          "line": 185,
+          "expression": "memcpy(st->codec->extradata, *pp, 4)",
+          "evidence": "Extradata allocation/copy and explicit little-endian read from advancing byte pointer. get8/get16 and metadata/decoder helpers have unresolved contracts; memcmp is comparison outside current sink family scope."
+        },
+        {
+          "api_name": "bytestream_get_le32",
+          "family": "buffer_read",
+          "start": 5465,
+          "end": 5488,
+          "line": 245,
+          "expression": "bytestream_get_le32(pp)",
+          "evidence": "Extradata allocation/copy and explicit little-endian read from advancing byte pointer. get8/get16 and metadata/decoder helpers have unresolved contracts; memcmp is comparison outside current sink family scope."
+        }
+      ],
+      "excluded_callsite_annotations": [],
+      "review_notes": "Extradata allocation/copy and explicit little-endian read from advancing byte pointer. get8/get16 and metadata/decoder helpers have unresolved contracts; memcmp is comparison outside current sink family scope."
+    },
+    {
+      "opaque_id": "E11-032",
+      "code_sha256": "14e626ff2b1e874291f547665464e584a894eb17bb385d781f51355698d4c453",
+      "context_status": "FUNCTION_TEXT_AVAILABLE",
+      "callsite_annotations": [
+        {
+          "api_name": "av_malloc",
+          "family": "alloc",
+          "start": 458,
+          "end": 496,
+          "line": 33,
+          "expression": "av_malloc(s->mb_height * s->mb_stride)",
+          "evidence": "Two buffers allocated for error recovery and freed on failure. Count two syntactic cleanup sites."
+        },
+        {
+          "api_name": "av_mallocz",
+          "family": "alloc",
+          "start": 528,
+          "end": 553,
+          "line": 35,
+          "expression": "av_mallocz(mb_array_size)",
+          "evidence": "Two buffers allocated for error recovery and freed on failure. Count two syntactic cleanup sites."
+        },
+        {
+          "api_name": "av_freep",
+          "family": "pointer_free",
+          "start": 908,
+          "end": 937,
+          "line": 65,
+          "expression": "av_freep(&er->er_temp_buffer)",
+          "evidence": "Two buffers allocated for error recovery and freed on failure. Count two syntactic cleanup sites."
+        },
+        {
+          "api_name": "av_freep",
+          "family": "pointer_free",
+          "start": 944,
+          "end": 977,
+          "line": 67,
+          "expression": "av_freep(&er->error_status_table)",
+          "evidence": "Two buffers allocated for error recovery and freed on failure. Count two syntactic cleanup sites."
+        }
+      ],
+      "excluded_callsite_annotations": [],
+      "review_notes": "Two buffers allocated for error recovery and freed on failure. Count two syntactic cleanup sites."
+    },
+    {
+      "opaque_id": "E11-033",
+      "code_sha256": "4202e63a27607f04fd5ab3783f5e8061e471a25b69361ffc9dc37d44726c201f",
+      "context_status": "FUNCTION_TEXT_AVAILABLE",
+      "callsite_annotations": [],
+      "excluded_callsite_annotations": [],
+      "review_notes": "Scalar size validation, property assignment and diagnostic wrappers; no standard IO API call in scope."
+    },
+    {
+      "opaque_id": "E11-034",
+      "code_sha256": "732991355f1257f055ca51438a6595969b509f1d41ae7b4747607f8ed0f7bb80",
+      "context_status": "FUNCTION_TEXT_AVAILABLE",
+      "callsite_annotations": [],
+      "excluded_callsite_annotations": [],
+      "review_notes": "VLAN strip helper contract unresolved, vector views/lengths assigned directly. Not an implicit copy simply because attach_data appears in function name."
+    },
+    {
+      "opaque_id": "E11-035",
+      "code_sha256": "44f00ac83722c09f21981f3c63af2fb336b4d97a9167714a553fc29d72ae76e4",
+      "context_status": "FUNCTION_TEXT_AVAILABLE",
+      "callsite_annotations": [
+        {
+          "api_name": "memcpy",
+          "family": "buffer_write",
+          "start": 570,
+          "end": 596,
+          "line": 39,
+          "expression": "memcpy(min_buf, buf, size)",
+          "evidence": "Packet pad/copy/VLAN move, guest descriptor read into host desc and two guest-memory write sites with explicit buffer sizes. DMA family assignments supported by caller roles, not independently audited implementation."
+        },
+        {
+          "api_name": "memset",
+          "family": "buffer_write",
+          "start": 607,
+          "end": 656,
+          "line": 41,
+          "expression": "memset(&min_buf[size], 0, sizeof(min_buf) - size)",
+          "evidence": "Packet pad/copy/VLAN move, guest descriptor read into host desc and two guest-memory write sites with explicit buffer sizes. DMA family assignments supported by caller roles, not independently audited implementation."
+        },
+        {
+          "api_name": "memmove",
+          "family": "buffer_write",
+          "start": 1205,
+          "end": 1241,
+          "line": 77,
+          "expression": "memmove((uint8_t *)buf + 4, buf, 12)",
+          "evidence": "Packet pad/copy/VLAN move, guest descriptor read into host desc and two guest-memory write sites with explicit buffer sizes. DMA family assignments supported by caller roles, not independently audited implementation."
+        },
+        {
+          "api_name": "pci_dma_read",
+          "family": "buffer_read",
+          "start": 1777,
+          "end": 1825,
+          "line": 115,
+          "expression": "pci_dma_read(&s->dev, base, &desc, sizeof(desc))",
+          "evidence": "Packet pad/copy/VLAN move, guest descriptor read into host desc and two guest-memory write sites with explicit buffer sizes. DMA family assignments supported by caller roles, not independently audited implementation."
+        },
+        {
+          "api_name": "pci_dma_write",
+          "family": "buffer_write",
+          "start": 2186,
+          "end": 2314,
+          "line": 133,
+          "expression": "pci_dma_write(&s->dev, le64_to_cpu(desc.buffer_addr),\n\n                              buf + desc_offset + vlan_offset, copy_size)",
+          "evidence": "Packet pad/copy/VLAN move, guest descriptor read into host desc and two guest-memory write sites with explicit buffer sizes. DMA family assignments supported by caller roles, not independently audited implementation."
+        },
+        {
+          "api_name": "pci_dma_write",
+          "family": "buffer_write",
+          "start": 2915,
+          "end": 2964,
+          "line": 163,
+          "expression": "pci_dma_write(&s->dev, base, &desc, sizeof(desc))",
+          "evidence": "Packet pad/copy/VLAN move, guest descriptor read into host desc and two guest-memory write sites with explicit buffer sizes. DMA family assignments supported by caller roles, not independently audited implementation."
+        }
+      ],
+      "excluded_callsite_annotations": [],
+      "review_notes": "Packet pad/copy/VLAN move, guest descriptor read into host desc and two guest-memory write sites with explicit buffer sizes. DMA family assignments supported by caller roles, not independently audited implementation."
+    },
+    {
+      "opaque_id": "E11-036",
+      "code_sha256": "64547eb35ab25992568daaeda48fbb75f919c30b4b311cdae559ed2fe178108c",
+      "context_status": "FUNCTION_TEXT_AVAILABLE",
+      "callsite_annotations": [
+        {
+          "api_name": "g_new",
+          "family": "alloc",
+          "start": 156,
+          "end": 178,
+          "line": 7,
+          "expression": "g_new(MemoryRegion, 1)",
+          "evidence": "MemoryRegion/IRQ/boot-info heap allocations and five diagnostic stdio sites. Device creation, guest RAM mapping and image loaders remain unresolved compound operations."
+        },
+        {
+          "api_name": "g_malloc0",
+          "family": "alloc",
+          "start": 865,
+          "end": 905,
+          "line": 59,
+          "expression": "g_malloc0(smp_cpus * sizeof(qemu_irq *))",
+          "evidence": "MemoryRegion/IRQ/boot-info heap allocations and five diagnostic stdio sites. Device creation, guest RAM mapping and image loaders remain unresolved compound operations."
+        },
+        {
+          "api_name": "g_malloc0",
+          "family": "alloc",
+          "start": 922,
+          "end": 980,
+          "line": 61,
+          "expression": "g_malloc0(smp_cpus * sizeof(qemu_irq) * OPENPIC_OUTPUT_NB)",
+          "evidence": "MemoryRegion/IRQ/boot-info heap allocations and five diagnostic stdio sites. Device creation, guest RAM mapping and image loaders remain unresolved compound operations."
+        },
+        {
+          "api_name": "fprintf",
+          "family": "format_string",
+          "start": 1184,
+          "end": 1230,
+          "line": 77,
+          "expression": "fprintf(stderr, \"Unable to initialize CPU!\\n\")",
+          "evidence": "MemoryRegion/IRQ/boot-info heap allocations and five diagnostic stdio sites. Device creation, guest RAM mapping and image loaders remain unresolved compound operations."
+        },
+        {
+          "api_name": "g_malloc0",
+          "family": "alloc",
+          "start": 2002,
+          "end": 2037,
+          "line": 125,
+          "expression": "g_malloc0(sizeof(struct boot_info))",
+          "evidence": "MemoryRegion/IRQ/boot-info heap allocations and five diagnostic stdio sites. Device creation, guest RAM mapping and image loaders remain unresolved compound operations."
+        },
+        {
+          "api_name": "printf",
+          "family": "format_string",
+          "start": 4401,
+          "end": 4444,
+          "line": 255,
+          "expression": "printf(\"couldn't create PCI controller!\\n\")",
+          "evidence": "MemoryRegion/IRQ/boot-info heap allocations and five diagnostic stdio sites. Device creation, guest RAM mapping and image loaders remain unresolved compound operations."
+        },
+        {
+          "api_name": "fprintf",
+          "family": "format_string",
+          "start": 5381,
+          "end": 5478,
+          "line": 309,
+          "expression": "fprintf(stderr, \"qemu: could not load kernel '%s'\\n\",\n\n                    args->kernel_filename)",
+          "evidence": "MemoryRegion/IRQ/boot-info heap allocations and five diagnostic stdio sites. Device creation, guest RAM mapping and image loaders remain unresolved compound operations."
+        },
+        {
+          "api_name": "fprintf",
+          "family": "format_string",
+          "start": 6028,
+          "end": 6135,
+          "line": 347,
+          "expression": "fprintf(stderr, \"qemu: could not load initial ram disk '%s'\\n\",\n\n                    args->initrd_filename)",
+          "evidence": "MemoryRegion/IRQ/boot-info heap allocations and five diagnostic stdio sites. Device creation, guest RAM mapping and image loaders remain unresolved compound operations."
+        },
+        {
+          "api_name": "fprintf",
+          "family": "format_string",
+          "start": 6589,
+          "end": 6635,
+          "line": 379,
+          "expression": "fprintf(stderr, \"couldn't load device tree\\n\")",
+          "evidence": "MemoryRegion/IRQ/boot-info heap allocations and five diagnostic stdio sites. Device creation, guest RAM mapping and image loaders remain unresolved compound operations."
+        }
+      ],
+      "excluded_callsite_annotations": [],
+      "review_notes": "MemoryRegion/IRQ/boot-info heap allocations and five diagnostic stdio sites. Device creation, guest RAM mapping and image loaders remain unresolved compound operations."
+    },
+    {
+      "opaque_id": "E11-037",
+      "code_sha256": "7fb4568de7b848c4d89f437242557fb2f28969ab2853f9c4a7367f5f063d581c",
+      "context_status": "FUNCTION_TEXT_AVAILABLE",
+      "callsite_annotations": [
+        {
+          "api_name": "bdrv_co_preadv",
+          "family": "block_read",
+          "start": 404,
+          "end": 456,
+          "line": 25,
+          "expression": "bdrv_co_preadv(bs->file, offset, bytes, qiov, flags)",
+          "evidence": "Adjusted byte offset/count and explicit block child/qiov passed to read wrapper; no guard-efficacy conclusion."
+        }
+      ],
+      "excluded_callsite_annotations": [],
+      "review_notes": "Adjusted byte offset/count and explicit block child/qiov passed to read wrapper; no guard-efficacy conclusion."
+    },
+    {
+      "opaque_id": "E11-038",
+      "code_sha256": "b3820737580899b70cddfa1a128b7e2108fc9bf23c7ecb2395ec0e7c181d5d26",
+      "context_status": "FUNCTION_TEXT_AVAILABLE",
+      "callsite_annotations": [],
+      "excluded_callsite_annotations": [],
+      "review_notes": "Indirect driver capability query, not actual read/write/zero-init operation."
+    },
+    {
+      "opaque_id": "E11-039",
+      "code_sha256": "e4226c4ae38f67167053848d660b4e547b633b2128a55746241ec9ee3c039b7f",
+      "context_status": "FUNCTION_TEXT_AVAILABLE",
+      "callsite_annotations": [],
+      "excluded_callsite_annotations": [],
+      "review_notes": "Raw transform buffers and FFT/CMUL helpers; array accesses outside resolved direct-call scope."
+    },
+    {
+      "opaque_id": "E11-040",
+      "code_sha256": "c04ff5ae6a7ec1e0b1b339106f00539a7cfb842ff0294dbc4f17f7defc5bf5ab",
+      "context_status": "FUNCTION_TEXT_AVAILABLE",
+      "callsite_annotations": [
+        {
+          "api_name": "ldl",
+          "family": "buffer_read",
+          "start": 282,
+          "end": 294,
+          "line": 21,
+          "expression": "ldl(ssp + 8)",
+          "evidence": "Six syntactic stack-pointer memory load sites for CPU interrupt-return frame. CPU segment/flags helpers unresolved; no stack-bounds safety claim."
+        },
+        {
+          "api_name": "ldl",
+          "family": "buffer_read",
+          "start": 314,
+          "end": 326,
+          "line": 23,
+          "expression": "ldl(ssp + 4)",
+          "evidence": "Six syntactic stack-pointer memory load sites for CPU interrupt-return frame. CPU segment/flags helpers unresolved; no stack-bounds safety claim."
+        },
+        {
+          "api_name": "ldl",
+          "family": "buffer_read",
+          "start": 356,
+          "end": 364,
+          "line": 25,
+          "expression": "ldl(ssp)",
+          "evidence": "Six syntactic stack-pointer memory load sites for CPU interrupt-return frame. CPU segment/flags helpers unresolved; no stack-bounds safety claim."
+        },
+        {
+          "api_name": "lduw",
+          "family": "buffer_read",
+          "start": 434,
+          "end": 447,
+          "line": 31,
+          "expression": "lduw(ssp + 4)",
+          "evidence": "Six syntactic stack-pointer memory load sites for CPU interrupt-return frame. CPU segment/flags helpers unresolved; no stack-bounds safety claim."
+        },
+        {
+          "api_name": "lduw",
+          "family": "buffer_read",
+          "start": 467,
+          "end": 480,
+          "line": 33,
+          "expression": "lduw(ssp + 2)",
+          "evidence": "Six syntactic stack-pointer memory load sites for CPU interrupt-return frame. CPU segment/flags helpers unresolved; no stack-bounds safety claim."
+        },
+        {
+          "api_name": "lduw",
+          "family": "buffer_read",
+          "start": 501,
+          "end": 510,
+          "line": 35,
+          "expression": "lduw(ssp)",
+          "evidence": "Six syntactic stack-pointer memory load sites for CPU interrupt-return frame. CPU segment/flags helpers unresolved; no stack-bounds safety claim."
+        }
+      ],
+      "excluded_callsite_annotations": [],
+      "review_notes": "Six syntactic stack-pointer memory load sites for CPU interrupt-return frame. CPU segment/flags helpers unresolved; no stack-bounds safety claim."
+    },
+    {
+      "opaque_id": "E11-041",
+      "code_sha256": "e6eeec8684099cb970e99f03a053ced81ac4c9f87fcc603ec076bb7656e52d0a",
+      "context_status": "FUNCTION_TEXT_AVAILABLE",
+      "callsite_annotations": [],
+      "excluded_callsite_annotations": [],
+      "review_notes": "Class casting/field assignment, no scoped direct API call."
+    },
+    {
+      "opaque_id": "E11-042",
+      "code_sha256": "81cc1cc4b293012829e4d8bfb77e714a14bb89f4b18a42cb13c7413c6fe1e50c",
+      "context_status": "FUNCTION_TEXT_AVAILABLE",
+      "callsite_annotations": [
+        {
+          "api_name": "g_malloc0",
+          "family": "alloc",
+          "start": 414,
+          "end": 455,
+          "line": 25,
+          "expression": "g_malloc0(nb_clusters * sizeof(uint16_t))",
+          "evidence": "Allocate/free refcount table and five formatted error/report sites. Refcount/check/update helpers have unresolved compound disk IO semantics."
+        },
+        {
+          "api_name": "fprintf",
+          "family": "format_string",
+          "start": 1623,
+          "end": 1754,
+          "line": 99,
+          "expression": "fprintf(stderr, \"ERROR refcount block %\" PRId64 \" is not \"\n\n                \"cluster aligned; refcount table entry corrupted\\n\", i)",
+          "evidence": "Allocate/free refcount table and five formatted error/report sites. Refcount/check/update helpers have unresolved compound disk IO semantics."
+        },
+        {
+          "api_name": "fprintf",
+          "family": "format_string",
+          "start": 1877,
+          "end": 1971,
+          "line": 113,
+          "expression": "fprintf(stderr, \"ERROR refcount block %\" PRId64\n\n                    \" is outside image\\n\", i)",
+          "evidence": "Allocate/free refcount table and five formatted error/report sites. Refcount/check/update helpers have unresolved compound disk IO semantics."
+        },
+        {
+          "api_name": "fprintf",
+          "family": "format_string",
+          "start": 2244,
+          "end": 2379,
+          "line": 133,
+          "expression": "fprintf(stderr, \"ERROR refcount block %\" PRId64\n\n                    \" refcount=%d\\n\",\n\n                    i, refcount_table[cluster])",
+          "evidence": "Allocate/free refcount table and five formatted error/report sites. Refcount/check/update helpers have unresolved compound disk IO semantics."
+        },
+        {
+          "api_name": "fprintf",
+          "family": "format_string",
+          "start": 2630,
+          "end": 2739,
+          "line": 157,
+          "expression": "fprintf(stderr, \"Can't get refcount for cluster %\" PRId64 \": %s\\n\",\n\n                i, strerror(-refcount1))",
+          "evidence": "Allocate/free refcount table and five formatted error/report sites. Refcount/check/update helpers have unresolved compound disk IO semantics."
+        },
+        {
+          "api_name": "fprintf",
+          "family": "format_string",
+          "start": 3362,
+          "end": 3641,
+          "line": 201,
+          "expression": "fprintf(stderr, \"%s cluster %\" PRId64 \" refcount=%d reference=%d\\n\",\n\n                   num_fixed != NULL     ? \"Repairing\" :\n\n                   refcount1 < refcount2 ? \"ERROR\" :\n\n                                           \"Leaked\",\n\n                   i, refcount1, refcount2)",
+          "evidence": "Allocate/free refcount table and five formatted error/report sites. Refcount/check/update helpers have unresolved compound disk IO semantics."
+        },
+        {
+          "api_name": "g_free",
+          "family": "pointer_free",
+          "start": 4262,
+          "end": 4284,
+          "line": 257,
+          "expression": "g_free(refcount_table)",
+          "evidence": "Allocate/free refcount table and five formatted error/report sites. Refcount/check/update helpers have unresolved compound disk IO semantics."
+        }
+      ],
+      "excluded_callsite_annotations": [],
+      "review_notes": "Allocate/free refcount table and five formatted error/report sites. Refcount/check/update helpers have unresolved compound disk IO semantics."
+    },
+    {
+      "opaque_id": "E11-043",
+      "code_sha256": "ca22acd3987c015e39af124e1c793a4deaa43718885b6348bb2ebf46995ed300",
+      "context_status": "INCOMPLETE_INPUT",
+      "callsite_annotations": [
+        {
+          "api_name": "memcpy",
+          "family": "buffer_write",
+          "start": 304,
+          "end": 335,
+          "line": 29,
+          "expression": "memcpy(s->rx_buffer, buf, size)",
+          "evidence": "Visible packet buffer copy is annotated, but supplied function lacks closing brace and conditional body structure is suspect. Do not repair input or certify its safety."
+        }
+      ],
+      "excluded_callsite_annotations": [],
+      "review_notes": "Visible packet buffer copy is annotated, but supplied function lacks closing brace and conditional body structure is suspect. Do not repair input or certify its safety."
+    },
+    {
+      "opaque_id": "E11-044",
+      "code_sha256": "ac7a240dee1c5ca3db0238577948427c1603cc91a577a2920bdd73ae9db0e53e",
+      "context_status": "FUNCTION_TEXT_AVAILABLE",
+      "callsite_annotations": [
+        {
+          "api_name": "printf",
+          "family": "format_string",
+          "start": 195,
+          "end": 231,
+          "line": 17,
+          "expression": "printf(\"xlat: EAX=\" FMTLX \"\\n\", res)",
+          "evidence": "Nine raw printf sites. Occurrences 2/3/4 lie in explicit #if 0 and are excluded from callable evidence; six others are union of platform-dependent branches. Inline asm not scored as API sink."
+        },
+        {
+          "api_name": "printf",
+          "family": "format_string",
+          "start": 1721,
+          "end": 1757,
+          "line": 111,
+          "expression": "printf(\"func_lret=\" FMTLX \"\\n\", res)",
+          "evidence": "Nine raw printf sites. Occurrences 2/3/4 lie in explicit #if 0 and are excluded from callable evidence; six others are union of platform-dependent branches. Inline asm not scored as API sink."
+        },
+        {
+          "api_name": "printf",
+          "family": "format_string",
+          "start": 1902,
+          "end": 1938,
+          "line": 121,
+          "expression": "printf(\"func_iret=\" FMTLX \"\\n\", res)",
+          "evidence": "Nine raw printf sites. Occurrences 2/3/4 lie in explicit #if 0 and are excluded from callable evidence; six others are union of platform-dependent branches. Inline asm not scored as API sink."
+        },
+        {
+          "api_name": "printf",
+          "family": "format_string",
+          "start": 2121,
+          "end": 2156,
+          "line": 135,
+          "expression": "printf(\"popl esp=\" FMTLX \"\\n\", res)",
+          "evidence": "Nine raw printf sites. Occurrences 2/3/4 lie in explicit #if 0 and are excluded from callable evidence; six others are union of platform-dependent branches. Inline asm not scored as API sink."
+        },
+        {
+          "api_name": "printf",
+          "family": "format_string",
+          "start": 2315,
+          "end": 2350,
+          "line": 145,
+          "expression": "printf(\"popl esp=\" FMTLX \"\\n\", res)",
+          "evidence": "Nine raw printf sites. Occurrences 2/3/4 lie in explicit #if 0 and are excluded from callable evidence; six others are union of platform-dependent branches. Inline asm not scored as API sink."
+        },
+        {
+          "api_name": "printf",
+          "family": "format_string",
+          "start": 2521,
+          "end": 2556,
+          "line": 155,
+          "expression": "printf(\"popw esp=\" FMTLX \"\\n\", res)",
+          "evidence": "Nine raw printf sites. Occurrences 2/3/4 lie in explicit #if 0 and are excluded from callable evidence; six others are union of platform-dependent branches. Inline asm not scored as API sink."
+        }
+      ],
+      "excluded_callsite_annotations": [
+        {
+          "api_name": "printf",
+          "family": "format_string",
+          "start": 828,
+          "end": 864,
+          "line": 57,
+          "expression": "printf(\"func_lret=\" FMTLX \"\\n\", res)",
+          "evidence": "Nine raw printf sites. Occurrences 2/3/4 lie in explicit #if 0 and are excluded from callable evidence; six others are union of platform-dependent branches. Inline asm not scored as API sink.",
+          "exclusion_reason": "explicit_if_zero_in_source_review"
+        },
+        {
+          "api_name": "printf",
+          "family": "format_string",
+          "start": 1155,
+          "end": 1192,
+          "line": 77,
+          "expression": "printf(\"func_lret2=\" FMTLX \"\\n\", res)",
+          "evidence": "Nine raw printf sites. Occurrences 2/3/4 lie in explicit #if 0 and are excluded from callable evidence; six others are union of platform-dependent branches. Inline asm not scored as API sink.",
+          "exclusion_reason": "explicit_if_zero_in_source_review"
+        },
+        {
+          "api_name": "printf",
+          "family": "format_string",
+          "start": 1527,
+          "end": 1564,
+          "line": 97,
+          "expression": "printf(\"func_lret3=\" FMTLX \"\\n\", res)",
+          "evidence": "Nine raw printf sites. Occurrences 2/3/4 lie in explicit #if 0 and are excluded from callable evidence; six others are union of platform-dependent branches. Inline asm not scored as API sink.",
+          "exclusion_reason": "explicit_if_zero_in_source_review"
+        }
+      ],
+      "review_notes": "Nine raw printf sites. Occurrences 2/3/4 lie in explicit #if 0 and are excluded from callable evidence; six others are union of platform-dependent branches. Inline asm not scored as API sink."
+    },
+    {
+      "opaque_id": "E11-045",
+      "code_sha256": "3686a42d85505acdbc4073eaf924f197fb17b4c52238583bf2c0839e49379d7f",
+      "context_status": "FUNCTION_TEXT_AVAILABLE",
+      "callsite_annotations": [
+        {
+          "api_name": "qemu_blockalign",
+          "family": "alloc",
+          "start": 663,
+          "end": 696,
+          "line": 39,
+          "expression": "qemu_blockalign(s->bs, len_bytes)",
+          "evidence": "Aligned temporary table allocation, explicit vector block write, optional flush and common cleanup. Iovec init is external-view setup, not assumed heap allocation."
+        },
+        {
+          "api_name": "bdrv_pwritev",
+          "family": "block_write",
+          "start": 1135,
+          "end": 1175,
+          "line": 71,
+          "expression": "bdrv_pwritev(s->bs->file, offset, &qiov)",
+          "evidence": "Aligned temporary table allocation, explicit vector block write, optional flush and common cleanup. Iovec init is external-view setup, not assumed heap allocation."
+        },
+        {
+          "api_name": "bdrv_flush",
+          "family": "io_flush",
+          "start": 1336,
+          "end": 1353,
+          "line": 87,
+          "expression": "bdrv_flush(s->bs)",
+          "evidence": "Aligned temporary table allocation, explicit vector block write, optional flush and common cleanup. Iovec init is external-view setup, not assumed heap allocation."
+        },
+        {
+          "api_name": "qemu_vfree",
+          "family": "pointer_free",
+          "start": 1472,
+          "end": 1493,
+          "line": 105,
+          "expression": "qemu_vfree(new_table)",
+          "evidence": "Aligned temporary table allocation, explicit vector block write, optional flush and common cleanup. Iovec init is external-view setup, not assumed heap allocation."
+        }
+      ],
+      "excluded_callsite_annotations": [],
+      "review_notes": "Aligned temporary table allocation, explicit vector block write, optional flush and common cleanup. Iovec init is external-view setup, not assumed heap allocation."
+    },
+    {
+      "opaque_id": "E11-046",
+      "code_sha256": "3e33061cd5f0cce77cb28372f9be1418e77708989b9fdaed251a427c9e97a491",
+      "context_status": "FUNCTION_TEXT_AVAILABLE",
+      "callsite_annotations": [
+        {
+          "api_name": "fprintf",
+          "family": "format_string",
+          "start": 3279,
+          "end": 3416,
+          "line": 207,
+          "expression": "fprintf(stderr, \"SwScaler: Warning: dstStride is not aligned!\\n\"\n\n\t\t\t\t\t\"SwScaler:          ->cannot do aligned memory acesses anymore\\n\")",
+          "evidence": "One actual stderr warning; printf sites are commented. RENAME scaling functions and macro-selected buffer kernels remain unresolved compound operations."
+        }
+      ],
+      "excluded_callsite_annotations": [],
+      "review_notes": "One actual stderr warning; printf sites are commented. RENAME scaling functions and macro-selected buffer kernels remain unresolved compound operations."
+    },
+    {
+      "opaque_id": "E11-047",
+      "code_sha256": "ae71e663e8919772b62303e3a4efd0ac30ae701e0720d9229a6f6c1e5164209d",
+      "context_status": "FUNCTION_TEXT_AVAILABLE",
+      "callsite_annotations": [],
+      "excluded_callsite_annotations": [],
+      "review_notes": "Raw EBML probe-array reads and memcmp comparator, outside current sink-call families; not a claim that input validation is correct."
+    },
+    {
+      "opaque_id": "E11-048",
+      "code_sha256": "fbc64bbbebb8054aef82510fff861f25daeae5dd88b64f4eb51fdf213544e878",
+      "context_status": "FUNCTION_TEXT_AVAILABLE",
+      "callsite_annotations": [],
+      "excluded_callsite_annotations": [],
+      "review_notes": "Rate-limit arithmetic and pointer-result writes. read/written words in comments must not be interpreted as IO API calls."
+    },
+    {
+      "opaque_id": "E11-049",
+      "code_sha256": "b5ade7c9479b4745130e665d7762b13addfe436c04fcd4ff25eb6280275de604",
+      "context_status": "FUNCTION_TEXT_AVAILABLE",
+      "callsite_annotations": [
+        {
+          "api_name": "printf",
+          "family": "format_string",
+          "start": 353,
+          "end": 477,
+          "line": 21,
+          "expression": "printf(\"%s: %p start %08x end %08x idx %08x eidx %08x mem %ld\\n\", __func__,\n\n           mmio, start, end, idx, eidx, memory)",
+          "evidence": "One debug printf under unknown DEBUG_SUBPAGE build condition; included in union of potentially active branches. Direct subpage-table writes are outside callsite scope."
+        }
+      ],
+      "excluded_callsite_annotations": [],
+      "review_notes": "One debug printf under unknown DEBUG_SUBPAGE build condition; included in union of potentially active branches. Direct subpage-table writes are outside callsite scope."
+    },
+    {
+      "opaque_id": "E11-050",
+      "code_sha256": "0f26169c4ceca71e24fbe82ec5ed64c2fdc95f93c69bd83aed9f17c7b79fb3d4",
+      "context_status": "FUNCTION_TEXT_AVAILABLE",
+      "callsite_annotations": [
+        {
+          "api_name": "safe_ioctl",
+          "family": "io_sink",
+          "start": 2149,
+          "end": 2187,
+          "line": 113,
+          "expression": "safe_ioctl(fd, ie->host_cmd, buf_temp)",
+          "evidence": "Explicit fd/cmd/converted-buffer ioctl wrapper. thunk/user-lock helpers unresolved, not automatic buffer-copy or effective guard evidence."
+        }
+      ],
+      "excluded_callsite_annotations": [],
+      "review_notes": "Explicit fd/cmd/converted-buffer ioctl wrapper. thunk/user-lock helpers unresolved, not automatic buffer-copy or effective guard evidence."
+    }
+  ]
+}

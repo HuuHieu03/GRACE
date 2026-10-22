@@ -1,0 +1,29 @@
+{
+  "development": {
+    "samples": 100,
+    "recognized_sites_preserved": 114,
+    "syntax_exclusions": 5,
+    "role:not_assessed": 100,
+    "role:buffer_formatting": 3,
+    "role:diagnostic_stderr": 5,
+    "role:standard_stdout": 6,
+    "excluded:macro_decorated_function_declaration_not_call": 4,
+    "excluded:array_pointer_parameter_type_not_call": 1
+  },
+  "fresh_inputs": {
+    "samples": 50,
+    "recognized_sites_preserved": 47,
+    "syntax_exclusions": 3,
+    "role:not_assessed": 27,
+    "role:diagnostic_stderr": 17,
+    "excluded:macro_decorated_function_declaration_not_call": 3,
+    "role:standard_stdout": 2,
+    "role:buffer_formatting": 1
+  },
+  "E12_frozen": true,
+  "H2_rerun": false,
+  "production_changed": false,
+  "precision_recall": null,
+  "independent_relevance_scores": 0,
+  "conclusion": "Syntax/offset/evidence preservation verified; output roles not independently semantically validated. Fresh inputs are not a relevance evaluation."
+}

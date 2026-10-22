@@ -1,0 +1,41 @@
+[
+  {
+    "opaque_id": "E11-044",
+    "api_name": "printf",
+    "family": "format_string",
+    "start": 828,
+    "end": 864,
+    "line": 57,
+    "expression": "printf(\"func_lret=\" FMTLX \"\\n\", res)",
+    "evidence_source": "direct_call_site",
+    "status": "recognized",
+    "reason": "registered_API_at_call_site",
+    "was_gold_positive": false
+  },
+  {
+    "opaque_id": "E11-044",
+    "api_name": "printf",
+    "family": "format_string",
+    "start": 1155,
+    "end": 1192,
+    "line": 77,
+    "expression": "printf(\"func_lret2=\" FMTLX \"\\n\", res)",
+    "evidence_source": "direct_call_site",
+    "status": "recognized",
+    "reason": "registered_API_at_call_site",
+    "was_gold_positive": false
+  },
+  {
+    "opaque_id": "E11-044",
+    "api_name": "printf",
+    "family": "format_string",
+    "start": 1527,
+    "end": 1564,
+    "line": 97,
+    "expression": "printf(\"func_lret3=\" FMTLX \"\\n\", res)",
+    "evidence_source": "direct_call_site",
+    "status": "recognized",
+    "reason": "registered_API_at_call_site",
+    "was_gold_positive": false
+  }
+]

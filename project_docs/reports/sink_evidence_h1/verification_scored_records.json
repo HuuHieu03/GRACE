@@ -1,0 +1,2084 @@
+[
+  {
+    "opaque_id": "H1-001",
+    "context_status": "FUNCTION_TEXT_AVAILABLE",
+    "gold_apis": [
+      "bytestream2_get_byte"
+    ],
+    "E0_apis": [],
+    "E1_apis": [],
+    "E0_false_positive_apis": [],
+    "E1_false_positive_apis": [],
+    "metrics": {
+      "E0_API": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 1,
+        "precision": null,
+        "recall": 0.0
+      },
+      "E1_API": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 1,
+        "precision": null,
+        "recall": 0.0
+      },
+      "E1_callsite": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 1,
+        "precision": null,
+        "recall": 0.0
+      },
+      "E1_family_callsite": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 1,
+        "precision": null,
+        "recall": 0.0
+      }
+    }
+  },
+  {
+    "opaque_id": "H1-002",
+    "context_status": "FUNCTION_TEXT_AVAILABLE",
+    "gold_apis": [],
+    "E0_apis": [],
+    "E1_apis": [],
+    "E0_false_positive_apis": [],
+    "E1_false_positive_apis": [],
+    "metrics": {
+      "E0_API": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null
+      },
+      "E1_API": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null
+      },
+      "E1_callsite": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null
+      },
+      "E1_family_callsite": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null
+      }
+    }
+  },
+  {
+    "opaque_id": "H1-003",
+    "context_status": "FUNCTION_TEXT_AVAILABLE",
+    "gold_apis": [],
+    "E0_apis": [],
+    "E1_apis": [],
+    "E0_false_positive_apis": [],
+    "E1_false_positive_apis": [],
+    "metrics": {
+      "E0_API": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null
+      },
+      "E1_API": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null
+      },
+      "E1_callsite": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null
+      },
+      "E1_family_callsite": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null
+      }
+    }
+  },
+  {
+    "opaque_id": "H1-004",
+    "context_status": "FUNCTION_TEXT_AVAILABLE",
+    "gold_apis": [
+      "g_free",
+      "memset"
+    ],
+    "E0_apis": [
+      "memset",
+      "read"
+    ],
+    "E1_apis": [
+      "g_free",
+      "memset"
+    ],
+    "E0_false_positive_apis": [
+      "read"
+    ],
+    "E1_false_positive_apis": [],
+    "metrics": {
+      "E0_API": {
+        "tp": 1,
+        "fp": 1,
+        "fn": 1,
+        "precision": 0.5,
+        "recall": 0.5
+      },
+      "E1_API": {
+        "tp": 2,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1.0,
+        "recall": 1.0
+      },
+      "E1_callsite": {
+        "tp": 3,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1.0,
+        "recall": 1.0
+      },
+      "E1_family_callsite": {
+        "tp": 3,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1.0,
+        "recall": 1.0
+      }
+    }
+  },
+  {
+    "opaque_id": "H1-005",
+    "context_status": "FUNCTION_TEXT_AVAILABLE",
+    "gold_apis": [
+      "av_freep",
+      "av_realloc"
+    ],
+    "E0_apis": [],
+    "E1_apis": [
+      "av_freep"
+    ],
+    "E0_false_positive_apis": [],
+    "E1_false_positive_apis": [],
+    "metrics": {
+      "E0_API": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 2,
+        "precision": null,
+        "recall": 0.0
+      },
+      "E1_API": {
+        "tp": 1,
+        "fp": 0,
+        "fn": 1,
+        "precision": 1.0,
+        "recall": 0.5
+      },
+      "E1_callsite": {
+        "tp": 2,
+        "fp": 0,
+        "fn": 1,
+        "precision": 1.0,
+        "recall": 0.666667
+      },
+      "E1_family_callsite": {
+        "tp": 2,
+        "fp": 0,
+        "fn": 1,
+        "precision": 1.0,
+        "recall": 0.666667
+      }
+    }
+  },
+  {
+    "opaque_id": "H1-006",
+    "context_status": "FUNCTION_TEXT_AVAILABLE",
+    "gold_apis": [
+      "fprintf"
+    ],
+    "E0_apis": [
+      "fprintf"
+    ],
+    "E1_apis": [
+      "fprintf"
+    ],
+    "E0_false_positive_apis": [],
+    "E1_false_positive_apis": [],
+    "metrics": {
+      "E0_API": {
+        "tp": 1,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1.0,
+        "recall": 1.0
+      },
+      "E1_API": {
+        "tp": 1,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1.0,
+        "recall": 1.0
+      },
+      "E1_callsite": {
+        "tp": 1,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1.0,
+        "recall": 1.0
+      },
+      "E1_family_callsite": {
+        "tp": 1,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1.0,
+        "recall": 1.0
+      }
+    }
+  },
+  {
+    "opaque_id": "H1-007",
+    "context_status": "FUNCTION_TEXT_AVAILABLE",
+    "gold_apis": [],
+    "E0_apis": [],
+    "E1_apis": [],
+    "E0_false_positive_apis": [],
+    "E1_false_positive_apis": [],
+    "metrics": {
+      "E0_API": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null
+      },
+      "E1_API": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null
+      },
+      "E1_callsite": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null
+      },
+      "E1_family_callsite": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null
+      }
+    }
+  },
+  {
+    "opaque_id": "H1-008",
+    "context_status": "FUNCTION_TEXT_AVAILABLE",
+    "gold_apis": [],
+    "E0_apis": [],
+    "E1_apis": [],
+    "E0_false_positive_apis": [],
+    "E1_false_positive_apis": [],
+    "metrics": {
+      "E0_API": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null
+      },
+      "E1_API": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null
+      },
+      "E1_callsite": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null
+      },
+      "E1_family_callsite": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null
+      }
+    }
+  },
+  {
+    "opaque_id": "H1-009",
+    "context_status": "FUNCTION_TEXT_AVAILABLE",
+    "gold_apis": [],
+    "E0_apis": [],
+    "E1_apis": [],
+    "E0_false_positive_apis": [],
+    "E1_false_positive_apis": [],
+    "metrics": {
+      "E0_API": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null
+      },
+      "E1_API": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null
+      },
+      "E1_callsite": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null
+      },
+      "E1_family_callsite": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null
+      }
+    }
+  },
+  {
+    "opaque_id": "H1-010",
+    "context_status": "FUNCTION_TEXT_AVAILABLE",
+    "gold_apis": [],
+    "E0_apis": [],
+    "E1_apis": [],
+    "E0_false_positive_apis": [],
+    "E1_false_positive_apis": [],
+    "metrics": {
+      "E0_API": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null
+      },
+      "E1_API": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null
+      },
+      "E1_callsite": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null
+      },
+      "E1_family_callsite": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null
+      }
+    }
+  },
+  {
+    "opaque_id": "H1-011",
+    "context_status": "FUNCTION_TEXT_AVAILABLE",
+    "gold_apis": [
+      "av_free",
+      "av_metadata_free",
+      "url_close",
+      "url_close_dyn_buf",
+      "url_fclose"
+    ],
+    "E0_apis": [],
+    "E1_apis": [
+      "av_free"
+    ],
+    "E0_false_positive_apis": [],
+    "E1_false_positive_apis": [],
+    "metrics": {
+      "E0_API": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 5,
+        "precision": null,
+        "recall": 0.0
+      },
+      "E1_API": {
+        "tp": 1,
+        "fp": 0,
+        "fn": 4,
+        "precision": 1.0,
+        "recall": 0.2
+      },
+      "E1_callsite": {
+        "tp": 3,
+        "fp": 0,
+        "fn": 5,
+        "precision": 1.0,
+        "recall": 0.375
+      },
+      "E1_family_callsite": {
+        "tp": 3,
+        "fp": 0,
+        "fn": 5,
+        "precision": 1.0,
+        "recall": 0.375
+      }
+    }
+  },
+  {
+    "opaque_id": "H1-012",
+    "context_status": "FUNCTION_TEXT_AVAILABLE",
+    "gold_apis": [
+      "free",
+      "qemu_mallocz"
+    ],
+    "E0_apis": [
+      "free"
+    ],
+    "E1_apis": [
+      "free"
+    ],
+    "E0_false_positive_apis": [],
+    "E1_false_positive_apis": [],
+    "metrics": {
+      "E0_API": {
+        "tp": 1,
+        "fp": 0,
+        "fn": 1,
+        "precision": 1.0,
+        "recall": 0.5
+      },
+      "E1_API": {
+        "tp": 1,
+        "fp": 0,
+        "fn": 1,
+        "precision": 1.0,
+        "recall": 0.5
+      },
+      "E1_callsite": {
+        "tp": 1,
+        "fp": 0,
+        "fn": 1,
+        "precision": 1.0,
+        "recall": 0.5
+      },
+      "E1_family_callsite": {
+        "tp": 1,
+        "fp": 0,
+        "fn": 1,
+        "precision": 1.0,
+        "recall": 0.5
+      }
+    }
+  },
+  {
+    "opaque_id": "H1-013",
+    "context_status": "FUNCTION_TEXT_AVAILABLE",
+    "gold_apis": [
+      "memset",
+      "tcg_malloc"
+    ],
+    "E0_apis": [
+      "memset"
+    ],
+    "E1_apis": [
+      "memset"
+    ],
+    "E0_false_positive_apis": [],
+    "E1_false_positive_apis": [],
+    "metrics": {
+      "E0_API": {
+        "tp": 1,
+        "fp": 0,
+        "fn": 1,
+        "precision": 1.0,
+        "recall": 0.5
+      },
+      "E1_API": {
+        "tp": 1,
+        "fp": 0,
+        "fn": 1,
+        "precision": 1.0,
+        "recall": 0.5
+      },
+      "E1_callsite": {
+        "tp": 3,
+        "fp": 0,
+        "fn": 4,
+        "precision": 1.0,
+        "recall": 0.428571
+      },
+      "E1_family_callsite": {
+        "tp": 3,
+        "fp": 0,
+        "fn": 4,
+        "precision": 1.0,
+        "recall": 0.428571
+      }
+    }
+  },
+  {
+    "opaque_id": "H1-014",
+    "context_status": "FUNCTION_TEXT_AVAILABLE",
+    "gold_apis": [
+      "bdrv_read",
+      "memcpy"
+    ],
+    "E0_apis": [
+      "memcpy"
+    ],
+    "E1_apis": [
+      "bdrv_read",
+      "memcpy"
+    ],
+    "E0_false_positive_apis": [],
+    "E1_false_positive_apis": [],
+    "metrics": {
+      "E0_API": {
+        "tp": 1,
+        "fp": 0,
+        "fn": 1,
+        "precision": 1.0,
+        "recall": 0.5
+      },
+      "E1_API": {
+        "tp": 2,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1.0,
+        "recall": 1.0
+      },
+      "E1_callsite": {
+        "tp": 2,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1.0,
+        "recall": 1.0
+      },
+      "E1_family_callsite": {
+        "tp": 2,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1.0,
+        "recall": 1.0
+      }
+    }
+  },
+  {
+    "opaque_id": "H1-015",
+    "context_status": "FUNCTION_TEXT_AVAILABLE",
+    "gold_apis": [],
+    "E0_apis": [],
+    "E1_apis": [],
+    "E0_false_positive_apis": [],
+    "E1_false_positive_apis": [],
+    "metrics": {
+      "E0_API": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null
+      },
+      "E1_API": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null
+      },
+      "E1_callsite": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null
+      },
+      "E1_family_callsite": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null
+      }
+    }
+  },
+  {
+    "opaque_id": "H1-016",
+    "context_status": "FUNCTION_TEXT_AVAILABLE",
+    "gold_apis": [],
+    "E0_apis": [
+      "read"
+    ],
+    "E1_apis": [],
+    "E0_false_positive_apis": [
+      "read"
+    ],
+    "E1_false_positive_apis": [],
+    "metrics": {
+      "E0_API": {
+        "tp": 0,
+        "fp": 1,
+        "fn": 0,
+        "precision": 0.0,
+        "recall": null
+      },
+      "E1_API": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null
+      },
+      "E1_callsite": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null
+      },
+      "E1_family_callsite": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null
+      }
+    }
+  },
+  {
+    "opaque_id": "H1-017",
+    "context_status": "FUNCTION_TEXT_AVAILABLE",
+    "gold_apis": [],
+    "E0_apis": [],
+    "E1_apis": [],
+    "E0_false_positive_apis": [],
+    "E1_false_positive_apis": [],
+    "metrics": {
+      "E0_API": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null
+      },
+      "E1_API": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null
+      },
+      "E1_callsite": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null
+      },
+      "E1_family_callsite": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null
+      }
+    }
+  },
+  {
+    "opaque_id": "H1-018",
+    "context_status": "FUNCTION_TEXT_AVAILABLE",
+    "gold_apis": [],
+    "E0_apis": [],
+    "E1_apis": [],
+    "E0_false_positive_apis": [],
+    "E1_false_positive_apis": [],
+    "metrics": {
+      "E0_API": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null
+      },
+      "E1_API": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null
+      },
+      "E1_callsite": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null
+      },
+      "E1_family_callsite": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null
+      }
+    }
+  },
+  {
+    "opaque_id": "H1-019",
+    "context_status": "FUNCTION_TEXT_AVAILABLE",
+    "gold_apis": [],
+    "E0_apis": [],
+    "E1_apis": [],
+    "E0_false_positive_apis": [],
+    "E1_false_positive_apis": [],
+    "metrics": {
+      "E0_API": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null
+      },
+      "E1_API": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null
+      },
+      "E1_callsite": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null
+      },
+      "E1_family_callsite": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null
+      }
+    }
+  },
+  {
+    "opaque_id": "H1-020",
+    "context_status": "FUNCTION_TEXT_AVAILABLE",
+    "gold_apis": [],
+    "E0_apis": [],
+    "E1_apis": [],
+    "E0_false_positive_apis": [],
+    "E1_false_positive_apis": [],
+    "metrics": {
+      "E0_API": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null
+      },
+      "E1_API": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null
+      },
+      "E1_callsite": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null
+      },
+      "E1_family_callsite": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null
+      }
+    }
+  },
+  {
+    "opaque_id": "H1-021",
+    "context_status": "FUNCTION_TEXT_AVAILABLE",
+    "gold_apis": [],
+    "E0_apis": [],
+    "E1_apis": [],
+    "E0_false_positive_apis": [],
+    "E1_false_positive_apis": [],
+    "metrics": {
+      "E0_API": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null
+      },
+      "E1_API": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null
+      },
+      "E1_callsite": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null
+      },
+      "E1_family_callsite": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null
+      }
+    }
+  },
+  {
+    "opaque_id": "H1-022",
+    "context_status": "FUNCTION_TEXT_AVAILABLE",
+    "gold_apis": [],
+    "E0_apis": [],
+    "E1_apis": [],
+    "E0_false_positive_apis": [],
+    "E1_false_positive_apis": [],
+    "metrics": {
+      "E0_API": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null
+      },
+      "E1_API": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null
+      },
+      "E1_callsite": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null
+      },
+      "E1_family_callsite": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null
+      }
+    }
+  },
+  {
+    "opaque_id": "H1-023",
+    "context_status": "FUNCTION_TEXT_AVAILABLE",
+    "gold_apis": [],
+    "E0_apis": [],
+    "E1_apis": [],
+    "E0_false_positive_apis": [],
+    "E1_false_positive_apis": [],
+    "metrics": {
+      "E0_API": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null
+      },
+      "E1_API": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null
+      },
+      "E1_callsite": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null
+      },
+      "E1_family_callsite": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null
+      }
+    }
+  },
+  {
+    "opaque_id": "H1-024",
+    "context_status": "FUNCTION_TEXT_AVAILABLE",
+    "gold_apis": [],
+    "E0_apis": [],
+    "E1_apis": [],
+    "E0_false_positive_apis": [],
+    "E1_false_positive_apis": [],
+    "metrics": {
+      "E0_API": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null
+      },
+      "E1_API": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null
+      },
+      "E1_callsite": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null
+      },
+      "E1_family_callsite": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null
+      }
+    }
+  },
+  {
+    "opaque_id": "H1-025",
+    "context_status": "FUNCTION_TEXT_AVAILABLE",
+    "gold_apis": [
+      "av_free_packet",
+      "av_new_packet",
+      "url_fclose",
+      "url_fopen"
+    ],
+    "E0_apis": [],
+    "E1_apis": [
+      "av_new_packet"
+    ],
+    "E0_false_positive_apis": [],
+    "E1_false_positive_apis": [],
+    "metrics": {
+      "E0_API": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 4,
+        "precision": null,
+        "recall": 0.0
+      },
+      "E1_API": {
+        "tp": 1,
+        "fp": 0,
+        "fn": 3,
+        "precision": 1.0,
+        "recall": 0.25
+      },
+      "E1_callsite": {
+        "tp": 1,
+        "fp": 0,
+        "fn": 3,
+        "precision": 1.0,
+        "recall": 0.25
+      },
+      "E1_family_callsite": {
+        "tp": 1,
+        "fp": 0,
+        "fn": 3,
+        "precision": 1.0,
+        "recall": 0.25
+      }
+    }
+  },
+  {
+    "opaque_id": "H1-026",
+    "context_status": "FUNCTION_TEXT_AVAILABLE",
+    "gold_apis": [
+      "fprintf",
+      "g_free",
+      "g_strdup"
+    ],
+    "E0_apis": [
+      "fprintf"
+    ],
+    "E1_apis": [
+      "fprintf",
+      "g_free"
+    ],
+    "E0_false_positive_apis": [],
+    "E1_false_positive_apis": [],
+    "metrics": {
+      "E0_API": {
+        "tp": 1,
+        "fp": 0,
+        "fn": 2,
+        "precision": 1.0,
+        "recall": 0.333333
+      },
+      "E1_API": {
+        "tp": 2,
+        "fp": 0,
+        "fn": 1,
+        "precision": 1.0,
+        "recall": 0.666667
+      },
+      "E1_callsite": {
+        "tp": 2,
+        "fp": 0,
+        "fn": 1,
+        "precision": 1.0,
+        "recall": 0.666667
+      },
+      "E1_family_callsite": {
+        "tp": 2,
+        "fp": 0,
+        "fn": 1,
+        "precision": 1.0,
+        "recall": 0.666667
+      }
+    }
+  },
+  {
+    "opaque_id": "H1-027",
+    "context_status": "FUNCTION_TEXT_AVAILABLE",
+    "gold_apis": [],
+    "E0_apis": [],
+    "E1_apis": [],
+    "E0_false_positive_apis": [],
+    "E1_false_positive_apis": [],
+    "metrics": {
+      "E0_API": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null
+      },
+      "E1_API": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null
+      },
+      "E1_callsite": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null
+      },
+      "E1_family_callsite": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null
+      }
+    }
+  },
+  {
+    "opaque_id": "H1-028",
+    "context_status": "FUNCTION_TEXT_AVAILABLE",
+    "gold_apis": [
+      "close",
+      "fchmod",
+      "fchownat",
+      "openat"
+    ],
+    "E0_apis": [],
+    "E1_apis": [],
+    "E0_false_positive_apis": [],
+    "E1_false_positive_apis": [],
+    "metrics": {
+      "E0_API": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 4,
+        "precision": null,
+        "recall": 0.0
+      },
+      "E1_API": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 4,
+        "precision": null,
+        "recall": 0.0
+      },
+      "E1_callsite": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 4,
+        "precision": null,
+        "recall": 0.0
+      },
+      "E1_family_callsite": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 4,
+        "precision": null,
+        "recall": 0.0
+      }
+    }
+  },
+  {
+    "opaque_id": "H1-029",
+    "context_status": "FUNCTION_TEXT_AVAILABLE",
+    "gold_apis": [
+      "av_frame_alloc",
+      "av_mallocz",
+      "memcpy"
+    ],
+    "E0_apis": [
+      "memcpy"
+    ],
+    "E1_apis": [
+      "av_mallocz",
+      "memcpy"
+    ],
+    "E0_false_positive_apis": [],
+    "E1_false_positive_apis": [],
+    "metrics": {
+      "E0_API": {
+        "tp": 1,
+        "fp": 0,
+        "fn": 2,
+        "precision": 1.0,
+        "recall": 0.333333
+      },
+      "E1_API": {
+        "tp": 2,
+        "fp": 0,
+        "fn": 1,
+        "precision": 1.0,
+        "recall": 0.666667
+      },
+      "E1_callsite": {
+        "tp": 5,
+        "fp": 0,
+        "fn": 1,
+        "precision": 1.0,
+        "recall": 0.833333
+      },
+      "E1_family_callsite": {
+        "tp": 5,
+        "fp": 0,
+        "fn": 1,
+        "precision": 1.0,
+        "recall": 0.833333
+      }
+    }
+  },
+  {
+    "opaque_id": "H1-030",
+    "context_status": "FUNCTION_TEXT_AVAILABLE",
+    "gold_apis": [],
+    "E0_apis": [],
+    "E1_apis": [],
+    "E0_false_positive_apis": [],
+    "E1_false_positive_apis": [],
+    "metrics": {
+      "E0_API": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null
+      },
+      "E1_API": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null
+      },
+      "E1_callsite": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null
+      },
+      "E1_family_callsite": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null
+      }
+    }
+  },
+  {
+    "opaque_id": "H1-031",
+    "context_status": "FUNCTION_TEXT_AVAILABLE",
+    "gold_apis": [
+      "g_new"
+    ],
+    "E0_apis": [],
+    "E1_apis": [],
+    "E0_false_positive_apis": [],
+    "E1_false_positive_apis": [],
+    "metrics": {
+      "E0_API": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 1,
+        "precision": null,
+        "recall": 0.0
+      },
+      "E1_API": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 1,
+        "precision": null,
+        "recall": 0.0
+      },
+      "E1_callsite": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 2,
+        "precision": null,
+        "recall": 0.0
+      },
+      "E1_family_callsite": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 2,
+        "precision": null,
+        "recall": 0.0
+      }
+    }
+  },
+  {
+    "opaque_id": "H1-032",
+    "context_status": "FUNCTION_TEXT_AVAILABLE",
+    "gold_apis": [],
+    "E0_apis": [],
+    "E1_apis": [],
+    "E0_false_positive_apis": [],
+    "E1_false_positive_apis": [],
+    "metrics": {
+      "E0_API": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null
+      },
+      "E1_API": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null
+      },
+      "E1_callsite": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null
+      },
+      "E1_family_callsite": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null
+      }
+    }
+  },
+  {
+    "opaque_id": "H1-033",
+    "context_status": "FUNCTION_TEXT_AVAILABLE",
+    "gold_apis": [
+      "av_freep"
+    ],
+    "E0_apis": [],
+    "E1_apis": [
+      "av_freep"
+    ],
+    "E0_false_positive_apis": [],
+    "E1_false_positive_apis": [],
+    "metrics": {
+      "E0_API": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 1,
+        "precision": null,
+        "recall": 0.0
+      },
+      "E1_API": {
+        "tp": 1,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1.0,
+        "recall": 1.0
+      },
+      "E1_callsite": {
+        "tp": 2,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1.0,
+        "recall": 1.0
+      },
+      "E1_family_callsite": {
+        "tp": 2,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1.0,
+        "recall": 1.0
+      }
+    }
+  },
+  {
+    "opaque_id": "H1-034",
+    "context_status": "FUNCTION_TEXT_AVAILABLE",
+    "gold_apis": [],
+    "E0_apis": [],
+    "E1_apis": [],
+    "E0_false_positive_apis": [],
+    "E1_false_positive_apis": [],
+    "metrics": {
+      "E0_API": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null
+      },
+      "E1_API": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null
+      },
+      "E1_callsite": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null
+      },
+      "E1_family_callsite": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null
+      }
+    }
+  },
+  {
+    "opaque_id": "H1-035",
+    "context_status": "FUNCTION_TEXT_AVAILABLE",
+    "gold_apis": [
+      "av_freep"
+    ],
+    "E0_apis": [
+      "write"
+    ],
+    "E1_apis": [
+      "av_freep"
+    ],
+    "E0_false_positive_apis": [
+      "write"
+    ],
+    "E1_false_positive_apis": [],
+    "metrics": {
+      "E0_API": {
+        "tp": 0,
+        "fp": 1,
+        "fn": 1,
+        "precision": 0.0,
+        "recall": 0.0
+      },
+      "E1_API": {
+        "tp": 1,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1.0,
+        "recall": 1.0
+      },
+      "E1_callsite": {
+        "tp": 1,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1.0,
+        "recall": 1.0
+      },
+      "E1_family_callsite": {
+        "tp": 1,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1.0,
+        "recall": 1.0
+      }
+    }
+  },
+  {
+    "opaque_id": "H1-036",
+    "context_status": "FUNCTION_TEXT_AVAILABLE",
+    "gold_apis": [
+      "qemu_iovec_from_buf",
+      "virtio_scsi_free_req"
+    ],
+    "E0_apis": [],
+    "E1_apis": [],
+    "E0_false_positive_apis": [],
+    "E1_false_positive_apis": [],
+    "metrics": {
+      "E0_API": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 2,
+        "precision": null,
+        "recall": 0.0
+      },
+      "E1_API": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 2,
+        "precision": null,
+        "recall": 0.0
+      },
+      "E1_callsite": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 2,
+        "precision": null,
+        "recall": 0.0
+      },
+      "E1_family_callsite": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 2,
+        "precision": null,
+        "recall": 0.0
+      }
+    }
+  },
+  {
+    "opaque_id": "H1-037",
+    "context_status": "FUNCTION_TEXT_AVAILABLE",
+    "gold_apis": [],
+    "E0_apis": [],
+    "E1_apis": [],
+    "E0_false_positive_apis": [],
+    "E1_false_positive_apis": [],
+    "metrics": {
+      "E0_API": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null
+      },
+      "E1_API": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null
+      },
+      "E1_callsite": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null
+      },
+      "E1_family_callsite": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null
+      }
+    }
+  },
+  {
+    "opaque_id": "H1-038",
+    "context_status": "FUNCTION_TEXT_AVAILABLE",
+    "gold_apis": [
+      "fprintf",
+      "snprintf"
+    ],
+    "E0_apis": [
+      "fprintf",
+      "snprintf"
+    ],
+    "E1_apis": [
+      "fprintf",
+      "snprintf"
+    ],
+    "E0_false_positive_apis": [],
+    "E1_false_positive_apis": [],
+    "metrics": {
+      "E0_API": {
+        "tp": 2,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1.0,
+        "recall": 1.0
+      },
+      "E1_API": {
+        "tp": 2,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1.0,
+        "recall": 1.0
+      },
+      "E1_callsite": {
+        "tp": 4,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1.0,
+        "recall": 1.0
+      },
+      "E1_family_callsite": {
+        "tp": 4,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1.0,
+        "recall": 1.0
+      }
+    }
+  },
+  {
+    "opaque_id": "H1-039",
+    "context_status": "FUNCTION_TEXT_AVAILABLE",
+    "gold_apis": [],
+    "E0_apis": [],
+    "E1_apis": [],
+    "E0_false_positive_apis": [],
+    "E1_false_positive_apis": [],
+    "metrics": {
+      "E0_API": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null
+      },
+      "E1_API": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null
+      },
+      "E1_callsite": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null
+      },
+      "E1_family_callsite": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null
+      }
+    }
+  },
+  {
+    "opaque_id": "H1-040",
+    "context_status": "FUNCTION_TEXT_AVAILABLE",
+    "gold_apis": [],
+    "E0_apis": [],
+    "E1_apis": [],
+    "E0_false_positive_apis": [],
+    "E1_false_positive_apis": [],
+    "metrics": {
+      "E0_API": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null
+      },
+      "E1_API": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null
+      },
+      "E1_callsite": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null
+      },
+      "E1_family_callsite": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null
+      }
+    }
+  },
+  {
+    "opaque_id": "H1-041",
+    "context_status": "FUNCTION_TEXT_AVAILABLE",
+    "gold_apis": [],
+    "E0_apis": [],
+    "E1_apis": [],
+    "E0_false_positive_apis": [],
+    "E1_false_positive_apis": [],
+    "metrics": {
+      "E0_API": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null
+      },
+      "E1_API": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null
+      },
+      "E1_callsite": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null
+      },
+      "E1_family_callsite": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null
+      }
+    }
+  },
+  {
+    "opaque_id": "H1-042",
+    "context_status": "FUNCTION_TEXT_AVAILABLE",
+    "gold_apis": [
+      "av_free",
+      "av_malloc",
+      "av_strlcat",
+      "avformat_free_context",
+      "strcpy"
+    ],
+    "E0_apis": [
+      "strcpy"
+    ],
+    "E1_apis": [
+      "av_free",
+      "av_malloc",
+      "strcpy"
+    ],
+    "E0_false_positive_apis": [],
+    "E1_false_positive_apis": [],
+    "metrics": {
+      "E0_API": {
+        "tp": 1,
+        "fp": 0,
+        "fn": 4,
+        "precision": 1.0,
+        "recall": 0.2
+      },
+      "E1_API": {
+        "tp": 3,
+        "fp": 0,
+        "fn": 2,
+        "precision": 1.0,
+        "recall": 0.6
+      },
+      "E1_callsite": {
+        "tp": 3,
+        "fp": 0,
+        "fn": 2,
+        "precision": 1.0,
+        "recall": 0.6
+      },
+      "E1_family_callsite": {
+        "tp": 3,
+        "fp": 0,
+        "fn": 2,
+        "precision": 1.0,
+        "recall": 0.6
+      }
+    }
+  },
+  {
+    "opaque_id": "H1-043",
+    "context_status": "FUNCTION_TEXT_AVAILABLE",
+    "gold_apis": [],
+    "E0_apis": [],
+    "E1_apis": [],
+    "E0_false_positive_apis": [],
+    "E1_false_positive_apis": [],
+    "metrics": {
+      "E0_API": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null
+      },
+      "E1_API": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null
+      },
+      "E1_callsite": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null
+      },
+      "E1_family_callsite": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null
+      }
+    }
+  },
+  {
+    "opaque_id": "H1-044",
+    "context_status": "FUNCTION_TEXT_AVAILABLE",
+    "gold_apis": [],
+    "E0_apis": [],
+    "E1_apis": [],
+    "E0_false_positive_apis": [],
+    "E1_false_positive_apis": [],
+    "metrics": {
+      "E0_API": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null
+      },
+      "E1_API": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null
+      },
+      "E1_callsite": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null
+      },
+      "E1_family_callsite": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null
+      }
+    }
+  },
+  {
+    "opaque_id": "H1-045",
+    "context_status": "FUNCTION_TEXT_AVAILABLE",
+    "gold_apis": [
+      "av_fast_padded_malloc",
+      "ff_thread_get_buffer"
+    ],
+    "E0_apis": [],
+    "E1_apis": [],
+    "E0_false_positive_apis": [],
+    "E1_false_positive_apis": [],
+    "metrics": {
+      "E0_API": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 2,
+        "precision": null,
+        "recall": 0.0
+      },
+      "E1_API": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 2,
+        "precision": null,
+        "recall": 0.0
+      },
+      "E1_callsite": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 4,
+        "precision": null,
+        "recall": 0.0
+      },
+      "E1_family_callsite": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 4,
+        "precision": null,
+        "recall": 0.0
+      }
+    }
+  },
+  {
+    "opaque_id": "H1-046",
+    "context_status": "FUNCTION_TEXT_AVAILABLE",
+    "gold_apis": [],
+    "E0_apis": [],
+    "E1_apis": [],
+    "E0_false_positive_apis": [],
+    "E1_false_positive_apis": [],
+    "metrics": {
+      "E0_API": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null
+      },
+      "E1_API": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null
+      },
+      "E1_callsite": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null
+      },
+      "E1_family_callsite": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null
+      }
+    }
+  },
+  {
+    "opaque_id": "H1-047",
+    "context_status": "FUNCTION_TEXT_AVAILABLE",
+    "gold_apis": [],
+    "E0_apis": [],
+    "E1_apis": [],
+    "E0_false_positive_apis": [],
+    "E1_false_positive_apis": [],
+    "metrics": {
+      "E0_API": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null
+      },
+      "E1_API": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null
+      },
+      "E1_callsite": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null
+      },
+      "E1_family_callsite": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null
+      }
+    }
+  },
+  {
+    "opaque_id": "H1-048",
+    "context_status": "FUNCTION_TEXT_AVAILABLE",
+    "gold_apis": [
+      "qemu_get_be32s",
+      "qemu_get_sbe32s"
+    ],
+    "E0_apis": [],
+    "E1_apis": [],
+    "E0_false_positive_apis": [],
+    "E1_false_positive_apis": [],
+    "metrics": {
+      "E0_API": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 2,
+        "precision": null,
+        "recall": 0.0
+      },
+      "E1_API": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 2,
+        "precision": null,
+        "recall": 0.0
+      },
+      "E1_callsite": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 3,
+        "precision": null,
+        "recall": 0.0
+      },
+      "E1_family_callsite": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 3,
+        "precision": null,
+        "recall": 0.0
+      }
+    }
+  },
+  {
+    "opaque_id": "H1-049",
+    "context_status": "INCOMPLETE_INPUT",
+    "gold_apis": [],
+    "E0_apis": [],
+    "E1_apis": [],
+    "E0_false_positive_apis": [],
+    "E1_false_positive_apis": [],
+    "metrics": {
+      "E0_API": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null
+      },
+      "E1_API": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null
+      },
+      "E1_callsite": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null
+      },
+      "E1_family_callsite": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null
+      }
+    }
+  },
+  {
+    "opaque_id": "H1-050",
+    "context_status": "FUNCTION_TEXT_AVAILABLE",
+    "gold_apis": [],
+    "E0_apis": [],
+    "E1_apis": [],
+    "E0_false_positive_apis": [],
+    "E1_false_positive_apis": [],
+    "metrics": {
+      "E0_API": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null
+      },
+      "E1_API": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null
+      },
+      "E1_callsite": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null
+      },
+      "E1_family_callsite": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": null,
+        "recall": null
+      }
+    }
+  }
+]

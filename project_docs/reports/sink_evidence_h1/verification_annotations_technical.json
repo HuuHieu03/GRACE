@@ -1,0 +1,1048 @@
+{
+  "annotation_type": "Technical source review by Codex; exploratory, not independent human ground truth",
+  "scope": "Direct calls and explicitly identified allocation/free/copy/formatted-stdio/block/file-IO operations plus named wrappers supported by local caller context. Raw array/asm accesses and unresolved codecs/macros/helpers are separately noted and excluded from callsite recall. A true operation is not a vulnerability.",
+  "review_exposure": "Reviewer had previously inspected E1 implementation and some E1 predictions. Annotation is not blind to the method.",
+  "independent": false,
+  "samples": [
+    {
+      "opaque_id": "H1-001",
+      "code_sha256": "ac09ac1863553c6592bb61303e3c779d08ff9b6b88136563d20b07378f2c6a6b",
+      "context_status": "FUNCTION_TEXT_AVAILABLE",
+      "callsite_annotations": [
+        {
+          "api_name": "bytestream2_get_byte",
+          "family": "buffer_read",
+          "start": 447,
+          "end": 471,
+          "line": 27,
+          "expression": "bytestream2_get_byte(gb)",
+          "evidence": "Returns byte from gb during range-coder refill, guarded by bytes-left query. Wrapper body absent; classification supported by explicit byte-use context.",
+          "annotation_basis": "Explicit technical source review; wrapper bodies may be unavailable"
+        }
+      ],
+      "review_notes": "Returns byte from gb during range-coder refill, guarded by bytes-left query. Wrapper body absent; classification supported by explicit byte-use context."
+    },
+    {
+      "opaque_id": "H1-002",
+      "code_sha256": "932e326c7cdcd7f4cb65fc504441ce7a40a3a8e757a95e1506584b4ecdb63f06",
+      "context_status": "FUNCTION_TEXT_AVAILABLE",
+      "callsite_annotations": [],
+      "review_notes": "Register/code-generation helpers and MASK/SH/MB macros; do not infer host memory sinks from guest load/store names."
+    },
+    {
+      "opaque_id": "H1-003",
+      "code_sha256": "a9c6024d00c14d22f9c259e1b5cfcf7e4d856d1cb75008f0782f16bc90c60f51",
+      "context_status": "FUNCTION_TEXT_AVAILABLE",
+      "callsite_annotations": [],
+      "review_notes": "Direct frame-plane array writes are present and outside callsite-only scope. decode_sym body unavailable; keep helper semantics unresolved."
+    },
+    {
+      "opaque_id": "H1-004",
+      "code_sha256": "25d7ce5e428027bdca799a40e620164d7894a8cb4d9bd410239d53c86eaa20d5",
+      "context_status": "FUNCTION_TEXT_AVAILABLE",
+      "callsite_annotations": [
+        {
+          "api_name": "memset",
+          "family": "buffer_write",
+          "start": 782,
+          "end": 819,
+          "line": 49,
+          "expression": "memset(iscsilun, 0, sizeof(IscsiLun))",
+          "evidence": "Two structure zeroings and cleanup of initiator_name. iscsi create/destroy and async-connect operations remain unresolved resource/IO helpers without implementations.",
+          "annotation_basis": "Explicit technical source review; wrapper bodies may be unavailable"
+        },
+        {
+          "api_name": "g_free",
+          "family": "pointer_free",
+          "start": 3353,
+          "end": 3375,
+          "line": 219,
+          "expression": "g_free(initiator_name)",
+          "evidence": "Two structure zeroings and cleanup of initiator_name. iscsi create/destroy and async-connect operations remain unresolved resource/IO helpers without implementations.",
+          "annotation_basis": "Explicit technical source review; wrapper bodies may be unavailable"
+        },
+        {
+          "api_name": "memset",
+          "family": "buffer_write",
+          "start": 3571,
+          "end": 3608,
+          "line": 239,
+          "expression": "memset(iscsilun, 0, sizeof(IscsiLun))",
+          "evidence": "Two structure zeroings and cleanup of initiator_name. iscsi create/destroy and async-connect operations remain unresolved resource/IO helpers without implementations.",
+          "annotation_basis": "Explicit technical source review; wrapper bodies may be unavailable"
+        }
+      ],
+      "review_notes": "Two structure zeroings and cleanup of initiator_name. iscsi create/destroy and async-connect operations remain unresolved resource/IO helpers without implementations."
+    },
+    {
+      "opaque_id": "H1-005",
+      "code_sha256": "b97ee21af5fa171932994cecfaabd893bda2bea7d272004fb876092be05d43ec",
+      "context_status": "FUNCTION_TEXT_AVAILABLE",
+      "callsite_annotations": [
+        {
+          "api_name": "av_freep",
+          "family": "pointer_free",
+          "start": 217,
+          "end": 230,
+          "line": 15,
+          "expression": "av_freep(ptr)",
+          "evidence": "av_realloc result assigned to ret then *ptrptr; two explicit failure/zero-length cleanup branches. Function definition av_reallocp_array is not a call.",
+          "annotation_basis": "Explicit technical source review; wrapper bodies may be unavailable"
+        },
+        {
+          "api_name": "av_realloc",
+          "family": "alloc",
+          "start": 269,
+          "end": 302,
+          "line": 21,
+          "expression": "av_realloc(*ptrptr, nmemb * size)",
+          "evidence": "av_realloc result assigned to ret then *ptrptr; two explicit failure/zero-length cleanup branches. Function definition av_reallocp_array is not a call.",
+          "annotation_basis": "Explicit technical source review; wrapper bodies may be unavailable"
+        },
+        {
+          "api_name": "av_freep",
+          "family": "pointer_free",
+          "start": 330,
+          "end": 343,
+          "line": 25,
+          "expression": "av_freep(ptr)",
+          "evidence": "av_realloc result assigned to ret then *ptrptr; two explicit failure/zero-length cleanup branches. Function definition av_reallocp_array is not a call.",
+          "annotation_basis": "Explicit technical source review; wrapper bodies may be unavailable"
+        }
+      ],
+      "review_notes": "av_realloc result assigned to ret then *ptrptr; two explicit failure/zero-length cleanup branches. Function definition av_reallocp_array is not a call."
+    },
+    {
+      "opaque_id": "H1-006",
+      "code_sha256": "a4ab882a57be91251ef89b565e7daa0e7ad5b1af92c89bcee09922268cc2fbf4",
+      "context_status": "FUNCTION_TEXT_AVAILABLE",
+      "callsite_annotations": [
+        {
+          "api_name": "fprintf",
+          "family": "format_string",
+          "start": 86,
+          "end": 148,
+          "line": 5,
+          "expression": "fprintf(stderr, \"EHCI doesn't handle 16-bit writes to MMIO\\n\")",
+          "evidence": "Actual formatted stderr output; MMIO writes only mentioned in text. A diagnostic-output call is not proof of a dangerous format vulnerability.",
+          "annotation_basis": "Explicit technical source review; wrapper bodies may be unavailable"
+        }
+      ],
+      "review_notes": "Actual formatted stderr output; MMIO writes only mentioned in text. A diagnostic-output call is not proof of a dangerous format vulnerability."
+    },
+    {
+      "opaque_id": "H1-007",
+      "code_sha256": "798997fbda98856487ba5ea9f6ecbd8ebb75d1372a6f213fcf49f891fdb8522b",
+      "context_status": "FUNCTION_TEXT_AVAILABLE",
+      "callsite_annotations": [],
+      "review_notes": "Direct writes to callback table fields; assert checks are not sinks. Callback is assigned, not invoked here."
+    },
+    {
+      "opaque_id": "H1-008",
+      "code_sha256": "39140f75723deedd93f351960e4699548195cc174bf80312e031d60068e664e7",
+      "context_status": "FUNCTION_TEXT_AVAILABLE",
+      "callsite_annotations": [],
+      "review_notes": "Class cast macro and set_bit helper. Body of set_bit is not provided; do not infer a validated call-family."
+    },
+    {
+      "opaque_id": "H1-009",
+      "code_sha256": "e49157cb8967ac3f0a6f22039aae3ddbc69f63de899ea01015a57706df81cb1d",
+      "context_status": "FUNCTION_TEXT_AVAILABLE",
+      "callsite_annotations": [],
+      "review_notes": "Numeric conversion/get_param_value helpers and scalar arithmetic; option-buffer writes inside helper remain unresolved. No selected-scope direct allocation/copy/file call."
+    },
+    {
+      "opaque_id": "H1-010",
+      "code_sha256": "c7c574ec8473382faed12d6f9df029c2278b13b740a1a9b026f0453b8b4a454d",
+      "context_status": "FUNCTION_TEXT_AVAILABLE",
+      "callsite_annotations": [],
+      "review_notes": "Stream-array traversal and scalar comparison, no selected-scope callsite. Array safety is outside this benchmark."
+    },
+    {
+      "opaque_id": "H1-011",
+      "code_sha256": "ef2a44abfd09ba118a0e067d877f9f563284c8ee86e2becfdbd96341b9f3da1e",
+      "context_status": "FUNCTION_TEXT_AVAILABLE",
+      "callsite_annotations": [
+        {
+          "api_name": "url_close_dyn_buf",
+          "family": "io_close",
+          "start": 553,
+          "end": 588,
+          "line": 31,
+          "expression": "url_close_dyn_buf(rtpctx->pb, &ptr)",
+          "evidence": "Explicit teardown: buffers/metadata/context cleanup and URL handles closed. av_write_trailer and RTP/RDT parser close helpers remain unresolved compound operations.",
+          "annotation_basis": "Explicit technical source review; wrapper bodies may be unavailable"
+        },
+        {
+          "api_name": "av_free",
+          "family": "pointer_free",
+          "start": 611,
+          "end": 623,
+          "line": 33,
+          "expression": "av_free(ptr)",
+          "evidence": "Explicit teardown: buffers/metadata/context cleanup and URL handles closed. av_write_trailer and RTP/RDT parser close helpers remain unresolved compound operations.",
+          "annotation_basis": "Explicit technical source review; wrapper bodies may be unavailable"
+        },
+        {
+          "api_name": "url_fclose",
+          "family": "io_close",
+          "start": 672,
+          "end": 694,
+          "line": 37,
+          "expression": "url_fclose(rtpctx->pb)",
+          "evidence": "Explicit teardown: buffers/metadata/context cleanup and URL handles closed. av_write_trailer and RTP/RDT parser close helpers remain unresolved compound operations.",
+          "annotation_basis": "Explicit technical source review; wrapper bodies may be unavailable"
+        },
+        {
+          "api_name": "av_metadata_free",
+          "family": "pointer_free",
+          "start": 732,
+          "end": 779,
+          "line": 41,
+          "expression": "av_metadata_free(&rtpctx->streams[0]->metadata)",
+          "evidence": "Explicit teardown: buffers/metadata/context cleanup and URL handles closed. av_write_trailer and RTP/RDT parser close helpers remain unresolved compound operations.",
+          "annotation_basis": "Explicit technical source review; wrapper bodies may be unavailable"
+        },
+        {
+          "api_name": "av_metadata_free",
+          "family": "pointer_free",
+          "start": 798,
+          "end": 833,
+          "line": 43,
+          "expression": "av_metadata_free(&rtpctx->metadata)",
+          "evidence": "Explicit teardown: buffers/metadata/context cleanup and URL handles closed. av_write_trailer and RTP/RDT parser close helpers remain unresolved compound operations.",
+          "annotation_basis": "Explicit technical source review; wrapper bodies may be unavailable"
+        },
+        {
+          "api_name": "av_free",
+          "family": "pointer_free",
+          "start": 853,
+          "end": 880,
+          "line": 46,
+          "expression": "av_free(rtpctx->streams[0])",
+          "evidence": "Explicit teardown: buffers/metadata/context cleanup and URL handles closed. av_write_trailer and RTP/RDT parser close helpers remain unresolved compound operations.",
+          "annotation_basis": "Explicit technical source review; wrapper bodies may be unavailable"
+        },
+        {
+          "api_name": "av_free",
+          "family": "pointer_free",
+          "start": 899,
+          "end": 914,
+          "line": 48,
+          "expression": "av_free(rtpctx)",
+          "evidence": "Explicit teardown: buffers/metadata/context cleanup and URL handles closed. av_write_trailer and RTP/RDT parser close helpers remain unresolved compound operations.",
+          "annotation_basis": "Explicit technical source review; wrapper bodies may be unavailable"
+        },
+        {
+          "api_name": "url_close",
+          "family": "io_close",
+          "start": 1251,
+          "end": 1281,
+          "line": 64,
+          "expression": "url_close(rtsp_st->rtp_handle)",
+          "evidence": "Explicit teardown: buffers/metadata/context cleanup and URL handles closed. av_write_trailer and RTP/RDT parser close helpers remain unresolved compound operations.",
+          "annotation_basis": "Explicit technical source review; wrapper bodies may be unavailable"
+        }
+      ],
+      "review_notes": "Explicit teardown: buffers/metadata/context cleanup and URL handles closed. av_write_trailer and RTP/RDT parser close helpers remain unresolved compound operations."
+    },
+    {
+      "opaque_id": "H1-012",
+      "code_sha256": "6a3b1c179db80140da68c49b0c9227dd068ed695e07d6c7feb66eb778533455f",
+      "context_status": "FUNCTION_TEXT_AVAILABLE",
+      "callsite_annotations": [
+        {
+          "api_name": "qemu_mallocz",
+          "family": "alloc",
+          "start": 205,
+          "end": 242,
+          "line": 17,
+          "expression": "qemu_mallocz(sizeof(CharDriverState))",
+          "evidence": "Allocation by sizeof(CharDriverState), null check, matching free if console creation fails. new_console and timer creation require helper contracts.",
+          "annotation_basis": "Explicit technical source review; wrapper bodies may be unavailable"
+        },
+        {
+          "api_name": "free",
+          "family": "pointer_free",
+          "start": 345,
+          "end": 354,
+          "line": 27,
+          "expression": "free(chr)",
+          "evidence": "Allocation by sizeof(CharDriverState), null check, matching free if console creation fails. new_console and timer creation require helper contracts.",
+          "annotation_basis": "Explicit technical source review; wrapper bodies may be unavailable"
+        }
+      ],
+      "review_notes": "Allocation by sizeof(CharDriverState), null check, matching free if console creation fails. new_console and timer creation require helper contracts."
+    },
+    {
+      "opaque_id": "H1-013",
+      "code_sha256": "6c8946529ef0857f4c25d1ac352ce63009f1fe14ef5f90f24473290acc25a9b2",
+      "context_status": "FUNCTION_TEXT_AVAILABLE",
+      "callsite_annotations": [
+        {
+          "api_name": "tcg_malloc",
+          "family": "alloc",
+          "start": 179,
+          "end": 216,
+          "line": 13,
+          "expression": "tcg_malloc(nb_ops * sizeof(uint16_t))",
+          "evidence": "Four buffer allocations assigned to liveness arrays and three syntactic memset sites. Count lexical sites, not loop execution frequency.",
+          "annotation_basis": "Explicit technical source review; wrapper bodies may be unavailable"
+        },
+        {
+          "api_name": "tcg_malloc",
+          "family": "alloc",
+          "start": 241,
+          "end": 277,
+          "line": 15,
+          "expression": "tcg_malloc(nb_ops * sizeof(uint8_t))",
+          "evidence": "Four buffer allocations assigned to liveness arrays and three syntactic memset sites. Count lexical sites, not loop execution frequency.",
+          "annotation_basis": "Explicit technical source review; wrapper bodies may be unavailable"
+        },
+        {
+          "api_name": "tcg_malloc",
+          "family": "alloc",
+          "start": 303,
+          "end": 326,
+          "line": 19,
+          "expression": "tcg_malloc(s->nb_temps)",
+          "evidence": "Four buffer allocations assigned to liveness arrays and three syntactic memset sites. Count lexical sites, not loop execution frequency.",
+          "annotation_basis": "Explicit technical source review; wrapper bodies may be unavailable"
+        },
+        {
+          "api_name": "tcg_malloc",
+          "family": "alloc",
+          "start": 345,
+          "end": 368,
+          "line": 21,
+          "expression": "tcg_malloc(s->nb_temps)",
+          "evidence": "Four buffer allocations assigned to liveness arrays and three syntactic memset sites. Count lexical sites, not loop execution frequency.",
+          "annotation_basis": "Explicit technical source review; wrapper bodies may be unavailable"
+        },
+        {
+          "api_name": "memset",
+          "family": "buffer_write",
+          "start": 2385,
+          "end": 2420,
+          "line": 133,
+          "expression": "memset(mem_temps, 1, s->nb_globals)",
+          "evidence": "Four buffer allocations assigned to liveness arrays and three syntactic memset sites. Count lexical sites, not loop execution frequency.",
+          "annotation_basis": "Explicit technical source review; wrapper bodies may be unavailable"
+        },
+        {
+          "api_name": "memset",
+          "family": "buffer_write",
+          "start": 2674,
+          "end": 2710,
+          "line": 143,
+          "expression": "memset(dead_temps, 1, s->nb_globals)",
+          "evidence": "Four buffer allocations assigned to liveness arrays and three syntactic memset sites. Count lexical sites, not loop execution frequency.",
+          "annotation_basis": "Explicit technical source review; wrapper bodies may be unavailable"
+        },
+        {
+          "api_name": "memset",
+          "family": "buffer_write",
+          "start": 8406,
+          "end": 8441,
+          "line": 431,
+          "expression": "memset(mem_temps, 1, s->nb_globals)",
+          "evidence": "Four buffer allocations assigned to liveness arrays and three syntactic memset sites. Count lexical sites, not loop execution frequency.",
+          "annotation_basis": "Explicit technical source review; wrapper bodies may be unavailable"
+        }
+      ],
+      "review_notes": "Four buffer allocations assigned to liveness arrays and three syntactic memset sites. Count lexical sites, not loop execution frequency."
+    },
+    {
+      "opaque_id": "H1-014",
+      "code_sha256": "c4584137a4bc5fff989764e5e01332f230d1f0a33066b91e83092543af699e38",
+      "context_status": "FUNCTION_TEXT_AVAILABLE",
+      "callsite_annotations": [
+        {
+          "api_name": "bdrv_read",
+          "family": "block_read",
+          "start": 142,
+          "end": 181,
+          "line": 9,
+          "expression": "bdrv_read(s->bdrv_cur, sec, dest, secn)",
+          "evidence": "Alternative paths read block sectors into dest or copy secn<<9 bytes from current mapping. Conditional bdrv_read is a real call.",
+          "annotation_basis": "Explicit technical source review; wrapper bodies may be unavailable"
+        },
+        {
+          "api_name": "memcpy",
+          "family": "buffer_write",
+          "start": 253,
+          "end": 301,
+          "line": 17,
+          "expression": "memcpy(dest, s->current + (sec << 9), secn << 9)",
+          "evidence": "Alternative paths read block sectors into dest or copy secn<<9 bytes from current mapping. Conditional bdrv_read is a real call.",
+          "annotation_basis": "Explicit technical source review; wrapper bodies may be unavailable"
+        }
+      ],
+      "review_notes": "Alternative paths read block sectors into dest or copy secn<<9 bytes from current mapping. Conditional bdrv_read is a real call."
+    },
+    {
+      "opaque_id": "H1-015",
+      "code_sha256": "45f6fd6cd8478543a73b297a69dafc92173eeb5882067b7d890080fc0ebe7967",
+      "context_status": "FUNCTION_TEXT_AVAILABLE",
+      "callsite_annotations": [],
+      "review_notes": "LUT field writes and residue macros; search_for_golomb implementation absent. Do not count macro/type declarations as confirmed API calls."
+    },
+    {
+      "opaque_id": "H1-016",
+      "code_sha256": "e64b0cdb643efd3bbf00d5ca05a4a8b9f57a8f3977a77c614d317c175d02aacb",
+      "context_status": "FUNCTION_TEXT_AVAILABLE",
+      "callsite_annotations": [],
+      "review_notes": "Ring-read helper and generation/barrier logic. The apparent DMA read is an unresolved helper without its implementation, not scored as an annotated direct IO API."
+    },
+    {
+      "opaque_id": "H1-017",
+      "code_sha256": "498223860d66eb10fa633a55cf894924ba023ce3ffd45b6dd241b2567b8b7764",
+      "context_status": "FUNCTION_TEXT_AVAILABLE",
+      "callsite_annotations": [],
+      "review_notes": "Only direct assignments to exception-vector array under preprocessor branch; no callsite in scope."
+    },
+    {
+      "opaque_id": "H1-018",
+      "code_sha256": "d37b1a7816c1bb40cc1687d706ce47b4f29fc60696856395e45950acc58e69a5",
+      "context_status": "FUNCTION_TEXT_AVAILABLE",
+      "callsite_annotations": [],
+      "review_notes": "DISAS_INSN macro definition and TCG generation helpers; no resolved host operation in scope. Macro expansion is not available."
+    },
+    {
+      "opaque_id": "H1-019",
+      "code_sha256": "8def01e9706c276613e93797ce701d737a5a0ad804b560479f5caf81a3f04330",
+      "context_status": "FUNCTION_TEXT_AVAILABLE",
+      "callsite_annotations": [],
+      "review_notes": "Raw pointer reads/writes and AV_RL16/32 endian macros are relevant but outside resolved direct-call scope. av_log is an unexpanded logging wrapper, not standard fprintf."
+    },
+    {
+      "opaque_id": "H1-020",
+      "code_sha256": "76b91755200362719c9dd86da96fa43cb3bc2e5f630b85994b957fdea435b396",
+      "context_status": "FUNCTION_TEXT_AVAILABLE",
+      "callsite_annotations": [],
+      "review_notes": "Direct pixel-array arithmetic in RENAME template. No direct API call; macro-selected function name is not invocation."
+    },
+    {
+      "opaque_id": "H1-021",
+      "code_sha256": "87f1b4abe1516ffd0d0b8288ba71119a4580d1f0e073454b5470001d70e1e969",
+      "context_status": "FUNCTION_TEXT_AVAILABLE",
+      "callsite_annotations": [],
+      "review_notes": "Dictionary/reference lifecycle and indirect monitor handler calls require type/helper resolution; not falsely labeled as no security-relevant operations."
+    },
+    {
+      "opaque_id": "H1-022",
+      "code_sha256": "dcd5fab56e8f053af218167c314fc763b3c7d2593ba9893d7dddac8e6511f800",
+      "context_status": "FUNCTION_TEXT_AVAILABLE",
+      "callsite_annotations": [],
+      "review_notes": "CPU register/codegen helper calls, not established host copy/file API calls."
+    },
+    {
+      "opaque_id": "H1-023",
+      "code_sha256": "0b961abb38d6088007a9293987578ef7c073b2359a9a8b3873aed17d52e9b7cc",
+      "context_status": "FUNCTION_TEXT_AVAILABLE",
+      "callsite_annotations": [],
+      "review_notes": "Integer overflow condition and exception helper. No selected-scope call; arithmetic correctness outside this measurement."
+    },
+    {
+      "opaque_id": "H1-024",
+      "code_sha256": "1bdcb9f2783f4f5cd441a429aa7152e5b41f46758497706875b53c4e30788f94",
+      "context_status": "FUNCTION_TEXT_AVAILABLE",
+      "callsite_annotations": [],
+      "review_notes": "Complex H264 decoder orchestration, bit-reader and loop-filter helpers/macros; unknown semantics not turned into No-Sink. Diagnostic strings containing overread are not read() calls."
+    },
+    {
+      "opaque_id": "H1-025",
+      "code_sha256": "be83b55708de602782824c1f74aa73448ad648b2efe3f5b58934fc9e19b94521",
+      "context_status": "FUNCTION_TEXT_AVAILABLE",
+      "callsite_annotations": [
+        {
+          "api_name": "url_fopen",
+          "family": "io_open",
+          "start": 366,
+          "end": 400,
+          "line": 27,
+          "expression": "url_fopen(f, filename, URL_RDONLY)",
+          "evidence": "File opened/closed on non-pipe path; packet allocated then freed on read failure. pgm_read/yuv_read/ppm_read and filename formatting helpers remain unresolved compound IO/copy operations.",
+          "annotation_basis": "Explicit technical source review; wrapper bodies may be unavailable"
+        },
+        {
+          "api_name": "av_new_packet",
+          "family": "alloc",
+          "start": 534,
+          "end": 565,
+          "line": 43,
+          "expression": "av_new_packet(pkt, s->img_size)",
+          "evidence": "File opened/closed on non-pipe path; packet allocated then freed on read failure. pgm_read/yuv_read/ppm_read and filename formatting helpers remain unresolved compound IO/copy operations.",
+          "annotation_basis": "Explicit technical source review; wrapper bodies may be unavailable"
+        },
+        {
+          "api_name": "url_fclose",
+          "family": "io_close",
+          "start": 1085,
+          "end": 1098,
+          "line": 85,
+          "expression": "url_fclose(f)",
+          "evidence": "File opened/closed on non-pipe path; packet allocated then freed on read failure. pgm_read/yuv_read/ppm_read and filename formatting helpers remain unresolved compound IO/copy operations.",
+          "annotation_basis": "Explicit technical source review; wrapper bodies may be unavailable"
+        },
+        {
+          "api_name": "av_free_packet",
+          "family": "pointer_free",
+          "start": 1138,
+          "end": 1157,
+          "line": 93,
+          "expression": "av_free_packet(pkt)",
+          "evidence": "File opened/closed on non-pipe path; packet allocated then freed on read failure. pgm_read/yuv_read/ppm_read and filename formatting helpers remain unresolved compound IO/copy operations.",
+          "annotation_basis": "Explicit technical source review; wrapper bodies may be unavailable"
+        }
+      ],
+      "review_notes": "File opened/closed on non-pipe path; packet allocated then freed on read failure. pgm_read/yuv_read/ppm_read and filename formatting helpers remain unresolved compound IO/copy operations."
+    },
+    {
+      "opaque_id": "H1-026",
+      "code_sha256": "e2a6b4a3541d2cf82bd387be7d89cb19e11f5a1358c611282456de5b04ac73af",
+      "context_status": "FUNCTION_TEXT_AVAILABLE",
+      "callsite_annotations": [
+        {
+          "api_name": "g_strdup",
+          "family": "alloc",
+          "start": 290,
+          "end": 303,
+          "line": 29,
+          "expression": "g_strdup(opt)",
+          "evidence": "Duplicate opt into mutable arg, parse with strtok, then free arg. Count real fprintf call independently of string contents; strtok parsing excluded from chosen sink-call scope.",
+          "annotation_basis": "Explicit technical source review; wrapper bodies may be unavailable"
+        },
+        {
+          "api_name": "fprintf",
+          "family": "format_string",
+          "start": 580,
+          "end": 623,
+          "line": 51,
+          "expression": "fprintf(stderr, \"Unknown clock %s\\n\", name)",
+          "evidence": "Duplicate opt into mutable arg, parse with strtok, then free arg. Count real fprintf call independently of string contents; strtok parsing excluded from chosen sink-call scope.",
+          "annotation_basis": "Explicit technical source review; wrapper bodies may be unavailable"
+        },
+        {
+          "api_name": "g_free",
+          "family": "pointer_free",
+          "start": 935,
+          "end": 946,
+          "line": 87,
+          "expression": "g_free(arg)",
+          "evidence": "Duplicate opt into mutable arg, parse with strtok, then free arg. Count real fprintf call independently of string contents; strtok parsing excluded from chosen sink-call scope.",
+          "annotation_basis": "Explicit technical source review; wrapper bodies may be unavailable"
+        }
+      ],
+      "review_notes": "Duplicate opt into mutable arg, parse with strtok, then free arg. Count real fprintf call independently of string contents; strtok parsing excluded from chosen sink-call scope."
+    },
+    {
+      "opaque_id": "H1-027",
+      "code_sha256": "e33dc5fa5baf086ef6cabef781d7d9a43a792647e36a5fb707481a2a26cb5ab9",
+      "context_status": "FUNCTION_TEXT_AVAILABLE",
+      "callsite_annotations": [],
+      "review_notes": "Motion-vector helpers and indirect put_pixels_tab[index](...) buffer kernel; not resolved by direct-call annotation."
+    },
+    {
+      "opaque_id": "H1-028",
+      "code_sha256": "5b5f55842dd9a84a345336d45031520090cb8e4ca9c594d7ec17c23154f58c6c",
+      "context_status": "FUNCTION_TEXT_AVAILABLE",
+      "callsite_annotations": [
+        {
+          "api_name": "openat",
+          "family": "io_open",
+          "start": 110,
+          "end": 154,
+          "line": 7,
+          "expression": "openat(dirfd, name, O_NONBLOCK | O_NOFOLLOW)",
+          "evidence": "Open descriptor, modify mode/ownership, close descriptor on common exit. Counts are independent of vulnerability label.",
+          "annotation_basis": "Explicit technical source review; wrapper bodies may be unavailable"
+        },
+        {
+          "api_name": "fchmod",
+          "family": "filesystem_metadata_write",
+          "start": 213,
+          "end": 247,
+          "line": 15,
+          "expression": "fchmod(fd, credp->fc_mode & 07777)",
+          "evidence": "Open descriptor, modify mode/ownership, close descriptor on common exit. Counts are independent of vulnerability label.",
+          "annotation_basis": "Explicit technical source review; wrapper bodies may be unavailable"
+        },
+        {
+          "api_name": "fchownat",
+          "family": "filesystem_metadata_write",
+          "start": 310,
+          "end": 371,
+          "line": 23,
+          "expression": "fchownat(fd, \"\", credp->fc_uid, credp->fc_gid, AT_EMPTY_PATH)",
+          "evidence": "Open descriptor, modify mode/ownership, close descriptor on common exit. Counts are independent of vulnerability label.",
+          "annotation_basis": "Explicit technical source review; wrapper bodies may be unavailable"
+        },
+        {
+          "api_name": "close",
+          "family": "io_close",
+          "start": 388,
+          "end": 397,
+          "line": 27,
+          "expression": "close(fd)",
+          "evidence": "Open descriptor, modify mode/ownership, close descriptor on common exit. Counts are independent of vulnerability label.",
+          "annotation_basis": "Explicit technical source review; wrapper bodies may be unavailable"
+        }
+      ],
+      "review_notes": "Open descriptor, modify mode/ownership, close descriptor on common exit. Counts are independent of vulnerability label."
+    },
+    {
+      "opaque_id": "H1-029",
+      "code_sha256": "3881650ba7de6e15b64039e42f1b6577162b733c050612f08e9f8ab9ba10bd1a",
+      "context_status": "FUNCTION_TEXT_AVAILABLE",
+      "callsite_annotations": [
+        {
+          "api_name": "memcpy",
+          "family": "buffer_write",
+          "start": 5603,
+          "end": 5700,
+          "line": 303,
+          "expression": "memcpy(s->quant_table, s->quant_tables[avctx->context_model],\n\n           sizeof(s->quant_table))",
+          "evidence": "Two quantization-table copy sites, frame allocation checked for null, and three stats-buffer allocation sites. ffv1_allocate_initial_states and slice initialization are unresolved compound alloc helpers; av_log not in direct stdio scope.",
+          "annotation_basis": "Explicit technical source review; wrapper bodies may be unavailable"
+        },
+        {
+          "api_name": "memcpy",
+          "family": "buffer_write",
+          "start": 5806,
+          "end": 5868,
+          "line": 315,
+          "expression": "memcpy(p->quant_table, s->quant_table, sizeof(p->quant_table))",
+          "evidence": "Two quantization-table copy sites, frame allocation checked for null, and three stats-buffer allocation sites. ffv1_allocate_initial_states and slice initialization are unresolved compound alloc helpers; av_log not in direct stdio scope.",
+          "annotation_basis": "Explicit technical source review; wrapper bodies may be unavailable"
+        },
+        {
+          "api_name": "av_frame_alloc",
+          "family": "alloc",
+          "start": 6108,
+          "end": 6124,
+          "line": 331,
+          "expression": "av_frame_alloc()",
+          "evidence": "Two quantization-table copy sites, frame allocation checked for null, and three stats-buffer allocation sites. ffv1_allocate_initial_states and slice initialization are unresolved compound alloc helpers; av_log not in direct stdio scope.",
+          "annotation_basis": "Explicit technical source review; wrapper bodies may be unavailable"
+        },
+        {
+          "api_name": "av_mallocz",
+          "family": "alloc",
+          "start": 6621,
+          "end": 6719,
+          "line": 363,
+          "expression": "av_mallocz(s->context_count[i] *\n\n                                        sizeof(*s->rc_stat2[i]))",
+          "evidence": "Two quantization-table copy sites, frame allocation checked for null, and three stats-buffer allocation sites. ffv1_allocate_initial_states and slice initialization are unresolved compound alloc helpers; av_log not in direct stdio scope.",
+          "annotation_basis": "Explicit technical source review; wrapper bodies may be unavailable"
+        },
+        {
+          "api_name": "av_mallocz",
+          "family": "alloc",
+          "start": 10436,
+          "end": 10462,
+          "line": 549,
+          "expression": "av_mallocz(STATS_OUT_SIZE)",
+          "evidence": "Two quantization-table copy sites, frame allocation checked for null, and three stats-buffer allocation sites. ffv1_allocate_initial_states and slice initialization are unresolved compound alloc helpers; av_log not in direct stdio scope.",
+          "annotation_basis": "Explicit technical source review; wrapper bodies may be unavailable"
+        },
+        {
+          "api_name": "av_mallocz",
+          "family": "alloc",
+          "start": 10706,
+          "end": 10810,
+          "line": 559,
+          "expression": "av_mallocz(s->context_count[i] *\n\n                                             sizeof(*sf->rc_stat2[i]))",
+          "evidence": "Two quantization-table copy sites, frame allocation checked for null, and three stats-buffer allocation sites. ffv1_allocate_initial_states and slice initialization are unresolved compound alloc helpers; av_log not in direct stdio scope.",
+          "annotation_basis": "Explicit technical source review; wrapper bodies may be unavailable"
+        }
+      ],
+      "review_notes": "Two quantization-table copy sites, frame allocation checked for null, and three stats-buffer allocation sites. ffv1_allocate_initial_states and slice initialization are unresolved compound alloc helpers; av_log not in direct stdio scope."
+    },
+    {
+      "opaque_id": "H1-030",
+      "code_sha256": "82af42af611c874ee260c7e11f72513a438bc0a1ed451f2ea0d1e001c9a67c42",
+      "context_status": "FUNCTION_TEXT_AVAILABLE",
+      "callsite_annotations": [],
+      "review_notes": "Template with output_pixel helper/macro and array operands. Pixel stores may occur but body unavailable; no confirmed registry-style call in scope."
+    },
+    {
+      "opaque_id": "H1-031",
+      "code_sha256": "86246453698a135a9d19929263c351b38683376cf9eeb5ad098e18f0fbc98de3",
+      "context_status": "FUNCTION_TEXT_AVAILABLE",
+      "callsite_annotations": [
+        {
+          "api_name": "g_new",
+          "family": "alloc",
+          "start": 3460,
+          "end": 3483,
+          "line": 203,
+          "expression": "g_new(spapr_pci_msi, 1)",
+          "evidence": "Two explicitly typed allocation macros: MSI record and int key, then fields assigned and hash-table insert. IRQ block allocation/release are non-heap resources, retained unresolved outside chosen scope.",
+          "annotation_basis": "Explicit technical source review; wrapper bodies may be unavailable"
+        },
+        {
+          "api_name": "g_new",
+          "family": "alloc",
+          "start": 3560,
+          "end": 3573,
+          "line": 209,
+          "expression": "g_new(int, 1)",
+          "evidence": "Two explicitly typed allocation macros: MSI record and int key, then fields assigned and hash-table insert. IRQ block allocation/release are non-heap resources, retained unresolved outside chosen scope.",
+          "annotation_basis": "Explicit technical source review; wrapper bodies may be unavailable"
+        }
+      ],
+      "review_notes": "Two explicitly typed allocation macros: MSI record and int key, then fields assigned and hash-table insert. IRQ block allocation/release are non-heap resources, retained unresolved outside chosen scope."
+    },
+    {
+      "opaque_id": "H1-032",
+      "code_sha256": "597a7242547d9d1e9faa035b2e3721f8ac52aeff94693d4e7f5820129eeba352",
+      "context_status": "FUNCTION_TEXT_AVAILABLE",
+      "callsite_annotations": [],
+      "review_notes": "COPY macro locally expands to struct-field assignment, not libc memory copy; no allocation/IO sink claimed from the name COPY."
+    },
+    {
+      "opaque_id": "H1-033",
+      "code_sha256": "f734484a08c60529637f01b9ed6c20f9f23a38fbe3e6f0468902d8e075bec529",
+      "context_status": "FUNCTION_TEXT_AVAILABLE",
+      "callsite_annotations": [
+        {
+          "api_name": "av_freep",
+          "family": "pointer_free",
+          "start": 162,
+          "end": 198,
+          "line": 17,
+          "expression": "av_freep(&ctx->planes[p].buffers[0])",
+          "evidence": "Two plane-buffer cleanup sites inside loop; count 2 sites, not 6 runtime calls.",
+          "annotation_basis": "Explicit technical source review; wrapper bodies may be unavailable"
+        },
+        {
+          "api_name": "av_freep",
+          "family": "pointer_free",
+          "start": 209,
+          "end": 245,
+          "line": 19,
+          "expression": "av_freep(&ctx->planes[p].buffers[1])",
+          "evidence": "Two plane-buffer cleanup sites inside loop; count 2 sites, not 6 runtime calls.",
+          "annotation_basis": "Explicit technical source review; wrapper bodies may be unavailable"
+        }
+      ],
+      "review_notes": "Two plane-buffer cleanup sites inside loop; count 2 sites, not 6 runtime calls."
+    },
+    {
+      "opaque_id": "H1-034",
+      "code_sha256": "a5babcbae67ef05a105bd1bec78e4985425c581287f9a1375f7299167a39bef4",
+      "context_status": "FUNCTION_TEXT_AVAILABLE",
+      "callsite_annotations": [],
+      "review_notes": "Extension match and indirect format read_probe. Probe implementation/type effects unknown; no selected-scope resolved call."
+    },
+    {
+      "opaque_id": "H1-035",
+      "code_sha256": "53dc9d5e87724e95e01510538388751baf1de45812340f85332d6340d1207531",
+      "context_status": "FUNCTION_TEXT_AVAILABLE",
+      "callsite_annotations": [
+        {
+          "api_name": "av_freep",
+          "family": "pointer_free",
+          "start": 569,
+          "end": 606,
+          "line": 43,
+          "expression": "av_freep(&ctx->streams[i]->priv_data)",
+          "evidence": "Stream private-data cleanup. put_be32/put_flush_packet appear only in comments; flush_packet implementation not supplied.",
+          "annotation_basis": "Explicit technical source review; wrapper bodies may be unavailable"
+        }
+      ],
+      "review_notes": "Stream private-data cleanup. put_be32/put_flush_packet appear only in comments; flush_packet implementation not supplied."
+    },
+    {
+      "opaque_id": "H1-036",
+      "code_sha256": "c7ff7e5f32137fd33815636bc1d40e3f39a0b5e32f08a13650f643cbb7b3773e",
+      "context_status": "FUNCTION_TEXT_AVAILABLE",
+      "callsite_annotations": [
+        {
+          "api_name": "qemu_iovec_from_buf",
+          "family": "buffer_write",
+          "start": 172,
+          "end": 238,
+          "line": 13,
+          "expression": "qemu_iovec_from_buf(&req->resp_iov, 0, &req->resp, req->resp_size)",
+          "evidence": "Response bytes copied from req->resp into response iovec using explicit size; request cleanup after queue notification. scsi_req_unref lifetime effects unresolved. Wrapper classification inferred from caller roles, not audited helper body.",
+          "annotation_basis": "Explicit technical source review; wrapper bodies may be unavailable"
+        },
+        {
+          "api_name": "virtio_scsi_free_req",
+          "family": "pointer_free",
+          "start": 588,
+          "end": 613,
+          "line": 37,
+          "expression": "virtio_scsi_free_req(req)",
+          "evidence": "Response bytes copied from req->resp into response iovec using explicit size; request cleanup after queue notification. scsi_req_unref lifetime effects unresolved. Wrapper classification inferred from caller roles, not audited helper body.",
+          "annotation_basis": "Explicit technical source review; wrapper bodies may be unavailable"
+        }
+      ],
+      "review_notes": "Response bytes copied from req->resp into response iovec using explicit size; request cleanup after queue notification. scsi_req_unref lifetime effects unresolved. Wrapper classification inferred from caller roles, not audited helper body."
+    },
+    {
+      "opaque_id": "H1-037",
+      "code_sha256": "7c64783f6113f4a2a82c361bcfdeb58d75f4538ff16ff95adaafd378a15c4154",
+      "context_status": "FUNCTION_TEXT_AVAILABLE",
+      "callsite_annotations": [],
+      "review_notes": "Preprocessor alternatives restore CPU state via codegen helpers, not direct host sink-call families."
+    },
+    {
+      "opaque_id": "H1-038",
+      "code_sha256": "df35e99fb0d0030c65086c5374d7218c1fb5e384350ee1aeb4552cc99bb4c12a",
+      "context_status": "FUNCTION_TEXT_AVAILABLE",
+      "callsite_annotations": [
+        {
+          "api_name": "snprintf",
+          "family": "format_string",
+          "start": 641,
+          "end": 696,
+          "line": 55,
+          "expression": "snprintf(p, &buf[sizeof(buf)] - p, TARGET_FMT_lx, addr)",
+          "evidence": "Three bounded formatting sites advance p within buf; fprintf reports invalid format. put_packet transport implementation unresolved; no assertion that all p increments remain safe.",
+          "annotation_basis": "Explicit technical source review; wrapper bodies may be unavailable"
+        },
+        {
+          "api_name": "snprintf",
+          "family": "format_string",
+          "start": 888,
+          "end": 939,
+          "line": 67,
+          "expression": "snprintf(p, &buf[sizeof(buf)] - p, \"%\" PRIx64, i64)",
+          "evidence": "Three bounded formatting sites advance p within buf; fprintf reports invalid format. put_packet transport implementation unresolved; no assertion that all p increments remain safe.",
+          "annotation_basis": "Explicit technical source review; wrapper bodies may be unavailable"
+        },
+        {
+          "api_name": "snprintf",
+          "family": "format_string",
+          "start": 1060,
+          "end": 1169,
+          "line": 75,
+          "expression": "snprintf(p, &buf[sizeof(buf)] - p, TARGET_FMT_lx \"/%x\",\n\n                              addr, va_arg(va, int))",
+          "evidence": "Three bounded formatting sites advance p within buf; fprintf reports invalid format. put_packet transport implementation unresolved; no assertion that all p increments remain safe.",
+          "annotation_basis": "Explicit technical source review; wrapper bodies may be unavailable"
+        },
+        {
+          "api_name": "fprintf",
+          "family": "format_string",
+          "start": 1259,
+          "end": 1353,
+          "line": 85,
+          "expression": "fprintf(stderr, \"gdbstub: Bad syscall format string '%s'\\n\",\n\n                        fmt - 1)",
+          "evidence": "Three bounded formatting sites advance p within buf; fprintf reports invalid format. put_packet transport implementation unresolved; no assertion that all p increments remain safe.",
+          "annotation_basis": "Explicit technical source review; wrapper bodies may be unavailable"
+        }
+      ],
+      "review_notes": "Three bounded formatting sites advance p within buf; fprintf reports invalid format. put_packet transport implementation unresolved; no assertion that all p increments remain safe."
+    },
+    {
+      "opaque_id": "H1-039",
+      "code_sha256": "c4d718f2ac05446d69857c06a8450430a186f03cc22b3fb9fd6e020c2b9f01ba",
+      "context_status": "FUNCTION_TEXT_AVAILABLE",
+      "callsite_annotations": [],
+      "review_notes": "Raw pixel-array reads/writes with clipping. No selected-scope call API; not evidence of no memory sink."
+    },
+    {
+      "opaque_id": "H1-040",
+      "code_sha256": "963beaa17dcffaa007bc58e3f037aae088322223945510afa9b3b0c779c79207",
+      "context_status": "FUNCTION_TEXT_AVAILABLE",
+      "callsite_annotations": [],
+      "review_notes": "Indirect DSP transform callback and av_log wrapper; unresolved callback performs computation on buffers, outside direct-call scored scope."
+    },
+    {
+      "opaque_id": "H1-041",
+      "code_sha256": "7fc5c53d401f2e175457fc472cf5af8340ffd0a11fc5a9fbff71fbd7b9d429ad",
+      "context_status": "FUNCTION_TEXT_AVAILABLE",
+      "callsite_annotations": [],
+      "review_notes": "RENAME uses initialize function pointers; no kernel invocation here. Preprocessor/rename macro semantics not mistaken for memory API."
+    },
+    {
+      "opaque_id": "H1-042",
+      "code_sha256": "c70daebea135e1688676920713c70cb845c4d050b2805c33bf5f69412145325c",
+      "context_status": "FUNCTION_TEXT_AVAILABLE",
+      "callsite_annotations": [
+        {
+          "api_name": "av_malloc",
+          "family": "alloc",
+          "start": 834,
+          "end": 858,
+          "line": 59,
+          "expression": "av_malloc(basename_size)",
+          "evidence": "Allocate basename, copy filename, append suffix with basename_size, cleanup basename and format context. Header-writing/init helpers unresolved; actual helper safety not inferred.",
+          "annotation_basis": "Explicit technical source review; wrapper bodies may be unavailable"
+        },
+        {
+          "api_name": "strcpy",
+          "family": "buffer_write",
+          "start": 955,
+          "end": 989,
+          "line": 73,
+          "expression": "strcpy(hls->basename, s->filename)",
+          "evidence": "Allocate basename, copy filename, append suffix with basename_size, cleanup basename and format context. Header-writing/init helpers unresolved; actual helper safety not inferred.",
+          "annotation_basis": "Explicit technical source review; wrapper bodies may be unavailable"
+        },
+        {
+          "api_name": "av_strlcat",
+          "family": "buffer_write",
+          "start": 1072,
+          "end": 1121,
+          "line": 87,
+          "expression": "av_strlcat(hls->basename, \"%d.ts\", basename_size)",
+          "evidence": "Allocate basename, copy filename, append suffix with basename_size, cleanup basename and format context. Header-writing/init helpers unresolved; actual helper safety not inferred.",
+          "annotation_basis": "Explicit technical source review; wrapper bodies may be unavailable"
+        },
+        {
+          "api_name": "av_free",
+          "family": "pointer_free",
+          "start": 1359,
+          "end": 1381,
+          "line": 115,
+          "expression": "av_free(hls->basename)",
+          "evidence": "Allocate basename, copy filename, append suffix with basename_size, cleanup basename and format context. Header-writing/init helpers unresolved; actual helper safety not inferred.",
+          "annotation_basis": "Explicit technical source review; wrapper bodies may be unavailable"
+        },
+        {
+          "api_name": "avformat_free_context",
+          "family": "pointer_free",
+          "start": 1419,
+          "end": 1450,
+          "line": 119,
+          "expression": "avformat_free_context(hls->avf)",
+          "evidence": "Allocate basename, copy filename, append suffix with basename_size, cleanup basename and format context. Header-writing/init helpers unresolved; actual helper safety not inferred.",
+          "annotation_basis": "Explicit technical source review; wrapper bodies may be unavailable"
+        }
+      ],
+      "review_notes": "Allocate basename, copy filename, append suffix with basename_size, cleanup basename and format context. Header-writing/init helpers unresolved; actual helper safety not inferred."
+    },
+    {
+      "opaque_id": "H1-043",
+      "code_sha256": "32b5858b75b0169af149f4b99f5b8d4fb0bcb9d115626df6d156ab577bd44f54",
+      "context_status": "FUNCTION_TEXT_AVAILABLE",
+      "callsite_annotations": [],
+      "review_notes": "Inline asm and scalar preprocessor alternatives directly write image buffer. No direct API call; MANGLE/ASMALIGN/RENAME not scored sink calls."
+    },
+    {
+      "opaque_id": "H1-044",
+      "code_sha256": "01495d888ca54a304efb5f91ad78b01e56b035ca8bd6eba43eebb8ff9a29444f",
+      "context_status": "FUNCTION_TEXT_AVAILABLE",
+      "callsite_annotations": [],
+      "review_notes": "mc is a function-pointer parameter; indirect pixel kernel is unresolved. Guard offs/ref_offs does not prove buffer capacities."
+    },
+    {
+      "opaque_id": "H1-045",
+      "code_sha256": "f68f9557d9668ca62db79a1fe38cbe9f4ac325b5622369cce9ceccf58344c8cc",
+      "context_status": "FUNCTION_TEXT_AVAILABLE",
+      "callsite_annotations": [
+        {
+          "api_name": "av_fast_padded_malloc",
+          "family": "alloc",
+          "start": 1112,
+          "end": 1213,
+          "line": 30,
+          "expression": "av_fast_padded_malloc(&ctx->swapped_buf,\n                          &ctx->swapped_buf_size, data_size)",
+          "evidence": "Explicit allocation into swapped_buf with capacity field, and three alternative frame-buffer acquisition sites. bswap16_buf indirect copy and decode functions remain unresolved; log-only conditions do not prove guards.",
+          "annotation_basis": "Explicit technical source review; wrapper bodies may be unavailable"
+        },
+        {
+          "api_name": "ff_thread_get_buffer",
+          "family": "alloc",
+          "start": 2074,
+          "end": 2112,
+          "line": 55,
+          "expression": "ff_thread_get_buffer(avctx, &frame, 0)",
+          "evidence": "Explicit allocation into swapped_buf with capacity field, and three alternative frame-buffer acquisition sites. bswap16_buf indirect copy and decode functions remain unresolved; log-only conditions do not prove guards.",
+          "annotation_basis": "Explicit technical source review; wrapper bodies may be unavailable"
+        },
+        {
+          "api_name": "ff_thread_get_buffer",
+          "family": "alloc",
+          "start": 2388,
+          "end": 2426,
+          "line": 65,
+          "expression": "ff_thread_get_buffer(avctx, &frame, 0)",
+          "evidence": "Explicit allocation into swapped_buf with capacity field, and three alternative frame-buffer acquisition sites. bswap16_buf indirect copy and decode functions remain unresolved; log-only conditions do not prove guards.",
+          "annotation_basis": "Explicit technical source review; wrapper bodies may be unavailable"
+        },
+        {
+          "api_name": "ff_thread_get_buffer",
+          "family": "alloc",
+          "start": 2691,
+          "end": 2729,
+          "line": 74,
+          "expression": "ff_thread_get_buffer(avctx, &frame, 0)",
+          "evidence": "Explicit allocation into swapped_buf with capacity field, and three alternative frame-buffer acquisition sites. bswap16_buf indirect copy and decode functions remain unresolved; log-only conditions do not prove guards.",
+          "annotation_basis": "Explicit technical source review; wrapper bodies may be unavailable"
+        }
+      ],
+      "review_notes": "Explicit allocation into swapped_buf with capacity field, and three alternative frame-buffer acquisition sites. bswap16_buf indirect copy and decode functions remain unresolved; log-only conditions do not prove guards."
+    },
+    {
+      "opaque_id": "H1-046",
+      "code_sha256": "6bf7a0f9139e7cd17f5714ad1df8e61d10199aa1e751c9a07046e086b5dc7dd6",
+      "context_status": "FUNCTION_TEXT_AVAILABLE",
+      "callsite_annotations": [],
+      "review_notes": "Bitreader macros plus direct out[0] stores. Macro bodies absent; no direct selected-scope API call."
+    },
+    {
+      "opaque_id": "H1-047",
+      "code_sha256": "55ebbca4679009b8dfcdcde9e8c5a1a293bcb8932494bc5a94c07e75a820f914",
+      "context_status": "FUNCTION_TEXT_AVAILABLE",
+      "callsite_annotations": [],
+      "review_notes": "Scalar popcount loop, no calls or direct buffer IO. Empty annotation is scoped to callsite operation detection."
+    },
+    {
+      "opaque_id": "H1-048",
+      "code_sha256": "c48776448d2a5aaa64da092c7ba68b98156e05c3dd2582bad48c7156805f5e54",
+      "context_status": "FUNCTION_TEXT_AVAILABLE",
+      "callsite_annotations": [
+        {
+          "api_name": "qemu_get_be32s",
+          "family": "buffer_read",
+          "start": 141,
+          "end": 172,
+          "line": 11,
+          "expression": "qemu_get_be32s(f, &q->queue[i])",
+          "evidence": "Read QEMUFile state into queue/next/priority pointer destinations. Classification inferred from explicit file-source and destination roles; wrapper bodies not expanded.",
+          "annotation_basis": "Explicit technical source review; wrapper bodies may be unavailable"
+        },
+        {
+          "api_name": "qemu_get_sbe32s",
+          "family": "buffer_read",
+          "start": 181,
+          "end": 209,
+          "line": 15,
+          "expression": "qemu_get_sbe32s(f, &q->next)",
+          "evidence": "Read QEMUFile state into queue/next/priority pointer destinations. Classification inferred from explicit file-source and destination roles; wrapper bodies not expanded.",
+          "annotation_basis": "Explicit technical source review; wrapper bodies may be unavailable"
+        },
+        {
+          "api_name": "qemu_get_sbe32s",
+          "family": "buffer_read",
+          "start": 216,
+          "end": 248,
+          "line": 17,
+          "expression": "qemu_get_sbe32s(f, &q->priority)",
+          "evidence": "Read QEMUFile state into queue/next/priority pointer destinations. Classification inferred from explicit file-source and destination roles; wrapper bodies not expanded.",
+          "annotation_basis": "Explicit technical source review; wrapper bodies may be unavailable"
+        }
+      ],
+      "review_notes": "Read QEMUFile state into queue/next/priority pointer destinations. Classification inferred from explicit file-source and destination roles; wrapper bodies not expanded."
+    },
+    {
+      "opaque_id": "H1-049",
+      "code_sha256": "5d95f1489aa0697366d3f10f70bec12a8f20ba8619c4a62d91807c7e2d51cce2",
+      "context_status": "INCOMPLETE_INPUT",
+      "callsite_annotations": [],
+      "review_notes": "Input function itself is incomplete: missing closing braces and no completed outer definition. chr lookup and backend init unresolved. Review only visible text; retain context-defect flag, not a safe judgment."
+    },
+    {
+      "opaque_id": "H1-050",
+      "code_sha256": "4fafe17953c37c22800b66ef4d84b61edad3bf6b8683ddd7e1f90d35ce7dcb1f",
+      "context_status": "FUNCTION_TEXT_AVAILABLE",
+      "callsite_annotations": [],
+      "review_notes": "MMIO address switch returns array/scalar fields. omap_badwidth_read32/OMAP_BAD_REG are unresolved error helpers, not confirmed read API calls."
+    }
+  ]
+}

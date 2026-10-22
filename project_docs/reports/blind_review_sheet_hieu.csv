@@ -19,7 +19,7 @@ sample_idx,target_id,target_label,target_code_snippet,demo_A_snippet,demo_B_snip
 
     ESI = (ESI & ~0xffff) | ((ESI + T0) & 0xffff);
 
-}",0,0,Unknown,0,0,Unknown,Neither,"AI-assisted draft (Codex); Hiếu chưa xác nhận. Target gọi lduw_phys_internal(addr, DEVICE_BIG_ENDIAN); A chỉ map MMIO bằng sysbus_mmio_map_common, B cộng thanh ghi ESI. Không thấy cùng thao tác đọc hay guard kiểm tra addr."
+}",0,0,Unknown,0,0,Unknown,Neither,"Target gọi lduw_phys_internal(addr, DEVICE_BIG_ENDIAN); A chỉ map MMIO bằng sysbus_mmio_map_common, B cộng thanh ghi ESI. Không thấy cùng thao tác đọc hay guard kiểm tra addr."
 2,id_75_label_False_qemu.c,0,"static void gen_cp0 (CPUState *env, DisasContext *ctx, uint32_t opc, int rt, int rd)
 
 {
@@ -348,7 +348,7 @@ sample_idx,target_id,target_label,target_code_snippet,demo_A_snippet,demo_B_snip
 
         raise_exception_err(EXCP0D_GPF, select
 
-/* ... [Cắt gọn do vượt quá 1800 ký tự] */",0,0,0,Partial,Partial,Partial,B,"AI-assisted draft (Codex); Hiếu chưa xác nhận. Target kiểm tra !env->do_tlbwi và MIPS_HFLAG_DM trước thao tác CPU/exception; B kiểm tra dpl, DESC_P_MASK rồi raise_exception_err, gần cơ chế kiểm tra đặc quyền hơn A xử lý hoàn tất SCSI. B bị cắt, chỉ kết luận trên phần thấy được."
+/* ... [Cắt gọn do vượt quá 1800 ký tự] */",0,0,0,Partial,Partial,Partial,B,"Target kiểm tra !env->do_tlbwi và MIPS_HFLAG_DM trước thao tác CPU/exception; B kiểm tra dpl, DESC_P_MASK rồi raise_exception_err, gần cơ chế kiểm tra đặc quyền hơn A xử lý hoàn tất SCSI. B bị cắt, chỉ kết luận trên phần thấy được."
 3,id_396_label_True_qemu.c,1,"static bool bdrv_drain_recurse(BlockDriverState *bs, bool begin)
 
 {
@@ -555,7 +555,7 @@ sample_idx,target_id,target_label,target_code_snippet,demo_A_snippet,demo_B_snip
 
             offse
 
-/* ... [Cắt gọn do vượt quá 1800 ký tự] */",0,0,0,0,Partial,0,Neither,"AI-assisted draft (Codex); Hiếu chưa xác nhận. Target giữ reference bằng bdrv_ref/bdrv_unref quanh đệ quy và assert(bs->refcnt > 0). A khởi tạo CPU; B đọc extension bằng bdrv_pread, cùng BlockDriverState nhưng không minh họa vòng đời reference hay đồng bộ drain."
+/* ... [Cắt gọn do vượt quá 1800 ký tự] */",0,0,0,0,Partial,0,Neither,"Target giữ reference bằng bdrv_ref/bdrv_unref quanh đệ quy và assert(bs->refcnt > 0). A khởi tạo CPU; B đọc extension bằng bdrv_pread, cùng BlockDriverState nhưng không minh họa vòng đời reference hay đồng bộ drain."
 4,id_747_label_True_FFmpeg.c,1,"void avcodec_align_dimensions2(AVCodecContext *s, int *width, int *height, int linesize_align[4]){
 
     int w_align= 1;
@@ -842,7 +842,7 @@ sample_idx,target_id,target_label,target_code_snippet,demo_A_snippet,demo_B_snip
 
         get_bits1_vector(gb, sbr->data[0].bs_add_harmonic, sbr->n[1]);
 
-}",0,Partial,0,0,Partial,0,Neither,"AI-assisted draft (Codex); Hiếu chưa xác nhận. Target FFALIGN(*width, w_align), FFALIGN(*height, h_align) và ghi linesize_align. A kiểm tra dung lượng RAM, B đọc SBR bitstream; không demo nào thể hiện cơ chế căn chỉnh kích thước pixel của target."
+}",0,Partial,0,0,Partial,0,Neither,"Target FFALIGN(*width, w_align), FFALIGN(*height, h_align) và ghi linesize_align. A kiểm tra dung lượng RAM, B đọc SBR bitstream; không demo nào thể hiện cơ chế căn chỉnh kích thước pixel của target."
 5,id_521_label_True_qemu.c,1,"static int bdrv_rd_badreq_sectors(BlockDriverState *bs,
 
                                   int64_t sector_num, int nb_sectors)
@@ -913,7 +913,7 @@ sample_idx,target_id,target_label,target_code_snippet,demo_A_snippet,demo_B_snip
 
     cpu_exec_initfn(cpu);
 
-}",0,0,0,0,0,0,Neither,"AI-assisted draft (Codex); Hiếu chưa xác nhận. Target kiểm tra sector_num > bs->total_sectors - nb_sectors và số sector âm. A ghi PCI config, B khởi tạo CPU; đều thiếu quan hệ sector/count/total và guard miền truy cập."
+}",0,0,0,0,0,0,Neither,"Target kiểm tra sector_num > bs->total_sectors - nb_sectors và số sector âm. A ghi PCI config, B khởi tạo CPU; đều thiếu quan hệ sector/count/total và guard miền truy cập."
 6,id_298_label_False_qemu.c,0,"static void timerlist_rearm(QEMUTimerList *timer_list)
 
 {
@@ -946,7 +946,7 @@ sample_idx,target_id,target_label,target_code_snippet,demo_A_snippet,demo_B_snip
 
     error_report(""spapr-pci-vfio-host-bridge is deprecated"");
 
-}",Partial,Partial,0,0,0,0,A,AI-assisted draft (Codex); Hiếu chưa xác nhận. Target gọi timerlist_notify sau nhánh clock->type. A gọi vq[n].handle_output và notify thiết bị nên gần cơ chế dispatch hơn B chỉ error_report; guard n < VIRTIO_PCI_QUEUE_MAX của A không tương đương nhánh loại clock.
+}",Partial,Partial,0,0,0,0,A,Target gọi timerlist_notify sau nhánh clock->type. A gọi vq[n].handle_output và notify thiết bị nên gần cơ chế dispatch hơn B chỉ error_report; guard n < VIRTIO_PCI_QUEUE_MAX của A không tương đương nhánh loại clock.
 7,id_143_label_True_qemu.c,1,"struct vhost_net *vhost_net_init(VLANClientState *backend, int devfd,
 
                                  bool force)
@@ -1012,7 +1012,7 @@ sample_idx,target_id,target_label,target_code_snippet,demo_A_snippet,demo_B_snip
 
     return fd;
 
-}",0,0,Unknown,0,0,0,Neither,"AI-assisted draft (Codex); Hiếu chưa xác nhận. Target là stub chỉ return NULL, không có sink/biến được sử dụng hay guard để đối chiếu. A là callback rỗng; B tạo socket datagram. Không lấy việc cùng ít code làm bằng chứng bảo mật."
+}",0,0,Unknown,0,0,0,Neither,"Target là stub chỉ return NULL, không có sink/biến được sử dụng hay guard để đối chiếu. A là callback rỗng; B tạo socket datagram. Không lấy việc cùng ít code làm bằng chứng bảo mật."
 8,id_705_label_True_qemu.c,1,"static int inet_connect_addr(struct addrinfo *addr, bool block,
 
                              bool *in_progress)
@@ -1185,7 +1185,7 @@ sample_idx,target_id,target_label,target_code_snippet,demo_A_snippet,demo_B_snip
 
     return fd;
 
-}",0,Partial,Partial,1,Partial,0,B,"AI-assisted draft (Codex); Hiếu chưa xác nhận. Target qemu_socket/connect với addr->ai_addr và closesocket khi rc < 0. B inet_dgram_opts dùng remote/local host/port nên cùng nghiệp vụ socket; if(local) chỉ gần kiểm tra con trỏ tùy chọn in_progress, không tương đương xử lý lỗi connect. A kiểm tra quyền block child."
+}",0,Partial,Partial,1,Partial,0,B,"Target qemu_socket/connect với addr->ai_addr và closesocket khi rc < 0. B inet_dgram_opts dùng remote/local host/port nên cùng nghiệp vụ socket; if(local) chỉ gần kiểm tra con trỏ tùy chọn in_progress, không tương đương xử lý lỗi connect. A kiểm tra quyền block child."
 9,id_863_label_True_FFmpeg.c,1,"static av_cold OMXContext *omx_init(void *logctx, const char *libname, const char *prefix)
 
 {
@@ -1388,7 +1388,7 @@ sample_idx,target_id,target_label,target_code_snippet,demo_A_snippet,demo_B_snip
 
     return 0;
 
-}",0,Partial,Partial,0,0,0,Neither,"AI-assisted draft (Codex); Hiếu chưa xác nhận. Target av_mallocz, if(!omx_context), av_free khi omx_try_load thất bại và ptr_Init. A có qemu_opts_del nhưng khác vòng đời thư viện/heap; B kiểm tra số byte read/write TPM. Không demo nào mô tả load thư viện và giải phóng context khi lỗi."
+}",0,Partial,Partial,0,0,0,Neither,"Target av_mallocz, if(!omx_context), av_free khi omx_try_load thất bại và ptr_Init. A có qemu_opts_del nhưng khác vòng đời thư viện/heap; B kiểm tra số byte read/write TPM. Không demo nào mô tả load thư viện và giải phóng context khi lỗi."
 10,id_782_label_True_qemu.c,1,"static void vvfat_close(BlockDriverState *bs)
 
 {
@@ -1463,7 +1463,7 @@ sample_idx,target_id,target_label,target_code_snippet,demo_A_snippet,demo_B_snip
 
     cpu_exec_initfn(cpu);
 
-}",0,0,0,0,Partial,0,Neither,"AI-assisted draft (Codex); Hiếu chưa xác nhận. Target vvfat_close_current_file, array_free và if(s->cluster_buffer) free. A acquire/release khóa AIO; B bitmap_new khởi tạo tài nguyên. B chỉ liên quan cấp phát ở mức chung, không cùng đường cleanup/free."
+}",0,0,0,0,Partial,0,Neither,"Target vvfat_close_current_file, array_free và if(s->cluster_buffer) free. A acquire/release khóa AIO; B bitmap_new khởi tạo tài nguyên. B chỉ liên quan cấp phát ở mức chung, không cùng đường cleanup/free."
 11,id_395_label_True_FFmpeg.c,1,"static int fourxm_read_packet(AVFormatContext *s,
 
                               AVPacket *pkt)
@@ -1764,7 +1764,7 @@ sample_idx,target_id,target_label,target_code_snippet,demo_A_snippet,demo_B_snip
 
         get_bits1_vector(gb, sbr->data[0].bs_add_harmonic, sbr->n[1]);
 
-}",Partial,Partial,Partial,0,Partial,0,A,"AI-assisted draft (Codex); Hiếu chưa xác nhận. Target đọc header/size, av_new_packet(size + 8), memcpy và get_buffer. A bytestream2_get_buffer và guard frame - line_ptr < count * 2 minh họa ràng buộc kích thước buffer gần hơn B đọc cờ SBR; guard A chưa phải kiểm tra overflow size + 8. Target bị cắt."
+}",Partial,Partial,Partial,0,Partial,0,A,"Target đọc header/size, av_new_packet(size + 8), memcpy và get_buffer. A bytestream2_get_buffer và guard frame - line_ptr < count * 2 minh họa ràng buộc kích thước buffer gần hơn B đọc cờ SBR; guard A chưa phải kiểm tra overflow size + 8. Target bị cắt."
 12,id_536_label_True_qemu.c,1,"int qemu_devtree_setprop(void *fdt, const char *node_path,
 
                          const char *property, void *val_array, int size)
@@ -1877,7 +1877,7 @@ sample_idx,target_id,target_label,target_code_snippet,demo_A_snippet,demo_B_snip
 
     cpu_exec_initfn(cpu);
 
-}",0,Partial,Partial,0,0,0,A,"AI-assisted draft (Codex); Hiếu chưa xác nhận. Target offset=fdt_path_offset; if(offset < 0) return trước fdt_setprop. A if(ret < 0) return trước bdrv_replace_child, cùng kiểu kiểm tra kết quả tiền điều kiện; thao tác và đối tượng khác. B không có guard kết quả tương ứng."
+}",0,Partial,Partial,0,0,0,A,"Target offset=fdt_path_offset; if(offset < 0) return trước fdt_setprop. A if(ret < 0) return trước bdrv_replace_child, cùng kiểu kiểm tra kết quả tiền điều kiện; thao tác và đối tượng khác. B không có guard kết quả tương ứng."
 13,id_1065_label_False_FFmpeg.c,0,"static void put_no_rnd_pixels_y2_mmx( UINT8  *block, const UINT8 *pixels, int line_size, int h)
 
 {
@@ -1998,7 +1998,7 @@ sample_idx,target_id,target_label,target_code_snippet,demo_A_snippet,demo_B_snip
 
      */
 
-}",Partial,Partial,Unknown,0,0,Unknown,A,"AI-assisted draft (Codex); Hiếu chưa xác nhận. Target asm movq đọc pix/pix+line_size và ghi *p; A gen_store với địa chỉ cpu_R[dc->op1], memsize gần vai trò địa chỉ/kích thước nhưng là sinh mã guest store, không phải truy cập pixel trực tiếp. Không đủ ngữ cảnh hợp đồng bộ đệm; B rỗng."
+}",Partial,Partial,Unknown,0,0,Unknown,A,"Target asm movq đọc pix/pix+line_size và ghi *p; A gen_store với địa chỉ cpu_R[dc->op1], memsize gần vai trò địa chỉ/kích thước nhưng là sinh mã guest store, không phải truy cập pixel trực tiếp. Không đủ ngữ cảnh hợp đồng bộ đệm; B rỗng."
 14,id_292_label_False_qemu.c,0,"static uint64_t sp804_read(void *opaque, target_phys_addr_t offset,
 
                            unsigned size)
@@ -2165,7 +2165,7 @@ sample_idx,target_id,target_label,target_code_snippet,demo_A_snippet,demo_B_snip
 
     return 0;
 
-}",Partial,Partial,Partial,0,Partial,0,A,"AI-assisted draft (Codex); Hiếu chưa xác nhận. Target kiểm tra miền offset rồi arm_timer_read hoặc tra sp804_ids; A gic_acknowledge_irq, kiểm tra irq==1023 rồi hw_error cùng cơ chế đọc trạng thái thiết bị và báo lỗi. B kiểm tra độ dài phản hồi TPM khác loại guard."
+}",Partial,Partial,Partial,0,Partial,0,A,"Target kiểm tra miền offset rồi arm_timer_read hoặc tra sp804_ids; A gic_acknowledge_irq, kiểm tra irq==1023 rồi hw_error cùng cơ chế đọc trạng thái thiết bị và báo lỗi. B kiểm tra độ dài phản hồi TPM khác loại guard."
 15,id_713_label_True_FFmpeg.c,1,"static int opt_new_stream(const char *opt, const char *arg)
 
 {
@@ -2294,7 +2294,7 @@ sample_idx,target_id,target_label,target_code_snippet,demo_A_snippet,demo_B_snip
 
     return fd;
 
-}",0,Partial,Partial,0,Partial,0,A,"AI-assisted draft (Codex); Hiếu chưa xác nhận. Target nb_output_files <= 0 chặn output_files[nb_output_files-1] rồi tạo stream. A ret < 0 chặn attach child có cùng kiểu tiền điều kiện trước tạo/gắn đối tượng, nhưng không phải guard chỉ số mảng. B dispatch socket theo kind không cùng ràng buộc count/index."
+}",0,Partial,Partial,0,Partial,0,A,"Target nb_output_files <= 0 chặn output_files[nb_output_files-1] rồi tạo stream. A ret < 0 chặn attach child có cùng kiểu tiền điều kiện trước tạo/gắn đối tượng, nhưng không phải guard chỉ số mảng. B dispatch socket theo kind không cùng ràng buộc count/index."
 16,id_514_label_False_FFmpeg.c,0,"static int xmv_read_header(AVFormatContext *s)
 
 {
@@ -2677,7 +2677,7 @@ fail:
 
             offse
 
-/* ... [Cắt gọn do vượt quá 1800 ký tự] */",Partial,Partial,Partial,Partial,Partial,Partial,Equal,"AI-assisted draft (Codex); Hiếu chưa xác nhận. Target đọc header audio, tính bit_rate/block_align và kiểm tra channels/sample_rate. A đọc bytestream và giới hạn frame/count; B bdrv_pread header rồi ext.len >= sizeof(backing_format). Cả hai gần một phần cơ chế parser có kiểm tra kích thước, không tái hiện chính xác arithmetic audio; B bị cắt."
+/* ... [Cắt gọn do vượt quá 1800 ký tự] */",Partial,Partial,Partial,Partial,Partial,Partial,Equal,"Target đọc header audio, tính bit_rate/block_align và kiểm tra channels/sample_rate. A đọc bytestream và giới hạn frame/count; B bdrv_pread header rồi ext.len >= sizeof(backing_format). Cả hai gần một phần cơ chế parser có kiểm tra kích thước, không tái hiện chính xác arithmetic audio; B bị cắt."
 17,id_146_label_True_FFmpeg.c,1,"static int bit8x8_c(MpegEncContext *s, uint8_t *src1, uint8_t *src2,
 
                     ptrdiff_t stride, int h)
@@ -2942,7 +2942,7 @@ fail:
 
     return 0;
 
-}",0,0,0,Partial,Partial,Partial,B,"AI-assisted draft (Codex); Hiếu chưa xác nhận. Target temp[scantable[i]], length[UNI_AC_ENC_INDEX(run,level)] và guard (level & (~127)) == 0. B truy cập frame/line_ptr có guard count * 2; cùng ràng buộc chỉ số/miền buffer ở mức một phần. A socket không liên quan."
+}",0,0,0,Partial,Partial,Partial,B,"Target temp[scantable[i]], length[UNI_AC_ENC_INDEX(run,level)] và guard (level & (~127)) == 0. B truy cập frame/line_ptr có guard count * 2; cùng ràng buộc chỉ số/miền buffer ở mức một phần. A socket không liên quan."
 18,id_188_label_False_FFmpeg.c,0,"static int config_props(AVFilterLink *outlink)
 
 {
@@ -3125,7 +3125,7 @@ fail:
 
     }
 
-}",0,Partial,0,Partial,Partial,Partial,B,"AI-assisted draft (Codex); Hiếu chưa xác nhận. Target w/h được kiểm tra > INT_MAX nhưng chỉ av_log rồi vẫn dùng sws_getContext. B n < VIRTIO_PCI_QUEUE_MAX thực sự chặn truy cập vq[n], hữu ích đối chiếu guard có hiệu lực; A kiểm tra req/allocate SCSI không gần bằng về giới hạn số. Không coi log của target là guard chặn."
+}",0,Partial,0,Partial,Partial,Partial,B,"Target w/h được kiểm tra > INT_MAX nhưng chỉ av_log rồi vẫn dùng sws_getContext. B n < VIRTIO_PCI_QUEUE_MAX thực sự chặn truy cập vq[n], hữu ích đối chiếu guard có hiệu lực; A kiểm tra req/allocate SCSI không gần bằng về giới hạn số. Không coi log của target là guard chặn."
 19,id_1064_label_False_qemu.c,0,"void kqemu_set_notdirty(CPUState *env, ram_addr_t ram_addr)
 
 {
@@ -3220,7 +3220,7 @@ fail:
 
      */
 
-}",Partial,Partial,Partial,0,0,0,A,"AI-assisted draft (Codex); Hiếu chưa xác nhận. Target giới hạn nb_ram_pages_to_update trước ram_pages_to_update[index++]. A size_stat[index]++ và size_stat_count > SIZE_STAT_THRESHOLD cùng cơ chế cập nhật thống kê/counter, nhưng guard A reset thống kê không phải chứng minh bound cho mảng target. B rỗng."
+}",Partial,Partial,Partial,0,0,0,A,"Target giới hạn nb_ram_pages_to_update trước ram_pages_to_update[index++]. A size_stat[index]++ và size_stat_count > SIZE_STAT_THRESHOLD cùng cơ chế cập nhật thống kê/counter, nhưng guard A reset thống kê không phải chứng minh bound cho mảng target. B rỗng."
 20,id_51_label_False_qemu.c,0,"static void do_busid_cmd(ESPState *s, uint8_t *buf, uint8_t busid)
 
 {
@@ -3379,7 +3379,7 @@ fail:
 
     }
 
-}",0,Partial,0,0,Partial,0,Neither,"AI-assisted draft (Codex); Hiếu chưa xác nhận. Target scsi_req_new/enqueue/continue rồi cập nhật thanh ghi IRQ. A gen_store sinh mã CPU, B reanalyze đếm packet; không cùng SCSI request lifetime hay kiểm tra kết quả cấp phát. Việc cùng cập nhật state chưa đủ."
+}",0,Partial,0,0,Partial,0,Neither,"Target scsi_req_new/enqueue/continue rồi cập nhật thanh ghi IRQ. A gen_store sinh mã CPU, B reanalyze đếm packet; không cùng SCSI request lifetime hay kiểm tra kết quả cấp phát. Việc cùng cập nhật state chưa đủ."
 21,id_497_label_False_qemu.c,0,"void ide_sector_read(IDEState *s)
 
 {
@@ -3652,7 +3652,7 @@ fail:
 
             offse
 
-/* ... [Cắt gọn do vượt quá 1800 ký tự] */",0,Partial,Partial,Partial,Partial,Partial,B,"AI-assisted draft (Codex); Hiếu chưa xác nhận. Target n bị chặn bởi req_nb_sectors trước bdrv_read(bs, sector_num, io_buffer,n), có xử lý ret. B bdrv_pread và guard ext.len/sizeof cùng block I/O và kích thước đọc; A unmap địa chỉ IOMMU khác thao tác. B bị cắt."
+/* ... [Cắt gọn do vượt quá 1800 ký tự] */",0,Partial,Partial,Partial,Partial,Partial,B,"Target n bị chặn bởi req_nb_sectors trước bdrv_read(bs, sector_num, io_buffer,n), có xử lý ret. B bdrv_pread và guard ext.len/sizeof cùng block I/O và kích thước đọc; A unmap địa chỉ IOMMU khác thao tác. B bị cắt."
 22,id_183_label_False_FFmpeg.c,0,"static inline void mix_2f_1r_to_dolby(AC3DecodeContext *ctx)
 
 {
@@ -3797,7 +3797,7 @@ fail:
 
     }
 
-}",Partial,Partial,0,Partial,Partial,0,Equal,"AI-assisted draft (Codex); Hiếu chưa xác nhận. A và B giống hệt reanalyze: memset(ts->size_stat,0,sizeof(ts->size_stat)). Target memset(output[3],0,sizeof(output[3])) nên cùng zero buffer, nhưng biến thống kê khác buffer audio; không thấy guard bảo mật tương ứng. Không có cơ sở ưu tiên A/B."
+}",Partial,Partial,0,Partial,Partial,0,Equal,"A và B giống hệt reanalyze: memset(ts->size_stat,0,sizeof(ts->size_stat)). Target memset(output[3],0,sizeof(output[3])) nên cùng zero buffer, nhưng biến thống kê khác buffer audio; không thấy guard bảo mật tương ứng. Không có cơ sở ưu tiên A/B."
 23,id_125_label_True_FFmpeg.c,1,"static int mxf_read_content_storage(MXFContext *mxf, ByteIOContext *pb, int tag)
 
 {
@@ -3928,7 +3928,7 @@ fail:
 
     return child;
 
-}",0,0,0,0,Partial,0,Neither,"AI-assisted draft (Codex); Hiếu chưa xác nhận. Target packages_count >= UINT_MAX/sizeof(UID) chặn overflow trước av_malloc và get_buffer; if(!packages_refs) kiểm tra cấp phát. B g_new/g_strdup chỉ gần cấp phát, thiếu size-derived allocation và overflow guard; A socket không phù hợp."
+}",0,0,0,0,Partial,0,Neither,"Target packages_count >= UINT_MAX/sizeof(UID) chặn overflow trước av_malloc và get_buffer; if(!packages_refs) kiểm tra cấp phát. B g_new/g_strdup chỉ gần cấp phát, thiếu size-derived allocation và overflow guard; A socket không phù hợp."
 24,id_162_label_True_qemu.c,1,"static uint64_t qdev_get_prop_mask64(Property *prop)
 
 {
@@ -3993,7 +3993,7 @@ fail:
 
     return view;
 
-}",0,0,0,0,0,0,Neither,"AI-assisted draft (Codex); Hiếu chưa xác nhận. Target return 0x1 << prop->bitnr cần xét độ rộng toán hạng/shift. A khởi tạo CPU, B khóa/ref FlatView; không có biến shift hay guard bitnr tương ứng. assert(prop->info...) không giới hạn bitnr."
+}",0,0,0,0,0,0,Neither,"Target return 0x1 << prop->bitnr cần xét độ rộng toán hạng/shift. A khởi tạo CPU, B khóa/ref FlatView; không có biến shift hay guard bitnr tương ứng. assert(prop->info...) không giới hạn bitnr."
 25,id_815_label_False_qemu.c,0,"static void monitor_readline(const char *prompt, int is_password,
 
                              char *buf, int buf_size)
@@ -4038,7 +4038,7 @@ fail:
 
     return 0;
 
-}",0,0,Unknown,0,0,Unknown,Neither,"AI-assisted draft (Codex); Hiếu chưa xác nhận. Target lưu buf/buf_size cho callback monitor_readline_cb và chờ main_loop_wait. A chỉ error_report, B ghi PCI config. Code callback không có trong snippet nên chưa xác định guard của thao tác ghi buffer."
+}",0,0,Unknown,0,0,Unknown,Neither,"Target lưu buf/buf_size cho callback monitor_readline_cb và chờ main_loop_wait. A chỉ error_report, B ghi PCI config. Code callback không có trong snippet nên chưa xác định guard của thao tác ghi buffer."
 26,id_914_label_False_qemu.c,0,"static void cs_write (void *opaque, target_phys_addr_t addr,
 
                       uint64_t val64, unsigned size)
@@ -4419,7 +4419,7 @@ fail:
 
     return 0;
 
-}",Partial,Partial,0,Partial,Partial,0,Equal,"AI-assisted draft (Codex); Hiếu chưa xác nhận. Target ghi s->dregs[iaddr] sau mask 0x0f/0x1f và dispatch thanh ghi. A ghi backing_format[ext.len] sau bound check, B đọc buf rồi cast header sau kiểm tra n: đều chỉ gần truy cập bộ nhớ/index một phần, không cùng mask thanh ghi. Target/A bị cắt; không xác định phần còn lại."
+}",Partial,Partial,0,Partial,Partial,0,Equal,"Target ghi s->dregs[iaddr] sau mask 0x0f/0x1f và dispatch thanh ghi. A ghi backing_format[ext.len] sau bound check, B đọc buf rồi cast header sau kiểm tra n: đều chỉ gần truy cập bộ nhớ/index một phần, không cùng mask thanh ghi. Target/A bị cắt; không xác định phần còn lại."
 27,id_227_label_False_qemu.c,0,"static uint64_t omap_pwt_read(void *opaque, target_phys_addr_t addr,
 
                               unsigned size)
@@ -4540,7 +4540,7 @@ fail:
 
     return child;
 
-}",1,Partial,1,0,0,0,A,"AI-assisted draft (Codex); Hiếu chưa xác nhận. Target kiểm tra size != 1 rồi dispatch MMIO offset. A kiểm tra addr/size trước pcnet_ioport_readb/readw/readl, khớp cơ chế kiểm tra độ rộng/miền địa chỉ của thiết bị. B attach block child và kiểm tra quyền không tương ứng."
+}",1,Partial,1,0,0,0,A,"Target kiểm tra size != 1 rồi dispatch MMIO offset. A kiểm tra addr/size trước pcnet_ioport_readb/readw/readl, khớp cơ chế kiểm tra độ rộng/miền địa chỉ của thiết bị. B attach block child và kiểm tra quyền không tương ứng."
 28,id_420_label_False_FFmpeg.c,0,"static int count_paired_channels(uint8_t (*layout_map)[3], int tags, int pos, int *current) {
 
     int num_pos_channels = 0;
@@ -4849,7 +4849,7 @@ fail:
 
     return 0;
 
-}",Partial,Partial,Unknown,Partial,Partial,Partial,B,"AI-assisted draft (Codex); Hiếu chưa xác nhận. Target layout_map[i][0/2] trong i < tags và kiểm tra parity trước return -1. B giới hạn lines/count trước ghi frame, gần xử lý sequence có bound hơn A sinh mã TCG; guard parity chỉ khớp một phần với bound buffer. A bị cắt nên chưa xác định guard cuối."
+}",Partial,Partial,Unknown,Partial,Partial,Partial,B,"Target layout_map[i][0/2] trong i < tags và kiểm tra parity trước return -1. B giới hạn lines/count trước ghi frame, gần xử lý sequence có bound hơn A sinh mã TCG; guard parity chỉ khớp một phần với bound buffer. A bị cắt nên chưa xác định guard cuối."
 29,id_10_label_True_qemu.c,1,"static inline int64_t sub64(const int64_t a, const int64_t b)
 
 {
@@ -4904,7 +4904,7 @@ fail:
 
     cpu_exec_initfn(cpu);
 
-}",0,0,Unknown,0,0,Unknown,Neither,"AI-assisted draft (Codex); Hiếu chưa xác nhận. Target chỉ return a - b trên int64_t, cần xét signed arithmetic và precondition. A callback rỗng, B khởi tạo CPU; không demo nào có phép trừ tương ứng hay bằng chứng kiểm tra overflow."
+}",0,0,Unknown,0,0,Unknown,Neither,"Target chỉ return a - b trên int64_t, cần xét signed arithmetic và precondition. A callback rỗng, B khởi tạo CPU; không demo nào có phép trừ tương ứng hay bằng chứng kiểm tra overflow."
 30,id_311_label_False_qemu.c,0,"bool error_is_type(Error *err, const char *fmt)
 
 {
@@ -5067,7 +5067,7 @@ fail:
 
     return kvm_vcpu_ioctl(CPU(cpu), KVM_SET_VCPU_EVENTS, &events);
 
-}",Partial,Partial,Partial,0,0,0,A,"AI-assisted draft (Codex); Hiếu chưa xác nhận. Target strstr/strchr, assert(ptr/end), strlen rồi strncmp theo end-ptr. A strcmp(*parg,""-f"") sau if(!*parg), và if(!bs) trước eject_device: cùng kiểm tra con trỏ trước dùng ở mức một phần. B ioctl events không liên quan chuỗi."
+}",Partial,Partial,Partial,0,0,0,A,"Target strstr/strchr, assert(ptr/end), strlen rồi strncmp theo end-ptr. A strcmp(*parg,""-f"") sau if(!*parg), và if(!bs) trước eject_device: cùng kiểm tra con trỏ trước dùng ở mức một phần. B ioctl events không liên quan chuỗi."
 31,id_682_label_True_FFmpeg.c,1,"int av_seek_frame(AVFormatContext *s, int stream_index, int64_t timestamp, int flags)
 
 {
@@ -5234,7 +5234,7 @@ fail:
 
     return child;
 
-}",0,Partial,0,0,Partial,Partial,Neither,"AI-assisted draft (Codex); Hiếu chưa xác nhận. Target chọn read_seek/read_timestamp callback, stream_index và ret trước fallback seek. A socket kind dispatch, B permission ret check chỉ giống điều khiển lỗi chung; đều không thể hiện seek/stream_index/timestamp hay callback capability guard tương ứng."
+}",0,Partial,0,0,Partial,Partial,Neither,"Target chọn read_seek/read_timestamp callback, stream_index và ret trước fallback seek. A socket kind dispatch, B permission ret check chỉ giống điều khiển lỗi chung; đều không thể hiện seek/stream_index/timestamp hay callback capability guard tương ứng."
 32,id_555_label_False_FFmpeg.c,0,"static int mp3lame_encode_frame(AVCodecContext *avctx, AVPacket *avpkt,
 
                                 const AVFrame *frame, int *got_packet_ptr)
@@ -5591,7 +5591,7 @@ fail:
 
     return 0;
 
-}",Partial,Partial,Partial,Partial,Partial,Partial,Equal,"AI-assisted draft (Codex); Hiếu chưa xác nhận. A/B giống hệt decode_wdlt. Target kiểm tra frame->linesize[0] so với 4*FFALIGN(nb_samples,8), buffer_index trước AV_RB32; demo kiểm tra count * 2 với frame-line_ptr trước ghi. Cùng buffer bound một phần, khác encode/decode; target bị cắt, không ưu tiên A/B."
+}",Partial,Partial,Partial,Partial,Partial,Partial,Equal,"A/B giống hệt decode_wdlt. Target kiểm tra frame->linesize[0] so với 4*FFALIGN(nb_samples,8), buffer_index trước AV_RB32; demo kiểm tra count * 2 với frame-line_ptr trước ghi. Cùng buffer bound một phần, khác encode/decode; target bị cắt, không ưu tiên A/B."
 33,id_22_label_True_qemu.c,1,"static void emulated_push_error(EmulatedState *card, uint64_t code)
 
 {
@@ -5662,7 +5662,7 @@ fail:
 
     aio_context_release(s->s->aio_context);
 
-}",Partial,Partial,0,0,0,0,A,"AI-assisted draft (Codex); Hiếu chưa xác nhận. Target g_malloc(sizeof(EmulEvent)), assert(event), gán fields rồi emulated_push_event. A bitmap_new rồi gán cpu->trace_dstate gần cơ chế cấp phát/khởi tạo; không có assert kết quả tương ứng. B chỉ khóa và xử lý CURL."
+}",Partial,Partial,0,0,0,0,A,"Target g_malloc(sizeof(EmulEvent)), assert(event), gán fields rồi emulated_push_event. A bitmap_new rồi gán cpu->trace_dstate gần cơ chế cấp phát/khởi tạo; không có assert kết quả tương ứng. B chỉ khóa và xử lý CURL."
 34,id_1076_label_False_FFmpeg.c,0,"static int encode_frame(AVCodecContext * avctx, AVPacket *pkt,
 
                         const AVFrame *pict, int *got_packet)
@@ -6043,7 +6043,7 @@ fail:
 
     return 0;
 
-}",0,Partial,0,Partial,Partial,Partial,B,"AI-assisted draft (Codex); Hiếu chưa xác nhận. Target tính width/height/bpp, strips và av_new_packet với tích kích thước. B frame_end=frame+width*height, ghi line_ptr kèm guard nên gần hình học buffer; A TPM read/write không gần bằng. Target bị cắt trước phần ghi packet nên chỉ khớp một phần."
+}",0,Partial,0,Partial,Partial,Partial,B,"Target tính width/height/bpp, strips và av_new_packet với tích kích thước. B frame_end=frame+width*height, ghi line_ptr kèm guard nên gần hình học buffer; A TPM read/write không gần bằng. Target bị cắt trước phần ghi packet nên chỉ khớp một phần."
 35,id_255_label_True_qemu.c,1,"gen_intermediate_code_internal(MIPSCPU *cpu, TranslationBlock *tb,
 
                                bool search_pc)
@@ -6364,7 +6364,7 @@ fail:
 
         int count;
 
-/* ... [Cắt gọn do vượt quá 1800 ký tự] */",0,0,0,1,Partial,Unknown,B,"AI-assisted draft (Codex); Hiếu chưa xác nhận. Target sinh mã MIPS, gen_opc_end=gen_opc_buf+OPC_MAX_SIZE, cập nhật gen_opc_ptr và decode_opc. B sinh mã x86 với gen_opc_end và gen_opc_ptr<gen_opc_end, cùng cơ chế code generation. Target bị cắt trước điều kiện dừng cuối nên chưa xác định guard tương đương đầy đủ."
+/* ... [Cắt gọn do vượt quá 1800 ký tự] */",0,0,0,1,Partial,Unknown,B,"Target sinh mã MIPS, gen_opc_end=gen_opc_buf+OPC_MAX_SIZE, cập nhật gen_opc_ptr và decode_opc. B sinh mã x86 với gen_opc_end và gen_opc_ptr<gen_opc_end, cùng cơ chế code generation. Target bị cắt trước điều kiện dừng cuối nên chưa xác định guard tương đương đầy đủ."
 36,id_754_label_False_FFmpeg.c,0,"static int h264_slice_header_parse(H264Context *h, H264SliceContext *sl,
 
                                    const H2645NAL *nal)
@@ -6769,7 +6769,7 @@ badframe:
 
   
 
-/* ... [Cắt gọn do vượt quá 1800 ký tự] */",Partial,Partial,Partial,Partial,Partial,Unknown,A,"AI-assisted draft (Codex); Hiếu chưa xác nhận. Target parse slice_type, pps_id, chặn pps_id>=MAX_PPS_COUNT và !pps_list trước dereference. A lock_user_struct rồi kiểm tra __get_user/restore_sigcontext và goto badframe gần cơ chế xác thực dữ liệu trước dùng; B tra bảng gen_op_buf/opcode nhưng bị cắt, chưa thấy guard tương ứng."
+/* ... [Cắt gọn do vượt quá 1800 ký tự] */",Partial,Partial,Partial,Partial,Partial,Unknown,A,"Target parse slice_type, pps_id, chặn pps_id>=MAX_PPS_COUNT và !pps_list trước dereference. A lock_user_struct rồi kiểm tra __get_user/restore_sigcontext và goto badframe gần cơ chế xác thực dữ liệu trước dùng; B tra bảng gen_op_buf/opcode nhưng bị cắt, chưa thấy guard tương ứng."
 37,id_814_label_False_qemu.c,0,"static void test_io_channel_setup_sync(SocketAddressLegacy *listen_addr,
 
                                        SocketAddressLegacy *connect_addr,
@@ -6896,7 +6896,7 @@ badframe:
 
     return fd;
 
-}",0,0,0,1,Partial,0,B,"AI-assisted draft (Codex); Hiếu chưa xác nhận. Target tạo/listen/connect/accept QIOChannelSocket từ SocketAddressLegacy và dùng error_abort. B inet_dgram_opts(remote/local) cùng cấu hình socket/address, khác datagram và không cùng error_abort/assert(*dst). A chỉ xử lý event CURL có khóa."
+}",0,0,0,1,Partial,0,B,"Target tạo/listen/connect/accept QIOChannelSocket từ SocketAddressLegacy và dùng error_abort. B inet_dgram_opts(remote/local) cùng cấu hình socket/address, khác datagram và không cùng error_abort/assert(*dst). A chỉ xử lý event CURL có khóa."
 38,id_512_label_False_qemu.c,0,"static void rtas_display_character(sPAPREnvironment *spapr,
 
                                    uint32_t token, uint32_t nargs,
@@ -6997,7 +6997,7 @@ badframe:
 
     aio_context_release(aio_context);
 
-}",0,Partial,Partial,Partial,Partial,Partial,B,"AI-assisted draft (Codex); Hiếu chưa xác nhận. Target vty_lookup rồi if(!sdev) trả lỗi, else vty_putchars. B lookup bitmap/bs rồi if(!bitmap || !bs) return trước release, cùng lookup-null-before-use; A if(dinfo) chỉ optional drive property, không guard kết quả qdev_create. Đối tượng/sink khác nên khớp một phần."
+}",0,Partial,Partial,Partial,Partial,Partial,B,"Target vty_lookup rồi if(!sdev) trả lỗi, else vty_putchars. B lookup bitmap/bs rồi if(!bitmap || !bs) return trước release, cùng lookup-null-before-use; A if(dinfo) chỉ optional drive property, không guard kết quả qdev_create. Đối tượng/sink khác nên khớp một phần."
 39,id_1021_label_True_FFmpeg.c,1,"static void RENAME(yuv2bgr24_1)(SwsContext *c, const int16_t *buf0,
 
                                 const int16_t *ubuf[2], const int16_t *bguf[2],
@@ -7128,7 +7128,7 @@ badframe:
 
     return qdict_size(palette);
 
-}",0,Partial,0,0,Partial,0,Neither,"AI-assisted draft (Codex); Hiếu chưa xác nhận. Target macro WRITEBGR24 trong asm ghi dest và đọc ubuf theo uvalpha. A parse SBR bitstream; B tight_palette_rgb2buf chuyển màu và chặn palette size, không thể hiện asm pixel store/stride hay buffer bound tương ứng. Macro body không có để xác định guard."
+}",0,Partial,0,0,Partial,0,Neither,"Target macro WRITEBGR24 trong asm ghi dest và đọc ubuf theo uvalpha. A parse SBR bitstream; B tight_palette_rgb2buf chuyển màu và chặn palette size, không thể hiện asm pixel store/stride hay buffer bound tương ứng. Macro body không có để xác định guard."
 40,id_1018_label_True_FFmpeg.c,1,"static int hevc_decode_frame(AVCodecContext *avctx, void *data, int *got_output,
 
                              AVPacket *avpkt)
@@ -7335,7 +7335,7 @@ badframe:
 
         get_bits1_vector(gb, sbr->data[0].bs_add_harmonic, sbr->n[1]);
 
-}",0,Partial,Partial,Partial,Partial,0,B,"AI-assisted draft (Codex); Hiếu chưa xác nhận. Target decode_nal_units(s,avpkt->data,avpkt->size), xử lý ret và ref/output_frame. B read_sbr_* cùng parser multimedia từ bitstream nhưng không có ret guard tương đương trong snippet. A fd_write_vmcore có kiểm tra ret nhưng khác decode/lifecycle frame; ưu tiên B về thao tác, mức phù hợp chỉ một phần."
+}",0,Partial,Partial,Partial,Partial,0,B,"Target decode_nal_units(s,avpkt->data,avpkt->size), xử lý ret và ref/output_frame. B read_sbr_* cùng parser multimedia từ bitstream nhưng không có ret guard tương đương trong snippet. A fd_write_vmcore có kiểm tra ret nhưng khác decode/lifecycle frame; ưu tiên B về thao tác, mức phù hợp chỉ một phần."
 41,id_274_label_True_qemu.c,1,"static void musb_rx_req(MUSBState *s, int epnum)
 
 {
@@ -7592,7 +7592,7 @@ badframe:
 
     return 0;
 
-}",0,Partial,0,Partial,Partial,Partial,B,"AI-assisted draft (Codex); Hiếu chưa xác nhận. Target total=MIN(ep->maxp[1]&0x3ff,sizeof(s->buf)) trước musb_packet và giới hạn rxcount. B frame-line_ptr < count*2 trước ghi buffer cùng bound trước thao tác; A chỉ đọc cờ SBR không có kiểm tra kích thước tương đương."
+}",0,Partial,0,Partial,Partial,Partial,B,"Target total=MIN(ep->maxp[1]&0x3ff,sizeof(s->buf)) trước musb_packet và giới hạn rxcount. B frame-line_ptr < count*2 trước ghi buffer cùng bound trước thao tác; A chỉ đọc cờ SBR không có kiểm tra kích thước tương đương."
 42,id_670_label_True_qemu.c,1,"static void pc_dimm_check_memdev_is_busy(Object *obj, const char *name,
 
                                       Object *val, Error **errp)
@@ -7703,7 +7703,7 @@ badframe:
 
     aio_context_release(aio_context);
 
-}",0,0,0,Partial,Partial,Partial,B,"AI-assisted draft (Codex); Hiếu chưa xác nhận. Target memory_region_is_mapped(mr) chặn gắn memdev bận, có g_free(path). B bdrv_dirty_bitmap_frozen chặn release bitmap, cùng kiểm tra trạng thái tài nguyên trước thay đổi. A khởi tạo CPU thiếu guard trạng thái tương ứng."
+}",0,0,0,Partial,Partial,Partial,B,"Target memory_region_is_mapped(mr) chặn gắn memdev bận, có g_free(path). B bdrv_dirty_bitmap_frozen chặn release bitmap, cùng kiểm tra trạng thái tài nguyên trước thay đổi. A khởi tạo CPU thiếu guard trạng thái tương ứng."
 43,id_137_label_False_FFmpeg.c,0,"void ff_put_h264_qpel16_mc31_msa(uint8_t *dst, const uint8_t *src,
 
                                  ptrdiff_t stride)
@@ -7824,7 +7824,7 @@ badframe:
 
     memory_region_notify_one(n, &entry);
 
-}",0,0,Unknown,0,Partial,0,Neither,"AI-assisted draft (Codex); Hiếu chưa xác nhận. Target src-2 và src-(stride*2)+sizeof(uint8_t) truyền kernel pixel; A error_report, B unmap IOVA. B chỉ cùng khái niệm offset, khác buffer pixel và không minh họa prepadding/stride; cần hợp đồng kernel/caller để xác định guard."
+}",0,0,Unknown,0,Partial,0,Neither,"Target src-2 và src-(stride*2)+sizeof(uint8_t) truyền kernel pixel; A error_report, B unmap IOVA. B chỉ cùng khái niệm offset, khác buffer pixel và không minh họa prepadding/stride; cần hợp đồng kernel/caller để xác định guard."
 44,id_88_label_True_qemu.c,1,"static void tricore_cpu_initfn(Object *obj)
 
 {
@@ -7925,7 +7925,7 @@ badframe:
 
     cpu_exec_initfn(cpu);
 
-}",1,Partial,Unknown,1,Partial,Unknown,Equal,"AI-assisted draft (Codex); Hiếu chưa xác nhận. A/B giống hệt cpu_common_initfn; target TRICORE_CPU/CPU, env_ptr và cpu_exec_init cùng khởi tạo CPU/object. tcg_enabled là nhánh tính năng; không coi việc hai bên thiếu null guard là khớp bảo mật."
+}",1,Partial,Unknown,1,Partial,Unknown,Equal,"A/B giống hệt cpu_common_initfn; target TRICORE_CPU/CPU, env_ptr và cpu_exec_init cùng khởi tạo CPU/object. tcg_enabled là nhánh tính năng; không coi việc hai bên thiếu null guard là khớp bảo mật."
 45,id_498_label_False_qemu.c,0,"static void cpu_ioreq_pio(ioreq_t *req)
 
 {
@@ -8148,7 +8148,7 @@ error:
 
                ""an int64 value or range"");
 
-}",0,Partial,0,0,Partial,0,Neither,"AI-assisted draft (Codex); Hiếu chưa xác nhận. A/B giống hệt parse_type_int64, kiểm tra string/ranges trước ghi *obj. Target do_inp/do_outp và read/write_phys_req_item theo req->count/size; khác port I/O, không demo cùng bound request. Chọn Neither vì cả hai không phù hợp, dù giống nhau."
+}",0,Partial,0,0,Partial,0,Neither,"A/B giống hệt parse_type_int64, kiểm tra string/ranges trước ghi *obj. Target do_inp/do_outp và read/write_phys_req_item theo req->count/size; khác port I/O, không demo cùng bound request. Chọn Neither vì cả hai không phù hợp, dù giống nhau."
 46,id_854_label_False_FFmpeg.c,0,"static void avc_luma_midh_qrt_and_aver_dst_8w_msa(const uint8_t *src,
 
                                                   int32_t src_stride,
@@ -8337,7 +8337,7 @@ error:
 
     memory_region_notify_one(n, &entry);
 
-}",0,0,0,0,Partial,0,Neither,"AI-assisted draft (Codex); Hiếu chưa xác nhận. Target gọi kernel pixel 4w hai lần rồi src+=4,dst+=4. A attach child kiểm tra quyền, B điều chỉnh IOVA/size trước unmap; không có cùng thao tác/stride buffer pixel. Kiểm tra end/start của IOMMU không phải guard chiều rộng ảnh."
+}",0,0,0,0,Partial,0,Neither,"Target gọi kernel pixel 4w hai lần rồi src+=4,dst+=4. A attach child kiểm tra quyền, B điều chỉnh IOVA/size trước unmap; không có cùng thao tác/stride buffer pixel. Kiểm tra end/start của IOMMU không phải guard chiều rộng ảnh."
 47,id_859_label_True_qemu.c,1,"static int mp_pacl_removexattr(FsContext *ctx,
 
                                const char *path, const char *name)
@@ -8468,7 +8468,7 @@ error:
 
     return child;
 
-}",0,0,0,0,Partial,0,Neither,"AI-assisted draft (Codex); Hiếu chưa xác nhận. Target rpath tạo buffer đường dẫn, lremovexattr, chuẩn hóa errno ENODATA rồi g_free(buffer). A khởi tạo CPU, B tạo/gắn block child; chỉ B có cấp phát chung, không path/xattr hay xử lý errno/cleanup tương ứng."
+}",0,0,0,0,Partial,0,Neither,"Target rpath tạo buffer đường dẫn, lremovexattr, chuẩn hóa errno ENODATA rồi g_free(buffer). A khởi tạo CPU, B tạo/gắn block child; chỉ B có cấp phát chung, không path/xattr hay xử lý errno/cleanup tương ứng."
 48,id_166_label_False_qemu.c,0,"static int create_ppc_opcodes (CPUPPCState *env, ppc_def_t *def)
 
 {
@@ -8765,7 +8765,7 @@ error:
 
             offse
 
-/* ... [Cắt gọn do vượt quá 1800 ký tự] */",0,Partial,Partial,0,Partial,Partial,Equal,"AI-assisted draft (Codex); Hiếu chưa xác nhận. Target register_insn(env->opcodes,opc)<0 trả lỗi, duyệt bảng opcode theo insns_flags. A kiểm tra render/magic/capacity rồi trả lỗi, B kiểm tra bdrv_pread/ext.len rồi trả lỗi; cùng kiểu validation một phần nhưng khác registration opcode. A/B bị cắt, không có bằng chứng ưu tiên rõ."
+/* ... [Cắt gọn do vượt quá 1800 ký tự] */",0,Partial,Partial,0,Partial,Partial,Equal,"Target register_insn(env->opcodes,opc)<0 trả lỗi, duyệt bảng opcode theo insns_flags. A kiểm tra render/magic/capacity rồi trả lỗi, B kiểm tra bdrv_pread/ext.len rồi trả lỗi; cùng kiểu validation một phần nhưng khác registration opcode. A/B bị cắt, không có bằng chứng ưu tiên rõ."
 49,id_257_label_True_qemu.c,1,"static void parse_type_bool(Visitor *v, const char *name, bool *obj,
 
                             Error **errp)
@@ -8932,7 +8932,7 @@ error:
 
     cpu_exec_initfn(cpu);
 
-}",1,Partial,1,0,0,0,A,"AI-assisted draft (Codex); Hiếu chưa xác nhận. Target to_siv(v), if(siv->string), strcasecmp các giá trị bool rồi ghi *obj/error_setg. A cùng StringInputVisitor, kiểm tra !siv->string, parse_str và báo lỗi trước ghi *obj; khớp parsing/validation input, khác bool và range int64. B khởi tạo CPU không tương ứng."
+}",1,Partial,1,0,0,0,A,"Target to_siv(v), if(siv->string), strcasecmp các giá trị bool rồi ghi *obj/error_setg. A cùng StringInputVisitor, kiểm tra !siv->string, parse_str và báo lỗi trước ghi *obj; khớp parsing/validation input, khác bool và range int64. B khởi tạo CPU không tương ứng."
 50,id_578_label_True_FFmpeg.c,1,"static int tta_decode_frame(AVCodecContext *avctx,
 
         void *data, int *data_size,
@@ -9249,4 +9249,4 @@ error:
 
     return fd;
 
-}",Partial,Partial,0,0,Partial,0,Neither,"AI-assisted draft (Codex); Hiếu chưa xác nhận. Target giải mã TTA, predictors/filters/rices theo channels và shift_16[rice->k1+1]. A megasas dùng buffer/SCSI với if(!req), khác cơ chế Rice/filter/index; B socket không phù hợp. Target và A bị cắt; không suy diễn guard cuối hay nhãn lỗi."
+}",Partial,Partial,0,0,Partial,0,Neither,"Target giải mã TTA, predictors/filters/rices theo channels và shift_16[rice->k1+1]. A megasas dùng buffer/SCSI với if(!req), khác cơ chế Rice/filter/index; B socket không phù hợp. Target và A bị cắt; không suy diễn guard cuối hay nhãn lỗi."

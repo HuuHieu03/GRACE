@@ -1,0 +1,312 @@
+{
+  "seed": 20261022,
+  "samples": [
+    {
+      "opaque_id": "E13-001",
+      "source_id": "id_10912_label_True_qemu.c",
+      "code_sha256": "62d6f48e6f24b25318180386442b53529ff3cb9d7350c9d87d6be45030aea95e",
+      "normalized_sha256": "6aa8e7f4bdf1af15bbee2820e448c259bfa07aebcbe5166b1c2a5cad2fc5d4ec"
+    },
+    {
+      "opaque_id": "E13-002",
+      "source_id": "id_5275_label_True_qemu.c",
+      "code_sha256": "9c148ddd0bf7bb2e0a4c7429c04b865c9b2cbcfe6842acd3e747c80e70adc8f5",
+      "normalized_sha256": "2826819e80a1988886e8f253b0c39c4ed597336f9aae5ab48a00223222518361"
+    },
+    {
+      "opaque_id": "E13-003",
+      "source_id": "id_19006_label_True_qemu.c",
+      "code_sha256": "88aef91401ba1d8d92868ac81f309ffb124aada64900ce44e3d2b2185c93fda4",
+      "normalized_sha256": "69e15dc5d2bbbb3726cec0521c354e932dd25ffddb241a4bd8245a7bbcccf9c4"
+    },
+    {
+      "opaque_id": "E13-004",
+      "source_id": "id_16425_label_True_qemu.c",
+      "code_sha256": "6a1ba5b0acb1463e9aa4a48bc30359d72d700a7556939b9b5cc04e48f5a25e5b",
+      "normalized_sha256": "dcc60dedcf25b7e04eae290a01b78763fa11770a156fd2207fa0cf5d93e9753e"
+    },
+    {
+      "opaque_id": "E13-005",
+      "source_id": "id_6040_label_False_FFmpeg.c",
+      "code_sha256": "f1c654187e921295e9e89dd4f3e261d3cde6e03dca7aeaa03791ae376b184b12",
+      "normalized_sha256": "293245f6d81e86007f93d74f0cf3aa54d72890f48bbc9484288eda1bb9e99c36"
+    },
+    {
+      "opaque_id": "E13-006",
+      "source_id": "id_10815_label_True_qemu.c",
+      "code_sha256": "2266f956fc5eda1a9ff51c9bdd8566b7ae100a1b04c7becba362fef78a00f468",
+      "normalized_sha256": "d07f9c60872914b18cab61cb49ba070d1dcc396ce734af601d343f6343492ce1"
+    },
+    {
+      "opaque_id": "E13-007",
+      "source_id": "id_9439_label_True_qemu.c",
+      "code_sha256": "1cd36a784b5c563d05a097577581e87f6382887e595f3998b2eb66ced77d0f69",
+      "normalized_sha256": "70de2bb6a1b01abaab63ebc8ebe47ce21803d2d53c55a57fc976f0009b84ebbe"
+    },
+    {
+      "opaque_id": "E13-008",
+      "source_id": "id_14630_label_True_FFmpeg.c",
+      "code_sha256": "6312fe211c45ac53f1fe5c0ea220ea4412eb425e72f0500819b35c3c7e42b498",
+      "normalized_sha256": "cf96a56f731a5461c6d0915ed3ea05115129430f4e01f57622b836ea137d2dda"
+    },
+    {
+      "opaque_id": "E13-009",
+      "source_id": "id_25743_label_True_FFmpeg.c",
+      "code_sha256": "7d51cfed987a5219f57644145d705f1121db9456fe42f10c598b3e7b5a7a00f6",
+      "normalized_sha256": "a839b4882a846ec4aa92c0e05284e5327cc14fb50fd860764e78e5adbfed4092"
+    },
+    {
+      "opaque_id": "E13-010",
+      "source_id": "id_7378_label_False_qemu.c",
+      "code_sha256": "81623c7c185c8655c3f6a3b744e1418474614402337e3340efc70d02fc035cc2",
+      "normalized_sha256": "59bf5578c18990c223462bd472fa3e7fdca59a8013752b47901f0d490688744b"
+    },
+    {
+      "opaque_id": "E13-011",
+      "source_id": "id_3747_label_False_qemu.c",
+      "code_sha256": "488bf3e11ef6bd36a89c872480612858b82c5319146adaa6f29cdf7507e61e18",
+      "normalized_sha256": "2e4da24d261b6eb069c000de4c7f29c38f63a68456b7a11bca373955095b69bc"
+    },
+    {
+      "opaque_id": "E13-012",
+      "source_id": "id_18503_label_False_FFmpeg.c",
+      "code_sha256": "4d75825f772a905a0387f129fb24f1ed28e42b4cb2724f53ad8ad2e2d436fc27",
+      "normalized_sha256": "c8bca89b667bce02a65ee54bb6f14dafd783a743c18c64dfe34b0751dc0acdfe"
+    },
+    {
+      "opaque_id": "E13-013",
+      "source_id": "id_5666_label_False_qemu.c",
+      "code_sha256": "050dd9f08891a9a95cf34df5370ab1913f38f4a06319c70d2878dc590b9ad935",
+      "normalized_sha256": "b7bb73611c5e2d15badee096ca27e8c1273119ade5293a0d84922c19bc54efd0"
+    },
+    {
+      "opaque_id": "E13-014",
+      "source_id": "id_5640_label_False_qemu.c",
+      "code_sha256": "a8ff8d76ae249d12dfba25414f0c910e645fa4a5699de7637867bb0b670dcaf0",
+      "normalized_sha256": "e74d0c9515cccd428e217b358d52059c0e063557c0c428488eeeaefb3ac8e082"
+    },
+    {
+      "opaque_id": "E13-015",
+      "source_id": "id_24699_label_False_FFmpeg.c",
+      "code_sha256": "115d9cf17e21a569e027138b594049e75be40b36f7e2573f9a24fbeb2c1b935c",
+      "normalized_sha256": "2c06f4409f6a0df8305d793cb4e3f48b35827282d58103390066acb39920fa15"
+    },
+    {
+      "opaque_id": "E13-016",
+      "source_id": "id_27247_label_False_qemu.c",
+      "code_sha256": "2653d2e1db1ea0426859e67dad6045ee0aa9e1e081924ac9ddbf676261db3ef8",
+      "normalized_sha256": "b2d3d4422e637ffc6c7376efd87ccf9d209deb1c13c097ac00bc785d03e9adde"
+    },
+    {
+      "opaque_id": "E13-017",
+      "source_id": "id_24326_label_False_qemu.c",
+      "code_sha256": "f4523a31a43097e1de78464ead358a9a47bfef82dd3f900e53ad692d42588b3c",
+      "normalized_sha256": "a6d2f268c1de05504d6664bb5b9b93cab30eaea2467d489f15198f2234599a5f"
+    },
+    {
+      "opaque_id": "E13-018",
+      "source_id": "id_13893_label_False_FFmpeg.c",
+      "code_sha256": "8b9211a48750968f0766ebcf555b5599b4928d3dcb477e3c86720f9aa74127d3",
+      "normalized_sha256": "04ef125cc0b46097c1fe038907457137a634e38078e8516e028e721047ada326"
+    },
+    {
+      "opaque_id": "E13-019",
+      "source_id": "id_16969_label_True_FFmpeg.c",
+      "code_sha256": "5d08fbe361c45492d7eeff96dbef29d45a2d3f09e0605d8b7a5696ebbaa6dc25",
+      "normalized_sha256": "915482b970906d6c5c741f6ac5ad5ac37de02873512865861f3c7f8b4816e6ef"
+    },
+    {
+      "opaque_id": "E13-020",
+      "source_id": "id_6083_label_False_qemu.c",
+      "code_sha256": "f9ad80caae794a14317f2a8d95880193b9e533c8cce757804c20f51a97f53cd8",
+      "normalized_sha256": "51f6441cd21bb33b7672ed2764e2d80f53b05d796c7ee574a5bb0c5ef68f61c7"
+    },
+    {
+      "opaque_id": "E13-021",
+      "source_id": "id_2235_label_True_FFmpeg.c",
+      "code_sha256": "ac4afa12af968fb385281daa08bf55221f24ecab302272a00eb0ceeba6261e61",
+      "normalized_sha256": "9297d31dcef0319d2d4af703bfca2a0bc54f866ce4b262a09c1e7ebb492ec3bc"
+    },
+    {
+      "opaque_id": "E13-022",
+      "source_id": "id_7295_label_True_FFmpeg.c",
+      "code_sha256": "f5b83007163c46e18ab31609da4c93d300d34a76e30ba801d724adac81a568c5",
+      "normalized_sha256": "7823916d6de0efb90e4f7ec316d6f813d0a88d72c71d98237ce2c60e7d6062bc"
+    },
+    {
+      "opaque_id": "E13-023",
+      "source_id": "id_17751_label_True_qemu.c",
+      "code_sha256": "9d524eb0f62fc1d2f0338aefb849edc7e02df32acbece2b3736b294930d1cdbf",
+      "normalized_sha256": "1d3346c558351b383ff17fd94b576781698feef79f82b6af69aa79859f0be0c3"
+    },
+    {
+      "opaque_id": "E13-024",
+      "source_id": "id_9627_label_False_qemu.c",
+      "code_sha256": "67433c0b2a2e608514e815e3029dbfde5b2df5f81f5f73eab4a176d7fc27b268",
+      "normalized_sha256": "cade1b858acc570d5d2ce8468d1dcb97ee176ff79392433b63b2dd64b4f0f864"
+    },
+    {
+      "opaque_id": "E13-025",
+      "source_id": "id_25519_label_False_qemu.c",
+      "code_sha256": "c8bbd0988d257d0b758225b6c15d47dfbca338959862de9377f2ac302c2ba07a",
+      "normalized_sha256": "34cd09edbffd57f244a7966ae0903b2f25a0e5036c9d429e11d8261ba3b96b6e"
+    },
+    {
+      "opaque_id": "E13-026",
+      "source_id": "id_5421_label_True_FFmpeg.c",
+      "code_sha256": "759ced6bb259d07dcad0f01750677dc86648b9b274ddfe7e60902af128c36703",
+      "normalized_sha256": "ebb20e34256a56e6c2cb3e52524a72b74eee0b7416618038c12c722ab4cd6163"
+    },
+    {
+      "opaque_id": "E13-027",
+      "source_id": "id_9229_label_True_FFmpeg.c",
+      "code_sha256": "1d6117420f8531fc45e3c8bc9cdf8410bcb4f4831e78ba81e6949ec522b00a60",
+      "normalized_sha256": "3c1568bf2dd078b054651b9e9d95e303ea3318042fd75c4ec28b5b6cd4064c23"
+    },
+    {
+      "opaque_id": "E13-028",
+      "source_id": "id_22664_label_False_FFmpeg.c",
+      "code_sha256": "cbd6eeaeb0ea6be1d32f330c01f57687bc82577e63c955f246280d3521f1104d",
+      "normalized_sha256": "4c9b4b23448c9fc803603ba15c54b8004ccf9f0546129d09a66a051e1390d058"
+    },
+    {
+      "opaque_id": "E13-029",
+      "source_id": "id_14947_label_True_FFmpeg.c",
+      "code_sha256": "601cb45ba6b0beeca3027e729544552894574eb09be62d9f3e6dc17a1f8f995c",
+      "normalized_sha256": "acadbd4421aaad1a07105d2d41aebf387d4d7b032ca94fa70a388438c690870c"
+    },
+    {
+      "opaque_id": "E13-030",
+      "source_id": "id_15986_label_False_FFmpeg.c",
+      "code_sha256": "5f3d24847e1c70f1e54080431344abb903ec4ced4e08bd8516c0148fa32f49f0",
+      "normalized_sha256": "9eb04e3f6dc3200ca58848c764700eba4d8a3fb0eecd47700c9f795fe86140ba"
+    },
+    {
+      "opaque_id": "E13-031",
+      "source_id": "id_17033_label_False_qemu.c",
+      "code_sha256": "34c95e19a62af93f317a1eaac8cf73fcb53daf2ebb56a0572496dc4542345892",
+      "normalized_sha256": "ec29fc031f24e5bbb49bd01110713e2e5638688e3250bbd3c00e0720fc014036"
+    },
+    {
+      "opaque_id": "E13-032",
+      "source_id": "id_8160_label_False_FFmpeg.c",
+      "code_sha256": "1e7286e03cf1184ed5892180169f8bc5ac9df9445d0289b36b8b8662ff938f1b",
+      "normalized_sha256": "57362b5d4f1abe7a2fab4b2934e1ff0e53f952e42f56f6d16600ed857bbe110d"
+    },
+    {
+      "opaque_id": "E13-033",
+      "source_id": "id_21141_label_True_FFmpeg.c",
+      "code_sha256": "79e68a837b30d67b43e38ad5c78953525ae9eccb47e298c9c4d4571252da87b6",
+      "normalized_sha256": "6144d6d724e6f5fac19f91bdf19e754c4ac620420488d3d4ddfaf192d0ffdb0b"
+    },
+    {
+      "opaque_id": "E13-034",
+      "source_id": "id_9893_label_True_qemu.c",
+      "code_sha256": "0ebd9852301c7b8152ecc030ac17da02867fe8c2f2d7304e1bc1b84fb27317dd",
+      "normalized_sha256": "d3f04a8d9eeaabd40f380fe172a3273cf602be6a337f50a77da7a3ace6cc98e9"
+    },
+    {
+      "opaque_id": "E13-035",
+      "source_id": "id_24711_label_False_qemu.c",
+      "code_sha256": "9f9ba0cba74851c1c7dcdea69d3f05d9fd773aed9fbb1854d3059be90a918c03",
+      "normalized_sha256": "ea2175e8d8bfa70a81f100086fe61cf056766ac8d4af721e7f525d2515370afb"
+    },
+    {
+      "opaque_id": "E13-036",
+      "source_id": "id_11883_label_False_FFmpeg.c",
+      "code_sha256": "767357faf664d195ccb8029cb4e30261f0c1da23638923bb7692132cd7d30d26",
+      "normalized_sha256": "9c75fcb5c6b9781cd032d7f2e94f1d69aee224f842a2c672f8897f594736394b"
+    },
+    {
+      "opaque_id": "E13-037",
+      "source_id": "id_1249_label_False_qemu.c",
+      "code_sha256": "fc34f5b917b5016f8bf666270d315c56db83354877595e40bd45ba19c0b6fbe2",
+      "normalized_sha256": "b566c316726b29e91ff8d9802282060d860171b1075bca80cdf4d0e9841072b9"
+    },
+    {
+      "opaque_id": "E13-038",
+      "source_id": "id_6339_label_True_qemu.c",
+      "code_sha256": "1a1f0e2c5fb735767b80252e4670adf8d419efc4250b4af981e70242d67d34e4",
+      "normalized_sha256": "7f94defc1c305e715889253ecb05fa9879b96ffe23c33a89fca84c554c6feea6"
+    },
+    {
+      "opaque_id": "E13-039",
+      "source_id": "id_21196_label_False_qemu.c",
+      "code_sha256": "7584838255cd168c41476545bd48776551325cbed5265259ebbccb733fc21d63",
+      "normalized_sha256": "9faa6083bf5d5ff1b7957c9832a6bff40cdf3f9ea47ae484cf90fd3e5ab86f47"
+    },
+    {
+      "opaque_id": "E13-040",
+      "source_id": "id_27183_label_False_FFmpeg.c",
+      "code_sha256": "9088853870be3b0555ef3c98460fae4a8359c6ea99fe2713757e7e026d93b1f0",
+      "normalized_sha256": "ea80445d83704c516c1654fdcee3a4fe1517f04695cfba792dcdbbb49be2f4f5"
+    },
+    {
+      "opaque_id": "E13-041",
+      "source_id": "id_18413_label_True_qemu.c",
+      "code_sha256": "ad7b79fd7530db247305651e67b06ec46ac434b8eca53a2fdeaceb5e908547df",
+      "normalized_sha256": "00aaf4837f3d9f3a3f85284df27c4ab26fd76234e20f818d184029601c6f1402"
+    },
+    {
+      "opaque_id": "E13-042",
+      "source_id": "id_10293_label_False_qemu.c",
+      "code_sha256": "a9ac70cd5f204ddf8a6f249faff0173c7edb77c6bcc1dbc722cba63efaa1943a",
+      "normalized_sha256": "53d41d25071cca50a0622fb79d91e011d59499598d4907a9d3b694d7aab3acc9"
+    },
+    {
+      "opaque_id": "E13-043",
+      "source_id": "id_8428_label_True_FFmpeg.c",
+      "code_sha256": "bc583381532668ddef8db088dc4f468ecc0c002b43ffc7a98d44bc0ca1e13eda",
+      "normalized_sha256": "4683754925ff925810620cb5aeb7910a12be7d8edeaf309c4415415da1ec626d"
+    },
+    {
+      "opaque_id": "E13-044",
+      "source_id": "id_4494_label_False_qemu.c",
+      "code_sha256": "cc0613a72457aa24027cf87ff398965b75d78aa807ffd0722a3036bb36eb5c97",
+      "normalized_sha256": "cf198030b2bdd3906a7470f55d2b11ac9412628c7b4cf118e37ee158bbb82a3e"
+    },
+    {
+      "opaque_id": "E13-045",
+      "source_id": "id_24682_label_False_qemu.c",
+      "code_sha256": "021f6a82a425a5d18d8cd1a9b42ee0b645c0ef7c0e08d6044829d1fa19e8ffef",
+      "normalized_sha256": "1cd2ab84acf7d67db011b4cb039e8a1e2852568a5ab1b4ebb7d59e0f2e8ec18b"
+    },
+    {
+      "opaque_id": "E13-046",
+      "source_id": "id_23663_label_True_qemu.c",
+      "code_sha256": "bda9e4a8480289d173b720bbc237b67d7ddaa66db215549687de11a171c05a1e",
+      "normalized_sha256": "042f6a4f69196dd42ba66675562283808f3a2c165ab2919d2f7f930388e774f4"
+    },
+    {
+      "opaque_id": "E13-047",
+      "source_id": "id_26727_label_True_FFmpeg.c",
+      "code_sha256": "a044258360b0411b7e3fa92b519bfe037bce0d517fded78c2dd00461efeef1a2",
+      "normalized_sha256": "7fcb4b3587642192d4cf586cb484898f1fd2f55ad45c09e987c2f26b8a7b9f00"
+    },
+    {
+      "opaque_id": "E13-048",
+      "source_id": "id_23071_label_False_qemu.c",
+      "code_sha256": "3e7f40d3f7f7aa9f19f30d6cec5e119057517814716b010c1f179e1bda321d39",
+      "normalized_sha256": "e5ac9c5a1a6a2523e8e643d413af7cc5ed66cea6e5e578edb3597bdbc6765542"
+    },
+    {
+      "opaque_id": "E13-049",
+      "source_id": "id_2560_label_False_qemu.c",
+      "code_sha256": "6989d16fcb769c70da4777c2ed51ea9734846293d93125cab44dd822b3540124",
+      "normalized_sha256": "3eb5712ba4294b836c70c37cc1d01a8efe187577620c7d0f28e7f811dac56a6f"
+    },
+    {
+      "opaque_id": "E13-050",
+      "source_id": "id_5252_label_False_qemu.c",
+      "code_sha256": "270b86f0e424ecfe08f2d86b67750109f36b63df94d0066f6eec319828d9d495",
+      "normalized_sha256": "929d50510e76e5c9dd06068e8dfb094c835bf9330618e7e348aed924b862e6db"
+    }
+  ],
+  "excluded_train_and_prior_dev_code": true,
+  "exact_whitespace_normalized_exclusion_only": true,
+  "labels_or_predictions_used": false,
+  "E13_sha256": "098f2c0e4a65615f75f1f21427d3c9273e6593457eef644fa9b06077ae0fde42",
+  "semantic_annotations": "PENDING",
+  "corpus": "Devign validation; not final test",
+  "purpose": "Fresh-input consistency and later semantic validation; not independently scored"
+}

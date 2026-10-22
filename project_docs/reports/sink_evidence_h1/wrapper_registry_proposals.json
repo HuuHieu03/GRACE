@@ -1,0 +1,353 @@
+[
+  {
+    "api_name": "av_fast_padded_malloc",
+    "proposed_families": [
+      "alloc"
+    ],
+    "missed_callsites": 1,
+    "samples": [
+      "H1-045"
+    ],
+    "example_expression": "av_fast_padded_malloc(&ctx->swapped_buf,\n                          &ctx->swapped_buf_size, data_size)",
+    "rationale": "Explicit allocation into swapped_buf with capacity field, and three alternative frame-buffer acquisition sites. bswap16_buf indirect copy and decode functions remain unresolved; log-only conditions do not prove guards.",
+    "status": "PROPOSED_NOT_INSTALLED",
+    "validation_needed": "Exact call-name rule only; comment/string/prototype negatives, family review and wrapper contract audit; evaluate next version on new data"
+  },
+  {
+    "api_name": "av_frame_alloc",
+    "proposed_families": [
+      "alloc"
+    ],
+    "missed_callsites": 1,
+    "samples": [
+      "H1-029"
+    ],
+    "example_expression": "av_frame_alloc()",
+    "rationale": "Two quantization-table copy sites, frame allocation checked for null, and three stats-buffer allocation sites. ffv1_allocate_initial_states and slice initialization are unresolved compound alloc helpers; av_log not in direct stdio scope.",
+    "status": "PROPOSED_NOT_INSTALLED",
+    "validation_needed": "Exact call-name rule only; comment/string/prototype negatives, family review and wrapper contract audit; evaluate next version on new data"
+  },
+  {
+    "api_name": "av_free_packet",
+    "proposed_families": [
+      "pointer_free"
+    ],
+    "missed_callsites": 1,
+    "samples": [
+      "H1-025"
+    ],
+    "example_expression": "av_free_packet(pkt)",
+    "rationale": "File opened/closed on non-pipe path; packet allocated then freed on read failure. pgm_read/yuv_read/ppm_read and filename formatting helpers remain unresolved compound IO/copy operations.",
+    "status": "PROPOSED_NOT_INSTALLED",
+    "validation_needed": "Exact call-name rule only; comment/string/prototype negatives, family review and wrapper contract audit; evaluate next version on new data"
+  },
+  {
+    "api_name": "av_metadata_free",
+    "proposed_families": [
+      "pointer_free"
+    ],
+    "missed_callsites": 2,
+    "samples": [
+      "H1-011"
+    ],
+    "example_expression": "av_metadata_free(&rtpctx->streams[0]->metadata)",
+    "rationale": "Explicit teardown: buffers/metadata/context cleanup and URL handles closed. av_write_trailer and RTP/RDT parser close helpers remain unresolved compound operations.",
+    "status": "PROPOSED_NOT_INSTALLED",
+    "validation_needed": "Exact call-name rule only; comment/string/prototype negatives, family review and wrapper contract audit; evaluate next version on new data"
+  },
+  {
+    "api_name": "av_realloc",
+    "proposed_families": [
+      "alloc"
+    ],
+    "missed_callsites": 1,
+    "samples": [
+      "H1-005"
+    ],
+    "example_expression": "av_realloc(*ptrptr, nmemb * size)",
+    "rationale": "av_realloc result assigned to ret then *ptrptr; two explicit failure/zero-length cleanup branches. Function definition av_reallocp_array is not a call.",
+    "status": "PROPOSED_NOT_INSTALLED",
+    "validation_needed": "Exact call-name rule only; comment/string/prototype negatives, family review and wrapper contract audit; evaluate next version on new data"
+  },
+  {
+    "api_name": "av_strlcat",
+    "proposed_families": [
+      "buffer_write"
+    ],
+    "missed_callsites": 1,
+    "samples": [
+      "H1-042"
+    ],
+    "example_expression": "av_strlcat(hls->basename, \"%d.ts\", basename_size)",
+    "rationale": "Allocate basename, copy filename, append suffix with basename_size, cleanup basename and format context. Header-writing/init helpers unresolved; actual helper safety not inferred.",
+    "status": "PROPOSED_NOT_INSTALLED",
+    "validation_needed": "Exact call-name rule only; comment/string/prototype negatives, family review and wrapper contract audit; evaluate next version on new data"
+  },
+  {
+    "api_name": "avformat_free_context",
+    "proposed_families": [
+      "pointer_free"
+    ],
+    "missed_callsites": 1,
+    "samples": [
+      "H1-042"
+    ],
+    "example_expression": "avformat_free_context(hls->avf)",
+    "rationale": "Allocate basename, copy filename, append suffix with basename_size, cleanup basename and format context. Header-writing/init helpers unresolved; actual helper safety not inferred.",
+    "status": "PROPOSED_NOT_INSTALLED",
+    "validation_needed": "Exact call-name rule only; comment/string/prototype negatives, family review and wrapper contract audit; evaluate next version on new data"
+  },
+  {
+    "api_name": "bytestream2_get_byte",
+    "proposed_families": [
+      "buffer_read"
+    ],
+    "missed_callsites": 1,
+    "samples": [
+      "H1-001"
+    ],
+    "example_expression": "bytestream2_get_byte(gb)",
+    "rationale": "Returns byte from gb during range-coder refill, guarded by bytes-left query. Wrapper body absent; classification supported by explicit byte-use context.",
+    "status": "PROPOSED_NOT_INSTALLED",
+    "validation_needed": "Exact call-name rule only; comment/string/prototype negatives, family review and wrapper contract audit; evaluate next version on new data"
+  },
+  {
+    "api_name": "close",
+    "proposed_families": [
+      "io_close"
+    ],
+    "missed_callsites": 1,
+    "samples": [
+      "H1-028"
+    ],
+    "example_expression": "close(fd)",
+    "rationale": "Open descriptor, modify mode/ownership, close descriptor on common exit. Counts are independent of vulnerability label.",
+    "status": "PROPOSED_NOT_INSTALLED",
+    "validation_needed": "Exact call-name rule only; comment/string/prototype negatives, family review and wrapper contract audit; evaluate next version on new data"
+  },
+  {
+    "api_name": "fchmod",
+    "proposed_families": [
+      "filesystem_metadata_write"
+    ],
+    "missed_callsites": 1,
+    "samples": [
+      "H1-028"
+    ],
+    "example_expression": "fchmod(fd, credp->fc_mode & 07777)",
+    "rationale": "Open descriptor, modify mode/ownership, close descriptor on common exit. Counts are independent of vulnerability label.",
+    "status": "PROPOSED_NOT_INSTALLED",
+    "validation_needed": "Exact call-name rule only; comment/string/prototype negatives, family review and wrapper contract audit; evaluate next version on new data"
+  },
+  {
+    "api_name": "fchownat",
+    "proposed_families": [
+      "filesystem_metadata_write"
+    ],
+    "missed_callsites": 1,
+    "samples": [
+      "H1-028"
+    ],
+    "example_expression": "fchownat(fd, \"\", credp->fc_uid, credp->fc_gid, AT_EMPTY_PATH)",
+    "rationale": "Open descriptor, modify mode/ownership, close descriptor on common exit. Counts are independent of vulnerability label.",
+    "status": "PROPOSED_NOT_INSTALLED",
+    "validation_needed": "Exact call-name rule only; comment/string/prototype negatives, family review and wrapper contract audit; evaluate next version on new data"
+  },
+  {
+    "api_name": "ff_thread_get_buffer",
+    "proposed_families": [
+      "alloc"
+    ],
+    "missed_callsites": 3,
+    "samples": [
+      "H1-045"
+    ],
+    "example_expression": "ff_thread_get_buffer(avctx, &frame, 0)",
+    "rationale": "Explicit allocation into swapped_buf with capacity field, and three alternative frame-buffer acquisition sites. bswap16_buf indirect copy and decode functions remain unresolved; log-only conditions do not prove guards.",
+    "status": "PROPOSED_NOT_INSTALLED",
+    "validation_needed": "Exact call-name rule only; comment/string/prototype negatives, family review and wrapper contract audit; evaluate next version on new data"
+  },
+  {
+    "api_name": "g_new",
+    "proposed_families": [
+      "alloc"
+    ],
+    "missed_callsites": 2,
+    "samples": [
+      "H1-031"
+    ],
+    "example_expression": "g_new(spapr_pci_msi, 1)",
+    "rationale": "Two explicitly typed allocation macros: MSI record and int key, then fields assigned and hash-table insert. IRQ block allocation/release are non-heap resources, retained unresolved outside chosen scope.",
+    "status": "PROPOSED_NOT_INSTALLED",
+    "validation_needed": "Exact call-name rule only; comment/string/prototype negatives, family review and wrapper contract audit; evaluate next version on new data"
+  },
+  {
+    "api_name": "g_strdup",
+    "proposed_families": [
+      "alloc"
+    ],
+    "missed_callsites": 1,
+    "samples": [
+      "H1-026"
+    ],
+    "example_expression": "g_strdup(opt)",
+    "rationale": "Duplicate opt into mutable arg, parse with strtok, then free arg. Count real fprintf call independently of string contents; strtok parsing excluded from chosen sink-call scope.",
+    "status": "PROPOSED_NOT_INSTALLED",
+    "validation_needed": "Exact call-name rule only; comment/string/prototype negatives, family review and wrapper contract audit; evaluate next version on new data"
+  },
+  {
+    "api_name": "openat",
+    "proposed_families": [
+      "io_open"
+    ],
+    "missed_callsites": 1,
+    "samples": [
+      "H1-028"
+    ],
+    "example_expression": "openat(dirfd, name, O_NONBLOCK | O_NOFOLLOW)",
+    "rationale": "Open descriptor, modify mode/ownership, close descriptor on common exit. Counts are independent of vulnerability label.",
+    "status": "PROPOSED_NOT_INSTALLED",
+    "validation_needed": "Exact call-name rule only; comment/string/prototype negatives, family review and wrapper contract audit; evaluate next version on new data"
+  },
+  {
+    "api_name": "qemu_get_be32s",
+    "proposed_families": [
+      "buffer_read"
+    ],
+    "missed_callsites": 1,
+    "samples": [
+      "H1-048"
+    ],
+    "example_expression": "qemu_get_be32s(f, &q->queue[i])",
+    "rationale": "Read QEMUFile state into queue/next/priority pointer destinations. Classification inferred from explicit file-source and destination roles; wrapper bodies not expanded.",
+    "status": "PROPOSED_NOT_INSTALLED",
+    "validation_needed": "Exact call-name rule only; comment/string/prototype negatives, family review and wrapper contract audit; evaluate next version on new data"
+  },
+  {
+    "api_name": "qemu_get_sbe32s",
+    "proposed_families": [
+      "buffer_read"
+    ],
+    "missed_callsites": 2,
+    "samples": [
+      "H1-048"
+    ],
+    "example_expression": "qemu_get_sbe32s(f, &q->next)",
+    "rationale": "Read QEMUFile state into queue/next/priority pointer destinations. Classification inferred from explicit file-source and destination roles; wrapper bodies not expanded.",
+    "status": "PROPOSED_NOT_INSTALLED",
+    "validation_needed": "Exact call-name rule only; comment/string/prototype negatives, family review and wrapper contract audit; evaluate next version on new data"
+  },
+  {
+    "api_name": "qemu_iovec_from_buf",
+    "proposed_families": [
+      "buffer_write"
+    ],
+    "missed_callsites": 1,
+    "samples": [
+      "H1-036"
+    ],
+    "example_expression": "qemu_iovec_from_buf(&req->resp_iov, 0, &req->resp, req->resp_size)",
+    "rationale": "Response bytes copied from req->resp into response iovec using explicit size; request cleanup after queue notification. scsi_req_unref lifetime effects unresolved. Wrapper classification inferred from caller roles, not audited helper body.",
+    "status": "PROPOSED_NOT_INSTALLED",
+    "validation_needed": "Exact call-name rule only; comment/string/prototype negatives, family review and wrapper contract audit; evaluate next version on new data"
+  },
+  {
+    "api_name": "qemu_mallocz",
+    "proposed_families": [
+      "alloc"
+    ],
+    "missed_callsites": 1,
+    "samples": [
+      "H1-012"
+    ],
+    "example_expression": "qemu_mallocz(sizeof(CharDriverState))",
+    "rationale": "Allocation by sizeof(CharDriverState), null check, matching free if console creation fails. new_console and timer creation require helper contracts.",
+    "status": "PROPOSED_NOT_INSTALLED",
+    "validation_needed": "Exact call-name rule only; comment/string/prototype negatives, family review and wrapper contract audit; evaluate next version on new data"
+  },
+  {
+    "api_name": "tcg_malloc",
+    "proposed_families": [
+      "alloc"
+    ],
+    "missed_callsites": 4,
+    "samples": [
+      "H1-013"
+    ],
+    "example_expression": "tcg_malloc(nb_ops * sizeof(uint16_t))",
+    "rationale": "Four buffer allocations assigned to liveness arrays and three syntactic memset sites. Count lexical sites, not loop execution frequency.",
+    "status": "PROPOSED_NOT_INSTALLED",
+    "validation_needed": "Exact call-name rule only; comment/string/prototype negatives, family review and wrapper contract audit; evaluate next version on new data"
+  },
+  {
+    "api_name": "url_close",
+    "proposed_families": [
+      "io_close"
+    ],
+    "missed_callsites": 1,
+    "samples": [
+      "H1-011"
+    ],
+    "example_expression": "url_close(rtsp_st->rtp_handle)",
+    "rationale": "Explicit teardown: buffers/metadata/context cleanup and URL handles closed. av_write_trailer and RTP/RDT parser close helpers remain unresolved compound operations.",
+    "status": "PROPOSED_NOT_INSTALLED",
+    "validation_needed": "Exact call-name rule only; comment/string/prototype negatives, family review and wrapper contract audit; evaluate next version on new data"
+  },
+  {
+    "api_name": "url_close_dyn_buf",
+    "proposed_families": [
+      "io_close"
+    ],
+    "missed_callsites": 1,
+    "samples": [
+      "H1-011"
+    ],
+    "example_expression": "url_close_dyn_buf(rtpctx->pb, &ptr)",
+    "rationale": "Explicit teardown: buffers/metadata/context cleanup and URL handles closed. av_write_trailer and RTP/RDT parser close helpers remain unresolved compound operations.",
+    "status": "PROPOSED_NOT_INSTALLED",
+    "validation_needed": "Exact call-name rule only; comment/string/prototype negatives, family review and wrapper contract audit; evaluate next version on new data"
+  },
+  {
+    "api_name": "url_fclose",
+    "proposed_families": [
+      "io_close"
+    ],
+    "missed_callsites": 2,
+    "samples": [
+      "H1-011",
+      "H1-025"
+    ],
+    "example_expression": "url_fclose(rtpctx->pb)",
+    "rationale": "Explicit teardown: buffers/metadata/context cleanup and URL handles closed. av_write_trailer and RTP/RDT parser close helpers remain unresolved compound operations.",
+    "status": "PROPOSED_NOT_INSTALLED",
+    "validation_needed": "Exact call-name rule only; comment/string/prototype negatives, family review and wrapper contract audit; evaluate next version on new data"
+  },
+  {
+    "api_name": "url_fopen",
+    "proposed_families": [
+      "io_open"
+    ],
+    "missed_callsites": 1,
+    "samples": [
+      "H1-025"
+    ],
+    "example_expression": "url_fopen(f, filename, URL_RDONLY)",
+    "rationale": "File opened/closed on non-pipe path; packet allocated then freed on read failure. pgm_read/yuv_read/ppm_read and filename formatting helpers remain unresolved compound IO/copy operations.",
+    "status": "PROPOSED_NOT_INSTALLED",
+    "validation_needed": "Exact call-name rule only; comment/string/prototype negatives, family review and wrapper contract audit; evaluate next version on new data"
+  },
+  {
+    "api_name": "virtio_scsi_free_req",
+    "proposed_families": [
+      "pointer_free"
+    ],
+    "missed_callsites": 1,
+    "samples": [
+      "H1-036"
+    ],
+    "example_expression": "virtio_scsi_free_req(req)",
+    "rationale": "Response bytes copied from req->resp into response iovec using explicit size; request cleanup after queue notification. scsi_req_unref lifetime effects unresolved. Wrapper classification inferred from caller roles, not audited helper body.",
+    "status": "PROPOSED_NOT_INSTALLED",
+    "validation_needed": "Exact call-name rule only; comment/string/prototype negatives, family review and wrapper contract audit; evaluate next version on new data"
+  }
+]

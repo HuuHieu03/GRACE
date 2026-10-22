@@ -1,0 +1,19 @@
+{
+  "sheets": {
+    "A": {
+      "rows": 100,
+      "complete": 0,
+      "incomplete": 100
+    },
+    "B": {
+      "rows": 100,
+      "complete": 0,
+      "incomplete": 100
+    }
+  },
+  "independence": "not verified by file validation",
+  "agreement": null,
+  "cohens_kappa": null,
+  "status": "PENDING_COMPLETE_REVIEWS",
+  "discordant": []
+}

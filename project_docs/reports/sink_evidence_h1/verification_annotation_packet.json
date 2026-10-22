@@ -1,0 +1,752 @@
+[
+  {
+    "opaque_id": "H1-001",
+    "code_sha256": "ac09ac1863553c6592bb61303e3c779d08ff9b6b88136563d20b07378f2c6a6b",
+    "code": "static int decode0(GetByteContext *gb, RangeCoder *rc, unsigned cumFreq, unsigned freq, unsigned total_freq)\n\n{\n\n    int t;\n\n\n\n    if (total_freq == 0)\n\n        return AVERROR_INVALIDDATA;\n\n\n\n    t = rc->range * (uint64_t)cumFreq / total_freq;\n\n\n\n    rc->code1 += t + 1;\n\n    rc->range = rc->range * (uint64_t)(freq + cumFreq) / total_freq - (t + 1);\n\n\n\n    while (rc->range < TOP && bytestream2_get_bytes_left(gb) > 0) {\n\n        unsigned byte = bytestream2_get_byte(gb);\n\n        rc->code = (rc->code << 8) | byte;\n\n        rc->code1 <<= 8;\n\n        rc->range <<= 8;\n\n    }\n\n\n\n    return 0;\n\n}",
+    "expected_callsite_annotations": null,
+    "annotator_notes": "",
+    "annotation_schema": {
+      "api_name": "str",
+      "family": "str",
+      "start": "0-based inclusive",
+      "end": "exclusive",
+      "status": "recognized/unknown/non_sink",
+      "evidence": "code-based justification"
+    }
+  },
+  {
+    "opaque_id": "H1-002",
+    "code_sha256": "932e326c7cdcd7f4cb65fc504441ce7a40a3a8e757a95e1506584b4ecdb63f06",
+    "code": "static always_inline void gen_rldimi (DisasContext *ctx, int mbn, int shn)\n\n{\n\n    uint64_t mask;\n\n    uint32_t sh, mb;\n\n\n\n    sh = SH(ctx->opcode) | (shn << 5);\n\n    mb = MB(ctx->opcode) | (mbn << 5);\n\n    if (likely(sh == 0)) {\n\n        if (likely(mb == 0)) {\n\n            gen_op_load_gpr_T0(rS(ctx->opcode));\n\n            goto do_store;\n\n        } else if (likely(mb == 63)) {\n\n            gen_op_load_gpr_T0(rA(ctx->opcode));\n\n            goto do_store;\n\n        }\n\n        gen_op_load_gpr_T0(rS(ctx->opcode));\n\n        gen_op_load_gpr_T1(rA(ctx->opcode));\n\n        goto do_mask;\n\n    }\n\n    gen_op_load_gpr_T0(rS(ctx->opcode));\n\n    gen_op_load_gpr_T1(rA(ctx->opcode));\n\n    gen_op_rotli64_T0(sh);\n\n do_mask:\n\n    mask = MASK(mb, 63 - sh);\n\n    gen_andi_T0_64(ctx, mask);\n\n    gen_andi_T1_64(ctx, ~mask);\n\n    gen_op_or();\n\n do_store:\n\n    gen_op_store_T0_gpr(rA(ctx->opcode));\n\n    if (unlikely(Rc(ctx->opcode) != 0))\n\n        gen_set_Rc0(ctx);\n\n}",
+    "expected_callsite_annotations": null,
+    "annotator_notes": "",
+    "annotation_schema": {
+      "api_name": "str",
+      "family": "str",
+      "start": "0-based inclusive",
+      "end": "exclusive",
+      "status": "recognized/unknown/non_sink",
+      "evidence": "code-based justification"
+    }
+  },
+  {
+    "opaque_id": "H1-003",
+    "code_sha256": "a9c6024d00c14d22f9c259e1b5cfcf7e4d856d1cb75008f0782f16bc90c60f51",
+    "code": "static int dx2_decode_slice_410(GetBitContext *gb, AVFrame *frame,\n\n                                int line, int left,\n\n                                uint8_t lru[3][8])\n\n{\n\n    int x, y, i, j;\n\n    int width   = frame->width;\n\n\n\n    int ystride = frame->linesize[0];\n\n    int ustride = frame->linesize[1];\n\n    int vstride = frame->linesize[2];\n\n\n\n    uint8_t *Y  = frame->data[0] + ystride * line;\n\n    uint8_t *U  = frame->data[1] + (ustride >> 2) * line;\n\n    uint8_t *V  = frame->data[2] + (vstride >> 2) * line;\n\n\n\n    for (y = 0; y < left - 3 && get_bits_left(gb) > 16; y += 4) {\n\n        for (x = 0; x < width; x += 4) {\n\n            for (j = 0; j < 4; j++)\n\n                for (i = 0; i < 4; i++)\n\n                    Y[x + i + j * ystride] = decode_sym(gb, lru[0]);\n\n            U[x >> 2] = decode_sym(gb, lru[1]) ^ 0x80;\n\n            V[x >> 2] = decode_sym(gb, lru[2]) ^ 0x80;\n\n        }\n\n\n\n        Y += ystride << 2;\n\n        U += ustride;\n\n        V += vstride;\n\n    }\n\n\n\n    return y;\n\n}",
+    "expected_callsite_annotations": null,
+    "annotator_notes": "",
+    "annotation_schema": {
+      "api_name": "str",
+      "family": "str",
+      "start": "0-based inclusive",
+      "end": "exclusive",
+      "status": "recognized/unknown/non_sink",
+      "evidence": "code-based justification"
+    }
+  },
+  {
+    "opaque_id": "H1-004",
+    "code_sha256": "25d7ce5e428027bdca799a40e620164d7894a8cb4d9bd410239d53c86eaa20d5",
+    "code": "static int iscsi_open(BlockDriverState *bs, const char *filename, int flags)\n\n{\n\n    IscsiLun *iscsilun = bs->opaque;\n\n    struct iscsi_context *iscsi = NULL;\n\n    struct iscsi_url *iscsi_url = NULL;\n\n    struct IscsiTask task;\n\n    char *initiator_name = NULL;\n\n    int ret;\n\n\n\n    if ((BDRV_SECTOR_SIZE % 512) != 0) {\n\n        error_report(\"iSCSI: Invalid BDRV_SECTOR_SIZE. \"\n\n                     \"BDRV_SECTOR_SIZE(%lld) is not a multiple \"\n\n                     \"of 512\", BDRV_SECTOR_SIZE);\n\n        return -EINVAL;\n\n    }\n\n\n\n    iscsi_url = iscsi_parse_full_url(iscsi, filename);\n\n    if (iscsi_url == NULL) {\n\n        error_report(\"Failed to parse URL : %s %s\", filename,\n\n                     iscsi_get_error(iscsi));\n\n        ret = -EINVAL;\n\n        goto out;\n\n    }\n\n\n\n    memset(iscsilun, 0, sizeof(IscsiLun));\n\n\n\n    initiator_name = parse_initiator_name(iscsi_url->target);\n\n\n\n    iscsi = iscsi_create_context(initiator_name);\n\n    if (iscsi == NULL) {\n\n        error_report(\"iSCSI: Failed to create iSCSI context.\");\n\n        ret = -ENOMEM;\n\n        goto out;\n\n    }\n\n\n\n    if (iscsi_set_targetname(iscsi, iscsi_url->target)) {\n\n        error_report(\"iSCSI: Failed to set target name.\");\n\n        ret = -EINVAL;\n\n        goto out;\n\n    }\n\n\n\n    if (iscsi_url->user != NULL) {\n\n        ret = iscsi_set_initiator_username_pwd(iscsi, iscsi_url->user,\n\n                                              iscsi_url->passwd);\n\n        if (ret != 0) {\n\n            error_report(\"Failed to set initiator username and password\");\n\n            ret = -EINVAL;\n\n            goto out;\n\n        }\n\n    }\n\n\n\n    /* check if we got CHAP username/password via the options */\n\n    if (parse_chap(iscsi, iscsi_url->target) != 0) {\n\n        error_report(\"iSCSI: Failed to set CHAP user/password\");\n\n        ret = -EINVAL;\n\n        goto out;\n\n    }\n\n\n\n    if (iscsi_set_session_type(iscsi, ISCSI_SESSION_NORMAL) != 0) {\n\n        error_report(\"iSCSI: Failed to set session type to normal.\");\n\n        ret = -EINVAL;\n\n        goto out;\n\n    }\n\n\n\n    iscsi_set_header_digest(iscsi, ISCSI_HEADER_DIGEST_NONE_CRC32C);\n\n\n\n    /* check if we got HEADER_DIGEST via the options */\n\n    parse_header_digest(iscsi, iscsi_url->target);\n\n\n\n    task.iscsilun = iscsilun;\n\n    task.status = 0;\n\n    task.complete = 0;\n\n    task.bs = bs;\n\n\n\n    iscsilun->iscsi = iscsi;\n\n    iscsilun->lun   = iscsi_url->lun;\n\n\n\n    if (iscsi_full_connect_async(iscsi, iscsi_url->portal, iscsi_url->lun,\n\n                                 iscsi_connect_cb, &task)\n\n        != 0) {\n\n        error_report(\"iSCSI: Failed to start async connect.\");\n\n        ret = -EINVAL;\n\n        goto out;\n\n    }\n\n\n\n    while (!task.complete) {\n\n        iscsi_set_events(iscsilun);\n\n        qemu_aio_wait();\n\n    }\n\n    if (task.status != 0) {\n\n        error_report(\"iSCSI: Failed to connect to LUN : %s\",\n\n                     iscsi_get_error(iscsi));\n\n        ret = -EINVAL;\n\n        goto out;\n\n    }\n\n\n\n    /* Medium changer or tape. We dont have any emulation for this so this must\n\n     * be sg ioctl compatible. We force it to be sg, otherwise qemu will try\n\n     * to read from the device to guess the image format.\n\n     */\n\n    if (iscsilun->type == TYPE_MEDIUM_CHANGER ||\n\n        iscsilun->type == TYPE_TAPE) {\n\n        bs->sg = 1;\n\n    }\n\n\n\n    ret = 0;\n\n\n\nout:\n\n    if (initiator_name != NULL) {\n\n        g_free(initiator_name);\n\n    }\n\n    if (iscsi_url != NULL) {\n\n        iscsi_destroy_url(iscsi_url);\n\n    }\n\n\n\n    if (ret) {\n\n        if (iscsi != NULL) {\n\n            iscsi_destroy_context(iscsi);\n\n        }\n\n        memset(iscsilun, 0, sizeof(IscsiLun));\n\n    }\n\n    return ret;\n\n}",
+    "expected_callsite_annotations": null,
+    "annotator_notes": "",
+    "annotation_schema": {
+      "api_name": "str",
+      "family": "str",
+      "start": "0-based inclusive",
+      "end": "exclusive",
+      "status": "recognized/unknown/non_sink",
+      "evidence": "code-based justification"
+    }
+  },
+  {
+    "opaque_id": "H1-005",
+    "code_sha256": "b97ee21af5fa171932994cecfaabd893bda2bea7d272004fb876092be05d43ec",
+    "code": "int av_reallocp_array(void *ptr, size_t nmemb, size_t size)\n\n{\n\n    void **ptrptr = ptr;\n\n    void *ret;\n\n    if (size <= 0 || nmemb >= INT_MAX / size)\n\n        return AVERROR(ENOMEM);\n\n    if (nmemb <= 0) {\n\n        av_freep(ptr);\n\n        return 0;\n\n    }\n\n    ret = av_realloc(*ptrptr, nmemb * size);\n\n    if (!ret) {\n\n        av_freep(ptr);\n\n        return AVERROR(ENOMEM);\n\n    }\n\n    *ptrptr = ret;\n\n    return 0;\n\n}",
+    "expected_callsite_annotations": null,
+    "annotator_notes": "",
+    "annotation_schema": {
+      "api_name": "str",
+      "family": "str",
+      "start": "0-based inclusive",
+      "end": "exclusive",
+      "status": "recognized/unknown/non_sink",
+      "evidence": "code-based justification"
+    }
+  },
+  {
+    "opaque_id": "H1-006",
+    "code_sha256": "a4ab882a57be91251ef89b565e7daa0e7ad5b1af92c89bcee09922268cc2fbf4",
+    "code": "static void ehci_mem_writew(void *ptr, target_phys_addr_t addr, uint32_t val)\n\n{\n\n    fprintf(stderr, \"EHCI doesn't handle 16-bit writes to MMIO\\n\");\n\n    exit(1);\n\n}",
+    "expected_callsite_annotations": null,
+    "annotator_notes": "",
+    "annotation_schema": {
+      "api_name": "str",
+      "family": "str",
+      "start": "0-based inclusive",
+      "end": "exclusive",
+      "status": "recognized/unknown/non_sink",
+      "evidence": "code-based justification"
+    }
+  },
+  {
+    "opaque_id": "H1-007",
+    "code_sha256": "798997fbda98856487ba5ea9f6ecbd8ebb75d1372a6f213fcf49f891fdb8522b",
+    "code": "void fw_cfg_add_callback(FWCfgState *s, uint16_t key, FWCfgCallback callback,\n\n                         void *callback_opaque, uint8_t *data, size_t len)\n\n{\n\n    int arch = !!(key & FW_CFG_ARCH_LOCAL);\n\n\n\n    assert(key & FW_CFG_WRITE_CHANNEL);\n\n\n\n    key &= FW_CFG_ENTRY_MASK;\n\n\n\n    assert(key < FW_CFG_MAX_ENTRY && len <= 65535);\n\n\n\n    s->entries[arch][key].data = data;\n\n    s->entries[arch][key].len = len;\n\n    s->entries[arch][key].callback_opaque = callback_opaque;\n\n    s->entries[arch][key].callback = callback;\n\n}",
+    "expected_callsite_annotations": null,
+    "annotator_notes": "",
+    "annotation_schema": {
+      "api_name": "str",
+      "family": "str",
+      "start": "0-based inclusive",
+      "end": "exclusive",
+      "status": "recognized/unknown/non_sink",
+      "evidence": "code-based justification"
+    }
+  },
+  {
+    "opaque_id": "H1-008",
+    "code_sha256": "39140f75723deedd93f351960e4699548195cc174bf80312e031d60068e664e7",
+    "code": "static void xendev_class_init(ObjectClass *klass, void *data)\n\n{\n\n    DeviceClass *dc = DEVICE_CLASS(klass);\n\n\n\n    dc->props = xendev_properties;\n\n    set_bit(DEVICE_CATEGORY_MISC, dc->categories);\n\n\n\n\n\n\n}",
+    "expected_callsite_annotations": null,
+    "annotator_notes": "",
+    "annotation_schema": {
+      "api_name": "str",
+      "family": "str",
+      "start": "0-based inclusive",
+      "end": "exclusive",
+      "status": "recognized/unknown/non_sink",
+      "evidence": "code-based justification"
+    }
+  },
+  {
+    "opaque_id": "H1-009",
+    "code_sha256": "e49157cb8967ac3f0a6f22039aae3ddbc69f63de899ea01015a57706df81cb1d",
+    "code": "static void smp_parse(const char *optarg)\n\n{\n\n    int smp, sockets = 0, threads = 0, cores = 0;\n\n    char *endptr;\n\n    char option[128];\n\n\n\n    smp = strtoul(optarg, &endptr, 10);\n\n    if (endptr != optarg) {\n\n        if (*endptr == ',') {\n\n            endptr++;\n\n        }\n\n    }\n\n    if (get_param_value(option, 128, \"sockets\", endptr) != 0)\n\n        sockets = strtoull(option, NULL, 10);\n\n    if (get_param_value(option, 128, \"cores\", endptr) != 0)\n\n        cores = strtoull(option, NULL, 10);\n\n    if (get_param_value(option, 128, \"threads\", endptr) != 0)\n\n        threads = strtoull(option, NULL, 10);\n\n    if (get_param_value(option, 128, \"maxcpus\", endptr) != 0)\n\n        max_cpus = strtoull(option, NULL, 10);\n\n\n\n    /* compute missing values, prefer sockets over cores over threads */\n\n    if (smp == 0 || sockets == 0) {\n\n        sockets = sockets > 0 ? sockets : 1;\n\n        cores = cores > 0 ? cores : 1;\n\n        threads = threads > 0 ? threads : 1;\n\n        if (smp == 0) {\n\n            smp = cores * threads * sockets;\n\n        }\n\n    } else {\n\n        if (cores == 0) {\n\n            threads = threads > 0 ? threads : 1;\n\n            cores = smp / (sockets * threads);\n\n        } else {\n\n            threads = smp / (cores * sockets);\n\n        }\n\n    }\n\n    smp_cpus = smp;\n\n    smp_cores = cores > 0 ? cores : 1;\n\n    smp_threads = threads > 0 ? threads : 1;\n\n    if (max_cpus == 0)\n\n        max_cpus = smp_cpus;\n\n}",
+    "expected_callsite_annotations": null,
+    "annotator_notes": "",
+    "annotation_schema": {
+      "api_name": "str",
+      "family": "str",
+      "start": "0-based inclusive",
+      "end": "exclusive",
+      "status": "recognized/unknown/non_sink",
+      "evidence": "code-based justification"
+    }
+  },
+  {
+    "opaque_id": "H1-010",
+    "code_sha256": "c7c574ec8473382faed12d6f9df029c2278b13b740a1a9b026f0453b8b4a454d",
+    "code": "static int find_stream_index(AVFormatContext *s)\n\n{\n\n    int i;\n\n    AVStream *st;\n\n\n\n    if (s->nb_streams <= 0)\n\n        return -1;\n\n    for(i = 0; i < s->nb_streams; i++) {\n\n        st = s->streams[i];\n\n        if (st->codec.codec_type == CODEC_TYPE_VIDEO) {\n\n            return i;\n\n        }\n\n    }\n\n    return 0;\n\n}",
+    "expected_callsite_annotations": null,
+    "annotator_notes": "",
+    "annotation_schema": {
+      "api_name": "str",
+      "family": "str",
+      "start": "0-based inclusive",
+      "end": "exclusive",
+      "status": "recognized/unknown/non_sink",
+      "evidence": "code-based justification"
+    }
+  },
+  {
+    "opaque_id": "H1-011",
+    "code_sha256": "ef2a44abfd09ba118a0e067d877f9f563284c8ee86e2becfdbd96341b9f3da1e",
+    "code": "void ff_rtsp_undo_setup(AVFormatContext *s)\n\n{\n\n    RTSPState *rt = s->priv_data;\n\n    int i;\n\n\n\n    for (i = 0; i < rt->nb_rtsp_streams; i++) {\n\n        RTSPStream *rtsp_st = rt->rtsp_streams[i];\n\n        if (!rtsp_st)\n\n            continue;\n\n        if (rtsp_st->transport_priv) {\n\n            if (s->oformat) {\n\n                AVFormatContext *rtpctx = rtsp_st->transport_priv;\n\n                av_write_trailer(rtpctx);\n\n                if (rt->lower_transport == RTSP_LOWER_TRANSPORT_TCP) {\n\n                    uint8_t *ptr;\n\n                    url_close_dyn_buf(rtpctx->pb, &ptr);\n\n                    av_free(ptr);\n\n                } else {\n\n                    url_fclose(rtpctx->pb);\n\n                }\n\n                av_metadata_free(&rtpctx->streams[0]->metadata);\n\n                av_metadata_free(&rtpctx->metadata);\n\n\n                av_free(rtpctx->streams[0]);\n\n                av_free(rtpctx);\n\n            } else if (rt->transport == RTSP_TRANSPORT_RDT && CONFIG_RTPDEC)\n\n                ff_rdt_parse_close(rtsp_st->transport_priv);\n\n            else if (CONFIG_RTPDEC)\n\n                rtp_parse_close(rtsp_st->transport_priv);\n\n        }\n\n        rtsp_st->transport_priv = NULL;\n\n        if (rtsp_st->rtp_handle)\n\n            url_close(rtsp_st->rtp_handle);\n\n        rtsp_st->rtp_handle = NULL;\n\n    }\n\n}",
+    "expected_callsite_annotations": null,
+    "annotator_notes": "",
+    "annotation_schema": {
+      "api_name": "str",
+      "family": "str",
+      "start": "0-based inclusive",
+      "end": "exclusive",
+      "status": "recognized/unknown/non_sink",
+      "evidence": "code-based justification"
+    }
+  },
+  {
+    "opaque_id": "H1-012",
+    "code_sha256": "6a3b1c179db80140da68c49b0c9227dd068ed695e07d6c7feb66eb778533455f",
+    "code": "CharDriverState *text_console_init(DisplayState *ds, const char *p)\n\n{\n\n    CharDriverState *chr;\n\n    TextConsole *s;\n\n    unsigned width;\n\n    unsigned height;\n\n    static int color_inited;\n\n\n\n    chr = qemu_mallocz(sizeof(CharDriverState));\n\n    if (!chr)\n\n        return NULL;\n\n    s = new_console(ds, TEXT_CONSOLE);\n\n    if (!s) {\n\n        free(chr);\n\n        return NULL;\n\n    }\n\n    if (!p)\n\n        p = DEFAULT_MONITOR_SIZE;\n\n\n\n    chr->opaque = s;\n\n    chr->chr_write = console_puts;\n\n    chr->chr_send_event = console_send_event;\n\n\n\n    s->chr = chr;\n\n    s->out_fifo.buf = s->out_fifo_buf;\n\n    s->out_fifo.buf_size = sizeof(s->out_fifo_buf);\n\n    s->kbd_timer = qemu_new_timer(rt_clock, kbd_send_chars, s);\n\n\n\n    if (!color_inited) {\n\n        color_inited = 1;\n\n        console_color_init(s->ds);\n\n    }\n\n    s->y_displayed = 0;\n\n    s->y_base = 0;\n\n    s->total_height = DEFAULT_BACKSCROLL;\n\n    s->x = 0;\n\n    s->y = 0;\n\n    width = s->ds->width;\n\n    height = s->ds->height;\n\n    if (p != 0) {\n\n        width = strtoul(p, (char **)&p, 10);\n\n        if (*p == 'C') {\n\n            p++;\n\n            width *= FONT_WIDTH;\n\n        }\n\n        if (*p == 'x') {\n\n            p++;\n\n            height = strtoul(p, (char **)&p, 10);\n\n            if (*p == 'C') {\n\n                p++;\n\n                height *= FONT_HEIGHT;\n\n            }\n\n        }\n\n    }\n\n    s->g_width = width;\n\n    s->g_height = height;\n\n\n\n    s->hw_invalidate = text_console_invalidate;\n\n    s->hw_text_update = text_console_update;\n\n    s->hw = s;\n\n\n\n    /* Set text attribute defaults */\n\n    s->t_attrib_default.bold = 0;\n\n    s->t_attrib_default.uline = 0;\n\n    s->t_attrib_default.blink = 0;\n\n    s->t_attrib_default.invers = 0;\n\n    s->t_attrib_default.unvisible = 0;\n\n    s->t_attrib_default.fgcol = COLOR_WHITE;\n\n    s->t_attrib_default.bgcol = COLOR_BLACK;\n\n\n\n    /* set current text attributes to default */\n\n    s->t_attrib = s->t_attrib_default;\n\n    text_console_resize(s);\n\n\n\n    qemu_chr_reset(chr);\n\n\n\n    return chr;\n\n}",
+    "expected_callsite_annotations": null,
+    "annotator_notes": "",
+    "annotation_schema": {
+      "api_name": "str",
+      "family": "str",
+      "start": "0-based inclusive",
+      "end": "exclusive",
+      "status": "recognized/unknown/non_sink",
+      "evidence": "code-based justification"
+    }
+  },
+  {
+    "opaque_id": "H1-013",
+    "code_sha256": "6c8946529ef0857f4c25d1ac352ce63009f1fe14ef5f90f24473290acc25a9b2",
+    "code": "static void tcg_liveness_analysis(TCGContext *s)\n\n{\n\n    uint8_t *dead_temps, *mem_temps;\n\n    int oi, oi_prev, nb_ops;\n\n\n\n    nb_ops = s->gen_next_op_idx;\n\n    s->op_dead_args = tcg_malloc(nb_ops * sizeof(uint16_t));\n\n    s->op_sync_args = tcg_malloc(nb_ops * sizeof(uint8_t));\n\n    \n\n    dead_temps = tcg_malloc(s->nb_temps);\n\n    mem_temps = tcg_malloc(s->nb_temps);\n\n    tcg_la_func_end(s, dead_temps, mem_temps);\n\n\n\n    for (oi = s->gen_last_op_idx; oi >= 0; oi = oi_prev) {\n\n        int i, nb_iargs, nb_oargs;\n\n        TCGOpcode opc_new, opc_new2;\n\n        bool have_opc_new2;\n\n        uint16_t dead_args;\n\n        uint8_t sync_args;\n\n        TCGArg arg;\n\n\n\n        TCGOp * const op = &s->gen_op_buf[oi];\n\n        TCGArg * const args = &s->gen_opparam_buf[op->args];\n\n        TCGOpcode opc = op->opc;\n\n        const TCGOpDef *def = &tcg_op_defs[opc];\n\n\n\n        oi_prev = op->prev;\n\n\n\n        switch (opc) {\n\n        case INDEX_op_call:\n\n            {\n\n                int call_flags;\n\n\n\n                nb_oargs = op->callo;\n\n                nb_iargs = op->calli;\n\n                call_flags = args[nb_oargs + nb_iargs + 1];\n\n\n\n                /* pure functions can be removed if their result is unused */\n\n                if (call_flags & TCG_CALL_NO_SIDE_EFFECTS) {\n\n                    for (i = 0; i < nb_oargs; i++) {\n\n                        arg = args[i];\n\n                        if (!dead_temps[arg] || mem_temps[arg]) {\n\n                            goto do_not_remove_call;\n\n                        }\n\n                    }\n\n                    goto do_remove;\n\n                } else {\n\n                do_not_remove_call:\n\n\n\n                    /* output args are dead */\n\n                    dead_args = 0;\n\n                    sync_args = 0;\n\n                    for (i = 0; i < nb_oargs; i++) {\n\n                        arg = args[i];\n\n                        if (dead_temps[arg]) {\n\n                            dead_args |= (1 << i);\n\n                        }\n\n                        if (mem_temps[arg]) {\n\n                            sync_args |= (1 << i);\n\n                        }\n\n                        dead_temps[arg] = 1;\n\n                        mem_temps[arg] = 0;\n\n                    }\n\n\n\n                    if (!(call_flags & TCG_CALL_NO_READ_GLOBALS)) {\n\n                        /* globals should be synced to memory */\n\n                        memset(mem_temps, 1, s->nb_globals);\n\n                    }\n\n                    if (!(call_flags & (TCG_CALL_NO_WRITE_GLOBALS |\n\n                                        TCG_CALL_NO_READ_GLOBALS))) {\n\n                        /* globals should go back to memory */\n\n                        memset(dead_temps, 1, s->nb_globals);\n\n                    }\n\n\n\n                    /* input args are live */\n\n                    for (i = nb_oargs; i < nb_iargs + nb_oargs; i++) {\n\n                        arg = args[i];\n\n                        if (arg != TCG_CALL_DUMMY_ARG) {\n\n                            if (dead_temps[arg]) {\n\n                                dead_args |= (1 << i);\n\n                            }\n\n                            dead_temps[arg] = 0;\n\n                        }\n\n                    }\n\n                    s->op_dead_args[oi] = dead_args;\n\n                    s->op_sync_args[oi] = sync_args;\n\n                }\n\n            }\n\n            break;\n\n        case INDEX_op_debug_insn_start:\n\n            break;\n\n        case INDEX_op_discard:\n\n            /* mark the temporary as dead */\n\n            dead_temps[args[0]] = 1;\n\n            mem_temps[args[0]] = 0;\n\n            break;\n\n\n\n        case INDEX_op_add2_i32:\n\n            opc_new = INDEX_op_add_i32;\n\n            goto do_addsub2;\n\n        case INDEX_op_sub2_i32:\n\n            opc_new = INDEX_op_sub_i32;\n\n            goto do_addsub2;\n\n        case INDEX_op_add2_i64:\n\n            opc_new = INDEX_op_add_i64;\n\n            goto do_addsub2;\n\n        case INDEX_op_sub2_i64:\n\n            opc_new = INDEX_op_sub_i64;\n\n        do_addsub2:\n\n            nb_iargs = 4;\n\n            nb_oargs = 2;\n\n            /* Test if the high part of the operation is dead, but not\n\n               the low part.  The result can be optimized to a simple\n\n               add or sub.  This happens often for x86_64 guest when the\n\n               cpu mode is set to 32 bit.  */\n\n            if (dead_temps[args[1]] && !mem_temps[args[1]]) {\n\n                if (dead_temps[args[0]] && !mem_temps[args[0]]) {\n\n                    goto do_remove;\n\n                }\n\n                /* Replace the opcode and adjust the args in place,\n\n                   leaving 3 unused args at the end.  */\n\n                op->opc = opc = opc_new;\n\n                args[1] = args[2];\n\n                args[2] = args[4];\n\n                /* Fall through and mark the single-word operation live.  */\n\n                nb_iargs = 2;\n\n                nb_oargs = 1;\n\n            }\n\n            goto do_not_remove;\n\n\n\n        case INDEX_op_mulu2_i32:\n\n            opc_new = INDEX_op_mul_i32;\n\n            opc_new2 = INDEX_op_muluh_i32;\n\n            have_opc_new2 = TCG_TARGET_HAS_muluh_i32;\n\n            goto do_mul2;\n\n        case INDEX_op_muls2_i32:\n\n            opc_new = INDEX_op_mul_i32;\n\n            opc_new2 = INDEX_op_mulsh_i32;\n\n            have_opc_new2 = TCG_TARGET_HAS_mulsh_i32;\n\n            goto do_mul2;\n\n        case INDEX_op_mulu2_i64:\n\n            opc_new = INDEX_op_mul_i64;\n\n            opc_new2 = INDEX_op_muluh_i64;\n\n            have_opc_new2 = TCG_TARGET_HAS_muluh_i64;\n\n            goto do_mul2;\n\n        case INDEX_op_muls2_i64:\n\n            opc_new = INDEX_op_mul_i64;\n\n            opc_new2 = INDEX_op_mulsh_i64;\n\n            have_opc_new2 = TCG_TARGET_HAS_mulsh_i64;\n\n            goto do_mul2;\n\n        do_mul2:\n\n            nb_iargs = 2;\n\n            nb_oargs = 2;\n\n            if (dead_temps[args[1]] && !mem_temps[args[1]]) {\n\n                if (dead_temps[args[0]] && !mem_temps[args[0]]) {\n\n                    /* Both parts of the operation are dead.  */\n\n                    goto do_remove;\n\n                }\n\n                /* The high part of the operation is dead; generate the low. */\n\n                op->opc = opc = opc_new;\n\n                args[1] = args[2];\n\n                args[2] = args[3];\n\n            } else if (have_opc_new2 && dead_temps[args[0]]\n\n                       && !mem_temps[args[0]]) {\n\n                /* The low part of the operation is dead; generate the high. */\n\n                op->opc = opc = opc_new2;\n\n                args[0] = args[1];\n\n                args[1] = args[2];\n\n                args[2] = args[3];\n\n            } else {\n\n                goto do_not_remove;\n\n            }\n\n            /* Mark the single-word operation live.  */\n\n            nb_oargs = 1;\n\n            goto do_not_remove;\n\n\n\n        default:\n\n            /* XXX: optimize by hardcoding common cases (e.g. triadic ops) */\n\n            nb_iargs = def->nb_iargs;\n\n            nb_oargs = def->nb_oargs;\n\n\n\n            /* Test if the operation can be removed because all\n\n               its outputs are dead. We assume that nb_oargs == 0\n\n               implies side effects */\n\n            if (!(def->flags & TCG_OPF_SIDE_EFFECTS) && nb_oargs != 0) {\n\n                for (i = 0; i < nb_oargs; i++) {\n\n                    arg = args[i];\n\n                    if (!dead_temps[arg] || mem_temps[arg]) {\n\n                        goto do_not_remove;\n\n                    }\n\n                }\n\n            do_remove:\n\n                tcg_op_remove(s, op);\n\n            } else {\n\n            do_not_remove:\n\n                /* output args are dead */\n\n                dead_args = 0;\n\n                sync_args = 0;\n\n                for (i = 0; i < nb_oargs; i++) {\n\n                    arg = args[i];\n\n                    if (dead_temps[arg]) {\n\n                        dead_args |= (1 << i);\n\n                    }\n\n                    if (mem_temps[arg]) {\n\n                        sync_args |= (1 << i);\n\n                    }\n\n                    dead_temps[arg] = 1;\n\n                    mem_temps[arg] = 0;\n\n                }\n\n\n\n                /* if end of basic block, update */\n\n                if (def->flags & TCG_OPF_BB_END) {\n\n                    tcg_la_bb_end(s, dead_temps, mem_temps);\n\n                } else if (def->flags & TCG_OPF_SIDE_EFFECTS) {\n\n                    /* globals should be synced to memory */\n\n                    memset(mem_temps, 1, s->nb_globals);\n\n                }\n\n\n\n                /* input args are live */\n\n                for (i = nb_oargs; i < nb_oargs + nb_iargs; i++) {\n\n                    arg = args[i];\n\n                    if (dead_temps[arg]) {\n\n                        dead_args |= (1 << i);\n\n                    }\n\n                    dead_temps[arg] = 0;\n\n                }\n\n                s->op_dead_args[oi] = dead_args;\n\n                s->op_sync_args[oi] = sync_args;\n\n            }\n\n            break;\n\n        }\n\n    }\n\n}",
+    "expected_callsite_annotations": null,
+    "annotator_notes": "",
+    "annotation_schema": {
+      "api_name": "str",
+      "family": "str",
+      "start": "0-based inclusive",
+      "end": "exclusive",
+      "status": "recognized/unknown/non_sink",
+      "evidence": "code-based justification"
+    }
+  },
+  {
+    "opaque_id": "H1-014",
+    "code_sha256": "c4584137a4bc5fff989764e5e01332f230d1f0a33066b91e83092543af699e38",
+    "code": "static inline int onenand_load_main(OneNANDState *s, int sec, int secn,\n\n                void *dest)\n\n{\n\n    if (s->bdrv_cur)\n\n        return bdrv_read(s->bdrv_cur, sec, dest, secn) < 0;\n\n    else if (sec + secn > s->secs_cur)\n\n        return 1;\n\n\n\n    memcpy(dest, s->current + (sec << 9), secn << 9);\n\n\n\n    return 0;\n\n}",
+    "expected_callsite_annotations": null,
+    "annotator_notes": "",
+    "annotation_schema": {
+      "api_name": "str",
+      "family": "str",
+      "start": "0-based inclusive",
+      "end": "exclusive",
+      "status": "recognized/unknown/non_sink",
+      "evidence": "code-based justification"
+    }
+  },
+  {
+    "opaque_id": "H1-015",
+    "code_sha256": "45f6fd6cd8478543a73b297a69dafc92173eeb5882067b7d890080fc0ebe7967",
+    "code": "static void generate_offset_lut(DiracGolombLUT *lut, int off)\n\n{\n\n    int idx;\n\n    for (idx = 0; idx < LUT_SIZE; idx++) {\n\n        DiracGolombLUT *l = &lut[idx];\n\n\n\n        INIT_RESIDUE(res);\n\n        SET_RESIDUE(res, idx, LUT_BITS);\n\n\n\n        l->preamble      = CONVERT_TO_RESIDUE(res >> (RSIZE_BITS - off), off);\n\n        l->preamble_bits = off;\n\n        l->sign = ((l->preamble >> (RSIZE_BITS - l->preamble_bits)) & 1) ? -1 : +1;\n\n\n\n        search_for_golomb(l, res << off, LUT_BITS - off);\n\n    }\n\n}",
+    "expected_callsite_annotations": null,
+    "annotator_notes": "",
+    "annotation_schema": {
+      "api_name": "str",
+      "family": "str",
+      "start": "0-based inclusive",
+      "end": "exclusive",
+      "status": "recognized/unknown/non_sink",
+      "evidence": "code-based justification"
+    }
+  },
+  {
+    "opaque_id": "H1-016",
+    "code_sha256": "e64b0cdb643efd3bbf00d5ca05a4a8b9f57a8f3977a77c614d317c175d02aacb",
+    "code": "vmxnet3_pop_next_tx_descr(VMXNET3State *s,\n\n                          int qidx,\n\n                          struct Vmxnet3_TxDesc *txd,\n\n                          uint32_t *descr_idx)\n\n{\n\n    Vmxnet3Ring *ring = &s->txq_descr[qidx].tx_ring;\n\n    PCIDevice *d = PCI_DEVICE(s);\n\n\n\n    vmxnet3_ring_read_curr_cell(d, ring, txd);\n\n    if (txd->gen == vmxnet3_ring_curr_gen(ring)) {\n\n        /* Only read after generation field verification */\n\n        smp_rmb();\n\n        /* Re-read to be sure we got the latest version */\n\n        vmxnet3_ring_read_curr_cell(d, ring, txd);\n\n        VMXNET3_RING_DUMP(VMW_RIPRN, \"TX\", qidx, ring);\n\n        *descr_idx = vmxnet3_ring_curr_cell_idx(ring);\n\n        vmxnet3_inc_tx_consumption_counter(s, qidx);\n\n        return true;\n\n    }\n\n\n\n    return false;\n\n}",
+    "expected_callsite_annotations": null,
+    "annotator_notes": "",
+    "annotation_schema": {
+      "api_name": "str",
+      "family": "str",
+      "start": "0-based inclusive",
+      "end": "exclusive",
+      "status": "recognized/unknown/non_sink",
+      "evidence": "code-based justification"
+    }
+  },
+  {
+    "opaque_id": "H1-017",
+    "code_sha256": "498223860d66eb10fa633a55cf894924ba023ce3ffd45b6dd241b2567b8b7764",
+    "code": "static void init_excp_BookE (CPUPPCState *env)\n\n{\n\n#if !defined(CONFIG_USER_ONLY)\n\n    env->excp_vectors[POWERPC_EXCP_CRITICAL] = 0x00000000;\n\n    env->excp_vectors[POWERPC_EXCP_MCHECK]   = 0x00000000;\n\n    env->excp_vectors[POWERPC_EXCP_DSI]      = 0x00000000;\n\n    env->excp_vectors[POWERPC_EXCP_ISI]      = 0x00000000;\n\n    env->excp_vectors[POWERPC_EXCP_EXTERNAL] = 0x00000000;\n\n    env->excp_vectors[POWERPC_EXCP_ALIGN]    = 0x00000000;\n\n    env->excp_vectors[POWERPC_EXCP_PROGRAM]  = 0x00000000;\n\n    env->excp_vectors[POWERPC_EXCP_FPU]      = 0x00000000;\n\n    env->excp_vectors[POWERPC_EXCP_SYSCALL]  = 0x00000000;\n\n    env->excp_vectors[POWERPC_EXCP_APU]      = 0x00000000;\n\n    env->excp_vectors[POWERPC_EXCP_DECR]     = 0x00000000;\n\n    env->excp_vectors[POWERPC_EXCP_FIT]      = 0x00000000;\n\n    env->excp_vectors[POWERPC_EXCP_WDT]      = 0x00000000;\n\n    env->excp_vectors[POWERPC_EXCP_DTLB]     = 0x00000000;\n\n    env->excp_vectors[POWERPC_EXCP_ITLB]     = 0x00000000;\n\n    env->excp_vectors[POWERPC_EXCP_DEBUG]    = 0x00000000;\n\n    env->excp_prefix = 0x00000000;\n\n    env->ivor_mask = 0x0000FFE0;\n\n    env->ivpr_mask = 0xFFFF0000;\n\n    /* Hardware reset vector */\n\n    env->hreset_vector = 0xFFFFFFFCUL;\n\n#endif\n\n}",
+    "expected_callsite_annotations": null,
+    "annotator_notes": "",
+    "annotation_schema": {
+      "api_name": "str",
+      "family": "str",
+      "start": "0-based inclusive",
+      "end": "exclusive",
+      "status": "recognized/unknown/non_sink",
+      "evidence": "code-based justification"
+    }
+  },
+  {
+    "opaque_id": "H1-018",
+    "code_sha256": "d37b1a7816c1bb40cc1687d706ce47b4f29fc60696856395e45950acc58e69a5",
+    "code": "DISAS_INSN(divw)\n\n{\n\n    TCGv reg;\n\n    TCGv tmp;\n\n    TCGv src;\n\n    int sign;\n\n\n\n    sign = (insn & 0x100) != 0;\n\n    reg = DREG(insn, 9);\n\n    if (sign) {\n\n        tcg_gen_ext16s_i32(QREG_DIV1, reg);\n\n    } else {\n\n        tcg_gen_ext16u_i32(QREG_DIV1, reg);\n\n    }\n\n    SRC_EA(env, src, OS_WORD, sign, NULL);\n\n    tcg_gen_mov_i32(QREG_DIV2, src);\n\n    if (sign) {\n\n        gen_helper_divs(cpu_env, tcg_const_i32(1));\n\n    } else {\n\n        gen_helper_divu(cpu_env, tcg_const_i32(1));\n\n    }\n\n\n\n    tmp = tcg_temp_new();\n\n    src = tcg_temp_new();\n\n    tcg_gen_ext16u_i32(tmp, QREG_DIV1);\n\n    tcg_gen_shli_i32(src, QREG_DIV2, 16);\n\n    tcg_gen_or_i32(reg, tmp, src);\n\n\n\n    set_cc_op(s, CC_OP_FLAGS);\n\n}",
+    "expected_callsite_annotations": null,
+    "annotator_notes": "",
+    "annotation_schema": {
+      "api_name": "str",
+      "family": "str",
+      "start": "0-based inclusive",
+      "end": "exclusive",
+      "status": "recognized/unknown/non_sink",
+      "evidence": "code-based justification"
+    }
+  },
+  {
+    "opaque_id": "H1-019",
+    "code_sha256": "8def01e9706c276613e93797ce701d737a5a0ad804b560479f5caf81a3f04330",
+    "code": "static int msrle_decode_8_16_24_32(AVCodecContext *avctx, AVPicture *pic, int depth,\n\n                                    const uint8_t *data, int srcsize)\n\n{\n\n    uint8_t *output, *output_end;\n\n    const uint8_t* src = data;\n\n    int p1, p2, line=avctx->height, pos=0, i;\n\n    uint16_t pix16;\n\n    uint32_t pix32;\n\n\n\n    output = pic->data[0] + (avctx->height - 1) * pic->linesize[0];\n\n    output_end = pic->data[0] + (avctx->height) * pic->linesize[0];\n\n    while(src < data + srcsize) {\n\n        p1 = *src++;\n\n        if(p1 == 0) { //Escape code\n\n            p2 = *src++;\n\n            if(p2 == 0) { //End-of-line\n\n                output = pic->data[0] + (--line) * pic->linesize[0];\n\n                if (line < 0){\n\n                    av_log(avctx, AV_LOG_ERROR, \"Next line is beyond picture bounds\\n\");\n\n                    return -1;\n\n                }\n\n                pos = 0;\n\n                continue;\n\n            } else if(p2 == 1) { //End-of-picture\n\n                return 0;\n\n            } else if(p2 == 2) { //Skip\n\n                p1 = *src++;\n\n                p2 = *src++;\n\n                line -= p2;\n\n                if (line < 0){\n\n                    av_log(avctx, AV_LOG_ERROR, \"Skip beyond picture bounds\\n\");\n\n                    return -1;\n\n                }\n\n                pos += p1;\n\n                output = pic->data[0] + line * pic->linesize[0] + pos * (depth >> 3);\n\n                continue;\n\n            }\n\n            // Copy data\n\n            if (output + p2 * (depth >> 3) > output_end) {\n\n                src += p2 * (depth >> 3);\n\n                continue;\n\n            }\n\n            if ((depth == 8) || (depth == 24)) {\n\n                for(i = 0; i < p2 * (depth >> 3); i++) {\n\n                    *output++ = *src++;\n\n                }\n\n                // RLE8 copy is actually padded - and runs are not!\n\n                if(depth == 8 && (p2 & 1)) {\n\n                    src++;\n\n                }\n\n            } else if (depth == 16) {\n\n                for(i = 0; i < p2; i++) {\n\n                    pix16 = AV_RL16(src);\n\n                    src += 2;\n\n                    *(uint16_t*)output = pix16;\n\n                    output += 2;\n\n                }\n\n            } else if (depth == 32) {\n\n                for(i = 0; i < p2; i++) {\n\n                    pix32 = AV_RL32(src);\n\n                    src += 4;\n\n                    *(uint32_t*)output = pix32;\n\n                    output += 4;\n\n                }\n\n            }\n\n            pos += p2;\n\n        } else { //Run of pixels\n\n            uint8_t pix[3]; //original pixel\n\n            switch(depth){\n\n            case  8: pix[0] = *src++;\n\n                     break;\n\n            case 16: pix16 = AV_RL16(src);\n\n                     src += 2;\n\n                     break;\n\n            case 24: pix[0] = *src++;\n\n                     pix[1] = *src++;\n\n                     pix[2] = *src++;\n\n                     break;\n\n            case 32: pix32 = AV_RL32(src);\n\n                     src += 4;\n\n                     break;\n\n            }\n\n            if (output + p1 * (depth >> 3) > output_end)\n\n                continue;\n\n            for(i = 0; i < p1; i++) {\n\n                switch(depth){\n\n                case  8: *output++ = pix[0];\n\n                         break;\n\n                case 16: *(uint16_t*)output = pix16;\n\n                         output += 2;\n\n                         break;\n\n                case 24: *output++ = pix[0];\n\n                         *output++ = pix[1];\n\n                         *output++ = pix[2];\n\n                         break;\n\n                case 32: *(uint32_t*)output = pix32;\n\n                         output += 4;\n\n                         break;\n\n                }\n\n            }\n\n            pos += p1;\n\n        }\n\n    }\n\n\n\n    av_log(avctx, AV_LOG_WARNING, \"MS RLE warning: no End-of-picture code\\n\");\n\n    return 0;\n\n}",
+    "expected_callsite_annotations": null,
+    "annotator_notes": "",
+    "annotation_schema": {
+      "api_name": "str",
+      "family": "str",
+      "start": "0-based inclusive",
+      "end": "exclusive",
+      "status": "recognized/unknown/non_sink",
+      "evidence": "code-based justification"
+    }
+  },
+  {
+    "opaque_id": "H1-020",
+    "code_sha256": "76b91755200362719c9dd86da96fa43cb3bc2e5f630b85994b957fdea435b396",
+    "code": "static void RENAME(vertical_compose53iL0)(uint8_t *_b0, uint8_t *_b1, uint8_t *_b2,\n\n                                          int width)\n\n{\n\n    int i;\n\n    TYPE *b0 = (TYPE *)_b0;\n\n    TYPE *b1 = (TYPE *)_b1;\n\n    TYPE *b2 = (TYPE *)_b2;\n\n    for (i = 0; i < width; i++)\n\n        b1[i] -= (b0[i] + b2[i] + 2) >> 2;\n\n}",
+    "expected_callsite_annotations": null,
+    "annotator_notes": "",
+    "annotation_schema": {
+      "api_name": "str",
+      "family": "str",
+      "start": "0-based inclusive",
+      "end": "exclusive",
+      "status": "recognized/unknown/non_sink",
+      "evidence": "code-based justification"
+    }
+  },
+  {
+    "opaque_id": "H1-021",
+    "code_sha256": "87f1b4abe1516ffd0d0b8288ba71119a4580d1f0e073454b5470001d70e1e969",
+    "code": "static void handle_user_command(Monitor *mon, const char *cmdline)\n\n{\n\n    QDict *qdict;\n\n    const mon_cmd_t *cmd;\n\n\n\n    qdict = qdict_new();\n\n\n\n    cmd = monitor_parse_command(mon, cmdline, 0, mon->cmd_table, qdict);\n\n    if (!cmd)\n\n        goto out;\n\n\n\n    if (handler_is_async(cmd)) {\n\n        user_async_cmd_handler(mon, cmd, qdict);\n\n    } else if (handler_is_qobject(cmd)) {\n\n        QObject *data = NULL;\n\n\n\n        /* XXX: ignores the error code */\n\n        cmd->mhandler.cmd_new(mon, qdict, &data);\n\n        assert(!monitor_has_error(mon));\n\n        if (data) {\n\n            cmd->user_print(mon, data);\n\n            qobject_decref(data);\n\n        }\n\n    } else {\n\n        cmd->mhandler.cmd(mon, qdict);\n\n    }\n\n\n\nout:\n\n    QDECREF(qdict);\n\n}",
+    "expected_callsite_annotations": null,
+    "annotator_notes": "",
+    "annotation_schema": {
+      "api_name": "str",
+      "family": "str",
+      "start": "0-based inclusive",
+      "end": "exclusive",
+      "status": "recognized/unknown/non_sink",
+      "evidence": "code-based justification"
+    }
+  },
+  {
+    "opaque_id": "H1-022",
+    "code_sha256": "dcd5fab56e8f053af218167c314fc763b3c7d2593ba9893d7dddac8e6511f800",
+    "code": "static void gen_exception_return(DisasContext *s, TCGv pc)\n\n{\n\n    TCGv tmp;\n\n    store_reg(s, 15, pc);\n\n    tmp = load_cpu_field(spsr);\n\n    gen_set_cpsr(tmp, 0xffffffff);\n\n    dead_tmp(tmp);\n\n    s->is_jmp = DISAS_UPDATE;\n\n}",
+    "expected_callsite_annotations": null,
+    "annotator_notes": "",
+    "annotation_schema": {
+      "api_name": "str",
+      "family": "str",
+      "start": "0-based inclusive",
+      "end": "exclusive",
+      "status": "recognized/unknown/non_sink",
+      "evidence": "code-based justification"
+    }
+  },
+  {
+    "opaque_id": "H1-023",
+    "code_sha256": "0b961abb38d6088007a9293987578ef7c073b2359a9a8b3873aed17d52e9b7cc",
+    "code": "uint64_t helper_sublv (uint64_t op1, uint64_t op2)\n\n{\n\n    uint64_t tmp = op1;\n\n    op1 = (uint32_t)(op1 - op2);\n\n    if (unlikely(((~tmp) ^ op1 ^ (-1UL)) & ((~tmp) ^ op2) & (1UL << 31))) {\n\n        helper_excp(EXCP_ARITH, EXCP_ARITH_OVERFLOW);\n\n    }\n\n    return op1;\n\n}",
+    "expected_callsite_annotations": null,
+    "annotator_notes": "",
+    "annotation_schema": {
+      "api_name": "str",
+      "family": "str",
+      "start": "0-based inclusive",
+      "end": "exclusive",
+      "status": "recognized/unknown/non_sink",
+      "evidence": "code-based justification"
+    }
+  },
+  {
+    "opaque_id": "H1-024",
+    "code_sha256": "1bdcb9f2783f4f5cd441a429aa7152e5b41f46758497706875b53c4e30788f94",
+    "code": "static int decode_slice(struct AVCodecContext *avctx, void *arg)\n\n{\n\n    H264Context *h = *(void **)arg;\n\n    int lf_x_start = h->mb_x;\n\n\n\n    h->mb_skip_run = -1;\n\n\n\n    av_assert0(h->block_offset[15] == (4 * ((scan8[15] - scan8[0]) & 7) << h->pixel_shift) + 4 * h->linesize * ((scan8[15] - scan8[0]) >> 3));\n\n\n\n    h->is_complex = FRAME_MBAFF(h) || h->picture_structure != PICT_FRAME ||\n\n                    avctx->codec_id != AV_CODEC_ID_H264 ||\n\n                    (CONFIG_GRAY && (h->flags & CODEC_FLAG_GRAY));\n\n\n\n    if (!(h->avctx->active_thread_type & FF_THREAD_SLICE) && h->picture_structure == PICT_FRAME) {\n\n        const int start_i  = av_clip(h->resync_mb_x + h->resync_mb_y * h->mb_width, 0, h->mb_num - 1);\n\n        if (start_i) {\n\n            int prev_status = h->er.error_status_table[h->er.mb_index2xy[start_i - 1]];\n\n            prev_status &= ~ VP_START;\n\n            if (prev_status != (ER_MV_END | ER_DC_END | ER_AC_END))\n\n                h->er.error_occurred = 1;\n\n        }\n\n    }\n\n\n\n    if (h->pps.cabac) {\n\n        /* realign */\n\n        align_get_bits(&h->gb);\n\n\n\n        /* init cabac */\n\n        ff_init_cabac_decoder(&h->cabac,\n\n                              h->gb.buffer + get_bits_count(&h->gb) / 8,\n\n                              (get_bits_left(&h->gb) + 7) / 8);\n\n\n\n        ff_h264_init_cabac_states(h);\n\n\n\n        for (;;) {\n\n            // START_TIMER\n\n            int ret = ff_h264_decode_mb_cabac(h);\n\n            int eos;\n\n            // STOP_TIMER(\"decode_mb_cabac\")\n\n\n\n            if (ret >= 0)\n\n                ff_h264_hl_decode_mb(h);\n\n\n\n            // FIXME optimal? or let mb_decode decode 16x32 ?\n\n            if (ret >= 0 && FRAME_MBAFF(h)) {\n\n                h->mb_y++;\n\n\n\n                ret = ff_h264_decode_mb_cabac(h);\n\n\n\n                if (ret >= 0)\n\n                    ff_h264_hl_decode_mb(h);\n\n                h->mb_y--;\n\n            }\n\n            eos = get_cabac_terminate(&h->cabac);\n\n\n\n            if ((h->workaround_bugs & FF_BUG_TRUNCATED) &&\n\n                h->cabac.bytestream > h->cabac.bytestream_end + 2) {\n\n                er_add_slice(h, h->resync_mb_x, h->resync_mb_y, h->mb_x - 1,\n\n                                h->mb_y, ER_MB_END);\n\n                if (h->mb_x >= lf_x_start)\n\n                    loop_filter(h, lf_x_start, h->mb_x + 1);\n\n                return 0;\n\n            }\n\n            if (h->cabac.bytestream > h->cabac.bytestream_end + 2 )\n\n                av_log(h->avctx, AV_LOG_DEBUG, \"bytestream overread %td\\n\", h->cabac.bytestream_end - h->cabac.bytestream);\n\n            if (ret < 0 || h->cabac.bytestream > h->cabac.bytestream_end + 4) {\n\n                av_log(h->avctx, AV_LOG_ERROR,\n\n                       \"error while decoding MB %d %d, bytestream (%td)\\n\",\n\n                       h->mb_x, h->mb_y,\n\n                       h->cabac.bytestream_end - h->cabac.bytestream);\n\n                er_add_slice(h, h->resync_mb_x, h->resync_mb_y, h->mb_x,\n\n                                h->mb_y, ER_MB_ERROR);\n\n                return -1;\n\n            }\n\n\n\n            if (++h->mb_x >= h->mb_width) {\n\n                loop_filter(h, lf_x_start, h->mb_x);\n\n                h->mb_x = lf_x_start = 0;\n\n                decode_finish_row(h);\n\n                ++h->mb_y;\n\n                if (FIELD_OR_MBAFF_PICTURE(h)) {\n\n                    ++h->mb_y;\n\n                    if (FRAME_MBAFF(h) && h->mb_y < h->mb_height)\n\n                        predict_field_decoding_flag(h);\n\n                }\n\n            }\n\n\n\n            if (eos || h->mb_y >= h->mb_height) {\n\n                tprintf(h->avctx, \"slice end %d %d\\n\",\n\n                        get_bits_count(&h->gb), h->gb.size_in_bits);\n\n                er_add_slice(h, h->resync_mb_x, h->resync_mb_y, h->mb_x - 1,\n\n                                h->mb_y, ER_MB_END);\n\n                if (h->mb_x > lf_x_start)\n\n                    loop_filter(h, lf_x_start, h->mb_x);\n\n                return 0;\n\n            }\n\n        }\n\n    } else {\n\n        for (;;) {\n\n            int ret = ff_h264_decode_mb_cavlc(h);\n\n\n\n            if (ret >= 0)\n\n                ff_h264_hl_decode_mb(h);\n\n\n\n            // FIXME optimal? or let mb_decode decode 16x32 ?\n\n            if (ret >= 0 && FRAME_MBAFF(h)) {\n\n                h->mb_y++;\n\n                ret = ff_h264_decode_mb_cavlc(h);\n\n\n\n                if (ret >= 0)\n\n                    ff_h264_hl_decode_mb(h);\n\n                h->mb_y--;\n\n            }\n\n\n\n            if (ret < 0) {\n\n                av_log(h->avctx, AV_LOG_ERROR,\n\n                       \"error while decoding MB %d %d\\n\", h->mb_x, h->mb_y);\n\n                er_add_slice(h, h->resync_mb_x, h->resync_mb_y, h->mb_x,\n\n                                h->mb_y, ER_MB_ERROR);\n\n                return -1;\n\n            }\n\n\n\n            if (++h->mb_x >= h->mb_width) {\n\n                loop_filter(h, lf_x_start, h->mb_x);\n\n                h->mb_x = lf_x_start = 0;\n\n                decode_finish_row(h);\n\n                ++h->mb_y;\n\n                if (FIELD_OR_MBAFF_PICTURE(h)) {\n\n                    ++h->mb_y;\n\n                    if (FRAME_MBAFF(h) && h->mb_y < h->mb_height)\n\n                        predict_field_decoding_flag(h);\n\n                }\n\n                if (h->mb_y >= h->mb_height) {\n\n                    tprintf(h->avctx, \"slice end %d %d\\n\",\n\n                            get_bits_count(&h->gb), h->gb.size_in_bits);\n\n\n\n                    if (   get_bits_left(&h->gb) == 0\n\n                        || get_bits_left(&h->gb) > 0 && !(h->avctx->err_recognition & AV_EF_AGGRESSIVE)) {\n\n                        er_add_slice(h, h->resync_mb_x, h->resync_mb_y,\n\n                                        h->mb_x - 1, h->mb_y,\n\n                                        ER_MB_END);\n\n\n\n                        return 0;\n\n                    } else {\n\n                        er_add_slice(h, h->resync_mb_x, h->resync_mb_y,\n\n                                        h->mb_x, h->mb_y,\n\n                                        ER_MB_END);\n\n\n\n                        return -1;\n\n                    }\n\n                }\n\n            }\n\n\n\n            if (get_bits_left(&h->gb) <= 0 && h->mb_skip_run <= 0) {\n\n                tprintf(h->avctx, \"slice end %d %d\\n\",\n\n                        get_bits_count(&h->gb), h->gb.size_in_bits);\n\n                if (get_bits_left(&h->gb) == 0) {\n\n                    er_add_slice(h, h->resync_mb_x, h->resync_mb_y,\n\n                                    h->mb_x - 1, h->mb_y,\n\n                                    ER_MB_END);\n\n                    if (h->mb_x > lf_x_start)\n\n                        loop_filter(h, lf_x_start, h->mb_x);\n\n\n\n                    return 0;\n\n                } else {\n\n                    er_add_slice(h, h->resync_mb_x, h->resync_mb_y, h->mb_x,\n\n                                    h->mb_y, ER_MB_ERROR);\n\n\n\n                    return -1;\n\n                }\n\n            }\n\n        }\n\n    }\n\n}",
+    "expected_callsite_annotations": null,
+    "annotator_notes": "",
+    "annotation_schema": {
+      "api_name": "str",
+      "family": "str",
+      "start": "0-based inclusive",
+      "end": "exclusive",
+      "status": "recognized/unknown/non_sink",
+      "evidence": "code-based justification"
+    }
+  },
+  {
+    "opaque_id": "H1-025",
+    "code_sha256": "be83b55708de602782824c1f74aa73448ad648b2efe3f5b58934fc9e19b94521",
+    "code": "static int img_read_packet(AVFormatContext *s1, AVPacket *pkt)\n\n{\n\n    VideoData *s = s1->priv_data;\n\n    char filename[1024];\n\n    int ret;\n\n    ByteIOContext f1, *f;\n\n\n\n    if (get_frame_filename(filename, sizeof(filename),\n\n                           s->path, s->img_number) < 0)\n\n        return -EIO;\n\n    \n\n    if (!s->is_pipe) {\n\n        f = &f1;\n\n        if (url_fopen(f, filename, URL_RDONLY) < 0)\n\n            return -EIO;\n\n    } else {\n\n        f = &s1->pb;\n\n        if (url_feof(f))\n\n            return -EIO;\n\n    }\n\n\n\n    av_new_packet(pkt, s->img_size);\n\n    pkt->stream_index = 0;\n\n\n\n    switch(s->img_fmt) {\n\n    case IMGFMT_PGMYUV:\n\n        ret = pgm_read(s, f, pkt->data, pkt->size, 1);\n\n        break;\n\n    case IMGFMT_PGM:\n\n        ret = pgm_read(s, f, pkt->data, pkt->size, 0);\n\n        break;\n\n    case IMGFMT_YUV:\n\n        ret = yuv_read(s, filename, pkt->data, pkt->size);\n\n        break;\n\n    case IMGFMT_PPM:\n\n        ret = ppm_read(s, f, pkt->data, pkt->size);\n\n        break;\n\n    default:\n\n        return -EIO;\n\n    }\n\n    \n\n    if (!s->is_pipe) {\n\n        url_fclose(f);\n\n    }\n\n\n\n    if (ret < 0) {\n\n        av_free_packet(pkt);\n\n        return -EIO; /* signal EOF */\n\n    } else {\n\n        s->img_number++;\n\n        return 0;\n\n    }\n\n}",
+    "expected_callsite_annotations": null,
+    "annotator_notes": "",
+    "annotation_schema": {
+      "api_name": "str",
+      "family": "str",
+      "start": "0-based inclusive",
+      "end": "exclusive",
+      "status": "recognized/unknown/non_sink",
+      "evidence": "code-based justification"
+    }
+  },
+  {
+    "opaque_id": "H1-026",
+    "code_sha256": "e2a6b4a3541d2cf82bd387be7d89cb19e11f5a1358c611282456de5b04ac73af",
+    "code": "void configure_alarms(char const *opt)\n\n{\n\n    int i;\n\n    int cur = 0;\n\n    int count = ARRAY_SIZE(alarm_timers) - 1;\n\n    char *arg;\n\n    char *name;\n\n    struct qemu_alarm_timer tmp;\n\n\n\n    if (!strcmp(opt, \"?\")) {\n\n        show_available_alarms();\n\n        exit(0);\n\n    }\n\n\n\n    arg = g_strdup(opt);\n\n\n\n    /* Reorder the array */\n\n    name = strtok(arg, \",\");\n\n    while (name) {\n\n        for (i = 0; i < count && alarm_timers[i].name; i++) {\n\n            if (!strcmp(alarm_timers[i].name, name))\n\n                break;\n\n        }\n\n\n\n        if (i == count) {\n\n            fprintf(stderr, \"Unknown clock %s\\n\", name);\n\n            goto next;\n\n        }\n\n\n\n        if (i < cur)\n\n            /* Ignore */\n\n            goto next;\n\n\n\n\t/* Swap */\n\n        tmp = alarm_timers[i];\n\n        alarm_timers[i] = alarm_timers[cur];\n\n        alarm_timers[cur] = tmp;\n\n\n\n        cur++;\n\nnext:\n\n        name = strtok(NULL, \",\");\n\n    }\n\n\n\n    g_free(arg);\n\n\n\n    if (cur) {\n\n        /* Disable remaining timers */\n\n        for (i = cur; i < count; i++)\n\n            alarm_timers[i].name = NULL;\n\n    } else {\n\n        show_available_alarms();\n\n        exit(1);\n\n    }\n\n}",
+    "expected_callsite_annotations": null,
+    "annotator_notes": "",
+    "annotation_schema": {
+      "api_name": "str",
+      "family": "str",
+      "start": "0-based inclusive",
+      "end": "exclusive",
+      "status": "recognized/unknown/non_sink",
+      "evidence": "code-based justification"
+    }
+  },
+  {
+    "opaque_id": "H1-027",
+    "code_sha256": "e33dc5fa5baf086ef6cabef781d7d9a43a792647e36a5fb707481a2a26cb5ab9",
+    "code": "static int motion_inter_4v_block (bit_buffer_t *bitbuf,\n\n\t\t\t\t  uint8_t *current, uint8_t *previous, int pitch,\n\n\t\t\t\t  svq1_pmv_t *motion,int x, int y) {\n\n  uint8_t    *src;\n\n  uint8_t    *dst;\n\n  svq1_pmv_t  mv;\n\n  svq1_pmv_t *pmv[4];\n\n  int\t      i, result;\n\n\n\n  /* predict and decode motion vector (0) */\n\n  pmv[0] = &motion[0];\n\n  pmv[1] = &motion[(x / 8) + 2];\n\n  pmv[2] = &motion[(x / 8) + 4];\n\n\n\n  if (y == 0) {\n\n    pmv[1] = pmv[0];\n\n    pmv[2] = pmv[0];\n\n  }\n\n\n\n  result = decode_motion_vector (bitbuf, &mv, pmv);\n\n\n\n  if (result != 0)\n\n    return result;\n\n\n\n  /* predict and decode motion vector (1) */\n\n  pmv[0] = &mv;\n\n  pmv[1] = &motion[(x / 8) + 3];\n\n\n\n  if (y == 0) {\n\n    pmv[1] = pmv[0];\n\n    pmv[2] = pmv[0];\n\n  }\n\n\n\n  result = decode_motion_vector (bitbuf, &motion[0], pmv);\n\n\n\n  if (result != 0)\n\n    return result;\n\n\n\n  /* predict and decode motion vector (2) */\n\n  pmv[1] = &motion[0];\n\n  pmv[2] = &motion[(x / 8) + 1];\n\n\n\n  result = decode_motion_vector (bitbuf, &motion[(x / 8) + 2], pmv);\n\n\n\n  if (result != 0)\n\n    return result;\n\n\n\n  /* predict and decode motion vector (3) */\n\n  pmv[2] = &motion[(x / 8) + 2];\n\n  pmv[3] = &motion[(x / 8) + 3];\n\n\n\n  result = decode_motion_vector (bitbuf, pmv[3], pmv);\n\n\n\n  if (result != 0)\n\n    return result;\n\n\n\n  /* form predictions */\n\n  for (i=0; i < 4; i++) {\n\n    src = &previous[(x + (pmv[i]->x >> 1)) + (y + (pmv[i]->y >> 1))*pitch];\n\n    dst = current;\n\n\n\n    put_pixels_tab[((pmv[i]->y & 1) << 1) | (pmv[i]->x & 1)](dst,src,pitch,8);\n\n\n\n    /* select next block */\n\n    if (i & 1) {\n\n      current  += 8*(pitch - 1);\n\n      previous += 8*(pitch - 1);\n\n    } else {\n\n      current  += 8;\n\n      previous += 8;\n\n    }\n\n  }\n\n\n\n  return 0;\n\n}",
+    "expected_callsite_annotations": null,
+    "annotator_notes": "",
+    "annotation_schema": {
+      "api_name": "str",
+      "family": "str",
+      "start": "0-based inclusive",
+      "end": "exclusive",
+      "status": "recognized/unknown/non_sink",
+      "evidence": "code-based justification"
+    }
+  },
+  {
+    "opaque_id": "H1-028",
+    "code_sha256": "5b5f55842dd9a84a345336d45031520090cb8e4ca9c594d7ec17c23154f58c6c",
+    "code": "static int handle_update_file_cred(int dirfd, const char *name, FsCred *credp)\n\n{\n\n    int fd, ret;\n\n    fd = openat(dirfd, name, O_NONBLOCK | O_NOFOLLOW);\n\n    if (fd < 0) {\n\n        return fd;\n\n    }\n\n    ret = fchmod(fd, credp->fc_mode & 07777);\n\n    if (ret < 0) {\n\n        goto err_out;\n\n    }\n\n    ret = fchownat(fd, \"\", credp->fc_uid, credp->fc_gid, AT_EMPTY_PATH);\n\nerr_out:\n\n    close(fd);\n\n    return ret;\n\n}",
+    "expected_callsite_annotations": null,
+    "annotator_notes": "",
+    "annotation_schema": {
+      "api_name": "str",
+      "family": "str",
+      "start": "0-based inclusive",
+      "end": "exclusive",
+      "status": "recognized/unknown/non_sink",
+      "evidence": "code-based justification"
+    }
+  },
+  {
+    "opaque_id": "H1-029",
+    "code_sha256": "3881650ba7de6e15b64039e42f1b6577162b733c050612f08e9f8ab9ba10bd1a",
+    "code": "static av_cold int ffv1_encode_init(AVCodecContext *avctx)\n\n{\n\n    FFV1Context *s = avctx->priv_data;\n\n    const AVPixFmtDescriptor *desc = av_pix_fmt_desc_get(avctx->pix_fmt);\n\n    int i, j, k, m, ret;\n\n\n\n    ffv1_common_init(avctx);\n\n\n\n    s->version = 0;\n\n\n\n    if ((avctx->flags & (CODEC_FLAG_PASS1 | CODEC_FLAG_PASS2)) ||\n\n        avctx->slices > 1)\n\n        s->version = FFMAX(s->version, 2);\n\n\n\n    if (avctx->level == 3) {\n\n        s->version = 3;\n\n    }\n\n\n\n    if (s->ec < 0) {\n\n        s->ec = (s->version >= 3);\n\n    }\n\n\n\n    if (s->version >= 2 &&\n\n        avctx->strict_std_compliance > FF_COMPLIANCE_EXPERIMENTAL) {\n\n        av_log(avctx, AV_LOG_ERROR,\n\n               \"Version %d requested, please set -strict experimental in \"\n\n               \"order to enable it\\n\",\n\n               s->version);\n\n        return AVERROR(ENOSYS);\n\n    }\n\n\n\n    s->ac = avctx->coder_type > 0 ? 2 : 0;\n\n\n\n    s->plane_count = 3;\n\n    switch (avctx->pix_fmt) {\n\n    case AV_PIX_FMT_YUV444P9:\n\n    case AV_PIX_FMT_YUV422P9:\n\n    case AV_PIX_FMT_YUV420P9:\n\n        if (!avctx->bits_per_raw_sample)\n\n            s->bits_per_raw_sample = 9;\n\n    case AV_PIX_FMT_YUV444P10:\n\n    case AV_PIX_FMT_YUV420P10:\n\n    case AV_PIX_FMT_YUV422P10:\n\n        s->packed_at_lsb = 1;\n\n        if (!avctx->bits_per_raw_sample && !s->bits_per_raw_sample)\n\n            s->bits_per_raw_sample = 10;\n\n    case AV_PIX_FMT_GRAY16:\n\n    case AV_PIX_FMT_YUV444P16:\n\n    case AV_PIX_FMT_YUV422P16:\n\n    case AV_PIX_FMT_YUV420P16:\n\n        if (!avctx->bits_per_raw_sample && !s->bits_per_raw_sample) {\n\n            s->bits_per_raw_sample = 16;\n\n        } else if (!s->bits_per_raw_sample) {\n\n            s->bits_per_raw_sample = avctx->bits_per_raw_sample;\n\n        }\n\n        if (s->bits_per_raw_sample <= 8) {\n\n            av_log(avctx, AV_LOG_ERROR, \"bits_per_raw_sample invalid\\n\");\n\n            return AVERROR_INVALIDDATA;\n\n        }\n\n        if (!s->ac && avctx->coder_type == -1) {\n\n            av_log(avctx, AV_LOG_INFO,\n\n                   \"bits_per_raw_sample > 8, forcing coder 1\\n\");\n\n            s->ac = 2;\n\n        }\n\n        if (!s->ac) {\n\n            av_log(\n\n                avctx, AV_LOG_ERROR,\n\n                \"bits_per_raw_sample of more than 8 needs -coder 1 currently\\n\");\n\n            return AVERROR_INVALIDDATA;\n\n        }\n\n        s->version = FFMAX(s->version, 1);\n\n    case AV_PIX_FMT_GRAY8:\n\n    case AV_PIX_FMT_YUV444P:\n\n    case AV_PIX_FMT_YUV440P:\n\n    case AV_PIX_FMT_YUV422P:\n\n    case AV_PIX_FMT_YUV420P:\n\n    case AV_PIX_FMT_YUV411P:\n\n    case AV_PIX_FMT_YUV410P:\n\n        s->chroma_planes = desc->nb_components < 3 ? 0 : 1;\n\n        s->colorspace    = 0;\n\n        break;\n\n    case AV_PIX_FMT_YUVA444P:\n\n    case AV_PIX_FMT_YUVA422P:\n\n    case AV_PIX_FMT_YUVA420P:\n\n        s->chroma_planes = 1;\n\n        s->colorspace    = 0;\n\n        s->transparency  = 1;\n\n        break;\n\n    case AV_PIX_FMT_RGB32:\n\n        s->colorspace   = 1;\n\n        s->transparency = 1;\n\n        break;\n\n    case AV_PIX_FMT_GBRP9:\n\n        if (!avctx->bits_per_raw_sample)\n\n            s->bits_per_raw_sample = 9;\n\n    case AV_PIX_FMT_GBRP10:\n\n        if (!avctx->bits_per_raw_sample && !s->bits_per_raw_sample)\n\n            s->bits_per_raw_sample = 10;\n\n    case AV_PIX_FMT_GBRP16:\n\n        if (!avctx->bits_per_raw_sample && !s->bits_per_raw_sample)\n\n            s->bits_per_raw_sample = 16;\n\n        else if (!s->bits_per_raw_sample)\n\n            s->bits_per_raw_sample = avctx->bits_per_raw_sample;\n\n        s->colorspace    = 1;\n\n        s->chroma_planes = 1;\n\n        s->version       = FFMAX(s->version, 1);\n\n        break;\n\n    default:\n\n        av_log(avctx, AV_LOG_ERROR, \"format not supported\\n\");\n\n        return AVERROR_INVALIDDATA;\n\n    }\n\n    if (s->transparency) {\n\n        av_log(\n\n            avctx, AV_LOG_WARNING,\n\n            \"Storing alpha plane, this will require a recent FFV1 decoder to playback!\\n\");\n\n    }\n\n    if (avctx->context_model > 1U) {\n\n        av_log(avctx, AV_LOG_ERROR,\n\n               \"Invalid context model %d, valid values are 0 and 1\\n\",\n\n               avctx->context_model);\n\n        return AVERROR(EINVAL);\n\n    }\n\n\n\n    if (s->ac > 1)\n\n        for (i = 1; i < 256; i++)\n\n            s->state_transition[i] = ffv1_ver2_state[i];\n\n\n\n    for (i = 0; i < 256; i++) {\n\n        s->quant_table_count = 2;\n\n        if (s->bits_per_raw_sample <= 8) {\n\n            s->quant_tables[0][0][i] = ffv1_quant11[i];\n\n            s->quant_tables[0][1][i] = ffv1_quant11[i] * 11;\n\n            s->quant_tables[0][2][i] = ffv1_quant11[i] * 11 * 11;\n\n            s->quant_tables[1][0][i] = ffv1_quant11[i];\n\n            s->quant_tables[1][1][i] = ffv1_quant11[i] * 11;\n\n            s->quant_tables[1][2][i] = ffv1_quant5[i]  * 11 * 11;\n\n            s->quant_tables[1][3][i] = ffv1_quant5[i]  *  5 * 11 * 11;\n\n            s->quant_tables[1][4][i] = ffv1_quant5[i]  *  5 *  5 * 11 * 11;\n\n        } else {\n\n            s->quant_tables[0][0][i] = ffv1_quant9_10bit[i];\n\n            s->quant_tables[0][1][i] = ffv1_quant9_10bit[i] * 11;\n\n            s->quant_tables[0][2][i] = ffv1_quant9_10bit[i] * 11 * 11;\n\n            s->quant_tables[1][0][i] = ffv1_quant9_10bit[i];\n\n            s->quant_tables[1][1][i] = ffv1_quant9_10bit[i] * 11;\n\n            s->quant_tables[1][2][i] = ffv1_quant5_10bit[i] * 11 * 11;\n\n            s->quant_tables[1][3][i] = ffv1_quant5_10bit[i] *  5 * 11 * 11;\n\n            s->quant_tables[1][4][i] = ffv1_quant5_10bit[i] *  5 *  5 * 11 * 11;\n\n        }\n\n    }\n\n    s->context_count[0] = (11 * 11 * 11        + 1) / 2;\n\n    s->context_count[1] = (11 * 11 * 5 * 5 * 5 + 1) / 2;\n\n    memcpy(s->quant_table, s->quant_tables[avctx->context_model],\n\n           sizeof(s->quant_table));\n\n\n\n    for (i = 0; i < s->plane_count; i++) {\n\n        PlaneContext *const p = &s->plane[i];\n\n\n\n        memcpy(p->quant_table, s->quant_table, sizeof(p->quant_table));\n\n        p->quant_table_index = avctx->context_model;\n\n        p->context_count     = s->context_count[p->quant_table_index];\n\n    }\n\n\n\n    if ((ret = ffv1_allocate_initial_states(s)) < 0)\n\n        return ret;\n\n\n\n    avctx->coded_frame = av_frame_alloc();\n\n    if (!avctx->coded_frame)\n\n        return AVERROR(ENOMEM);\n\n\n\n    avctx->coded_frame->pict_type = AV_PICTURE_TYPE_I;\n\n\n\n    if (!s->transparency)\n\n        s->plane_count = 2;\n\n\n\n    av_pix_fmt_get_chroma_sub_sample(avctx->pix_fmt, &s->chroma_h_shift,\n\n                                     &s->chroma_v_shift);\n\n\n\n    s->picture_number = 0;\n\n\n\n    if (avctx->flags & (CODEC_FLAG_PASS1 | CODEC_FLAG_PASS2)) {\n\n        for (i = 0; i < s->quant_table_count; i++) {\n\n            s->rc_stat2[i] = av_mallocz(s->context_count[i] *\n\n                                        sizeof(*s->rc_stat2[i]));\n\n            if (!s->rc_stat2[i])\n\n                return AVERROR(ENOMEM);\n\n        }\n\n    }\n\n    if (avctx->stats_in) {\n\n        char *p = avctx->stats_in;\n\n        uint8_t best_state[256][256];\n\n        int gob_count = 0;\n\n        char *next;\n\n\n\n        av_assert0(s->version >= 2);\n\n\n\n        for (;; ) {\n\n            for (j = 0; j < 256; j++)\n\n                for (i = 0; i < 2; i++) {\n\n                    s->rc_stat[j][i] = strtol(p, &next, 0);\n\n                    if (next == p) {\n\n                        av_log(avctx, AV_LOG_ERROR,\n\n                               \"2Pass file invalid at %d %d [%s]\\n\", j, i, p);\n\n                        return AVERROR_INVALIDDATA;\n\n                    }\n\n                    p = next;\n\n                }\n\n            for (i = 0; i < s->quant_table_count; i++)\n\n                for (j = 0; j < s->context_count[i]; j++) {\n\n                    for (k = 0; k < 32; k++)\n\n                        for (m = 0; m < 2; m++) {\n\n                            s->rc_stat2[i][j][k][m] = strtol(p, &next, 0);\n\n                            if (next == p) {\n\n                                av_log(avctx, AV_LOG_ERROR,\n\n                                       \"2Pass file invalid at %d %d %d %d [%s]\\n\",\n\n                                       i, j, k, m, p);\n\n                                return AVERROR_INVALIDDATA;\n\n                            }\n\n                            p = next;\n\n                        }\n\n                }\n\n            gob_count = strtol(p, &next, 0);\n\n            if (next == p || gob_count <= 0) {\n\n                av_log(avctx, AV_LOG_ERROR, \"2Pass file invalid\\n\");\n\n                return AVERROR_INVALIDDATA;\n\n            }\n\n            p = next;\n\n            while (*p == '\\n' || *p == ' ')\n\n                p++;\n\n            if (p[0] == 0)\n\n                break;\n\n        }\n\n        sort_stt(s, s->state_transition);\n\n\n\n        find_best_state(best_state, s->state_transition);\n\n\n\n        for (i = 0; i < s->quant_table_count; i++) {\n\n            for (j = 0; j < s->context_count[i]; j++)\n\n                for (k = 0; k < 32; k++) {\n\n                    double p = 128;\n\n                    if (s->rc_stat2[i][j][k][0] + s->rc_stat2[i][j][k][1]) {\n\n                        p = 256.0 * s->rc_stat2[i][j][k][1] /\n\n                            (s->rc_stat2[i][j][k][0] + s->rc_stat2[i][j][k][1]);\n\n                    }\n\n                    s->initial_states[i][j][k] =\n\n                        best_state[av_clip(round(p), 1, 255)][av_clip((s->rc_stat2[i][j][k][0] +\n\n                                                                       s->rc_stat2[i][j][k][1]) /\n\n                                                                      gob_count, 0, 255)];\n\n                }\n\n        }\n\n    }\n\n\n\n    if (s->version > 1) {\n\n        for (s->num_v_slices = 2; s->num_v_slices < 9; s->num_v_slices++)\n\n            for (s->num_h_slices = s->num_v_slices;\n\n                 s->num_h_slices < 2 * s->num_v_slices; s->num_h_slices++)\n\n                if (avctx->slices == s->num_h_slices * s->num_v_slices &&\n\n                    avctx->slices <= 64 || !avctx->slices)\n\n                    goto slices_ok;\n\n        av_log(avctx, AV_LOG_ERROR,\n\n               \"Unsupported number %d of slices requested, please specify a \"\n\n               \"supported number with -slices (ex:4,6,9,12,16, ...)\\n\",\n\n               avctx->slices);\n\n        return AVERROR(ENOSYS);\n\nslices_ok:\n\n        write_extradata(s);\n\n    }\n\n\n\n    if ((ret = ffv1_init_slice_contexts(s)) < 0)\n\n        return ret;\n\n    if ((ret = init_slices_state(s)) < 0)\n\n        return ret;\n\n\n\n#define STATS_OUT_SIZE 1024 * 1024 * 6\n\n    if (avctx->flags & CODEC_FLAG_PASS1) {\n\n        avctx->stats_out = av_mallocz(STATS_OUT_SIZE);\n\n        for (i = 0; i < s->quant_table_count; i++)\n\n            for (j = 0; j < s->slice_count; j++) {\n\n                FFV1Context *sf = s->slice_context[j];\n\n                av_assert0(!sf->rc_stat2[i]);\n\n                sf->rc_stat2[i] = av_mallocz(s->context_count[i] *\n\n                                             sizeof(*sf->rc_stat2[i]));\n\n                if (!sf->rc_stat2[i])\n\n                    return AVERROR(ENOMEM);\n\n            }\n\n    }\n\n\n\n    return 0;\n\n}",
+    "expected_callsite_annotations": null,
+    "annotator_notes": "",
+    "annotation_schema": {
+      "api_name": "str",
+      "family": "str",
+      "start": "0-based inclusive",
+      "end": "exclusive",
+      "status": "recognized/unknown/non_sink",
+      "evidence": "code-based justification"
+    }
+  },
+  {
+    "opaque_id": "H1-030",
+    "code_sha256": "82af42af611c874ee260c7e11f72513a438bc0a1ed451f2ea0d1e001c9a67c42",
+    "code": "yuv2rgba64_2_c_template(SwsContext *c, const int32_t *buf[2],\n\n                       const int32_t *ubuf[2], const int32_t *vbuf[2],\n\n                       const int32_t *abuf[2], uint16_t *dest, int dstW,\n\n                       int yalpha, int uvalpha, int y,\n\n                       enum AVPixelFormat target, int hasAlpha, int eightbytes)\n\n{\n\n    const int32_t *buf0  = buf[0],  *buf1  = buf[1],\n\n                  *ubuf0 = ubuf[0], *ubuf1 = ubuf[1],\n\n                  *vbuf0 = vbuf[0], *vbuf1 = vbuf[1],\n\n                  *abuf0 = hasAlpha ? abuf[0] : NULL,\n\n                  *abuf1 = hasAlpha ? abuf[1] : NULL;\n\n    int  yalpha1 = 4096 - yalpha;\n\n    int uvalpha1 = 4096 - uvalpha;\n\n    int i;\n\n    int A1 = 0xffff<<14, A2 = 0xffff<<14;\n\n\n\n    for (i = 0; i < ((dstW + 1) >> 1); i++) {\n\n        int Y1 = (buf0[i * 2]     * yalpha1  + buf1[i * 2]     * yalpha) >> 14;\n\n        int Y2 = (buf0[i * 2 + 1] * yalpha1  + buf1[i * 2 + 1] * yalpha) >> 14;\n\n        int U  = (ubuf0[i]        * uvalpha1 + ubuf1[i]        * uvalpha + (-128 << 23)) >> 14;\n\n        int V  = (vbuf0[i]        * uvalpha1 + vbuf1[i]        * uvalpha + (-128 << 23)) >> 14;\n\n        int R, G, B;\n\n\n\n        Y1 -= c->yuv2rgb_y_offset;\n\n        Y2 -= c->yuv2rgb_y_offset;\n\n        Y1 *= c->yuv2rgb_y_coeff;\n\n        Y2 *= c->yuv2rgb_y_coeff;\n\n        Y1 += 1 << 13;\n\n        Y2 += 1 << 13;\n\n\n\n        R = V * c->yuv2rgb_v2r_coeff;\n\n        G = V * c->yuv2rgb_v2g_coeff + U * c->yuv2rgb_u2g_coeff;\n\n        B =                            U * c->yuv2rgb_u2b_coeff;\n\n\n\n        if (hasAlpha) {\n\n            A1 = (abuf0[i * 2    ] * yalpha1 + abuf1[i * 2    ] * yalpha) >> 1;\n\n            A2 = (abuf0[i * 2 + 1] * yalpha1 + abuf1[i * 2 + 1] * yalpha) >> 1;\n\n\n\n            A1 += 1 << 13;\n\n            A2 += 1 << 13;\n\n        }\n\n\n\n        output_pixel(&dest[0], av_clip_uintp2(R_B + Y1, 30) >> 14);\n\n        output_pixel(&dest[1], av_clip_uintp2(  G + Y1, 30) >> 14);\n\n        output_pixel(&dest[2], av_clip_uintp2(B_R + Y1, 30) >> 14);\n\n        if (eightbytes) {\n\n            output_pixel(&dest[3], av_clip_uintp2(A1      , 30) >> 14);\n\n            output_pixel(&dest[4], av_clip_uintp2(R_B + Y2, 30) >> 14);\n\n            output_pixel(&dest[5], av_clip_uintp2(  G + Y2, 30) >> 14);\n\n            output_pixel(&dest[6], av_clip_uintp2(B_R + Y2, 30) >> 14);\n\n            output_pixel(&dest[7], av_clip_uintp2(A2      , 30) >> 14);\n\n            dest += 8;\n\n        } else {\n\n            output_pixel(&dest[3], av_clip_uintp2(R_B + Y2, 30) >> 14);\n\n            output_pixel(&dest[4], av_clip_uintp2(  G + Y2, 30) >> 14);\n\n            output_pixel(&dest[5], av_clip_uintp2(B_R + Y2, 30) >> 14);\n\n            dest += 6;\n\n        }\n\n    }\n\n}",
+    "expected_callsite_annotations": null,
+    "annotator_notes": "",
+    "annotation_schema": {
+      "api_name": "str",
+      "family": "str",
+      "start": "0-based inclusive",
+      "end": "exclusive",
+      "status": "recognized/unknown/non_sink",
+      "evidence": "code-based justification"
+    }
+  },
+  {
+    "opaque_id": "H1-031",
+    "code_sha256": "86246453698a135a9d19929263c351b38683376cf9eeb5ad098e18f0fbc98de3",
+    "code": "static void rtas_ibm_change_msi(PowerPCCPU *cpu, sPAPRMachineState *spapr,\n\n                                uint32_t token, uint32_t nargs,\n\n                                target_ulong args, uint32_t nret,\n\n                                target_ulong rets)\n\n{\n\n    uint32_t config_addr = rtas_ld(args, 0);\n\n    uint64_t buid = rtas_ldq(args, 1);\n\n    unsigned int func = rtas_ld(args, 3);\n\n    unsigned int req_num = rtas_ld(args, 4); /* 0 == remove all */\n\n    unsigned int seq_num = rtas_ld(args, 5);\n\n    unsigned int ret_intr_type;\n\n    unsigned int irq, max_irqs = 0, num = 0;\n\n    sPAPRPHBState *phb = NULL;\n\n    PCIDevice *pdev = NULL;\n\n    spapr_pci_msi *msi;\n\n    int *config_addr_key;\n\n\n\n    switch (func) {\n\n    case RTAS_CHANGE_MSI_FN:\n\n    case RTAS_CHANGE_FN:\n\n        ret_intr_type = RTAS_TYPE_MSI;\n\n        break;\n\n    case RTAS_CHANGE_MSIX_FN:\n\n        ret_intr_type = RTAS_TYPE_MSIX;\n\n        break;\n\n    default:\n\n        error_report(\"rtas_ibm_change_msi(%u) is not implemented\", func);\n\n        rtas_st(rets, 0, RTAS_OUT_PARAM_ERROR);\n\n        return;\n\n    }\n\n\n\n    /* Fins sPAPRPHBState */\n\n    phb = spapr_pci_find_phb(spapr, buid);\n\n    if (phb) {\n\n        pdev = spapr_pci_find_dev(spapr, buid, config_addr);\n\n    }\n\n    if (!phb || !pdev) {\n\n        rtas_st(rets, 0, RTAS_OUT_PARAM_ERROR);\n\n        return;\n\n    }\n\n\n\n    /* Releasing MSIs */\n\n    if (!req_num) {\n\n        msi = (spapr_pci_msi *) g_hash_table_lookup(phb->msi, &config_addr);\n\n        if (!msi) {\n\n            trace_spapr_pci_msi(\"Releasing wrong config\", config_addr);\n\n            rtas_st(rets, 0, RTAS_OUT_HW_ERROR);\n\n            return;\n\n        }\n\n\n\n        xics_free(spapr->icp, msi->first_irq, msi->num);\n\n        if (msi_present(pdev)) {\n\n            spapr_msi_setmsg(pdev, 0, false, 0, num);\n\n        }\n\n        if (msix_present(pdev)) {\n\n            spapr_msi_setmsg(pdev, 0, true, 0, num);\n\n        }\n\n        g_hash_table_remove(phb->msi, &config_addr);\n\n\n\n        trace_spapr_pci_msi(\"Released MSIs\", config_addr);\n\n        rtas_st(rets, 0, RTAS_OUT_SUCCESS);\n\n        rtas_st(rets, 1, 0);\n\n        return;\n\n    }\n\n\n\n    /* Enabling MSI */\n\n\n\n    /* Check if the device supports as many IRQs as requested */\n\n    if (ret_intr_type == RTAS_TYPE_MSI) {\n\n        max_irqs = msi_nr_vectors_allocated(pdev);\n\n    } else if (ret_intr_type == RTAS_TYPE_MSIX) {\n\n        max_irqs = pdev->msix_entries_nr;\n\n    }\n\n    if (!max_irqs) {\n\n        error_report(\"Requested interrupt type %d is not enabled for device %x\",\n\n                     ret_intr_type, config_addr);\n\n        rtas_st(rets, 0, -1); /* Hardware error */\n\n        return;\n\n    }\n\n    /* Correct the number if the guest asked for too many */\n\n    if (req_num > max_irqs) {\n\n        trace_spapr_pci_msi_retry(config_addr, req_num, max_irqs);\n\n        req_num = max_irqs;\n\n        irq = 0; /* to avoid misleading trace */\n\n        goto out;\n\n    }\n\n\n\n    /* Allocate MSIs */\n\n    irq = xics_alloc_block(spapr->icp, 0, req_num, false,\n\n                           ret_intr_type == RTAS_TYPE_MSI);\n\n    if (!irq) {\n\n        error_report(\"Cannot allocate MSIs for device %x\", config_addr);\n\n        rtas_st(rets, 0, RTAS_OUT_HW_ERROR);\n\n        return;\n\n    }\n\n\n\n    /* Setup MSI/MSIX vectors in the device (via cfgspace or MSIX BAR) */\n\n    spapr_msi_setmsg(pdev, SPAPR_PCI_MSI_WINDOW, ret_intr_type == RTAS_TYPE_MSIX,\n\n                     irq, req_num);\n\n\n\n    /* Add MSI device to cache */\n\n    msi = g_new(spapr_pci_msi, 1);\n\n    msi->first_irq = irq;\n\n    msi->num = req_num;\n\n    config_addr_key = g_new(int, 1);\n\n    *config_addr_key = config_addr;\n\n    g_hash_table_insert(phb->msi, config_addr_key, msi);\n\n\n\nout:\n\n    rtas_st(rets, 0, RTAS_OUT_SUCCESS);\n\n    rtas_st(rets, 1, req_num);\n\n    rtas_st(rets, 2, ++seq_num);\n\n    if (nret > 3) {\n\n        rtas_st(rets, 3, ret_intr_type);\n\n    }\n\n\n\n    trace_spapr_pci_rtas_ibm_change_msi(config_addr, func, req_num, irq);\n\n}",
+    "expected_callsite_annotations": null,
+    "annotator_notes": "",
+    "annotation_schema": {
+      "api_name": "str",
+      "family": "str",
+      "start": "0-based inclusive",
+      "end": "exclusive",
+      "status": "recognized/unknown/non_sink",
+      "evidence": "code-based justification"
+    }
+  },
+  {
+    "opaque_id": "H1-032",
+    "code_sha256": "597a7242547d9d1e9faa035b2e3721f8ac52aeff94693d4e7f5820129eeba352",
+    "code": "static void backup_duplicate_context(MpegEncContext *bak, MpegEncContext *src){\n\n#define COPY(a) bak->a= src->a\n\n    COPY(allocated_edge_emu_buffer);\n\n    COPY(edge_emu_buffer);\n\n    COPY(me.scratchpad);\n\n    COPY(me.temp);\n\n    COPY(rd_scratchpad);\n\n    COPY(b_scratchpad);\n\n    COPY(obmc_scratchpad);\n\n    COPY(me.map);\n\n    COPY(me.score_map);\n\n    COPY(blocks);\n\n    COPY(block);\n\n    COPY(start_mb_y);\n\n    COPY(end_mb_y);\n\n    COPY(me.map_generation);\n\n    COPY(pb);\n\n    COPY(dct_error_sum);\n\n    COPY(dct_count[0]);\n\n    COPY(dct_count[1]);\n\n    COPY(ac_val_base);\n\n    COPY(ac_val[0]);\n\n    COPY(ac_val[1]);\n\n    COPY(ac_val[2]);\n\n#undef COPY\n\n}",
+    "expected_callsite_annotations": null,
+    "annotator_notes": "",
+    "annotation_schema": {
+      "api_name": "str",
+      "family": "str",
+      "start": "0-based inclusive",
+      "end": "exclusive",
+      "status": "recognized/unknown/non_sink",
+      "evidence": "code-based justification"
+    }
+  },
+  {
+    "opaque_id": "H1-033",
+    "code_sha256": "f734484a08c60529637f01b9ed6c20f9f23a38fbe3e6f0468902d8e075bec529",
+    "code": "static av_cold void free_frame_buffers(Indeo3DecodeContext *ctx)\n\n{\n\n    int p;\n\n\n\n    ctx->width=\n\n    ctx->height= 0;\n\n\n\n    for (p = 0; p < 3; p++) {\n\n        av_freep(&ctx->planes[p].buffers[0]);\n\n        av_freep(&ctx->planes[p].buffers[1]);\n\n        ctx->planes[p].pixels[0] = ctx->planes[p].pixels[1] = 0;\n\n    }\n\n}",
+    "expected_callsite_annotations": null,
+    "annotator_notes": "",
+    "annotation_schema": {
+      "api_name": "str",
+      "family": "str",
+      "start": "0-based inclusive",
+      "end": "exclusive",
+      "status": "recognized/unknown/non_sink",
+      "evidence": "code-based justification"
+    }
+  },
+  {
+    "opaque_id": "H1-034",
+    "code_sha256": "a5babcbae67ef05a105bd1bec78e4985425c581287f9a1375f7299167a39bef4",
+    "code": "static AVInputFormat *probe_input_format(AVProbeData *pd, int is_opened)\n\n{\n\n    AVInputFormat *fmt1, *fmt;\n\n    int score, score_max;\n\n\n\n    fmt = NULL;\n\n    score_max = 0;\n\n    for(fmt1 = first_iformat; fmt1 != NULL; fmt1 = fmt1->next) {\n\n        if (!is_opened && !(fmt1->flags & AVFMT_NOFILE))\n\n            continue;\n\n        score = 0;\n\n        if (fmt1->extensions) {\n\n            if (match_ext(pd->filename, fmt1->extensions)) {\n\n                score = 50;\n\n            }\n\n        } else if (fmt1->read_probe) {\n\n            score = fmt1->read_probe(pd);\n\n        }\n\n        if (score > score_max) {\n\n            score_max = score;\n\n            fmt = fmt1;\n\n        }\n\n    }\n\n    return fmt;\n\n}",
+    "expected_callsite_annotations": null,
+    "annotator_notes": "",
+    "annotation_schema": {
+      "api_name": "str",
+      "family": "str",
+      "start": "0-based inclusive",
+      "end": "exclusive",
+      "status": "recognized/unknown/non_sink",
+      "evidence": "code-based justification"
+    }
+  },
+  {
+    "opaque_id": "H1-035",
+    "code_sha256": "53dc9d5e87724e95e01510538388751baf1de45812340f85332d6340d1207531",
+    "code": "static int mpeg_mux_end(AVFormatContext *ctx)\n\n{\n\n    StreamInfo *stream;\n\n    int i;\n\n\n\n    /* flush each packet */\n\n    for(i=0;i<ctx->nb_streams;i++) {\n\n        stream = ctx->streams[i]->priv_data;\n\n        if (stream->buffer_ptr > 0) {\n\n            if (i == (ctx->nb_streams - 1)) \n\n                flush_packet(ctx, i, 1);\n\n            else\n\n                flush_packet(ctx, i, 0);\n\n        }\n\n    }\n\n\n\n    /* write the end header */\n\n    //put_be32(&ctx->pb, ISO_11172_END_CODE);\n\n    //put_flush_packet(&ctx->pb);\n\n\n\n    for(i=0;i<ctx->nb_streams;i++)\n\n        av_freep(&ctx->streams[i]->priv_data);\n\n\n\n    return 0;\n\n}",
+    "expected_callsite_annotations": null,
+    "annotator_notes": "",
+    "annotation_schema": {
+      "api_name": "str",
+      "family": "str",
+      "start": "0-based inclusive",
+      "end": "exclusive",
+      "status": "recognized/unknown/non_sink",
+      "evidence": "code-based justification"
+    }
+  },
+  {
+    "opaque_id": "H1-036",
+    "code_sha256": "c7ff7e5f32137fd33815636bc1d40e3f39a0b5e32f08a13650f643cbb7b3773e",
+    "code": "static void virtio_scsi_complete_req(VirtIOSCSIReq *req)\n\n{\n\n    VirtIOSCSI *s = req->dev;\n\n    VirtQueue *vq = req->vq;\n\n    VirtIODevice *vdev = VIRTIO_DEVICE(s);\n\n\n\n    qemu_iovec_from_buf(&req->resp_iov, 0, &req->resp, req->resp_size);\n\n    virtqueue_push(vq, &req->elem, req->qsgl.size + req->resp_iov.size);\n\n    if (s->dataplane_started && !s->dataplane_fenced) {\n\n        virtio_scsi_dataplane_notify(vdev, req);\n\n    } else {\n\n        virtio_notify(vdev, vq);\n\n    }\n\n\n\n    if (req->sreq) {\n\n        req->sreq->hba_private = NULL;\n\n        scsi_req_unref(req->sreq);\n\n    }\n\n    virtio_scsi_free_req(req);\n\n}",
+    "expected_callsite_annotations": null,
+    "annotator_notes": "",
+    "annotation_schema": {
+      "api_name": "str",
+      "family": "str",
+      "start": "0-based inclusive",
+      "end": "exclusive",
+      "status": "recognized/unknown/non_sink",
+      "evidence": "code-based justification"
+    }
+  },
+  {
+    "opaque_id": "H1-037",
+    "code_sha256": "7c64783f6113f4a2a82c361bcfdeb58d75f4538ff16ff95adaafd378a15c4154",
+    "code": "static void gen_rfci(DisasContext *ctx)\n\n{\n\n#if defined(CONFIG_USER_ONLY)\n\n    gen_inval_exception(ctx, POWERPC_EXCP_PRIV_OPC);\n\n#else\n\n    if (unlikely(ctx->pr)) {\n\n        gen_inval_exception(ctx, POWERPC_EXCP_PRIV_OPC);\n\n        return;\n\n    }\n\n    /* Restore CPU state */\n\n    gen_helper_rfci(cpu_env);\n\n    gen_sync_exception(ctx);\n\n#endif\n\n}",
+    "expected_callsite_annotations": null,
+    "annotator_notes": "",
+    "annotation_schema": {
+      "api_name": "str",
+      "family": "str",
+      "start": "0-based inclusive",
+      "end": "exclusive",
+      "status": "recognized/unknown/non_sink",
+      "evidence": "code-based justification"
+    }
+  },
+  {
+    "opaque_id": "H1-038",
+    "code_sha256": "df35e99fb0d0030c65086c5374d7218c1fb5e384350ee1aeb4552cc99bb4c12a",
+    "code": "void gdb_do_syscall(gdb_syscall_complete_cb cb, const char *fmt, ...)\n\n{\n\n    va_list va;\n\n    char buf[256];\n\n    char *p;\n\n    target_ulong addr;\n\n    uint64_t i64;\n\n    GDBState *s;\n\n\n\n    s = gdbserver_state;\n\n    if (!s)\n\n        return;\n\n    gdb_current_syscall_cb = cb;\n\n    s->state = RS_SYSCALL;\n\n#ifndef CONFIG_USER_ONLY\n\n    vm_stop(EXCP_DEBUG);\n\n#endif\n\n    s->state = RS_IDLE;\n\n    va_start(va, fmt);\n\n    p = buf;\n\n    *(p++) = 'F';\n\n    while (*fmt) {\n\n        if (*fmt == '%') {\n\n            fmt++;\n\n            switch (*fmt++) {\n\n            case 'x':\n\n                addr = va_arg(va, target_ulong);\n\n                p += snprintf(p, &buf[sizeof(buf)] - p, TARGET_FMT_lx, addr);\n\n                break;\n\n            case 'l':\n\n                if (*(fmt++) != 'x')\n\n                    goto bad_format;\n\n                i64 = va_arg(va, uint64_t);\n\n                p += snprintf(p, &buf[sizeof(buf)] - p, \"%\" PRIx64, i64);\n\n                break;\n\n            case 's':\n\n                addr = va_arg(va, target_ulong);\n\n                p += snprintf(p, &buf[sizeof(buf)] - p, TARGET_FMT_lx \"/%x\",\n\n                              addr, va_arg(va, int));\n\n                break;\n\n            default:\n\n            bad_format:\n\n                fprintf(stderr, \"gdbstub: Bad syscall format string '%s'\\n\",\n\n                        fmt - 1);\n\n                break;\n\n            }\n\n        } else {\n\n            *(p++) = *(fmt++);\n\n        }\n\n    }\n\n    *p = 0;\n\n    va_end(va);\n\n    put_packet(s, buf);\n\n#ifdef CONFIG_USER_ONLY\n\n    gdb_handlesig(s->c_cpu, 0);\n\n#else\n\n    cpu_interrupt(s->c_cpu, CPU_INTERRUPT_EXIT);\n\n#endif\n\n}",
+    "expected_callsite_annotations": null,
+    "annotator_notes": "",
+    "annotation_schema": {
+      "api_name": "str",
+      "family": "str",
+      "start": "0-based inclusive",
+      "end": "exclusive",
+      "status": "recognized/unknown/non_sink",
+      "evidence": "code-based justification"
+    }
+  },
+  {
+    "opaque_id": "H1-039",
+    "code_sha256": "c4d718f2ac05446d69857c06a8450430a186f03cc22b3fb9fd6e020c2b9f01ba",
+    "code": "void ff_vp3_v_loop_filter_c(uint8_t *first_pixel, int stride, int *bounding_values)\n\n{\n\n    unsigned char *end;\n\n    int filter_value;\n\n    const int nstride= -stride;\n\n\n\n    for (end= first_pixel + 8; first_pixel < end; first_pixel++) {\n\n        filter_value =\n\n            (first_pixel[2 * nstride] - first_pixel[ stride])\n\n         +3*(first_pixel[0          ] - first_pixel[nstride]);\n\n        filter_value = bounding_values[(filter_value + 4) >> 3];\n\n        first_pixel[nstride] = av_clip_uint8(first_pixel[nstride] + filter_value);\n\n        first_pixel[0] = av_clip_uint8(first_pixel[0] - filter_value);\n\n    }\n\n}",
+    "expected_callsite_annotations": null,
+    "annotator_notes": "",
+    "annotation_schema": {
+      "api_name": "str",
+      "family": "str",
+      "start": "0-based inclusive",
+      "end": "exclusive",
+      "status": "recognized/unknown/non_sink",
+      "evidence": "code-based justification"
+    }
+  },
+  {
+    "opaque_id": "H1-040",
+    "code_sha256": "963beaa17dcffaa007bc58e3f037aae088322223945510afa9b3b0c779c79207",
+    "code": "static inline void mct_decode(Jpeg2000DecoderContext *s, Jpeg2000Tile *tile)\n\n{\n\n    int i, csize = 1;\n\n    void *src[3];\n\n\n\n    for (i = 1; i < 3; i++)\n\n        if (tile->codsty[0].transform != tile->codsty[i].transform) {\n\n            av_log(s->avctx, AV_LOG_ERROR, \"Transforms mismatch, MCT not supported\\n\");\n\n            return;\n\n        }\n\n\n\n    for (i = 0; i < 3; i++)\n\n        if (tile->codsty[0].transform == FF_DWT97)\n\n            src[i] = tile->comp[i].f_data;\n\n        else\n\n            src[i] = tile->comp[i].i_data;\n\n\n\n    for (i = 0; i < 2; i++)\n\n        csize *= tile->comp[0].coord[i][1] - tile->comp[0].coord[i][0];\n\n\n\n    s->dsp.mct_decode[tile->codsty[0].transform](src[0], src[1], src[2], csize);\n\n}",
+    "expected_callsite_annotations": null,
+    "annotator_notes": "",
+    "annotation_schema": {
+      "api_name": "str",
+      "family": "str",
+      "start": "0-based inclusive",
+      "end": "exclusive",
+      "status": "recognized/unknown/non_sink",
+      "evidence": "code-based justification"
+    }
+  },
+  {
+    "opaque_id": "H1-041",
+    "code_sha256": "7fc5c53d401f2e175457fc472cf5af8340ffd0a11fc5a9fbff71fbd7b9d429ad",
+    "code": "static inline void RENAME(rgb2rgb_init)(void)\n\n{\n\n#if !COMPILE_TEMPLATE_SSE2\n\n#if !COMPILE_TEMPLATE_AMD3DNOW\n\n    rgb15to16          = RENAME(rgb15to16);\n\n    rgb15tobgr24       = RENAME(rgb15tobgr24);\n\n    rgb15to32          = RENAME(rgb15to32);\n\n    rgb16tobgr24       = RENAME(rgb16tobgr24);\n\n    rgb16to32          = RENAME(rgb16to32);\n\n    rgb16to15          = RENAME(rgb16to15);\n\n    rgb24tobgr16       = RENAME(rgb24tobgr16);\n\n    rgb24tobgr15       = RENAME(rgb24tobgr15);\n\n    rgb24tobgr32       = RENAME(rgb24tobgr32);\n\n    rgb32to16          = RENAME(rgb32to16);\n\n    rgb32to15          = RENAME(rgb32to15);\n\n    rgb32tobgr24       = RENAME(rgb32tobgr24);\n\n    rgb24to15          = RENAME(rgb24to15);\n\n    rgb24to16          = RENAME(rgb24to16);\n\n    rgb24tobgr24       = RENAME(rgb24tobgr24);\n\n    shuffle_bytes_2103 = RENAME(shuffle_bytes_2103);\n\n    rgb32tobgr16       = RENAME(rgb32tobgr16);\n\n    rgb32tobgr15       = RENAME(rgb32tobgr15);\n\n    yv12toyuy2         = RENAME(yv12toyuy2);\n\n    yv12touyvy         = RENAME(yv12touyvy);\n\n    yuv422ptoyuy2      = RENAME(yuv422ptoyuy2);\n\n    yuv422ptouyvy      = RENAME(yuv422ptouyvy);\n\n    yuy2toyv12         = RENAME(yuy2toyv12);\n\n    vu9_to_vu12        = RENAME(vu9_to_vu12);\n\n    yvu9_to_yuy2       = RENAME(yvu9_to_yuy2);\n\n    uyvytoyuv422       = RENAME(uyvytoyuv422);\n\n    yuyvtoyuv422       = RENAME(yuyvtoyuv422);\n\n#endif /* !COMPILE_TEMPLATE_AMD3DNOW */\n\n\n\n#if COMPILE_TEMPLATE_MMXEXT || COMPILE_TEMPLATE_AMD3DNOW\n\n    planar2x           = RENAME(planar2x);\n\n#endif /* COMPILE_TEMPLATE_MMXEXT || COMPILE_TEMPLATE_AMD3DNOW */\n\n    rgb24toyv12        = RENAME(rgb24toyv12);\n\n\n\n    yuyvtoyuv420       = RENAME(yuyvtoyuv420);\n\n    uyvytoyuv420       = RENAME(uyvytoyuv420);\n\n#endif /* !COMPILE_TEMPLATE_SSE2 */\n\n\n\n#if !COMPILE_TEMPLATE_AMD3DNOW\n\n    interleaveBytes    = RENAME(interleaveBytes);\n\n#endif /* !COMPILE_TEMPLATE_AMD3DNOW */\n\n}",
+    "expected_callsite_annotations": null,
+    "annotator_notes": "",
+    "annotation_schema": {
+      "api_name": "str",
+      "family": "str",
+      "start": "0-based inclusive",
+      "end": "exclusive",
+      "status": "recognized/unknown/non_sink",
+      "evidence": "code-based justification"
+    }
+  },
+  {
+    "opaque_id": "H1-042",
+    "code_sha256": "c70daebea135e1688676920713c70cb845c4d050b2805c33bf5f69412145325c",
+    "code": "static int hls_write_header(AVFormatContext *s)\n\n{\n\n    HLSContext *hls = s->priv_data;\n\n    int ret, i;\n\n    char *p;\n\n    const char *pattern = \"%d.ts\";\n\n    int basename_size = strlen(s->filename) + strlen(pattern);\n\n\n\n    hls->number      = 0;\n\n\n\n    hls->recording_time = hls->time * 1000000;\n\n    hls->start_pts      = AV_NOPTS_VALUE;\n\n\n\n    for (i = 0; i < s->nb_streams; i++)\n\n        hls->has_video +=\n\n            s->streams[i]->codec->codec_type == AVMEDIA_TYPE_VIDEO;\n\n\n\n    if (hls->has_video > 1)\n\n        av_log(s, AV_LOG_WARNING,\n\n               \"More than a single video stream present, \"\n\n               \"expect issues decoding it.\\n\");\n\n\n\n    hls->oformat = av_guess_format(\"mpegts\", NULL, NULL);\n\n\n\n    if (!hls->oformat) {\n\n        ret = AVERROR_MUXER_NOT_FOUND;\n\n        goto fail;\n\n    }\n\n\n\n    hls->basename = av_malloc(basename_size);\n\n\n\n    if (!hls->basename) {\n\n        ret = AVERROR(ENOMEM);\n\n        goto fail;\n\n    }\n\n\n\n    strcpy(hls->basename, s->filename);\n\n\n\n    p = strrchr(hls->basename, '.');\n\n\n\n    if (p)\n\n        *p = '\\0';\n\n\n\n    av_strlcat(hls->basename, \"%d.ts\", basename_size);\n\n\n\n    if ((ret = hls_mux_init(s)) < 0)\n\n        goto fail;\n\n\n\n    if ((ret = hls_start(s)) < 0)\n\n        goto fail;\n\n\n\n    if ((ret = avformat_write_header(hls->avf, NULL)) < 0)\n\n        return ret;\n\n\n\n\n\nfail:\n\n    if (ret) {\n\n        av_free(hls->basename);\n\n        if (hls->avf)\n\n            avformat_free_context(hls->avf);\n\n    }\n\n    return ret;\n\n}",
+    "expected_callsite_annotations": null,
+    "annotator_notes": "",
+    "annotation_schema": {
+      "api_name": "str",
+      "family": "str",
+      "start": "0-based inclusive",
+      "end": "exclusive",
+      "status": "recognized/unknown/non_sink",
+      "evidence": "code-based justification"
+    }
+  },
+  {
+    "opaque_id": "H1-043",
+    "code_sha256": "32b5858b75b0169af149f4b99f5b8d4fb0bcb9d115626df6d156ab577bd44f54",
+    "code": "static inline void RENAME(bgr24ToY)(uint8_t *dst, uint8_t *src, long width)\n\n{\n\n#ifdef HAVE_MMX\n\n\tasm volatile(\n\n\t\t\"mov %2, %%\"REG_a\"\t\t\\n\\t\"\n\n\t\t\"movq \"MANGLE(bgr2YCoeff)\", %%mm6\t\t\\n\\t\"\n\n\t\t\"movq \"MANGLE(w1111)\", %%mm5\t\t\\n\\t\"\n\n\t\t\"pxor %%mm7, %%mm7\t\t\\n\\t\"\n\n\t\t\"lea (%%\"REG_a\", %%\"REG_a\", 2), %%\"REG_d\"\\n\\t\"\n\n\t\tASMALIGN(4)\n\n\t\t\"1:\t\t\t\t\\n\\t\"\n\n\t\tPREFETCH\" 64(%0, %%\"REG_d\")\t\\n\\t\"\n\n\t\t\"movd (%0, %%\"REG_d\"), %%mm0\t\\n\\t\"\n\n\t\t\"movd 3(%0, %%\"REG_d\"), %%mm1\t\\n\\t\"\n\n\t\t\"punpcklbw %%mm7, %%mm0\t\t\\n\\t\"\n\n\t\t\"punpcklbw %%mm7, %%mm1\t\t\\n\\t\"\n\n\t\t\"movd 6(%0, %%\"REG_d\"), %%mm2\t\\n\\t\"\n\n\t\t\"movd 9(%0, %%\"REG_d\"), %%mm3\t\\n\\t\"\n\n\t\t\"punpcklbw %%mm7, %%mm2\t\t\\n\\t\"\n\n\t\t\"punpcklbw %%mm7, %%mm3\t\t\\n\\t\"\n\n\t\t\"pmaddwd %%mm6, %%mm0\t\t\\n\\t\"\n\n\t\t\"pmaddwd %%mm6, %%mm1\t\t\\n\\t\"\n\n\t\t\"pmaddwd %%mm6, %%mm2\t\t\\n\\t\"\n\n\t\t\"pmaddwd %%mm6, %%mm3\t\t\\n\\t\"\n\n#ifndef FAST_BGR2YV12\n\n\t\t\"psrad $8, %%mm0\t\t\\n\\t\"\n\n\t\t\"psrad $8, %%mm1\t\t\\n\\t\"\n\n\t\t\"psrad $8, %%mm2\t\t\\n\\t\"\n\n\t\t\"psrad $8, %%mm3\t\t\\n\\t\"\n\n#endif\n\n\t\t\"packssdw %%mm1, %%mm0\t\t\\n\\t\"\n\n\t\t\"packssdw %%mm3, %%mm2\t\t\\n\\t\"\n\n\t\t\"pmaddwd %%mm5, %%mm0\t\t\\n\\t\"\n\n\t\t\"pmaddwd %%mm5, %%mm2\t\t\\n\\t\"\n\n\t\t\"packssdw %%mm2, %%mm0\t\t\\n\\t\"\n\n\t\t\"psraw $7, %%mm0\t\t\\n\\t\"\n\n\n\n\t\t\"movd 12(%0, %%\"REG_d\"), %%mm4\t\\n\\t\"\n\n\t\t\"movd 15(%0, %%\"REG_d\"), %%mm1\t\\n\\t\"\n\n\t\t\"punpcklbw %%mm7, %%mm4\t\t\\n\\t\"\n\n\t\t\"punpcklbw %%mm7, %%mm1\t\t\\n\\t\"\n\n\t\t\"movd 18(%0, %%\"REG_d\"), %%mm2\t\\n\\t\"\n\n\t\t\"movd 21(%0, %%\"REG_d\"), %%mm3\t\\n\\t\"\n\n\t\t\"punpcklbw %%mm7, %%mm2\t\t\\n\\t\"\n\n\t\t\"punpcklbw %%mm7, %%mm3\t\t\\n\\t\"\n\n\t\t\"pmaddwd %%mm6, %%mm4\t\t\\n\\t\"\n\n\t\t\"pmaddwd %%mm6, %%mm1\t\t\\n\\t\"\n\n\t\t\"pmaddwd %%mm6, %%mm2\t\t\\n\\t\"\n\n\t\t\"pmaddwd %%mm6, %%mm3\t\t\\n\\t\"\n\n#ifndef FAST_BGR2YV12\n\n\t\t\"psrad $8, %%mm4\t\t\\n\\t\"\n\n\t\t\"psrad $8, %%mm1\t\t\\n\\t\"\n\n\t\t\"psrad $8, %%mm2\t\t\\n\\t\"\n\n\t\t\"psrad $8, %%mm3\t\t\\n\\t\"\n\n#endif\n\n\t\t\"packssdw %%mm1, %%mm4\t\t\\n\\t\"\n\n\t\t\"packssdw %%mm3, %%mm2\t\t\\n\\t\"\n\n\t\t\"pmaddwd %%mm5, %%mm4\t\t\\n\\t\"\n\n\t\t\"pmaddwd %%mm5, %%mm2\t\t\\n\\t\"\n\n\t\t\"add $24, %%\"REG_d\"\t\t\\n\\t\"\n\n\t\t\"packssdw %%mm2, %%mm4\t\t\\n\\t\"\n\n\t\t\"psraw $7, %%mm4\t\t\\n\\t\"\n\n\n\n\t\t\"packuswb %%mm4, %%mm0\t\t\\n\\t\"\n\n\t\t\"paddusb \"MANGLE(bgr2YOffset)\", %%mm0\t\\n\\t\"\n\n\n\n\t\t\"movq %%mm0, (%1, %%\"REG_a\")\t\\n\\t\"\n\n\t\t\"add $8, %%\"REG_a\"\t\t\\n\\t\"\n\n\t\t\" js 1b\t\t\t\t\\n\\t\"\n\n\t\t: : \"r\" (src+width*3), \"r\" (dst+width), \"g\" (-width)\n\n\t\t: \"%\"REG_a, \"%\"REG_d\n\n\t);\n\n#else\n\n\tint i;\n\n\tfor(i=0; i<width; i++)\n\n\t{\n\n\t\tint b= src[i*3+0];\n\n\t\tint g= src[i*3+1];\n\n\t\tint r= src[i*3+2];\n\n\n\n\t\tdst[i]= ((RY*r + GY*g + BY*b + (33<<(RGB2YUV_SHIFT-1)) )>>RGB2YUV_SHIFT);\n\n\t}\n\n#endif\n\n}",
+    "expected_callsite_annotations": null,
+    "annotator_notes": "",
+    "annotation_schema": {
+      "api_name": "str",
+      "family": "str",
+      "start": "0-based inclusive",
+      "end": "exclusive",
+      "status": "recognized/unknown/non_sink",
+      "evidence": "code-based justification"
+    }
+  },
+  {
+    "opaque_id": "H1-044",
+    "code_sha256": "01495d888ca54a304efb5f91ad78b01e56b035ca8bd6eba43eebb8ff9a29444f",
+    "code": "static int ivi_mc(ivi_mc_func mc, int16_t *buf, const int16_t *ref_buf,\n\n                  int offs, int mv_x, int mv_y, uint32_t pitch,\n\n                  int mc_type)\n\n{\n\n    int ref_offs = offs + mv_y * pitch + mv_x;\n\n\n\n    if (offs < 0 || ref_offs < 0 || !ref_buf)\n\n        return AVERROR_INVALIDDATA;\n\n\n\n    mc(buf + offs, ref_buf + ref_offs, pitch, mc_type);\n\n\n\n    return 0;\n\n}",
+    "expected_callsite_annotations": null,
+    "annotator_notes": "",
+    "annotation_schema": {
+      "api_name": "str",
+      "family": "str",
+      "start": "0-based inclusive",
+      "end": "exclusive",
+      "status": "recognized/unknown/non_sink",
+      "evidence": "code-based justification"
+    }
+  },
+  {
+    "opaque_id": "H1-045",
+    "code_sha256": "f68f9557d9668ca62db79a1fe38cbe9f4ac325b5622369cce9ceccf58344c8cc",
+    "code": "static int cllc_decode_frame(AVCodecContext *avctx, void *data,\n                             int *got_picture_ptr, AVPacket *avpkt)\n{\n    CLLCContext *ctx = avctx->priv_data;\n    AVFrame *pic = data;\n    ThreadFrame frame = { .f = data };\n    uint8_t *src = avpkt->data;\n    uint32_t info_tag, info_offset;\n    int data_size;\n    GetBitContext gb;\n    int coding_type, ret;\n    if (avpkt->size < 4 + 4) {\n        av_log(avctx, AV_LOG_ERROR, \"Frame is too small %d.\\n\", avpkt->size);\n    }\n    info_offset = 0;\n    info_tag    = AV_RL32(src);\n    if (info_tag == MKTAG('I', 'N', 'F', 'O')) {\n        info_offset = AV_RL32(src + 4);\n        if (info_offset > UINT32_MAX - 8 || info_offset + 8 > avpkt->size) {\n            av_log(avctx, AV_LOG_ERROR,\n                   \"Invalid INFO header offset: 0x%08\"PRIX32\" is too large.\\n\",\n                   info_offset);\n        }\n        ff_canopus_parse_info_tag(avctx, src + 8, info_offset);\n        info_offset += 8;\n        src         += info_offset;\n    }\n    data_size = (avpkt->size - info_offset) & ~1;\n    /* Make sure our bswap16'd buffer is big enough */\n    av_fast_padded_malloc(&ctx->swapped_buf,\n                          &ctx->swapped_buf_size, data_size);\n    if (!ctx->swapped_buf) {\n        av_log(avctx, AV_LOG_ERROR, \"Could not allocate swapped buffer.\\n\");\n        return AVERROR(ENOMEM);\n    }\n    /* bswap16 the buffer since CLLC's bitreader works in 16-bit words */\n    ctx->bdsp.bswap16_buf((uint16_t *) ctx->swapped_buf, (uint16_t *) src,\n                          data_size / 2);\n    if ((ret = init_get_bits8(&gb, ctx->swapped_buf, data_size)) < 0)\n        return ret;\n    /*\n     * Read in coding type. The types are as follows:\n     *\n     * 0 - YUY2\n     * 1 - BGR24 (Triples)\n     * 2 - BGR24 (Quads)\n     * 3 - BGRA\n     */\n    coding_type = (AV_RL32(src) >> 8) & 0xFF;\n    av_log(avctx, AV_LOG_DEBUG, \"Frame coding type: %d\\n\", coding_type);\n    switch (coding_type) {\n    case 0:\n        avctx->pix_fmt             = AV_PIX_FMT_YUV422P;\n        avctx->bits_per_raw_sample = 8;\n        if ((ret = ff_thread_get_buffer(avctx, &frame, 0)) < 0)\n            return ret;\n        ret = decode_yuv_frame(ctx, &gb, pic);\n        if (ret < 0)\n            return ret;\n        break;\n    case 1:\n    case 2:\n        avctx->pix_fmt             = AV_PIX_FMT_RGB24;\n        avctx->bits_per_raw_sample = 8;\n        if ((ret = ff_thread_get_buffer(avctx, &frame, 0)) < 0)\n            return ret;\n        ret = decode_rgb24_frame(ctx, &gb, pic);\n        if (ret < 0)\n            return ret;\n        break;\n    case 3:\n        avctx->pix_fmt             = AV_PIX_FMT_ARGB;\n        avctx->bits_per_raw_sample = 8;\n        if ((ret = ff_thread_get_buffer(avctx, &frame, 0)) < 0)\n            return ret;\n        ret = decode_argb_frame(ctx, &gb, pic);\n        if (ret < 0)\n            return ret;\n        break;\n    default:\n        av_log(avctx, AV_LOG_ERROR, \"Unknown coding type: %d.\\n\", coding_type);\n    }\n    pic->key_frame = 1;\n    pic->pict_type = AV_PICTURE_TYPE_I;\n    *got_picture_ptr = 1;\n    return avpkt->size;\n}",
+    "expected_callsite_annotations": null,
+    "annotator_notes": "",
+    "annotation_schema": {
+      "api_name": "str",
+      "family": "str",
+      "start": "0-based inclusive",
+      "end": "exclusive",
+      "status": "recognized/unknown/non_sink",
+      "evidence": "code-based justification"
+    }
+  },
+  {
+    "opaque_id": "H1-046",
+    "code_sha256": "6bf7a0f9139e7cd17f5714ad1df8e61d10199aa1e751c9a07046e086b5dc7dd6",
+    "code": "static av_always_inline void decode_dc_coeffs(GetBitContext *gb, int16_t *out,\n\n                                              int blocks_per_slice)\n\n{\n\n    int16_t prev_dc;\n\n    int code, i, sign;\n\n\n\n    OPEN_READER(re, gb);\n\n\n\n    DECODE_CODEWORD(code, FIRST_DC_CB);\n\n    prev_dc = TOSIGNED(code);\n\n    out[0] = prev_dc;\n\n\n\n    out += 64; // dc coeff for the next block\n\n\n\n    code = 5;\n\n    sign = 0;\n\n    for (i = 1; i < blocks_per_slice; i++, out += 64) {\n\n        DECODE_CODEWORD(code, dc_codebook[FFMIN(code, 6U)]);\n\n        if(code) sign ^= -(code & 1);\n\n        else     sign  = 0;\n\n        prev_dc += (((code + 1) >> 1) ^ sign) - sign;\n\n        out[0] = prev_dc;\n\n    }\n\n    CLOSE_READER(re, gb);\n\n}",
+    "expected_callsite_annotations": null,
+    "annotator_notes": "",
+    "annotation_schema": {
+      "api_name": "str",
+      "family": "str",
+      "start": "0-based inclusive",
+      "end": "exclusive",
+      "status": "recognized/unknown/non_sink",
+      "evidence": "code-based justification"
+    }
+  },
+  {
+    "opaque_id": "H1-047",
+    "code_sha256": "55ebbca4679009b8dfcdcde9e8c5a1a293bcb8932494bc5a94c07e75a820f914",
+    "code": "int av_get_channel_layout_nb_channels(int64_t channel_layout)\n\n{\n\n    int count;\n\n    uint64_t x = channel_layout;\n\n    for (count = 0; x; count++)\n\n        x &= x-1; // unset lowest set bit\n\n    return count;\n\n}",
+    "expected_callsite_annotations": null,
+    "annotator_notes": "",
+    "annotation_schema": {
+      "api_name": "str",
+      "family": "str",
+      "start": "0-based inclusive",
+      "end": "exclusive",
+      "status": "recognized/unknown/non_sink",
+      "evidence": "code-based justification"
+    }
+  },
+  {
+    "opaque_id": "H1-048",
+    "code_sha256": "c48776448d2a5aaa64da092c7ba68b98156e05c3dd2582bad48c7156805f5e54",
+    "code": "static void openpic_load_IRQ_queue(QEMUFile* f, IRQQueue *q)\n\n{\n\n    unsigned int i;\n\n\n\n    for (i = 0; i < BF_WIDTH(MAX_IRQ); i++)\n\n        qemu_get_be32s(f, &q->queue[i]);\n\n\n\n    qemu_get_sbe32s(f, &q->next);\n\n    qemu_get_sbe32s(f, &q->priority);\n\n}",
+    "expected_callsite_annotations": null,
+    "annotator_notes": "",
+    "annotation_schema": {
+      "api_name": "str",
+      "family": "str",
+      "start": "0-based inclusive",
+      "end": "exclusive",
+      "status": "recognized/unknown/non_sink",
+      "evidence": "code-based justification"
+    }
+  },
+  {
+    "opaque_id": "H1-049",
+    "code_sha256": "5d95f1489aa0697366d3f10f70bec12a8f20ba8619c4a62d91807c7e2d51cce2",
+    "code": "static void filter_mirror_setup(NetFilterState *nf, Error **errp)\n{\n    MirrorState *s = FILTER_MIRROR(nf);\n    Chardev *chr;\n    chr = qemu_chr_find(s->outdev);\n    if (chr == NULL) {\n        error_set(errp, ERROR_CLASS_DEVICE_NOT_FOUND,\n                  \"Device '%s' not found\", s->outdev);\n    qemu_chr_fe_init(&s->chr_out, chr, errp);",
+    "expected_callsite_annotations": null,
+    "annotator_notes": "",
+    "annotation_schema": {
+      "api_name": "str",
+      "family": "str",
+      "start": "0-based inclusive",
+      "end": "exclusive",
+      "status": "recognized/unknown/non_sink",
+      "evidence": "code-based justification"
+    }
+  },
+  {
+    "opaque_id": "H1-050",
+    "code_sha256": "4fafe17953c37c22800b66ef4d84b61edad3bf6b8683ddd7e1f90d35ce7dcb1f",
+    "code": "static uint64_t omap_pin_cfg_read(void *opaque, target_phys_addr_t addr,\n\n                                  unsigned size)\n\n{\n\n    struct omap_mpu_state_s *s = (struct omap_mpu_state_s *) opaque;\n\n\n\n    if (size != 4) {\n\n        return omap_badwidth_read32(opaque, addr);\n\n    }\n\n\n\n    switch (addr) {\n\n    case 0x00:\t/* FUNC_MUX_CTRL_0 */\n\n    case 0x04:\t/* FUNC_MUX_CTRL_1 */\n\n    case 0x08:\t/* FUNC_MUX_CTRL_2 */\n\n        return s->func_mux_ctrl[addr >> 2];\n\n\n\n    case 0x0c:\t/* COMP_MODE_CTRL_0 */\n\n        return s->comp_mode_ctrl[0];\n\n\n\n    case 0x10:\t/* FUNC_MUX_CTRL_3 */\n\n    case 0x14:\t/* FUNC_MUX_CTRL_4 */\n\n    case 0x18:\t/* FUNC_MUX_CTRL_5 */\n\n    case 0x1c:\t/* FUNC_MUX_CTRL_6 */\n\n    case 0x20:\t/* FUNC_MUX_CTRL_7 */\n\n    case 0x24:\t/* FUNC_MUX_CTRL_8 */\n\n    case 0x28:\t/* FUNC_MUX_CTRL_9 */\n\n    case 0x2c:\t/* FUNC_MUX_CTRL_A */\n\n    case 0x30:\t/* FUNC_MUX_CTRL_B */\n\n    case 0x34:\t/* FUNC_MUX_CTRL_C */\n\n    case 0x38:\t/* FUNC_MUX_CTRL_D */\n\n        return s->func_mux_ctrl[(addr >> 2) - 1];\n\n\n\n    case 0x40:\t/* PULL_DWN_CTRL_0 */\n\n    case 0x44:\t/* PULL_DWN_CTRL_1 */\n\n    case 0x48:\t/* PULL_DWN_CTRL_2 */\n\n    case 0x4c:\t/* PULL_DWN_CTRL_3 */\n\n        return s->pull_dwn_ctrl[(addr & 0xf) >> 2];\n\n\n\n    case 0x50:\t/* GATE_INH_CTRL_0 */\n\n        return s->gate_inh_ctrl[0];\n\n\n\n    case 0x60:\t/* VOLTAGE_CTRL_0 */\n\n        return s->voltage_ctrl[0];\n\n\n\n    case 0x70:\t/* TEST_DBG_CTRL_0 */\n\n        return s->test_dbg_ctrl[0];\n\n\n\n    case 0x80:\t/* MOD_CONF_CTRL_0 */\n\n        return s->mod_conf_ctrl[0];\n\n    }\n\n\n\n    OMAP_BAD_REG(addr);\n\n    return 0;\n\n}",
+    "expected_callsite_annotations": null,
+    "annotator_notes": "",
+    "annotation_schema": {
+      "api_name": "str",
+      "family": "str",
+      "start": "0-based inclusive",
+      "end": "exclusive",
+      "status": "recognized/unknown/non_sink",
+      "evidence": "code-based justification"
+    }
+  }
+]

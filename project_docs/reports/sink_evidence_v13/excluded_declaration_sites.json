@@ -1,0 +1,158 @@
+{
+  "development": [
+    {
+      "opaque_id": "Q-00040",
+      "excluded": [
+        {
+          "api_name": "RENAME",
+          "family": "",
+          "start": 12,
+          "end": 41,
+          "line": 1,
+          "expression": "RENAME(vertical_compose53iL0)",
+          "evidence_source": "direct_call_site",
+          "status": "excluded_syntax",
+          "reason": "unexpanded_macro_or_uppercase_helper",
+          "preprocessor_state": "active",
+          "preprocessor_conditions": [],
+          "exclusion_reason": "macro_decorated_function_declaration_not_call"
+        }
+      ]
+    },
+    {
+      "opaque_id": "Q-00045",
+      "excluded": [
+        {
+          "api_name": "uint8_t",
+          "family": "",
+          "start": 33,
+          "end": 54,
+          "line": 1,
+          "expression": "uint8_t (*layout_map)",
+          "evidence_source": "direct_call_site",
+          "status": "excluded_syntax",
+          "reason": "unresolved_helper_or_function",
+          "preprocessor_state": "active",
+          "preprocessor_conditions": [],
+          "exclusion_reason": "array_pointer_parameter_type_not_call"
+        }
+      ]
+    },
+    {
+      "opaque_id": "Q-00076",
+      "excluded": [
+        {
+          "api_name": "RENAME",
+          "family": "",
+          "start": 19,
+          "end": 39,
+          "line": 1,
+          "expression": "RENAME(rgb2rgb_init)",
+          "evidence_source": "direct_call_site",
+          "status": "excluded_syntax",
+          "reason": "unexpanded_macro_or_uppercase_helper",
+          "preprocessor_state": "active",
+          "preprocessor_conditions": [],
+          "exclusion_reason": "macro_decorated_function_declaration_not_call"
+        }
+      ]
+    },
+    {
+      "opaque_id": "Q-00078",
+      "excluded": [
+        {
+          "api_name": "RENAME",
+          "family": "",
+          "start": 19,
+          "end": 35,
+          "line": 1,
+          "expression": "RENAME(bgr24ToY)",
+          "evidence_source": "direct_call_site",
+          "status": "excluded_syntax",
+          "reason": "unexpanded_macro_or_uppercase_helper",
+          "preprocessor_state": "active",
+          "preprocessor_conditions": [],
+          "exclusion_reason": "macro_decorated_function_declaration_not_call"
+        }
+      ]
+    },
+    {
+      "opaque_id": "Q-00094",
+      "excluded": [
+        {
+          "api_name": "RENAME",
+          "family": "",
+          "start": 12,
+          "end": 31,
+          "line": 1,
+          "expression": "RENAME(yuv2bgr24_1)",
+          "evidence_source": "direct_call_site",
+          "status": "excluded_syntax",
+          "reason": "unexpanded_macro_or_uppercase_helper",
+          "preprocessor_state": "active",
+          "preprocessor_conditions": [],
+          "exclusion_reason": "macro_decorated_function_declaration_not_call"
+        }
+      ]
+    }
+  ],
+  "fresh": [
+    {
+      "opaque_id": "E13-009",
+      "excluded": [
+        {
+          "api_name": "RENAME",
+          "family": "",
+          "start": 12,
+          "end": 37,
+          "line": 1,
+          "expression": "RENAME(SwScale_YV12slice)",
+          "evidence_source": "direct_call_site",
+          "status": "excluded_syntax",
+          "reason": "unexpanded_macro_or_uppercase_helper",
+          "preprocessor_state": "active",
+          "preprocessor_conditions": [],
+          "exclusion_reason": "macro_decorated_function_declaration_not_call"
+        }
+      ]
+    },
+    {
+      "opaque_id": "E13-043",
+      "excluded": [
+        {
+          "api_name": "RENAME",
+          "family": "",
+          "start": 19,
+          "end": 38,
+          "line": 1,
+          "expression": "RENAME(vu9_to_vu12)",
+          "evidence_source": "direct_call_site",
+          "status": "excluded_syntax",
+          "reason": "unexpanded_macro_or_uppercase_helper",
+          "preprocessor_state": "active",
+          "preprocessor_conditions": [],
+          "exclusion_reason": "macro_decorated_function_declaration_not_call"
+        }
+      ]
+    },
+    {
+      "opaque_id": "E13-047",
+      "excluded": [
+        {
+          "api_name": "RENAME",
+          "family": "",
+          "start": 19,
+          "end": 39,
+          "line": 1,
+          "expression": "RENAME(hyscale_fast)",
+          "evidence_source": "direct_call_site",
+          "status": "excluded_syntax",
+          "reason": "unexpanded_macro_or_uppercase_helper",
+          "preprocessor_state": "active",
+          "preprocessor_conditions": [],
+          "exclusion_reason": "macro_decorated_function_declaration_not_call"
+        }
+      ]
+    }
+  ]
+}

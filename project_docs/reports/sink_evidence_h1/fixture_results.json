@@ -1,0 +1,869 @@
+[
+  {
+    "fixture": "comment",
+    "code": "void f(void) { /* memcpy(d,s,n); free(p); */ }",
+    "expected_expressions": [],
+    "E0_apis": [
+      "free",
+      "memcpy"
+    ],
+    "E1": {
+      "schema_version": 1,
+      "extractor": "E1_lexical_callsite_experimental",
+      "recognized": [],
+      "unknown_calls": [],
+      "sink_apis": [],
+      "sink_families": [],
+      "diagnostics": [],
+      "guard_assessment": "not_performed",
+      "limits": [
+        "No macro expansion, type resolution, indirect-call resolution, preprocessor branch evaluation or guard/dataflow proof.",
+        "Missing evidence does not mean no sink or safe code; wrapper rules need semantic validation."
+      ]
+    },
+    "E1_exact_callsite_match": true
+  },
+  {
+    "fixture": "line_comment",
+    "code": "void f(void) { // read(fd,b,n);\n }",
+    "expected_expressions": [],
+    "E0_apis": [
+      "read"
+    ],
+    "E1": {
+      "schema_version": 1,
+      "extractor": "E1_lexical_callsite_experimental",
+      "recognized": [],
+      "unknown_calls": [],
+      "sink_apis": [],
+      "sink_families": [],
+      "diagnostics": [],
+      "guard_assessment": "not_performed",
+      "limits": [
+        "No macro expansion, type resolution, indirect-call resolution, preprocessor branch evaluation or guard/dataflow proof.",
+        "Missing evidence does not mean no sink or safe code; wrapper rules need semantic validation."
+      ]
+    },
+    "E1_exact_callsite_match": true
+  },
+  {
+    "fixture": "string",
+    "code": "void f(void) { puts(\"read(fd,b,n); free(p)\"); }",
+    "expected_expressions": [],
+    "E0_apis": [
+      "free",
+      "read"
+    ],
+    "E1": {
+      "schema_version": 1,
+      "extractor": "E1_lexical_callsite_experimental",
+      "recognized": [],
+      "unknown_calls": [
+        {
+          "api_name": "puts",
+          "family": "",
+          "start": 15,
+          "end": 44,
+          "line": 1,
+          "expression": "puts(\"read(fd,b,n); free(p)\")",
+          "evidence_source": "direct_call_site",
+          "status": "unknown",
+          "reason": "unresolved_helper_or_function"
+        }
+      ],
+      "sink_apis": [],
+      "sink_families": [],
+      "diagnostics": [],
+      "guard_assessment": "not_performed",
+      "limits": [
+        "No macro expansion, type resolution, indirect-call resolution, preprocessor branch evaluation or guard/dataflow proof.",
+        "Missing evidence does not mean no sink or safe code; wrapper rules need semantic validation."
+      ]
+    },
+    "E1_exact_callsite_match": true
+  },
+  {
+    "fixture": "variable",
+    "code": "void f(void) { int read=0; read++; }",
+    "expected_expressions": [],
+    "E0_apis": [
+      "read"
+    ],
+    "E1": {
+      "schema_version": 1,
+      "extractor": "E1_lexical_callsite_experimental",
+      "recognized": [],
+      "unknown_calls": [],
+      "sink_apis": [],
+      "sink_families": [],
+      "diagnostics": [],
+      "guard_assessment": "not_performed",
+      "limits": [
+        "No macro expansion, type resolution, indirect-call resolution, preprocessor branch evaluation or guard/dataflow proof.",
+        "Missing evidence does not mean no sink or safe code; wrapper rules need semantic validation."
+      ]
+    },
+    "E1_exact_callsite_match": true
+  },
+  {
+    "fixture": "prototype",
+    "code": "extern void *malloc(size_t n);",
+    "expected_expressions": [],
+    "E0_apis": [
+      "malloc"
+    ],
+    "E1": {
+      "schema_version": 1,
+      "extractor": "E1_lexical_callsite_experimental",
+      "recognized": [],
+      "unknown_calls": [],
+      "sink_apis": [],
+      "sink_families": [],
+      "diagnostics": [],
+      "guard_assessment": "not_performed",
+      "limits": [
+        "No macro expansion, type resolution, indirect-call resolution, preprocessor branch evaluation or guard/dataflow proof.",
+        "Missing evidence does not mean no sink or safe code; wrapper rules need semantic validation."
+      ]
+    },
+    "E1_exact_callsite_match": true
+  },
+  {
+    "fixture": "local_prototype",
+    "code": "void f(void) { extern void free(void *p); }",
+    "expected_expressions": [],
+    "E0_apis": [
+      "free"
+    ],
+    "E1": {
+      "schema_version": 1,
+      "extractor": "E1_lexical_callsite_experimental",
+      "recognized": [],
+      "unknown_calls": [],
+      "sink_apis": [],
+      "sink_families": [],
+      "diagnostics": [],
+      "guard_assessment": "not_performed",
+      "limits": [
+        "No macro expansion, type resolution, indirect-call resolution, preprocessor branch evaluation or guard/dataflow proof.",
+        "Missing evidence does not mean no sink or safe code; wrapper rules need semantic validation."
+      ]
+    },
+    "E1_exact_callsite_match": true
+  },
+  {
+    "fixture": "definition",
+    "code": "void free(void *p) { }",
+    "expected_expressions": [],
+    "E0_apis": [
+      "free"
+    ],
+    "E1": {
+      "schema_version": 1,
+      "extractor": "E1_lexical_callsite_experimental",
+      "recognized": [],
+      "unknown_calls": [],
+      "sink_apis": [],
+      "sink_families": [],
+      "diagnostics": [],
+      "guard_assessment": "not_performed",
+      "limits": [
+        "No macro expansion, type resolution, indirect-call resolution, preprocessor branch evaluation or guard/dataflow proof.",
+        "Missing evidence does not mean no sink or safe code; wrapper rules need semantic validation."
+      ]
+    },
+    "E1_exact_callsite_match": true
+  },
+  {
+    "fixture": "macro_definition",
+    "code": "#define COPY(d,s,n) memcpy(d,s,n)\nvoid f(void) {}",
+    "expected_expressions": [],
+    "E0_apis": [
+      "memcpy"
+    ],
+    "E1": {
+      "schema_version": 1,
+      "extractor": "E1_lexical_callsite_experimental",
+      "recognized": [],
+      "unknown_calls": [],
+      "sink_apis": [],
+      "sink_families": [],
+      "diagnostics": [],
+      "guard_assessment": "not_performed",
+      "limits": [
+        "No macro expansion, type resolution, indirect-call resolution, preprocessor branch evaluation or guard/dataflow proof.",
+        "Missing evidence does not mean no sink or safe code; wrapper rules need semantic validation."
+      ]
+    },
+    "E1_exact_callsite_match": true
+  },
+  {
+    "fixture": "copy",
+    "code": "void f(void) { memcpy(d,s,n); }",
+    "expected_expressions": [
+      "memcpy(d,s,n)"
+    ],
+    "E0_apis": [
+      "memcpy"
+    ],
+    "E1": {
+      "schema_version": 1,
+      "extractor": "E1_lexical_callsite_experimental",
+      "recognized": [
+        {
+          "api_name": "memcpy",
+          "family": "buffer_write",
+          "start": 15,
+          "end": 28,
+          "line": 1,
+          "expression": "memcpy(d,s,n)",
+          "evidence_source": "direct_call_site",
+          "status": "recognized",
+          "reason": "registered_API_at_call_site"
+        }
+      ],
+      "unknown_calls": [],
+      "sink_apis": [
+        "memcpy"
+      ],
+      "sink_families": [
+        "buffer_write"
+      ],
+      "diagnostics": [],
+      "guard_assessment": "not_performed",
+      "limits": [
+        "No macro expansion, type resolution, indirect-call resolution, preprocessor branch evaluation or guard/dataflow proof.",
+        "Missing evidence does not mean no sink or safe code; wrapper rules need semantic validation."
+      ]
+    },
+    "E1_exact_callsite_match": true
+  },
+  {
+    "fixture": "nested",
+    "code": "void f(void) { memcpy(d,malloc(n),n); }",
+    "expected_expressions": [
+      "memcpy(d,malloc(n),n)",
+      "malloc(n)"
+    ],
+    "E0_apis": [
+      "malloc",
+      "memcpy"
+    ],
+    "E1": {
+      "schema_version": 1,
+      "extractor": "E1_lexical_callsite_experimental",
+      "recognized": [
+        {
+          "api_name": "memcpy",
+          "family": "buffer_write",
+          "start": 15,
+          "end": 36,
+          "line": 1,
+          "expression": "memcpy(d,malloc(n),n)",
+          "evidence_source": "direct_call_site",
+          "status": "recognized",
+          "reason": "registered_API_at_call_site"
+        },
+        {
+          "api_name": "malloc",
+          "family": "alloc",
+          "start": 24,
+          "end": 33,
+          "line": 1,
+          "expression": "malloc(n)",
+          "evidence_source": "direct_call_site",
+          "status": "recognized",
+          "reason": "registered_API_at_call_site"
+        }
+      ],
+      "unknown_calls": [],
+      "sink_apis": [
+        "malloc",
+        "memcpy"
+      ],
+      "sink_families": [
+        "alloc",
+        "buffer_write"
+      ],
+      "diagnostics": [],
+      "guard_assessment": "not_performed",
+      "limits": [
+        "No macro expansion, type resolution, indirect-call resolution, preprocessor branch evaluation or guard/dataflow proof.",
+        "Missing evidence does not mean no sink or safe code; wrapper rules need semantic validation."
+      ]
+    },
+    "E1_exact_callsite_match": true
+  },
+  {
+    "fixture": "two_calls",
+    "code": "void f(void) { free(a); free(b); }",
+    "expected_expressions": [
+      "free(a)",
+      "free(b)"
+    ],
+    "E0_apis": [
+      "free"
+    ],
+    "E1": {
+      "schema_version": 1,
+      "extractor": "E1_lexical_callsite_experimental",
+      "recognized": [
+        {
+          "api_name": "free",
+          "family": "pointer_free",
+          "start": 15,
+          "end": 22,
+          "line": 1,
+          "expression": "free(a)",
+          "evidence_source": "direct_call_site",
+          "status": "recognized",
+          "reason": "registered_API_at_call_site"
+        },
+        {
+          "api_name": "free",
+          "family": "pointer_free",
+          "start": 24,
+          "end": 31,
+          "line": 1,
+          "expression": "free(b)",
+          "evidence_source": "direct_call_site",
+          "status": "recognized",
+          "reason": "registered_API_at_call_site"
+        }
+      ],
+      "unknown_calls": [],
+      "sink_apis": [
+        "free"
+      ],
+      "sink_families": [
+        "pointer_free"
+      ],
+      "diagnostics": [],
+      "guard_assessment": "not_performed",
+      "limits": [
+        "No macro expansion, type resolution, indirect-call resolution, preprocessor branch evaluation or guard/dataflow proof.",
+        "Missing evidence does not mean no sink or safe code; wrapper rules need semantic validation."
+      ]
+    },
+    "E1_exact_callsite_match": true
+  },
+  {
+    "fixture": "return",
+    "code": "void *f(void) { return malloc(n); }",
+    "expected_expressions": [
+      "malloc(n)"
+    ],
+    "E0_apis": [
+      "malloc"
+    ],
+    "E1": {
+      "schema_version": 1,
+      "extractor": "E1_lexical_callsite_experimental",
+      "recognized": [
+        {
+          "api_name": "malloc",
+          "family": "alloc",
+          "start": 23,
+          "end": 32,
+          "line": 1,
+          "expression": "malloc(n)",
+          "evidence_source": "direct_call_site",
+          "status": "recognized",
+          "reason": "registered_API_at_call_site"
+        }
+      ],
+      "unknown_calls": [],
+      "sink_apis": [
+        "malloc"
+      ],
+      "sink_families": [
+        "alloc"
+      ],
+      "diagnostics": [],
+      "guard_assessment": "not_performed",
+      "limits": [
+        "No macro expansion, type resolution, indirect-call resolution, preprocessor branch evaluation or guard/dataflow proof.",
+        "Missing evidence does not mean no sink or safe code; wrapper rules need semantic validation."
+      ]
+    },
+    "E1_exact_callsite_match": true
+  },
+  {
+    "fixture": "cast",
+    "code": "void f(void) { (void)memcpy(d,s,n); }",
+    "expected_expressions": [
+      "memcpy(d,s,n)"
+    ],
+    "E0_apis": [
+      "memcpy"
+    ],
+    "E1": {
+      "schema_version": 1,
+      "extractor": "E1_lexical_callsite_experimental",
+      "recognized": [
+        {
+          "api_name": "memcpy",
+          "family": "buffer_write",
+          "start": 21,
+          "end": 34,
+          "line": 1,
+          "expression": "memcpy(d,s,n)",
+          "evidence_source": "direct_call_site",
+          "status": "recognized",
+          "reason": "registered_API_at_call_site"
+        }
+      ],
+      "unknown_calls": [],
+      "sink_apis": [
+        "memcpy"
+      ],
+      "sink_families": [
+        "buffer_write"
+      ],
+      "diagnostics": [],
+      "guard_assessment": "not_performed",
+      "limits": [
+        "No macro expansion, type resolution, indirect-call resolution, preprocessor branch evaluation or guard/dataflow proof.",
+        "Missing evidence does not mean no sink or safe code; wrapper rules need semantic validation."
+      ]
+    },
+    "E1_exact_callsite_match": true
+  },
+  {
+    "fixture": "conditional",
+    "code": "void f(void) { if(ok) free(p); }",
+    "expected_expressions": [
+      "free(p)"
+    ],
+    "E0_apis": [
+      "free"
+    ],
+    "E1": {
+      "schema_version": 1,
+      "extractor": "E1_lexical_callsite_experimental",
+      "recognized": [
+        {
+          "api_name": "free",
+          "family": "pointer_free",
+          "start": 22,
+          "end": 29,
+          "line": 1,
+          "expression": "free(p)",
+          "evidence_source": "direct_call_site",
+          "status": "recognized",
+          "reason": "registered_API_at_call_site"
+        }
+      ],
+      "unknown_calls": [],
+      "sink_apis": [
+        "free"
+      ],
+      "sink_families": [
+        "pointer_free"
+      ],
+      "diagnostics": [],
+      "guard_assessment": "not_performed",
+      "limits": [
+        "No macro expansion, type resolution, indirect-call resolution, preprocessor branch evaluation or guard/dataflow proof.",
+        "Missing evidence does not mean no sink or safe code; wrapper rules need semantic validation."
+      ]
+    },
+    "E1_exact_callsite_match": true
+  },
+  {
+    "fixture": "wrong_guard",
+    "code": "void f(void) { if(other < max) memcpy(d,s,n); }",
+    "expected_expressions": [
+      "memcpy(d,s,n)"
+    ],
+    "E0_apis": [
+      "memcpy"
+    ],
+    "E1": {
+      "schema_version": 1,
+      "extractor": "E1_lexical_callsite_experimental",
+      "recognized": [
+        {
+          "api_name": "memcpy",
+          "family": "buffer_write",
+          "start": 31,
+          "end": 44,
+          "line": 1,
+          "expression": "memcpy(d,s,n)",
+          "evidence_source": "direct_call_site",
+          "status": "recognized",
+          "reason": "registered_API_at_call_site"
+        }
+      ],
+      "unknown_calls": [],
+      "sink_apis": [
+        "memcpy"
+      ],
+      "sink_families": [
+        "buffer_write"
+      ],
+      "diagnostics": [],
+      "guard_assessment": "not_performed",
+      "limits": [
+        "No macro expansion, type resolution, indirect-call resolution, preprocessor branch evaluation or guard/dataflow proof.",
+        "Missing evidence does not mean no sink or safe code; wrapper rules need semantic validation."
+      ]
+    },
+    "E1_exact_callsite_match": true
+  },
+  {
+    "fixture": "late_guard",
+    "code": "void f(void) { memcpy(d,s,n); if(n>max) return; }",
+    "expected_expressions": [
+      "memcpy(d,s,n)"
+    ],
+    "E0_apis": [
+      "memcpy"
+    ],
+    "E1": {
+      "schema_version": 1,
+      "extractor": "E1_lexical_callsite_experimental",
+      "recognized": [
+        {
+          "api_name": "memcpy",
+          "family": "buffer_write",
+          "start": 15,
+          "end": 28,
+          "line": 1,
+          "expression": "memcpy(d,s,n)",
+          "evidence_source": "direct_call_site",
+          "status": "recognized",
+          "reason": "registered_API_at_call_site"
+        }
+      ],
+      "unknown_calls": [],
+      "sink_apis": [
+        "memcpy"
+      ],
+      "sink_families": [
+        "buffer_write"
+      ],
+      "diagnostics": [],
+      "guard_assessment": "not_performed",
+      "limits": [
+        "No macro expansion, type resolution, indirect-call resolution, preprocessor branch evaluation or guard/dataflow proof.",
+        "Missing evidence does not mean no sink or safe code; wrapper rules need semantic validation."
+      ]
+    },
+    "E1_exact_callsite_match": true
+  },
+  {
+    "fixture": "log_only_guard",
+    "code": "void f(void) { if(n>max) puts(\"error\"); memcpy(d,s,n); }",
+    "expected_expressions": [
+      "memcpy(d,s,n)"
+    ],
+    "E0_apis": [
+      "memcpy"
+    ],
+    "E1": {
+      "schema_version": 1,
+      "extractor": "E1_lexical_callsite_experimental",
+      "recognized": [
+        {
+          "api_name": "memcpy",
+          "family": "buffer_write",
+          "start": 40,
+          "end": 53,
+          "line": 1,
+          "expression": "memcpy(d,s,n)",
+          "evidence_source": "direct_call_site",
+          "status": "recognized",
+          "reason": "registered_API_at_call_site"
+        }
+      ],
+      "unknown_calls": [
+        {
+          "api_name": "puts",
+          "family": "",
+          "start": 25,
+          "end": 38,
+          "line": 1,
+          "expression": "puts(\"error\")",
+          "evidence_source": "direct_call_site",
+          "status": "unknown",
+          "reason": "unresolved_helper_or_function"
+        }
+      ],
+      "sink_apis": [
+        "memcpy"
+      ],
+      "sink_families": [
+        "buffer_write"
+      ],
+      "diagnostics": [],
+      "guard_assessment": "not_performed",
+      "limits": [
+        "No macro expansion, type resolution, indirect-call resolution, preprocessor branch evaluation or guard/dataflow proof.",
+        "Missing evidence does not mean no sink or safe code; wrapper rules need semantic validation."
+      ]
+    },
+    "E1_exact_callsite_match": true
+  },
+  {
+    "fixture": "wrapper_alloc",
+    "code": "void f(void) { av_mallocz(n); g_free(p); }",
+    "expected_expressions": [
+      "av_mallocz(n)",
+      "g_free(p)"
+    ],
+    "E0_apis": [],
+    "E1": {
+      "schema_version": 1,
+      "extractor": "E1_lexical_callsite_experimental",
+      "recognized": [
+        {
+          "api_name": "av_mallocz",
+          "family": "alloc",
+          "start": 15,
+          "end": 28,
+          "line": 1,
+          "expression": "av_mallocz(n)",
+          "evidence_source": "explicit_wrapper_call_site",
+          "status": "recognized",
+          "reason": "FFmpeg zeroed allocation API"
+        },
+        {
+          "api_name": "g_free",
+          "family": "pointer_free",
+          "start": 30,
+          "end": 39,
+          "line": 1,
+          "expression": "g_free(p)",
+          "evidence_source": "explicit_wrapper_call_site",
+          "status": "recognized",
+          "reason": "GLib deallocation API"
+        }
+      ],
+      "unknown_calls": [],
+      "sink_apis": [
+        "av_mallocz",
+        "g_free"
+      ],
+      "sink_families": [
+        "alloc",
+        "pointer_free"
+      ],
+      "diagnostics": [],
+      "guard_assessment": "not_performed",
+      "limits": [
+        "No macro expansion, type resolution, indirect-call resolution, preprocessor branch evaluation or guard/dataflow proof.",
+        "Missing evidence does not mean no sink or safe code; wrapper rules need semantic validation."
+      ]
+    },
+    "E1_exact_callsite_match": true
+  },
+  {
+    "fixture": "wrapper_read",
+    "code": "void f(void) { bdrv_pread(bs,o,b,n); }",
+    "expected_expressions": [
+      "bdrv_pread(bs,o,b,n)"
+    ],
+    "E0_apis": [],
+    "E1": {
+      "schema_version": 1,
+      "extractor": "E1_lexical_callsite_experimental",
+      "recognized": [
+        {
+          "api_name": "bdrv_pread",
+          "family": "block_read",
+          "start": 15,
+          "end": 35,
+          "line": 1,
+          "expression": "bdrv_pread(bs,o,b,n)",
+          "evidence_source": "explicit_wrapper_call_site",
+          "status": "recognized",
+          "reason": "Explicit block read wrapper; body not expanded"
+        }
+      ],
+      "unknown_calls": [],
+      "sink_apis": [
+        "bdrv_pread"
+      ],
+      "sink_families": [
+        "block_read"
+      ],
+      "diagnostics": [],
+      "guard_assessment": "not_performed",
+      "limits": [
+        "No macro expansion, type resolution, indirect-call resolution, preprocessor branch evaluation or guard/dataflow proof.",
+        "Missing evidence does not mean no sink or safe code; wrapper rules need semantic validation."
+      ]
+    },
+    "E1_exact_callsite_match": true
+  },
+  {
+    "fixture": "wrapper_packet",
+    "code": "void f(void) { av_new_packet(pkt,n); }",
+    "expected_expressions": [
+      "av_new_packet(pkt,n)"
+    ],
+    "E0_apis": [],
+    "E1": {
+      "schema_version": 1,
+      "extractor": "E1_lexical_callsite_experimental",
+      "recognized": [
+        {
+          "api_name": "av_new_packet",
+          "family": "alloc",
+          "start": 15,
+          "end": 35,
+          "line": 1,
+          "expression": "av_new_packet(pkt,n)",
+          "evidence_source": "explicit_wrapper_call_site",
+          "status": "recognized",
+          "reason": "Packet allocation API; body not expanded"
+        }
+      ],
+      "unknown_calls": [],
+      "sink_apis": [
+        "av_new_packet"
+      ],
+      "sink_families": [
+        "alloc"
+      ],
+      "diagnostics": [],
+      "guard_assessment": "not_performed",
+      "limits": [
+        "No macro expansion, type resolution, indirect-call resolution, preprocessor branch evaluation or guard/dataflow proof.",
+        "Missing evidence does not mean no sink or safe code; wrapper rules need semantic validation."
+      ]
+    },
+    "E1_exact_callsite_match": true
+  },
+  {
+    "fixture": "unknown_wrapper",
+    "code": "void f(void) { bdrv_mystery(bs); }",
+    "expected_expressions": [],
+    "E0_apis": [],
+    "E1": {
+      "schema_version": 1,
+      "extractor": "E1_lexical_callsite_experimental",
+      "recognized": [],
+      "unknown_calls": [
+        {
+          "api_name": "bdrv_mystery",
+          "family": "",
+          "start": 15,
+          "end": 31,
+          "line": 1,
+          "expression": "bdrv_mystery(bs)",
+          "evidence_source": "direct_call_site",
+          "status": "unknown",
+          "reason": "unresolved_helper_or_function"
+        }
+      ],
+      "sink_apis": [],
+      "sink_families": [],
+      "diagnostics": [],
+      "guard_assessment": "not_performed",
+      "limits": [
+        "No macro expansion, type resolution, indirect-call resolution, preprocessor branch evaluation or guard/dataflow proof.",
+        "Missing evidence does not mean no sink or safe code; wrapper rules need semantic validation."
+      ]
+    },
+    "E1_exact_callsite_match": true
+  },
+  {
+    "fixture": "unknown_macro",
+    "code": "void f(void) { WRITEBGR24(x); }",
+    "expected_expressions": [],
+    "E0_apis": [],
+    "E1": {
+      "schema_version": 1,
+      "extractor": "E1_lexical_callsite_experimental",
+      "recognized": [],
+      "unknown_calls": [
+        {
+          "api_name": "WRITEBGR24",
+          "family": "",
+          "start": 15,
+          "end": 28,
+          "line": 1,
+          "expression": "WRITEBGR24(x)",
+          "evidence_source": "direct_call_site",
+          "status": "unknown",
+          "reason": "unexpanded_macro_or_uppercase_helper"
+        }
+      ],
+      "sink_apis": [],
+      "sink_families": [],
+      "diagnostics": [],
+      "guard_assessment": "not_performed",
+      "limits": [
+        "No macro expansion, type resolution, indirect-call resolution, preprocessor branch evaluation or guard/dataflow proof.",
+        "Missing evidence does not mean no sink or safe code; wrapper rules need semantic validation."
+      ]
+    },
+    "E1_exact_callsite_match": true
+  },
+  {
+    "fixture": "member",
+    "code": "void f(void) { obj->free(p); }",
+    "expected_expressions": [],
+    "E0_apis": [
+      "free"
+    ],
+    "E1": {
+      "schema_version": 1,
+      "extractor": "E1_lexical_callsite_experimental",
+      "recognized": [],
+      "unknown_calls": [
+        {
+          "api_name": "free",
+          "family": "",
+          "start": 20,
+          "end": 27,
+          "line": 1,
+          "expression": "free(p)",
+          "evidence_source": "direct_call_site",
+          "status": "unknown",
+          "reason": "member_or_qualified_call_requires_resolution"
+        }
+      ],
+      "sink_apis": [],
+      "sink_families": [],
+      "diagnostics": [],
+      "guard_assessment": "not_performed",
+      "limits": [
+        "No macro expansion, type resolution, indirect-call resolution, preprocessor branch evaluation or guard/dataflow proof.",
+        "Missing evidence does not mean no sink or safe code; wrapper rules need semantic validation."
+      ]
+    },
+    "E1_exact_callsite_match": true
+  },
+  {
+    "fixture": "incomplete",
+    "code": "void f(void) { memcpy(d,s,",
+    "expected_expressions": [],
+    "E0_apis": [
+      "memcpy"
+    ],
+    "E1": {
+      "schema_version": 1,
+      "extractor": "E1_lexical_callsite_experimental",
+      "recognized": [],
+      "unknown_calls": [],
+      "sink_apis": [],
+      "sink_families": [],
+      "diagnostics": [
+        {
+          "name": "memcpy",
+          "start": 15,
+          "reason": "unbalanced_call_or_declaration"
+        }
+      ],
+      "guard_assessment": "not_performed",
+      "limits": [
+        "No macro expansion, type resolution, indirect-call resolution, preprocessor branch evaluation or guard/dataflow proof.",
+        "Missing evidence does not mean no sink or safe code; wrapper rules need semantic validation."
+      ]
+    },
+    "E1_exact_callsite_match": true
+  }
+]

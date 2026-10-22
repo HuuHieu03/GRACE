@@ -1,0 +1,90 @@
+{
+  "status": "COMPLETE_AUDITED",
+  "checks": {
+    "input_hashes_match": true,
+    "full_bank_vectors_finite": true,
+    "complete_embedding_checkpoints": true,
+    "shared_top50_replayed": 100,
+    "reranking_and_both_selections_replayed": 100,
+    "summary_recomputed": true,
+    "pinned_git_source_hashes_verified": 8
+  },
+  "metrics": {
+    "queries": 100,
+    "changed": 0,
+    "queries_with_active_evidence": 36,
+    "queries_with_matching_candidate": 36,
+    "conditional_only": 0,
+    "fallback": 64,
+    "interpretation": "Selection diagnostics only; no independent relevance or prediction-quality conclusion."
+  },
+  "active_family_query_counts": {
+    "alloc": 16,
+    "format_string": 6,
+    "buffer_read": 4,
+    "pointer_free": 17,
+    "buffer_write": 10,
+    "io_close": 3,
+    "block_read": 2,
+    "io_open": 2,
+    "filesystem_metadata_write": 2
+  },
+  "matching_candidates_when_available": {
+    "min": 2,
+    "median": 18.5,
+    "max": 41
+  },
+  "no_active_evidence_with_unknown_calls": 58,
+  "whitespace_normalized_train_query_overlap": [],
+  "r0_l2_rank_counts": {
+    "24": 1,
+    "1": 48,
+    "2": 8,
+    "43": 2,
+    "37": 1,
+    "18": 1,
+    "42": 2,
+    "47": 3,
+    "25": 2,
+    "12": 1,
+    "4": 4,
+    "32": 1,
+    "8": 4,
+    "5": 2,
+    "22": 1,
+    "9": 1,
+    "30": 1,
+    "48": 2,
+    "41": 1,
+    "23": 2,
+    "35": 2,
+    "14": 1,
+    "3": 2,
+    "11": 1,
+    "49": 2,
+    "44": 1,
+    "6": 1,
+    "38": 1,
+    "28": 1
+  },
+  "unique_selected_candidates": 100,
+  "encoder": {
+    "assets": {
+      "model.safetensors": "bece5f1d53db21d4d297d861d9b033341e88e8861316282592bbb198da37342d",
+      "config.json": "747cddfb84f44944822684ab4c1815f4043345e79f4be70e1bcdbb60b5e5dbd1",
+      "vocab.json": "43bb485f4de0f2fd49b370bef4efab23ea3ab6d0019e72bdd9cec1436a6eaa2b",
+      "merges.txt": "5d346f84939a98df0cde902df7d60154b461cde1b90dc653ab9b81d74e752a4d"
+    },
+    "vocabulary": 32100,
+    "max_length": 512,
+    "pooling": "attention_mask_mean",
+    "device": "cuda",
+    "torch": "2.11.0+cu128",
+    "transformers": "5.1.0",
+    "runner_sha256": "998b1254f51aae6aa79e7308a932cc88501aaaf025a36de339e2db96e5ccc4bf"
+  },
+  "git_revision": {
+    "revision": "827aab9b50039647f2f1136dee3c6a1fa5640374"
+  },
+  "interpretation": "R1 makes no changes on this split. Both arms are observationally identical; this does not establish relevance or vulnerability prediction quality."
+}

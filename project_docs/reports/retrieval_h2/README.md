@@ -1,17 +1,27 @@
 # H2: shared candidate archive and offline selection comparison
 
-Status (2026-10-21): code pushed to origin/main and private Kaggle notebook
-version 1 submitted through CLI with GPU enabled. Kaggle reports QUEUED;
-full-train embedding and experiment results remain pending execution.
-No H2 measurements are reported yet.
+Status (2026-10-22): Kaggle version 1 COMPLETE; results downloaded and all 100
+full-bank searches, rankings and selections replayed locally. R1 changes 0/100
+choices; active evidence and same-family candidates are available for 36/100
+queries, and R1 falls back for 64/100. See
+[the audited report](results_2026-10-22/report.md). No LLM was called.
+
+Post-H2 follow-up: [technical audit and independent review preparation](followup_2026-10-22/report.md).
+The 58-query Unknown inventory and 100-case relevance packet are prepared;
+independent reviewer sheets remain unfilled.
+
+E1.3 follow-up: [syntax exclusions and output-role implementation](../sink_evidence_v13/report.md).
+The experimental extractor passed 63 focused tests together with review tooling,
+E1.2 and H2 policy regressions. It preserves recognized sites on canonical100
+and fresh validation50; no production/reranker integration or new H2 run yet.
+Current project status: [H2/E1.3 progress](../../progress/v1.0.0_2026-10-22_h2_and_e13_progress.md).
 
 Notebook: https://www.kaggle.com/code/huuhieu3333/grace-h2-shared-top50-r0-r1
 
 Frozen execution commit: `827aab9b50039647f2f1136dee3c6a1fa5640374`.
 Notebook deployment commit: `e559873`. Submission command:
 `kaggle kernels push -p kaggle_notebooks/retrieval_h2 -t 7200`.
-The API accepted version 1 with no failure message. QUEUED confirms submission,
-not that GPU code has started or finished. Check status before interpreting results.
+The API initially accepted version 1 as QUEUED; its final status is COMPLETE.
 
 The notebook in `kaggle_notebooks/retrieval_h2` clones this Git repository and
 checks out an exact committed revision. It reads the tracked compact CPG gzip

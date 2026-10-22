@@ -1,0 +1,36 @@
+{
+  "queries": 100,
+  "unknown_queries": 58,
+  "unknown_sites": 492,
+  "unknown_names": 252,
+  "triage_site_counts": {
+    "unresolved_requires_definition_or_context": 380,
+    "assertion_name_cue_not_sink_or_guard_proof": 10,
+    "logging_name_cue_requires_context": 43,
+    "unexpanded_symbol_macro_not_proven_runtime_call": 36,
+    "reviewed_declaration_artifact": 1,
+    "reviewed_local_field_assignment_macro": 22
+  },
+  "names_with_possible_definition": 60,
+  "format_family_only_query_ids": [
+    "Q-00007",
+    "Q-00015",
+    "Q-00018",
+    "Q-00069",
+    "Q-00071"
+  ],
+  "family_overlap_without_same_api_query_ids": [
+    "Q-00031",
+    "Q-00054",
+    "Q-00079"
+  ],
+  "reviewer_packet_count": 100,
+  "reviewer_scores_generated": 0,
+  "provenance": "Technical inventory and selected code inspections prepared with Codex; not independent human relevance labels.",
+  "raw_archive_sha256": "67970bc5b8c18fb41d83f04c0297ce6fe0d29345157eb978eaa37cf490f040de",
+  "limits": [
+    "Triage cues are not semantic classifications of every helper.",
+    "Possible definitions are unresolved corpus leads, not verified contracts.",
+    "Selected code inspections are purposive, not an unbiased error-rate estimate."
+  ]
+}

@@ -1,0 +1,67 @@
+{
+  "date": "2026-10-21",
+  "review_type": "Technical adjudication, not a new independent human blind review",
+  "rubric_document": "project_docs/reports/blind_review_adjudication_protocol.md",
+  "source_sheet_sha256": {
+    "hieu": "7b97c16bf27dd00065f817c020b8d897d46e5f0a78799c4c585045be9c08b64c",
+    "dung": "c86665fc65983364e76153beb02cc00a9c10fd537e3d871fba36f2ba56688402"
+  },
+  "answer_key_sha256": "edc2894f85df61ef00a0d31ae7ce68df79d2d9137907557313520c9827e82ce9",
+  "original_paired_samples": 50,
+  "original_agreed": 24,
+  "original_disagreed": 26,
+  "original_unweighted_method_kappa": 0.3151,
+  "original_agreement_pct": 48.0,
+  "technical_reviewed_samples": 50,
+  "full_context_cases": [
+    26,
+    28,
+    34,
+    39,
+    50
+  ],
+  "full_context_files": 15,
+  "technical_choice_counts": {
+    "Neither": 30,
+    "B": 12,
+    "A": 5,
+    "Equal": 3
+  },
+  "technical_method_counts_descriptive_only": {
+    "Neither": 30,
+    "Security-Aware": 7,
+    "Baseline": 10,
+    "Equal": 3
+  },
+  "changes_from_hieu": [
+    6,
+    12,
+    13,
+    14,
+    15,
+    16,
+    19,
+    26,
+    28,
+    36,
+    40,
+    48
+  ],
+  "changes_on_originally_agreed_cases": [
+    6,
+    13,
+    14,
+    15,
+    19,
+    36,
+    48
+  ],
+  "human_consensus_established": false,
+  "new_independent_kappa_computed": false,
+  "limits": [
+    "Original labels and method mapping were previously visible; technical adjudication is not newly blinded.",
+    "Full function bodies do not supply every macro, helper implementation, struct definition or caller contract.",
+    "A technical decision is a relevance judgment, not validation of a dataset vulnerability label.",
+    "Dung sheet matches a lexical scoring helper; agreement cannot establish independent human reliability."
+  ]
+}

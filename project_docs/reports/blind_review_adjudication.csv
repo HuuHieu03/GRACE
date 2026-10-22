@@ -1,0 +1,5059 @@
+﻿sample_idx,target_id,hieu_original_choice,dung_original_choice,target_code,demo_A_code,demo_B_code,hieu_evidence,dung_evidence,decisive_code_evidence,adjudication_reason,proposed_choice,proposal_confidence,status,next_action,hieu_recheck,dung_recheck,consensus_choice,consensus_evidence,technical_choice,technical_evidence,context_resolution,technical_status,acceptance_status,accepted_by
+1,id_235_label_False_qemu.c,Neither,A,"uint32_t lduw_be_phys(target_phys_addr_t addr)
+
+{
+
+    return lduw_phys_internal(addr, DEVICE_BIG_ENDIAN);
+
+}","void sysbus_mmio_map_overlap(SysBusDevice *dev, int n, hwaddr addr,
+
+                             unsigned priority)
+
+{
+
+    sysbus_mmio_map_common(dev, n, addr, true, priority);
+
+}","void OPPROTO op_addw_ESI_T0(void)
+
+{
+
+    ESI = (ESI & ~0xffff) | ((ESI + T0) & 0xffff);
+
+}","Target gọi lduw_phys_internal(addr, DEVICE_BIG_ENDIAN); A chỉ map MMIO bằng sysbus_mmio_map_common, B cộng thanh ghi ESI. Không thấy cùng thao tác đọc hay guard kiểm tra addr.",Demo A liên quan an ninh hơn (cùng sink [address_bus_mapping]; biến chung (addr)); trong khi Demo B (khác biệt về thao tác và rào chắn an ninh).,"Target gọi lduw_phys_internal(addr, DEVICE_BIG_ENDIAN); A chỉ map MMIO bằng sysbus_mmio_map_common, B cộng thanh ghi ESI. Không thấy cùng thao tác đọc hay guard kiểm tra addr.",Trùng addr không biến thao tác map MMIO thành đọc bộ nhớ.,Neither,High,PROPOSED,"Hai người đọc biểu thức trong evidence, ghi quyết định kiểm tra lại riêng trước thảo luận.",,,Neither,"Target gọi lduw_phys_internal(addr, DEVICE_BIG_ENDIAN); A chỉ map MMIO bằng sysbus_mmio_map_common, B cộng thanh ghi ESI. Không thấy cùng thao tác đọc hay guard kiểm tra addr.",Neither,"Target gọi lduw_phys_internal(addr, DEVICE_BIG_ENDIAN); A chỉ map MMIO bằng sysbus_mmio_map_common, B cộng thanh ghi ESI. Không thấy cùng thao tác đọc hay guard kiểm tra addr.",Reviewed under uniform rubric using original snippets,TECHNICAL_REVIEW_COMPLETE,USER_CONFIRMED_ADJUDICATION,User confirmation in conversation; not two newly recorded independent votes
+2,id_75_label_False_qemu.c,B,Equal,"static void gen_cp0 (CPUState *env, DisasContext *ctx, uint32_t opc, int rt, int rd)
+
+{
+
+    const char *opn = ""ldst"";
+
+
+
+    switch (opc) {
+
+    case OPC_MFC0:
+
+        if (rt == 0) {
+
+            /* Treat as NOP */
+
+            return;
+
+        }
+
+        gen_mfc0(ctx, rd, ctx->opcode & 0x7);
+
+        gen_op_store_T0_gpr(rt);
+
+        opn = ""mfc0"";
+
+        break;
+
+    case OPC_MTC0:
+
+        GEN_LOAD_REG_TN(T0, rt);
+
+        gen_mtc0(ctx, rd, ctx->opcode & 0x7);
+
+        opn = ""mtc0"";
+
+        break;
+
+#ifdef TARGET_MIPS64
+
+    case OPC_DMFC0:
+
+        if (rt == 0) {
+
+            /* Treat as NOP */
+
+            return;
+
+        }
+
+        gen_dmfc0(ctx, rd, ctx->opcode & 0x7);
+
+        gen_op_store_T0_gpr(rt);
+
+        opn = ""dmfc0"";
+
+        break;
+
+    case OPC_DMTC0:
+
+        GEN_LOAD_REG_TN(T0, rt);
+
+        gen_dmtc0(ctx, rd, ctx->opcode & 0x7);
+
+        opn = ""dmtc0"";
+
+        break;
+
+#endif
+
+    case OPC_TLBWI:
+
+        opn = ""tlbwi"";
+
+        if (!env->do_tlbwi)
+
+            goto die;
+
+        gen_op_tlbwi();
+
+        break;
+
+    case OPC_TLBWR:
+
+        opn = ""tlbwr"";
+
+        if (!env->do_tlbwr)
+
+            goto die;
+
+        gen_op_tlbwr();
+
+        break;
+
+    case OPC_TLBP:
+
+        opn = ""tlbp"";
+
+        if (!env->do_tlbp)
+
+            goto die;
+
+        gen_op_tlbp();
+
+        break;
+
+    case OPC_TLBR:
+
+        opn = ""tlbr"";
+
+        if (!env->do_tlbr)
+
+            goto die;
+
+        gen_op_tlbr();
+
+        break;
+
+    case OPC_ERET:
+
+        opn = ""eret"";
+
+        save_cpu_state(ctx, 0);
+
+        gen_op_eret();
+
+        ctx->bstate = BS_EXCP;
+
+        break;
+
+    case OPC_DERET:
+
+        opn = ""deret"";
+
+        if (!(ctx->hflags & MIPS_HFLAG_DM)) {
+
+            MIPS_INVAL(opn);
+
+            generate_exception(ctx, EXCP_RI);
+
+        } else {
+
+            save_cpu_state(ctx, 0);
+
+            gen_op_deret();
+
+            ctx->bstate = BS_EXCP;
+
+        }
+
+        break;
+
+    case OPC_WAIT:
+
+        opn = ""wait"";
+
+        /* If we get an exception, we want to restart at next instruction */
+
+        ctx->pc += 4;
+
+        save_cpu_state(ctx, 1);
+
+        ctx->pc -= 4;
+
+        gen_op_wait();
+
+        ctx->bstate = BS_EXCP;
+
+        break;
+
+    default:
+
+ die:
+
+        MIPS_INVAL(opn);
+
+        generate_exception(ctx, EXCP_RI);
+
+        return;
+
+    }
+
+    MIPS_DEBUG(""%s %s %d"", opn, regnames[rt], rd);
+
+}","static void lsi_command_complete(SCSIRequest *req, uint32_t status, size_t resid)
+
+{
+
+    LSIState *s = DO_UPCAST(LSIState, dev.qdev, req->bus->qbus.parent);
+
+    int out;
+
+
+
+    out = (s->sstat1 & PHASE_MASK) == PHASE_DO;
+
+    DPRINTF(""Command complete status=%d\n"", (int)status);
+
+    s->status = status;
+
+    s->command_complete = 2;
+
+    if (s->waiting && s->dbc != 0) {
+
+        /* Raise phase mismatch for short transfers.  */
+
+        lsi_bad_phase(s, out, PHASE_ST);
+
+    } else {
+
+        lsi_set_phase(s, PHASE_ST);
+
+    }
+
+
+
+    if (s->current && req == s->current->req) {
+
+        req->hba_private = NULL;
+
+        lsi_request_free(s, s->current);
+
+        scsi_req_unref(req);
+
+    }
+
+    lsi_resume_script(s);
+
+}","static void do_interrupt_protected(int intno, int is_int, int error_code,
+
+                                   unsigned int next_eip)
+
+{
+
+    SegmentCache *dt;
+
+    uint8_t *ptr, *ssp;
+
+    int type, dpl, selector, ss_dpl;
+
+    int has_error_code, new_stack, shift;
+
+    uint32_t e1, e2, offset, ss, esp, ss_e1, ss_e2, push_size;
+
+    uint32_t old_cs, old_ss, old_esp, old_eip;
+
+
+
+    dt = &env->idt;
+
+    if (intno * 8 + 7 > dt->limit)
+
+        raise_exception_err(EXCP0D_GPF, intno * 8 + 2);
+
+    ptr = dt->base + intno * 8;
+
+    e1 = ldl(ptr);
+
+    e2 = ldl(ptr + 4);
+
+    /* check gate type */
+
+    type = (e2 >> DESC_TYPE_SHIFT) & 0x1f;
+
+    switch(type) {
+
+    case 5: /* task gate */
+
+        cpu_abort(env, ""task gate not supported"");
+
+        break;
+
+    case 6: /* 286 interrupt gate */
+
+    case 7: /* 286 trap gate */
+
+    case 14: /* 386 interrupt gate */
+
+    case 15: /* 386 trap gate */
+
+        break;
+
+    default:
+
+        raise_exception_err(EXCP0D_GPF, intno * 8 + 2);
+
+        break;
+
+    }
+
+    dpl = (e2 >> DESC_DPL_SHIFT) & 3;
+
+    /* check privledge if software int */
+
+    if (is_int && dpl < env->cpl)
+
+        raise_exception_err(EXCP0D_GPF, intno * 8 + 2);
+
+    /* check valid bit */
+
+    if (!(e2 & DESC_P_MASK))
+
+        raise_exception_err(EXCP0B_NOSEG, intno * 8 + 2);
+
+    selector = e1 >> 16;
+
+    offset = (e2 & 0xffff0000) | (e1 & 0x0000ffff);
+
+    if ((selector & 0xfffc) == 0)
+
+        raise_exception_err(EXCP0D_GPF, 0);
+
+
+
+    if (load_segment(&e1, &e2, selector) != 0)
+
+        raise_exception_err(EXCP0D_GPF, selector & 0xfffc);
+
+    if (!(e2 & DESC_S_MASK) || !(e2 & (DESC_CS_MASK)))
+
+        raise_exception_err(EXCP0D_GPF, selector & 0xfffc);
+
+    dpl = (e2 >> DESC_DPL_SHIFT) & 3;
+
+    if (dpl > env->cpl)
+
+        raise_exception_err(EXCP0D_GPF, select
+
+/* ... [Cắt gọn do vượt quá 1800 ký tự] */","Target kiểm tra !env->do_tlbwi và MIPS_HFLAG_DM trước thao tác CPU/exception; B kiểm tra dpl, DESC_P_MASK rồi raise_exception_err, gần cơ chế kiểm tra đặc quyền hơn A xử lý hoàn tất SCSI. B bị cắt, chỉ kết luận trên phần thấy được.","Cả hai demo đều có ngữ nghĩa an ninh tương đồng: Demo A (cùng sink [bitwise_arithmetic, pointer_dereference]; cùng guard [numerical_bounds_check]; biến chung (d, s)); Demo B (cùng sink [bitwise_arithmetic, pointer_dereference]; cùng guard [numerical_bounds_check]; biến chung (break, default)).","Target kiểm tra !env->do_tlbwi và MIPS_HFLAG_DM trước thao tác CPU/exception; B kiểm tra dpl, DESC_P_MASK rồi raise_exception_err, gần cơ chế kiểm tra đặc quyền hơn A xử lý hoàn tất SCSI. B bị cắt, chỉ kết luận trên phần thấy được.","B kiểm tra đặc quyền CPU trước exception; A xử lý SCSI completion, khác cơ chế.",B,Medium,PROPOSED,"Hai người đọc biểu thức trong evidence, ghi quyết định kiểm tra lại riêng trước thảo luận.",,,B,"Target kiểm tra !env->do_tlbwi và MIPS_HFLAG_DM trước thao tác CPU/exception; B kiểm tra dpl, DESC_P_MASK rồi raise_exception_err, gần cơ chế kiểm tra đặc quyền hơn A xử lý hoàn tất SCSI. B bị cắt, chỉ kết luận trên phần thấy được.",B,"Target kiểm tra !env->do_tlbwi và MIPS_HFLAG_DM trước thao tác CPU/exception; B kiểm tra dpl, DESC_P_MASK rồi raise_exception_err, gần cơ chế kiểm tra đặc quyền hơn A xử lý hoàn tất SCSI. B bị cắt, chỉ kết luận trên phần thấy được.",Reviewed under uniform rubric using original snippets,TECHNICAL_REVIEW_COMPLETE,USER_CONFIRMED_ADJUDICATION,User confirmation in conversation; not two newly recorded independent votes
+3,id_396_label_True_qemu.c,Neither,A,"static bool bdrv_drain_recurse(BlockDriverState *bs, bool begin)
+
+{
+
+    BdrvChild *child, *tmp;
+
+    bool waited;
+
+
+
+    /* Ensure any pending metadata writes are submitted to bs->file.  */
+
+    bdrv_drain_invoke(bs, begin);
+
+
+
+    /* Wait for drained requests to finish */
+
+    waited = BDRV_POLL_WHILE(bs, atomic_read(&bs->in_flight) > 0);
+
+
+
+    QLIST_FOREACH_SAFE(child, &bs->children, next, tmp) {
+
+        BlockDriverState *bs = child->bs;
+
+        bool in_main_loop =
+
+            qemu_get_current_aio_context() == qemu_get_aio_context();
+
+        assert(bs->refcnt > 0);
+
+        if (in_main_loop) {
+
+            /* In case the recursive bdrv_drain_recurse processes a
+
+             * block_job_defer_to_main_loop BH and modifies the graph,
+
+             * let's hold a reference to bs until we are done.
+
+             *
+
+             * IOThread doesn't have such a BH, and it is not safe to call
+
+             * bdrv_unref without BQL, so skip doing it there.
+
+             */
+
+            bdrv_ref(bs);
+
+        }
+
+        waited |= bdrv_drain_recurse(bs, begin);
+
+        if (in_main_loop) {
+
+            bdrv_unref(bs);
+
+        }
+
+    }
+
+
+
+    return waited;
+
+}","static void cpu_common_initfn(Object *obj)
+
+{
+
+    CPUState *cpu = CPU(obj);
+
+    CPUClass *cc = CPU_GET_CLASS(obj);
+
+
+
+    cpu->cpu_index = UNASSIGNED_CPU_INDEX;
+
+    cpu->gdb_num_regs = cpu->gdb_num_g_regs = cc->gdb_num_core_regs;
+
+    /* *-user doesn't have configurable SMP topology */
+
+    /* the default value is changed by qemu_init_vcpu() for softmmu */
+
+    cpu->nr_cores = 1;
+
+    cpu->nr_threads = 1;
+
+
+
+    qemu_mutex_init(&cpu->work_mutex);
+
+    QTAILQ_INIT(&cpu->breakpoints);
+
+    QTAILQ_INIT(&cpu->watchpoints);
+
+
+
+    cpu->trace_dstate = bitmap_new(trace_get_vcpu_event_count());
+
+
+
+    cpu_exec_initfn(cpu);
+
+}","static int qcow_read_extensions(BlockDriverState *bs, uint64_t start_offset,
+
+                                uint64_t end_offset)
+
+{
+
+    BDRVQcowState *s = bs->opaque;
+
+    QCowExtension ext;
+
+    uint64_t offset;
+
+
+
+#ifdef DEBUG_EXT
+
+    printf(""qcow_read_extensions: start=%ld end=%ld\n"", start_offset, end_offset);
+
+#endif
+
+    offset = start_offset;
+
+    while (offset < end_offset) {
+
+
+
+#ifdef DEBUG_EXT
+
+        /* Sanity check */
+
+        if (offset > s->cluster_size)
+
+            printf(""qcow_handle_extension: suspicious offset %lu\n"", offset);
+
+
+
+        printf(""attemting to read extended header in offset %lu\n"", offset);
+
+#endif
+
+
+
+        if (bdrv_pread(s->hd, offset, &ext, sizeof(ext)) != sizeof(ext)) {
+
+            fprintf(stderr, ""qcow_handle_extension: ERROR: pread fail from offset %llu\n"",
+
+                    (unsigned long long)offset);
+
+            return 1;
+
+        }
+
+        be32_to_cpus(&ext.magic);
+
+        be32_to_cpus(&ext.len);
+
+        offset += sizeof(ext);
+
+#ifdef DEBUG_EXT
+
+        printf(""ext.magic = 0x%x\n"", ext.magic);
+
+#endif
+
+        switch (ext.magic) {
+
+        case QCOW_EXT_MAGIC_END:
+
+            return 0;
+
+
+
+        case QCOW_EXT_MAGIC_BACKING_FORMAT:
+
+            if (ext.len >= sizeof(bs->backing_format)) {
+
+                fprintf(stderr, ""ERROR: ext_backing_format: len=%u too large""
+
+                        "" (>=%zu)\n"",
+
+                        ext.len, sizeof(bs->backing_format));
+
+                return 2;
+
+            }
+
+            if (bdrv_pread(s->hd, offset , bs->backing_format,
+
+                           ext.len) != ext.len)
+
+                return 3;
+
+            bs->backing_format[ext.len] = '\0';
+
+#ifdef DEBUG_EXT
+
+            printf(""Qcow2: Got format extension %s\n"", bs->backing_format);
+
+#endif
+
+            offse
+
+/* ... [Cắt gọn do vượt quá 1800 ký tự] */","Target giữ reference bằng bdrv_ref/bdrv_unref quanh đệ quy và assert(bs->refcnt > 0). A khởi tạo CPU; B đọc extension bằng bdrv_pread, cùng BlockDriverState nhưng không minh họa vòng đời reference hay đồng bộ drain.","Demo A liên quan an ninh hơn (cùng sink [bitwise_arithmetic, io_network_transport]; cùng guard [numerical_bounds_check]; biến chung (doesn, have)); trong khi Demo B (cùng sink [bitwise_arithmetic, io_network_transport]; biến chung (BlockDriverState, bs)).","Target giữ reference bằng bdrv_ref/bdrv_unref quanh đệ quy và assert(bs->refcnt > 0). A khởi tạo CPU; B đọc extension bằng bdrv_pread, cùng BlockDriverState nhưng không minh họa vòng đời reference hay đồng bộ drain.",Reference quanh đệ quy drain khác init CPU/đọc header. Không dùng từ comment doesn/have làm bằng chứng biến.,Neither,High,PROPOSED,"Hai người đọc biểu thức trong evidence, ghi quyết định kiểm tra lại riêng trước thảo luận.",,,Neither,"Target giữ reference bằng bdrv_ref/bdrv_unref quanh đệ quy và assert(bs->refcnt > 0). A khởi tạo CPU; B đọc extension bằng bdrv_pread, cùng BlockDriverState nhưng không minh họa vòng đời reference hay đồng bộ drain.",Neither,"Target giữ reference bằng bdrv_ref/bdrv_unref quanh đệ quy và assert(bs->refcnt > 0). A khởi tạo CPU; B đọc extension bằng bdrv_pread, cùng BlockDriverState nhưng không minh họa vòng đời reference hay đồng bộ drain.",Reviewed under uniform rubric using original snippets,TECHNICAL_REVIEW_COMPLETE,USER_CONFIRMED_ADJUDICATION,User confirmation in conversation; not two newly recorded independent votes
+4,id_747_label_True_FFmpeg.c,Neither,A,"void avcodec_align_dimensions2(AVCodecContext *s, int *width, int *height, int linesize_align[4]){
+
+    int w_align= 1;
+
+    int h_align= 1;
+
+
+
+    switch(s->pix_fmt){
+
+    case PIX_FMT_YUV420P:
+
+    case PIX_FMT_YUYV422:
+
+    case PIX_FMT_UYVY422:
+
+    case PIX_FMT_YUV422P:
+
+    case PIX_FMT_YUV440P:
+
+    case PIX_FMT_YUV444P:
+
+    case PIX_FMT_GRAY8:
+
+    case PIX_FMT_GRAY16BE:
+
+    case PIX_FMT_GRAY16LE:
+
+    case PIX_FMT_YUVJ420P:
+
+    case PIX_FMT_YUVJ422P:
+
+    case PIX_FMT_YUVJ440P:
+
+    case PIX_FMT_YUVJ444P:
+
+    case PIX_FMT_YUVA420P:
+
+    case PIX_FMT_YUV420P9LE:
+
+    case PIX_FMT_YUV420P9BE:
+
+    case PIX_FMT_YUV420P10LE:
+
+    case PIX_FMT_YUV420P10BE:
+
+    case PIX_FMT_YUV422P10LE:
+
+    case PIX_FMT_YUV422P10BE:
+
+
+
+
+
+        w_align= 16; //FIXME check for non mpeg style codecs and use less alignment
+
+        h_align= 16;
+
+        if(s->codec_id == CODEC_ID_MPEG2VIDEO || s->codec_id == CODEC_ID_MJPEG || s->codec_id == CODEC_ID_AMV || s->codec_id == CODEC_ID_THP || s->codec_id == CODEC_ID_H264)
+
+            h_align= 32; // interlaced is rounded up to 2 MBs
+
+        break;
+
+    case PIX_FMT_YUV411P:
+
+    case PIX_FMT_UYYVYY411:
+
+        w_align=32;
+
+        h_align=8;
+
+        break;
+
+    case PIX_FMT_YUV410P:
+
+        if(s->codec_id == CODEC_ID_SVQ1){
+
+            w_align=64;
+
+            h_align=64;
+
+        }
+
+    case PIX_FMT_RGB555:
+
+        if(s->codec_id == CODEC_ID_RPZA){
+
+            w_align=4;
+
+            h_align=4;
+
+        }
+
+    case PIX_FMT_PAL8:
+
+    case PIX_FMT_BGR8:
+
+    case PIX_FMT_RGB8:
+
+        if(s->codec_id == CODEC_ID_SMC){
+
+            w_align=4;
+
+            h_align=4;
+
+        }
+
+        break;
+
+    case PIX_FMT_BGR24:
+
+        if((s->codec_id == CODEC_ID_MSZH) || (s->codec_id == CODEC_ID_ZLIB)){
+
+            w_align=4;
+
+            h_align=4;
+
+        }
+
+        break;
+
+    default:
+
+        w_align= 1;
+
+        h_align= 1;
+
+        break;
+
+    }
+
+
+
+    *width = FFALIGN(*width , w_align);
+
+    *height= FFALIGN(*height, h_align);
+
+    if(s->codec_id == CODEC_ID_H264 || s->lowres)
+
+        *height+=2; // some of the optimized chroma MC reads one line too much
+
+                    // which is also done in mpeg decoders with lowres > 0
+
+
+
+    linesize_align[0] =
+
+    linesize_align[1] =
+
+    linesize_align[2] =
+
+    linesize_align[3] = STRIDE_ALIGN;
+
+//STRIDE_ALIGN is 8 for SSE* but this does not work for SVQ1 chroma planes
+
+//we could change STRIDE_ALIGN to 16 for x86/sse but it would increase the
+
+//picture size unneccessarily in some cases. The solution here is not
+
+//pretty and better ideas are welcome!
+
+#if HAVE_MMX
+
+    if(s->codec_id == CODEC_ID_SVQ1 || s->codec_id == CODEC_ID_VP5 ||
+
+       s->codec_id == CODEC_ID_VP6 || s->codec_id == CODEC_ID_VP6F ||
+
+       s->codec_id == CODEC_ID_VP6A) {
+
+        linesize_align[0] =
+
+        linesize_align[1] =
+
+        linesize_align[2] = 16;
+
+    }
+
+#endif
+
+}","static void connex_init(ram_addr_t ram_size, int vga_ram_size,
+
+                const char *boot_device,
+
+                const char *kernel_filename, const char *kernel_cmdline,
+
+                const char *initrd_filename, const char *cpu_model)
+
+{
+
+    struct pxa2xx_state_s *cpu;
+
+    int index;
+
+
+
+    uint32_t connex_rom = 0x01000000;
+
+    uint32_t connex_ram = 0x04000000;
+
+
+
+    if (ram_size < (connex_ram + connex_rom + PXA2XX_INTERNAL_SIZE)) {
+
+        fprintf(stderr, ""This platform requires %i bytes of memory\n"",
+
+                connex_ram + connex_rom + PXA2XX_INTERNAL_SIZE);
+
+        exit(1);
+
+    }
+
+
+
+    cpu = pxa255_init(connex_ram);
+
+
+
+    index = drive_get_index(IF_PFLASH, 0, 0);
+
+    if (index == -1) {
+
+        fprintf(stderr, ""A flash image must be given with the ""
+
+                ""'pflash' parameter\n"");
+
+        exit(1);
+
+    }
+
+
+
+    if (!pflash_cfi01_register(0x00000000, qemu_ram_alloc(connex_rom),
+
+            drives_table[index].bdrv, sector_len, connex_rom / sector_len,
+
+            2, 0, 0, 0, 0)) {
+
+        fprintf(stderr, ""qemu: Error registering flash memory.\n"");
+
+        exit(1);
+
+    }
+
+
+
+    cpu->env->regs[15] = 0x00000000;
+
+
+
+    /* Interrupt line of NIC is connected to GPIO line 36 */
+
+    smc91c111_init(&nd_table[0], 0x04000300,
+
+                    pxa2xx_gpio_in_get(cpu->gpio)[36]);
+
+}","static void read_sbr_single_channel_element(AACContext *ac,
+
+                                            SpectralBandReplication *sbr,
+
+                                            GetBitContext *gb)
+
+{
+
+    if (get_bits1(gb)) // bs_data_extra
+
+        skip_bits(gb, 4); // bs_reserved
+
+
+
+    read_sbr_grid(ac, sbr, gb, &sbr->data[0]);
+
+    read_sbr_dtdf(sbr, gb, &sbr->data[0]);
+
+    read_sbr_invf(sbr, gb, &sbr->data[0]);
+
+    read_sbr_envelope(sbr, gb, &sbr->data[0], 0);
+
+    read_sbr_noise(sbr, gb, &sbr->data[0], 0);
+
+
+
+    if ((sbr->data[0].bs_add_harmonic_flag = get_bits1(gb)))
+
+        get_bits1_vector(gb, sbr->data[0].bs_add_harmonic, sbr->n[1]);
+
+}","Target FFALIGN(*width, w_align), FFALIGN(*height, h_align) và ghi linesize_align. A kiểm tra dung lượng RAM, B đọc SBR bitstream; không demo nào thể hiện cơ chế căn chỉnh kích thước pixel của target.","Demo A liên quan an ninh hơn (cùng sink [bitwise_arithmetic, pointer_dereference]; cùng guard [numerical_bounds_check]; biến chung (is, line)); trong khi Demo B (cùng sink [bitwise_arithmetic, io_network_transport]; cùng guard [numerical_bounds_check]).","Target FFALIGN(*width, w_align), FFALIGN(*height, h_align) và ghi linesize_align. A kiểm tra dung lượng RAM, B đọc SBR bitstream; không demo nào thể hiện cơ chế căn chỉnh kích thước pixel của target.",FFALIGN/linesize khác RAM platform và đọc SBR. Từ is/line không xác lập liên kết biến.,Neither,High,PROPOSED,"Hai người đọc biểu thức trong evidence, ghi quyết định kiểm tra lại riêng trước thảo luận.",,,Neither,"Target FFALIGN(*width, w_align), FFALIGN(*height, h_align) và ghi linesize_align. A kiểm tra dung lượng RAM, B đọc SBR bitstream; không demo nào thể hiện cơ chế căn chỉnh kích thước pixel của target.",Neither,"Target FFALIGN(*width, w_align), FFALIGN(*height, h_align) và ghi linesize_align. A kiểm tra dung lượng RAM, B đọc SBR bitstream; không demo nào thể hiện cơ chế căn chỉnh kích thước pixel của target.",Reviewed under uniform rubric using original snippets,TECHNICAL_REVIEW_COMPLETE,USER_CONFIRMED_ADJUDICATION,User confirmation in conversation; not two newly recorded independent votes
+5,id_521_label_True_qemu.c,Neither,Equal,"static int bdrv_rd_badreq_sectors(BlockDriverState *bs,
+
+                                  int64_t sector_num, int nb_sectors)
+
+{
+
+    return
+
+        nb_sectors < 0 ||
+
+        sector_num < 0 ||
+
+        nb_sectors > bs->total_sectors ||
+
+        sector_num > bs->total_sectors - nb_sectors;
+
+}","static int sh_pci_host_init(PCIDevice *d)
+
+{
+
+    pci_config_set_vendor_id(d->config, PCI_VENDOR_ID_HITACHI);
+
+    pci_config_set_device_id(d->config, PCI_DEVICE_ID_HITACHI_SH7751R);
+
+    pci_set_word(d->config + PCI_COMMAND, PCI_COMMAND_WAIT);
+
+    pci_set_word(d->config + PCI_STATUS, PCI_STATUS_CAP_LIST |
+
+                 PCI_STATUS_FAST_BACK | PCI_STATUS_DEVSEL_MEDIUM);
+
+    return 0;
+
+}","static void cpu_common_initfn(Object *obj)
+
+{
+
+    CPUState *cpu = CPU(obj);
+
+    CPUClass *cc = CPU_GET_CLASS(obj);
+
+
+
+    cpu->cpu_index = UNASSIGNED_CPU_INDEX;
+
+    cpu->gdb_num_regs = cpu->gdb_num_g_regs = cc->gdb_num_core_regs;
+
+    /* *-user doesn't have configurable SMP topology */
+
+    /* the default value is changed by qemu_init_vcpu() for softmmu */
+
+    cpu->nr_cores = 1;
+
+    cpu->nr_threads = 1;
+
+
+
+    qemu_mutex_init(&cpu->work_mutex);
+
+    QTAILQ_INIT(&cpu->breakpoints);
+
+    QTAILQ_INIT(&cpu->watchpoints);
+
+
+
+    cpu->trace_dstate = bitmap_new(trace_get_vcpu_event_count());
+
+
+
+    cpu_exec_initfn(cpu);
+
+}","Target kiểm tra sector_num > bs->total_sectors - nb_sectors và số sector âm. A ghi PCI config, B khởi tạo CPU; đều thiếu quan hệ sector/count/total và guard miền truy cập.","Cả hai demo đều có ngữ nghĩa an ninh tương đồng: Demo A (cùng sink [bitwise_arithmetic, pointer_dereference]; cùng guard [numerical_bounds_check]); Demo B (cùng sink [bitwise_arithmetic, pointer_dereference]; cùng guard [numerical_bounds_check]).","Target kiểm tra sector_num > bs->total_sectors - nb_sectors và số sector âm. A ghi PCI config, B khởi tạo CPU; đều thiếu quan hệ sector/count/total và guard miền truy cập.","Không demo nào thể hiện sector/count/total. Cả hai yếu thì chọn Neither, không mặc định Equal.",Neither,High,PROPOSED,"Hai người đọc biểu thức trong evidence, ghi quyết định kiểm tra lại riêng trước thảo luận.",,,Neither,"Target kiểm tra sector_num > bs->total_sectors - nb_sectors và số sector âm. A ghi PCI config, B khởi tạo CPU; đều thiếu quan hệ sector/count/total và guard miền truy cập.",Neither,"Target kiểm tra sector_num > bs->total_sectors - nb_sectors và số sector âm. A ghi PCI config, B khởi tạo CPU; đều thiếu quan hệ sector/count/total và guard miền truy cập.",Reviewed under uniform rubric using original snippets,TECHNICAL_REVIEW_COMPLETE,USER_CONFIRMED_ADJUDICATION,User confirmation in conversation; not two newly recorded independent votes
+9,id_863_label_True_FFmpeg.c,Neither,B,"static av_cold OMXContext *omx_init(void *logctx, const char *libname, const char *prefix)
+
+{
+
+    static const char * const libnames[] = {
+
+        ""libOMX_Core.so"",
+
+        ""libOmxCore.so"",
+
+        NULL
+
+    };
+
+    const char* const* nameptr;
+
+    int ret = AVERROR_ENCODER_NOT_FOUND;
+
+    OMXContext *omx_context;
+
+
+
+    omx_context = av_mallocz(sizeof(*omx_context));
+
+    if (!omx_context)
+
+        return NULL;
+
+    if (libname) {
+
+        ret = omx_try_load(omx_context, logctx, libname, prefix);
+
+        if (ret < 0) {
+
+            av_free(omx_context);
+
+            return NULL;
+
+        }
+
+    } else {
+
+        for (nameptr = libnames; *nameptr; nameptr++)
+
+            if (!(ret = omx_try_load(omx_context, logctx, *nameptr, prefix)))
+
+                break;
+
+        if (!*nameptr) {
+
+            av_free(omx_context);
+
+            return NULL;
+
+        }
+
+    }
+
+
+
+    omx_context->ptr_Init();
+
+    return omx_context;
+
+}","int socket_dgram(SocketAddress *remote, SocketAddress *local, Error **errp)
+
+{
+
+    QemuOpts *opts;
+
+    int fd;
+
+
+
+    opts = qemu_opts_create_nofail(&socket_optslist);
+
+    switch (remote->kind) {
+
+    case SOCKET_ADDRESS_KIND_INET:
+
+        qemu_opt_set(opts, ""host"", remote->inet->host);
+
+        qemu_opt_set(opts, ""port"", remote->inet->port);
+
+        if (local) {
+
+            qemu_opt_set(opts, ""localaddr"", local->inet->host);
+
+            qemu_opt_set(opts, ""localport"", local->inet->port);
+
+        }
+
+        fd = inet_dgram_opts(opts, errp);
+
+        break;
+
+
+
+    default:
+
+        error_setg(errp, ""socket type unsupported for datagram"");
+
+        return -1;
+
+    }
+
+    qemu_opts_del(opts);
+
+    return fd;
+
+}","static int tpm_passthrough_test_tpmdev(int fd)
+
+{
+
+    struct tpm_req_hdr req = {
+
+        .tag = cpu_to_be16(TPM_TAG_RQU_COMMAND),
+
+        .len = cpu_to_be32(sizeof(req)),
+
+        .ordinal = cpu_to_be32(TPM_ORD_GetTicks),
+
+    };
+
+    struct tpm_resp_hdr *resp;
+
+    fd_set readfds;
+
+    int n;
+
+    struct timeval tv = {
+
+        .tv_sec = 1,
+
+        .tv_usec = 0,
+
+    };
+
+    unsigned char buf[1024];
+
+
+
+    n = write(fd, &req, sizeof(req));
+
+    if (n < 0) {
+
+        return errno;
+
+    }
+
+    if (n != sizeof(req)) {
+
+        return EFAULT;
+
+    }
+
+
+
+    FD_ZERO(&readfds);
+
+    FD_SET(fd, &readfds);
+
+
+
+    /* wait for a second */
+
+    n = select(fd + 1, &readfds, NULL, NULL, &tv);
+
+    if (n != 1) {
+
+        return errno;
+
+    }
+
+
+
+    n = read(fd, &buf, sizeof(buf));
+
+    if (n < sizeof(struct tpm_resp_hdr)) {
+
+        return EFAULT;
+
+    }
+
+
+
+    resp = (struct tpm_resp_hdr *)buf;
+
+    /* check the header */
+
+    if (be16_to_cpu(resp->tag) != TPM_TAG_RSP_COMMAND ||
+
+        be32_to_cpu(resp->len) != n) {
+
+        return EBADMSG;
+
+    }
+
+
+
+    return 0;
+
+}","Target av_mallocz, if(!omx_context), av_free khi omx_try_load thất bại và ptr_Init. A có qemu_opts_del nhưng khác vòng đời thư viện/heap; B kiểm tra số byte read/write TPM. Không demo nào mô tả load thư viện và giải phóng context khi lỗi.","Demo B liên quan an ninh hơn (cùng sink [pointer_dereference]; cùng guard [null_pointer_check, sizeof_bounds_check]; biến chung (NULL)); trong khi Demo A (cùng sink [pointer_dereference]; cùng guard [error_handling_guard]; biến chung (break)).","Target av_mallocz, if(!omx_context), av_free khi omx_try_load thất bại và ptr_Init. A có qemu_opts_del nhưng khác vòng đời thư viện/heap; B kiểm tra số byte read/write TPM. Không demo nào mô tả load thư viện và giải phóng context khi lỗi.",Allocation/load/free OMX context khác kiểm tra độ dài TPM; cùng NULL chưa đủ.,Neither,High,PROPOSED,"Hai người đọc biểu thức trong evidence, ghi quyết định kiểm tra lại riêng trước thảo luận.",,,Neither,"Target av_mallocz, if(!omx_context), av_free khi omx_try_load thất bại và ptr_Init. A có qemu_opts_del nhưng khác vòng đời thư viện/heap; B kiểm tra số byte read/write TPM. Không demo nào mô tả load thư viện và giải phóng context khi lỗi.",Neither,"Target av_mallocz, if(!omx_context), av_free khi omx_try_load thất bại và ptr_Init. A có qemu_opts_del nhưng khác vòng đời thư viện/heap; B kiểm tra số byte read/write TPM. Không demo nào mô tả load thư viện và giải phóng context khi lỗi.",Reviewed under uniform rubric using original snippets,TECHNICAL_REVIEW_COMPLETE,USER_CONFIRMED_ADJUDICATION,User confirmation in conversation; not two newly recorded independent votes
+10,id_782_label_True_qemu.c,Neither,A,"static void vvfat_close(BlockDriverState *bs)
+
+{
+
+    BDRVVVFATState *s = bs->opaque;
+
+
+
+    vvfat_close_current_file(s);
+
+    array_free(&(s->fat));
+
+    array_free(&(s->directory));
+
+    array_free(&(s->mapping));
+
+    if(s->cluster_buffer)
+
+        free(s->cluster_buffer);
+
+}","static void curl_multi_read(void *arg)
+
+{
+
+    CURLState *s = (CURLState *)arg;
+
+
+
+    aio_context_acquire(s->s->aio_context);
+
+    curl_multi_do_locked(s);
+
+    curl_multi_check_completion(s->s);
+
+    aio_context_release(s->s->aio_context);
+
+}","static void cpu_common_initfn(Object *obj)
+
+{
+
+    CPUState *cpu = CPU(obj);
+
+    CPUClass *cc = CPU_GET_CLASS(obj);
+
+
+
+    cpu->cpu_index = UNASSIGNED_CPU_INDEX;
+
+    cpu->gdb_num_regs = cpu->gdb_num_g_regs = cc->gdb_num_core_regs;
+
+    /* *-user doesn't have configurable SMP topology */
+
+    /* the default value is changed by qemu_init_vcpu() for softmmu */
+
+    cpu->nr_cores = 1;
+
+    cpu->nr_threads = 1;
+
+
+
+    qemu_mutex_init(&cpu->work_mutex);
+
+    QTAILQ_INIT(&cpu->breakpoints);
+
+    QTAILQ_INIT(&cpu->watchpoints);
+
+
+
+    cpu->trace_dstate = bitmap_new(trace_get_vcpu_event_count());
+
+
+
+    cpu_exec_initfn(cpu);
+
+}","Target vvfat_close_current_file, array_free và if(s->cluster_buffer) free. A acquire/release khóa AIO; B bitmap_new khởi tạo tài nguyên. B chỉ liên quan cấp phát ở mức chung, không cùng đường cleanup/free.","Demo A liên quan an ninh hơn (cùng sink [io_network_transport, pointer_dereference]; cùng guard [numerical_bounds_check]; biến chung (s)); trong khi Demo B (cùng sink [bitwise_arithmetic, io_network_transport]; cùng guard [numerical_bounds_check]).","Target vvfat_close_current_file, array_free và if(s->cluster_buffer) free. A acquire/release khóa AIO; B bitmap_new khởi tạo tài nguyên. B chỉ liên quan cấp phát ở mức chung, không cùng đường cleanup/free.",Cleanup heap khác acquire/release khóa; bitmap_new không thể hiện cleanup khi lỗi.,Neither,High,PROPOSED,"Hai người đọc biểu thức trong evidence, ghi quyết định kiểm tra lại riêng trước thảo luận.",,,Neither,"Target vvfat_close_current_file, array_free và if(s->cluster_buffer) free. A acquire/release khóa AIO; B bitmap_new khởi tạo tài nguyên. B chỉ liên quan cấp phát ở mức chung, không cùng đường cleanup/free.",Neither,"Target vvfat_close_current_file, array_free và if(s->cluster_buffer) free. A acquire/release khóa AIO; B bitmap_new khởi tạo tài nguyên. B chỉ liên quan cấp phát ở mức chung, không cùng đường cleanup/free.",Reviewed under uniform rubric using original snippets,TECHNICAL_REVIEW_COMPLETE,USER_CONFIRMED_ADJUDICATION,User confirmation in conversation; not two newly recorded independent votes
+11,id_395_label_True_FFmpeg.c,A,B,"static int fourxm_read_packet(AVFormatContext *s,
+
+                              AVPacket *pkt)
+
+{
+
+    FourxmDemuxContext *fourxm = s->priv_data;
+
+    ByteIOContext *pb = &s->pb;
+
+    unsigned int fourcc_tag;
+
+    unsigned int size, out_size;
+
+    int ret = 0;
+
+    int track_number;
+
+    int packet_read = 0;
+
+    unsigned char header[8];
+
+    int64_t pts_inc;
+
+    int audio_frame_count;
+
+
+
+    while (!packet_read) {
+
+
+
+        if ((ret = get_buffer(&s->pb, header, 8)) < 0)
+
+            return ret;
+
+        fourcc_tag = LE_32(&header[0]);
+
+        size = LE_32(&header[4]);
+
+        if (url_feof(pb))
+
+            return AVERROR_IO;
+
+        switch (fourcc_tag) {
+
+
+
+        case LIST_TAG:
+
+            /* this is a good time to bump the video pts */
+
+            fourxm->video_pts += fourxm->video_pts_inc;
+
+
+
+            /* skip the LIST-* tag and move on to the next fourcc */
+
+            get_le32(pb);
+
+            break;
+
+
+
+        case ifrm_TAG:
+
+        case pfrm_TAG:
+
+        case cfrm_TAG:{
+
+
+
+            /* allocate 8 more bytes than 'size' to account for fourcc
+
+             * and size */
+
+            if (av_new_packet(pkt, size + 8))
+
+                return AVERROR_IO;
+
+            pkt->stream_index = fourxm->video_stream_index;
+
+            pkt->pts = fourxm->video_pts;
+
+            memcpy(pkt->data, header, 8);
+
+            ret = get_buffer(&s->pb, &pkt->data[8], size);
+
+
+
+            if (ret < 0)
+
+                av_free_packet(pkt);
+
+            else
+
+                packet_read = 1;
+
+            break;
+
+        }
+
+
+
+        case snd__TAG:
+
+            track_number = get_le32(pb);
+
+            out_size= get_le32(pb);
+
+            size-=8;
+
+
+
+            if (track_number == fourxm->selected_track) {
+
+                if (av_new_packet(pkt, size))
+
+                    return AVERROR_IO;
+
+                pkt->stream_index = 
+
+                    fourxm->tracks[fourxm->selected_track].stream_index;
+
+                pkt->pts = fourxm->audio_pts;
+
+                ret = get_buffer(&s->pb, pkt->data, size);
+
+                if (ret < 0)
+
+                    av_free_packet(pkt);
+
+                else
+
+                    packet_read = 1;
+
+
+
+                /* pts accounting */
+
+                audio_frame_count = size;
+
+                if (fourxm->tracks[fourxm->selected_track].adpcm)
+
+                    audio_frame_count -= 
+
+                        2 * (fourxm->tracks[fourxm->selected_track].channels);
+
+                audio_frame_count /=
+
+                      fourxm->tracks[fourxm->selected_track].channels;
+
+                if (fourxm->tracks[fourxm->selected_track].adpcm)
+
+                    audio_frame_count *= 2;
+
+                else 
+
+                    audio_frame_count /=
+
+                    (fourxm->tracks[fourxm->selected_track].bits / 8);
+
+                pts_inc = audio_frame_count;
+
+                pts_inc *= 90000;
+
+                pts_inc /= fourxm->tracks[fourxm->selected_track].sample_rate;
+
+                fourxm->audio_p
+
+/* ... [Cắt gọn do vượt quá 3000 ký tự] */","static int decode_wdlt(GetByteContext *gb, uint8_t *frame, int width, int height)
+
+{
+
+    const uint8_t *frame_end   = frame + width * height;
+
+    uint8_t *line_ptr;
+
+    int count, i, v, lines, segments;
+
+
+
+    lines = bytestream2_get_le16(gb);
+
+    if (lines > height)
+
+        return -1;
+
+
+
+    while (lines--) {
+
+        if (bytestream2_get_bytes_left(gb) < 2)
+
+            return -1;
+
+        segments = bytestream2_get_le16u(gb);
+
+        while ((segments & 0xC000) == 0xC000) {
+
+            unsigned delta = -((int16_t)segments * width);
+
+            if (frame_end - frame <= delta)
+
+                return -1;
+
+            frame    += delta;
+
+            segments = bytestream2_get_le16(gb);
+
+        }
+
+        if (segments & 0x8000) {
+
+            frame[width - 1] = segments & 0xFF;
+
+            segments = bytestream2_get_le16(gb);
+
+        }
+
+        line_ptr = frame;
+
+        frame += width;
+
+        while (segments--) {
+
+            if (frame - line_ptr <= bytestream2_peek_byte(gb))
+
+                return -1;
+
+            line_ptr += bytestream2_get_byte(gb);
+
+            count = (int8_t)bytestream2_get_byte(gb);
+
+            if (count >= 0) {
+
+                if (frame - line_ptr < count * 2)
+
+                    return -1;
+
+                if (bytestream2_get_buffer(gb, line_ptr, count * 2) != count * 2)
+
+                    return -1;
+
+                line_ptr += count * 2;
+
+            } else {
+
+                count = -count;
+
+                if (frame - line_ptr < count * 2)
+
+                    return -1;
+
+                v = bytestream2_get_le16(gb);
+
+                for (i = 0; i < count; i++)
+
+                    bytestream_put_le16(&line_ptr, v);
+
+            }
+
+        }
+
+    }
+
+
+
+    return 0;
+
+}","static void read_sbr_single_channel_element(AACContext *ac,
+
+                                            SpectralBandReplication *sbr,
+
+                                            GetBitContext *gb)
+
+{
+
+    if (get_bits1(gb)) // bs_data_extra
+
+        skip_bits(gb, 4); // bs_reserved
+
+
+
+    read_sbr_grid(ac, sbr, gb, &sbr->data[0]);
+
+    read_sbr_dtdf(sbr, gb, &sbr->data[0]);
+
+    read_sbr_invf(sbr, gb, &sbr->data[0]);
+
+    read_sbr_envelope(sbr, gb, &sbr->data[0], 0);
+
+    read_sbr_noise(sbr, gb, &sbr->data[0], 0);
+
+
+
+    if ((sbr->data[0].bs_add_harmonic_flag = get_bits1(gb)))
+
+        get_bits1_vector(gb, sbr->data[0].bs_add_harmonic, sbr->n[1]);
+
+}","Target đọc header/size, av_new_packet(size + 8), memcpy và get_buffer. A bytestream2_get_buffer và guard frame - line_ptr < count * 2 minh họa ràng buộc kích thước buffer gần hơn B đọc cờ SBR; guard A chưa phải kiểm tra overflow size + 8. Target bị cắt.","Demo B liên quan an ninh hơn (cùng sink [bitwise_arithmetic, io_network_transport]; cùng guard [numerical_bounds_check]; biến chung (data)); trong khi Demo A (cùng sink [bitwise_arithmetic]; cùng guard [error_handling_guard, numerical_bounds_check]).","Target đọc header/size, av_new_packet(size + 8), memcpy và get_buffer. A bytestream2_get_buffer và guard frame - line_ptr < count * 2 minh họa ràng buộc kích thước buffer gần hơn B đọc cờ SBR; guard A chưa phải kiểm tra overflow size + 8. Target bị cắt.","A gắn count/length với buffer trước ghi, gần target hơn SBR flag; không tái hiện overflow size+8.",A,Medium,PROPOSED,"Hai người đọc biểu thức trong evidence, ghi quyết định kiểm tra lại riêng trước thảo luận.",,,A,"Target đọc header/size, av_new_packet(size + 8), memcpy và get_buffer. A bytestream2_get_buffer và guard frame - line_ptr < count * 2 minh họa ràng buộc kích thước buffer gần hơn B đọc cờ SBR; guard A chưa phải kiểm tra overflow size + 8. Target bị cắt.",A,"Target đọc header/size, av_new_packet(size + 8), memcpy và get_buffer. A bytestream2_get_buffer và guard frame - line_ptr < count * 2 minh họa ràng buộc kích thước buffer gần hơn B đọc cờ SBR; guard A chưa phải kiểm tra overflow size + 8. Target bị cắt.",Reviewed under uniform rubric using original snippets,TECHNICAL_REVIEW_COMPLETE,USER_CONFIRMED_ADJUDICATION,User confirmation in conversation; not two newly recorded independent votes
+12,id_536_label_True_qemu.c,A,Equal,"int qemu_devtree_setprop(void *fdt, const char *node_path,
+
+                         const char *property, void *val_array, int size)
+
+{
+
+    int offset;
+
+
+
+    offset = fdt_path_offset(fdt, node_path);
+
+    if (offset < 0)
+
+        return offset;
+
+
+
+    return fdt_setprop(fdt, offset, property, val_array, size);
+
+}","BdrvChild *bdrv_root_attach_child(BlockDriverState *child_bs,
+
+                                  const char *child_name,
+
+                                  const BdrvChildRole *child_role,
+
+                                  uint64_t perm, uint64_t shared_perm,
+
+                                  void *opaque, Error **errp)
+
+{
+
+    BdrvChild *child;
+
+    int ret;
+
+
+
+    ret = bdrv_check_update_perm(child_bs, perm, shared_perm, NULL, errp);
+
+    if (ret < 0) {
+
+        return NULL;
+
+    }
+
+
+
+    child = g_new(BdrvChild, 1);
+
+    *child = (BdrvChild) {
+
+        .bs             = NULL,
+
+        .name           = g_strdup(child_name),
+
+        .role           = child_role,
+
+        .perm           = perm,
+
+        .shared_perm    = shared_perm,
+
+        .opaque         = opaque,
+
+    };
+
+
+
+    bdrv_replace_child(child, child_bs);
+
+
+
+    return child;
+
+}","static void cpu_common_initfn(Object *obj)
+
+{
+
+    CPUState *cpu = CPU(obj);
+
+    CPUClass *cc = CPU_GET_CLASS(obj);
+
+
+
+    cpu->cpu_index = UNASSIGNED_CPU_INDEX;
+
+    cpu->gdb_num_regs = cpu->gdb_num_g_regs = cc->gdb_num_core_regs;
+
+    /* *-user doesn't have configurable SMP topology */
+
+    /* the default value is changed by qemu_init_vcpu() for softmmu */
+
+    cpu->nr_cores = 1;
+
+    cpu->nr_threads = 1;
+
+
+
+    qemu_mutex_init(&cpu->work_mutex);
+
+    QTAILQ_INIT(&cpu->breakpoints);
+
+    QTAILQ_INIT(&cpu->watchpoints);
+
+
+
+    cpu->trace_dstate = bitmap_new(trace_get_vcpu_event_count());
+
+
+
+    cpu_exec_initfn(cpu);
+
+}","Target offset=fdt_path_offset; if(offset < 0) return trước fdt_setprop. A if(ret < 0) return trước bdrv_replace_child, cùng kiểu kiểm tra kết quả tiền điều kiện; thao tác và đối tượng khác. B không có guard kết quả tương ứng.",Cả hai demo đều có ngữ nghĩa an ninh tương đồng: Demo A (cùng guard [numerical_bounds_check]); Demo B (cùng guard [numerical_bounds_check]).,"Target offset=fdt_path_offset; if(offset < 0) return trước fdt_setprop. A if(ret < 0) return trước bdrv_replace_child, cùng kiểu kiểm tra kết quả tiền điều kiện; thao tác và đối tượng khác. B không có guard kết quả tương ứng.",Đề xuất sửa Hiếu A thành Neither: ret<0 chung chưa đủ khi fdt offset/property khác permission/block attach.,Neither,Medium,PROPOSED,"Hai người đọc biểu thức trong evidence, ghi quyết định kiểm tra lại riêng trước thảo luận.",,,Neither,fdt_path_offset -> fdt_setprop khác permission-check -> block attach. Chỉ cùng if(ret < 0) không đủ để chọn A.,Neither,fdt_path_offset -> fdt_setprop khác permission-check -> block attach. Chỉ cùng if(ret < 0) không đủ để chọn A.,Reviewed under uniform rubric using original snippets,TECHNICAL_REVIEW_COMPLETE,USER_CONFIRMED_ADJUDICATION,User confirmation in conversation; not two newly recorded independent votes
+16,id_514_label_False_FFmpeg.c,Equal,B,"static int xmv_read_header(AVFormatContext *s)
+
+{
+
+    XMVDemuxContext *xmv = s->priv_data;
+
+    AVIOContext     *pb  = s->pb;
+
+
+
+    uint32_t file_version;
+
+    uint32_t this_packet_size;
+
+    uint16_t audio_track;
+
+    int ret;
+
+
+
+    s->ctx_flags |= AVFMTCTX_NOHEADER;
+
+
+
+    avio_skip(pb, 4); /* Next packet size */
+
+
+
+    this_packet_size = avio_rl32(pb);
+
+
+
+    avio_skip(pb, 4); /* Max packet size */
+
+    avio_skip(pb, 4); /* ""xobX"" */
+
+
+
+    file_version = avio_rl32(pb);
+
+    if ((file_version != 4) && (file_version != 2))
+
+        avpriv_request_sample(s, ""Uncommon version %""PRIu32"""", file_version);
+
+
+
+    /* Video tracks */
+
+
+
+    xmv->video_width    = avio_rl32(pb);
+
+    xmv->video_height   = avio_rl32(pb);
+
+    xmv->video_duration = avio_rl32(pb);
+
+
+
+    /* Audio tracks */
+
+
+
+    xmv->audio_track_count = avio_rl16(pb);
+
+
+
+    avio_skip(pb, 2); /* Unknown (padding?) */
+
+
+
+    xmv->audio = av_mallocz_array(xmv->audio_track_count, sizeof(XMVAudioPacket));
+
+    if (!xmv->audio) {
+
+        ret = AVERROR(ENOMEM);
+
+        goto fail;
+
+    }
+
+
+
+    for (audio_track = 0; audio_track < xmv->audio_track_count; audio_track++) {
+
+        XMVAudioPacket *packet = &xmv->audio[audio_track];
+
+
+
+        packet->compression     = avio_rl16(pb);
+
+        packet->channels        = avio_rl16(pb);
+
+        packet->sample_rate     = avio_rl32(pb);
+
+        packet->bits_per_sample = avio_rl16(pb);
+
+        packet->flags           = avio_rl16(pb);
+
+
+
+        packet->bit_rate      = packet->bits_per_sample *
+
+                                packet->sample_rate *
+
+                                packet->channels;
+
+        packet->block_align   = XMV_BLOCK_ALIGN_SIZE * packet->channels;
+
+        packet->block_samples = 64;
+
+        packet->codec_id      = ff_wav_codec_get_id(packet->compression,
+
+                                                    packet->bits_per_sample);
+
+
+
+        packet->stream_index = -1;
+
+
+
+        packet->frame_size  = 0;
+
+        packet->block_count = 0;
+
+
+
+        /* TODO: ADPCM'd 5.1 sound is encoded in three separate streams.
+
+         *       Those need to be interleaved to a proper 5.1 stream. */
+
+        if (packet->flags & XMV_AUDIO_ADPCM51)
+
+            av_log(s, AV_LOG_WARNING, ""Unsupported 5.1 ADPCM audio stream ""
+
+                                      ""(0x%04X)\n"", packet->flags);
+
+
+
+        if (!packet->channels || !packet->sample_rate ||
+
+             packet->channels >= UINT16_MAX / XMV_BLOCK_ALIGN_SIZE) {
+
+            av_log(s, AV_LOG_ERROR, ""Invalid parameters for audio track %""PRIu16"".\n"",
+
+                   audio_track);
+
+            ret = AVERROR_INVALIDDATA;
+
+            goto fail;
+
+        }
+
+    }
+
+
+
+
+
+    /* Initialize the packet context */
+
+
+
+    xmv->next_packet_offset = avio_tell(pb);
+
+    xmv->next_packet_size   = this_packet_size - xmv->next_packet_offset;
+
+    xmv->stream_count       = xmv->audio_track_count + 1;
+
+
+
+    return 0;
+
+
+
+fail:
+
+    xmv_read_close(s);
+
+    return ret;
+
+}","static int decode_wdlt(GetByteContext *gb, uint8_t *frame, int width, int height)
+
+{
+
+    const uint8_t *frame_end   = frame + width * height;
+
+    uint8_t *line_ptr;
+
+    int count, i, v, lines, segments;
+
+
+
+    lines = bytestream2_get_le16(gb);
+
+    if (lines > height)
+
+        return -1;
+
+
+
+    while (lines--) {
+
+        if (bytestream2_get_bytes_left(gb) < 2)
+
+            return -1;
+
+        segments = bytestream2_get_le16u(gb);
+
+        while ((segments & 0xC000) == 0xC000) {
+
+            unsigned delta = -((int16_t)segments * width);
+
+            if (frame_end - frame <= delta)
+
+                return -1;
+
+            frame    += delta;
+
+            segments = bytestream2_get_le16(gb);
+
+        }
+
+        if (segments & 0x8000) {
+
+            frame[width - 1] = segments & 0xFF;
+
+            segments = bytestream2_get_le16(gb);
+
+        }
+
+        line_ptr = frame;
+
+        frame += width;
+
+        while (segments--) {
+
+            if (frame - line_ptr <= bytestream2_peek_byte(gb))
+
+                return -1;
+
+            line_ptr += bytestream2_get_byte(gb);
+
+            count = (int8_t)bytestream2_get_byte(gb);
+
+            if (count >= 0) {
+
+                if (frame - line_ptr < count * 2)
+
+                    return -1;
+
+                if (bytestream2_get_buffer(gb, line_ptr, count * 2) != count * 2)
+
+                    return -1;
+
+                line_ptr += count * 2;
+
+            } else {
+
+                count = -count;
+
+                if (frame - line_ptr < count * 2)
+
+                    return -1;
+
+                v = bytestream2_get_le16(gb);
+
+                for (i = 0; i < count; i++)
+
+                    bytestream_put_le16(&line_ptr, v);
+
+            }
+
+        }
+
+    }
+
+
+
+    return 0;
+
+}","static int qcow_read_extensions(BlockDriverState *bs, uint64_t start_offset,
+
+                                uint64_t end_offset)
+
+{
+
+    BDRVQcowState *s = bs->opaque;
+
+    QCowExtension ext;
+
+    uint64_t offset;
+
+
+
+#ifdef DEBUG_EXT
+
+    printf(""qcow_read_extensions: start=%ld end=%ld\n"", start_offset, end_offset);
+
+#endif
+
+    offset = start_offset;
+
+    while (offset < end_offset) {
+
+
+
+#ifdef DEBUG_EXT
+
+        /* Sanity check */
+
+        if (offset > s->cluster_size)
+
+            printf(""qcow_handle_extension: suspicious offset %lu\n"", offset);
+
+
+
+        printf(""attemting to read extended header in offset %lu\n"", offset);
+
+#endif
+
+
+
+        if (bdrv_pread(s->hd, offset, &ext, sizeof(ext)) != sizeof(ext)) {
+
+            fprintf(stderr, ""qcow_handle_extension: ERROR: pread fail from offset %llu\n"",
+
+                    (unsigned long long)offset);
+
+            return 1;
+
+        }
+
+        be32_to_cpus(&ext.magic);
+
+        be32_to_cpus(&ext.len);
+
+        offset += sizeof(ext);
+
+#ifdef DEBUG_EXT
+
+        printf(""ext.magic = 0x%x\n"", ext.magic);
+
+#endif
+
+        switch (ext.magic) {
+
+        case QCOW_EXT_MAGIC_END:
+
+            return 0;
+
+
+
+        case QCOW_EXT_MAGIC_BACKING_FORMAT:
+
+            if (ext.len >= sizeof(bs->backing_format)) {
+
+                fprintf(stderr, ""ERROR: ext_backing_format: len=%u too large""
+
+                        "" (>=%zu)\n"",
+
+                        ext.len, sizeof(bs->backing_format));
+
+                return 2;
+
+            }
+
+            if (bdrv_pread(s->hd, offset , bs->backing_format,
+
+                           ext.len) != ext.len)
+
+                return 3;
+
+            bs->backing_format[ext.len] = '\0';
+
+#ifdef DEBUG_EXT
+
+            printf(""Qcow2: Got format extension %s\n"", bs->backing_format);
+
+#endif
+
+            offse
+
+/* ... [Cắt gọn do vượt quá 1800 ký tự] */","Target đọc header audio, tính bit_rate/block_align và kiểm tra channels/sample_rate. A đọc bytestream và giới hạn frame/count; B bdrv_pread header rồi ext.len >= sizeof(backing_format). Cả hai gần một phần cơ chế parser có kiểm tra kích thước, không tái hiện chính xác arithmetic audio; B bị cắt.","Demo B liên quan an ninh hơn (cùng sink [bitwise_arithmetic, format_logging]; cùng guard [error_handling_guard, sizeof_bounds_check]; biến chung (fail, in)); trong khi Demo A (cùng sink [bitwise_arithmetic]; cùng guard [error_handling_guard]).","Target đọc header audio, tính bit_rate/block_align và kiểm tra channels/sample_rate. A đọc bytestream và giới hạn frame/count; B bdrv_pread header rồi ext.len >= sizeof(backing_format). Cả hai gần một phần cơ chế parser có kiểm tra kích thước, không tái hiện chính xác arithmetic audio; B bị cắt.","Đề xuất sửa Hiếu Equal thành B: parser metadata header/len gần audio metadata hơn delta decode/frame write, mức Partial.",B,Medium,PROPOSED,"Hai người đọc biểu thức trong evidence, ghi quyết định kiểm tra lại riêng trước thảo luận.",,,B,"B đọc metadata extension/header và kiểm tra ext.len trước đọc/ghi backing_format; gần target parser metadata audio hơn A giải mã delta vào frame. Chỉ khớp một phần, không tái hiện arithmetic channels/sample_rate.",B,"B đọc metadata extension/header và kiểm tra ext.len trước đọc/ghi backing_format; gần target parser metadata audio hơn A giải mã delta vào frame. Chỉ khớp một phần, không tái hiện arithmetic channels/sample_rate.",Reviewed under uniform rubric using original snippets,TECHNICAL_REVIEW_COMPLETE,USER_CONFIRMED_ADJUDICATION,User confirmation in conversation; not two newly recorded independent votes
+18,id_188_label_False_FFmpeg.c,B,A,"static int config_props(AVFilterLink *outlink)
+
+{
+
+    AVFilterContext *ctx = outlink->src;
+
+    AVFilterLink *inlink = outlink->src->inputs[0];
+
+    ScaleContext *scale = ctx->priv;
+
+    int64_t w, h;
+
+
+
+    if (!(w = scale->w))
+
+        w = inlink->w;
+
+    if (!(h = scale->h))
+
+        h = inlink->h;
+
+    if (w == -1)
+
+        w = av_rescale(h, inlink->w, inlink->h);
+
+    if (h == -1)
+
+        h = av_rescale(w, inlink->h, inlink->w);
+
+
+
+    if (w > INT_MAX || h > INT_MAX ||
+
+        (h * inlink->w) > INT_MAX  ||
+
+        (w * inlink->h) > INT_MAX)
+
+        av_log(ctx, AV_LOG_ERROR, ""Rescaled value for width or height is too big.\n"");
+
+
+
+    outlink->w = w;
+
+    outlink->h = h;
+
+
+
+    /* TODO: make algorithm configurable */
+
+    scale->sws = sws_getContext(inlink ->w, inlink ->h, inlink ->format,
+
+                                outlink->w, outlink->h, outlink->format,
+
+                                SWS_BILINEAR, NULL, NULL, NULL);
+
+
+
+    av_log(ctx, AV_LOG_INFO, ""w:%d h:%d fmt:%s\n"",
+
+           outlink->w, outlink->h, av_pix_fmt_descriptors[outlink->format].name);
+
+
+
+    scale->input_is_pal = inlink->format == PIX_FMT_PAL8      ||
+
+                          inlink->format == PIX_FMT_BGR4_BYTE ||
+
+                          inlink->format == PIX_FMT_RGB4_BYTE ||
+
+                          inlink->format == PIX_FMT_BGR8      ||
+
+                          inlink->format == PIX_FMT_RGB8;
+
+
+
+    return !scale->sws;
+
+}","static int megasas_ld_get_info_submit(SCSIDevice *sdev, int lun,
+
+                                      MegasasCmd *cmd)
+
+{
+
+    struct mfi_ld_info *info = cmd->iov_buf;
+
+    size_t dcmd_size = sizeof(struct mfi_ld_info);
+
+    uint8_t cdb[6];
+
+    SCSIRequest *req;
+
+    ssize_t len, resid;
+
+    BlockConf *conf = &sdev->conf;
+
+    uint16_t sdev_id = ((sdev->id & 0xFF) >> 8) | (lun & 0xFF);
+
+    uint64_t ld_size;
+
+
+
+    if (!cmd->iov_buf) {
+
+        cmd->iov_buf = g_malloc(dcmd_size);
+
+        memset(cmd->iov_buf, 0x0, dcmd_size);
+
+        info = cmd->iov_buf;
+
+        megasas_setup_inquiry(cdb, 0x83, sizeof(info->vpd_page83));
+
+        req = scsi_req_new(sdev, cmd->index, lun, cdb, cmd);
+
+        if (!req) {
+
+            trace_megasas_dcmd_req_alloc_failed(cmd->index,
+
+                                                ""LD get info vpd inquiry"");
+
+            g_free(cmd->iov_buf);
+
+            cmd->iov_buf = NULL;
+
+            return MFI_STAT_FLASH_ALLOC_FAIL;
+
+        }
+
+        trace_megasas_dcmd_internal_submit(cmd->index,
+
+                                           ""LD get info vpd inquiry"", lun);
+
+        len = scsi_req_enqueue(req);
+
+        if (len > 0) {
+
+            cmd->iov_size = len;
+
+            scsi_req_continue(req);
+
+        }
+
+        return MFI_STAT_INVALID_STATUS;
+
+    }
+
+
+
+    info->ld_config.params.state = MFI_LD_STATE_OPTIMAL;
+
+    info->ld_config.properties.ld.v.target_id = lun;
+
+    info->ld_config.params.stripe_size = 3;
+
+    info->ld_config.params.num_drives = 1;
+
+    info->ld_config.params.is_consistent = 1;
+
+    /* Logical device size is in blocks */
+
+    bdrv_get_geometry(conf->bs, &ld_size);
+
+    info->size = cpu_to_le64(ld_size);
+
+    memset(info->ld_config.span, 0, sizeof(info->ld_config.span));
+
+    info->ld_config.span[0].start_block = 0;
+
+
+
+/* ... [Cắt gọn do vượt quá 1800 ký tự] */","void virtio_queue_notify(VirtIODevice *vdev, int n)
+
+{
+
+    if (n < VIRTIO_PCI_QUEUE_MAX && vdev->vq[n].vring.desc) {
+
+        trace_virtio_queue_notify(vdev, n, &vdev->vq[n]);
+
+        vdev->vq[n].handle_output(vdev, &vdev->vq[n]);
+
+    }
+
+}","Target w/h được kiểm tra > INT_MAX nhưng chỉ av_log rồi vẫn dùng sws_getContext. B n < VIRTIO_PCI_QUEUE_MAX thực sự chặn truy cập vq[n], hữu ích đối chiếu guard có hiệu lực; A kiểm tra req/allocate SCSI không gần bằng về giới hạn số. Không coi log của target là guard chặn.","Demo A liên quan an ninh hơn (cùng sink [bitwise_arithmetic, format_logging]; cùng guard [error_handling_guard, null_pointer_check]; biến chung (NULL, is)); trong khi Demo B (cùng sink [bitwise_arithmetic, format_logging]; cùng guard [numerical_bounds_check]; biến chung (n)).","Target w/h được kiểm tra > INT_MAX nhưng chỉ av_log rồi vẫn dùng sws_getContext. B n < VIRTIO_PCI_QUEUE_MAX thực sự chặn truy cập vq[n], hữu ích đối chiếu guard có hiệu lực; A kiểm tra req/allocate SCSI không gần bằng về giới hạn số. Không coi log của target là guard chặn.",Target chỉ log khi w/h>INT_MAX; B thực sự chặn vq[n] bằng n<MAX. Không coi log là guard ngăn sink.,B,Medium,PROPOSED,"Hai người đọc biểu thức trong evidence, ghi quyết định kiểm tra lại riêng trước thảo luận.",,,B,"Target w/h được kiểm tra > INT_MAX nhưng chỉ av_log rồi vẫn dùng sws_getContext. B n < VIRTIO_PCI_QUEUE_MAX thực sự chặn truy cập vq[n], hữu ích đối chiếu guard có hiệu lực; A kiểm tra req/allocate SCSI không gần bằng về giới hạn số. Không coi log của target là guard chặn.",B,"Target w/h được kiểm tra > INT_MAX nhưng chỉ av_log rồi vẫn dùng sws_getContext. B n < VIRTIO_PCI_QUEUE_MAX thực sự chặn truy cập vq[n], hữu ích đối chiếu guard có hiệu lực; A kiểm tra req/allocate SCSI không gần bằng về giới hạn số. Không coi log của target là guard chặn.",Reviewed under uniform rubric using original snippets,TECHNICAL_REVIEW_COMPLETE,USER_CONFIRMED_ADJUDICATION,User confirmation in conversation; not two newly recorded independent votes
+20,id_51_label_False_qemu.c,Neither,A,"static void do_busid_cmd(ESPState *s, uint8_t *buf, uint8_t busid)
+
+{
+
+    int32_t datalen;
+
+    int lun;
+
+
+
+    DPRINTF(""do_busid_cmd: busid 0x%x\n"", busid);
+
+    lun = busid & 7;
+
+    s->current_req = scsi_req_new(s->current_dev, 0, lun, NULL);
+
+    datalen = scsi_req_enqueue(s->current_req, buf);
+
+    s->ti_size = datalen;
+
+    if (datalen != 0) {
+
+        s->rregs[ESP_RSTAT] = STAT_TC;
+
+        s->dma_left = 0;
+
+        s->dma_counter = 0;
+
+        if (datalen > 0) {
+
+            s->rregs[ESP_RSTAT] |= STAT_DI;
+
+        } else {
+
+            s->rregs[ESP_RSTAT] |= STAT_DO;
+
+        }
+
+        scsi_req_continue(s->current_req);
+
+    }
+
+    s->rregs[ESP_RINTR] = INTR_BS | INTR_FC;
+
+    s->rregs[ESP_RSEQ] = SEQ_CD;
+
+    esp_raise_irq(s);
+
+}","static unsigned int dec_move_pm(DisasContext *dc)
+
+{
+
+	TCGv t0;
+
+	int memsize;
+
+
+
+	memsize = preg_sizes[dc->op2];
+
+
+
+	DIS(fprintf (logfile, ""move.%c $p%u, [$r%u%s\n"",
+
+		     memsize_char(memsize), 
+
+		     dc->op2, dc->op1, dc->postinc ? ""+]"" : ""]""));
+
+
+
+	/* prepare store. Address in T0, value in T1.  */
+
+	if (dc->op2 == PR_CCS)
+
+		cris_evaluate_flags(dc);
+
+	t0 = tcg_temp_new(TCG_TYPE_TL);
+
+	t_gen_mov_TN_preg(t0, dc->op2);
+
+	cris_flush_cc_state(dc);
+
+	gen_store(dc, cpu_R[dc->op1], t0, memsize);
+
+	tcg_temp_free(t0);
+
+
+
+	cris_cc_mask(dc, 0);
+
+	if (dc->postinc)
+
+		tcg_gen_addi_tl(cpu_R[dc->op1], cpu_R[dc->op1], memsize);
+
+	return 2;
+
+}","static void reanalyze(MpegTSContext *ts) {
+
+    AVIOContext *pb = ts->stream->pb;
+
+    int64_t pos = avio_tell(pb);
+
+    if(pos < 0)
+
+        return;
+
+    pos += ts->raw_packet_size - ts->pos47_full;
+
+    if (pos == TS_PACKET_SIZE) {
+
+        ts->size_stat[0] ++;
+
+    } else if (pos == TS_DVHS_PACKET_SIZE) {
+
+        ts->size_stat[1] ++;
+
+    } else if (pos == TS_FEC_PACKET_SIZE) {
+
+        ts->size_stat[2] ++;
+
+    }
+
+
+
+    ts->size_stat_count ++;
+
+    if(ts->size_stat_count > SIZE_STAT_THRESHOLD) {
+
+        int newsize = 0;
+
+        if (ts->size_stat[0] > SIZE_STAT_THRESHOLD) {
+
+            newsize = TS_PACKET_SIZE;
+
+        } else if (ts->size_stat[1] > SIZE_STAT_THRESHOLD) {
+
+            newsize = TS_DVHS_PACKET_SIZE;
+
+        } else if (ts->size_stat[2] > SIZE_STAT_THRESHOLD) {
+
+            newsize = TS_FEC_PACKET_SIZE;
+
+        }
+
+        if (newsize) {
+
+            av_log(ts->stream, AV_LOG_WARNING, ""changing packet size to %d\n"", newsize);
+
+            ts->raw_packet_size = newsize;
+
+        }
+
+        ts->size_stat_count = 0;
+
+        memset(ts->size_stat, 0, sizeof(ts->size_stat));
+
+    }
+
+}","Target scsi_req_new/enqueue/continue rồi cập nhật thanh ghi IRQ. A gen_store sinh mã CPU, B reanalyze đếm packet; không cùng SCSI request lifetime hay kiểm tra kết quả cấp phát. Việc cùng cập nhật state chưa đủ.","Demo A liên quan an ninh hơn (cùng sink [address_bus_mapping, format_logging]; cùng guard [numerical_bounds_check]; biến chung (n, s)); trong khi Demo B (cùng sink [format_logging, pointer_dereference]; biến chung (n)).","Target scsi_req_new/enqueue/continue rồi cập nhật thanh ghi IRQ. A gen_store sinh mã CPU, B reanalyze đếm packet; không cùng SCSI request lifetime hay kiểm tra kết quả cấp phát. Việc cùng cập nhật state chưa đủ.",SCSI request lifetime khác gen_store CPU và thống kê packet; state/log chung không đủ.,Neither,High,PROPOSED,"Hai người đọc biểu thức trong evidence, ghi quyết định kiểm tra lại riêng trước thảo luận.",,,Neither,"Target scsi_req_new/enqueue/continue rồi cập nhật thanh ghi IRQ. A gen_store sinh mã CPU, B reanalyze đếm packet; không cùng SCSI request lifetime hay kiểm tra kết quả cấp phát. Việc cùng cập nhật state chưa đủ.",Neither,"Target scsi_req_new/enqueue/continue rồi cập nhật thanh ghi IRQ. A gen_store sinh mã CPU, B reanalyze đếm packet; không cùng SCSI request lifetime hay kiểm tra kết quả cấp phát. Việc cùng cập nhật state chưa đủ.",Reviewed under uniform rubric using original snippets,TECHNICAL_REVIEW_COMPLETE,USER_CONFIRMED_ADJUDICATION,User confirmation in conversation; not two newly recorded independent votes
+23,id_125_label_True_FFmpeg.c,Neither,A,"static int mxf_read_content_storage(MXFContext *mxf, ByteIOContext *pb, int tag)
+
+{
+
+    switch (tag) {
+
+    case 0x1901:
+
+        mxf->packages_count = get_be32(pb);
+
+        if (mxf->packages_count >= UINT_MAX / sizeof(UID))
+
+            return -1;
+
+        mxf->packages_refs = av_malloc(mxf->packages_count * sizeof(UID));
+
+        if (!mxf->packages_refs)
+
+            return -1;
+
+        url_fskip(pb, 4); /* useless size of objects, always 16 according to specs */
+
+        get_buffer(pb, (uint8_t *)mxf->packages_refs, mxf->packages_count * sizeof(UID));
+
+        break;
+
+    }
+
+    return 0;
+
+}","int socket_dgram(SocketAddress *remote, SocketAddress *local, Error **errp)
+
+{
+
+    QemuOpts *opts;
+
+    int fd;
+
+
+
+    opts = qemu_opts_create_nofail(&socket_optslist);
+
+    switch (remote->kind) {
+
+    case SOCKET_ADDRESS_KIND_INET:
+
+        qemu_opt_set(opts, ""host"", remote->inet->host);
+
+        qemu_opt_set(opts, ""port"", remote->inet->port);
+
+        if (local) {
+
+            qemu_opt_set(opts, ""localaddr"", local->inet->host);
+
+            qemu_opt_set(opts, ""localport"", local->inet->port);
+
+        }
+
+        fd = inet_dgram_opts(opts, errp);
+
+        break;
+
+
+
+    default:
+
+        error_setg(errp, ""socket type unsupported for datagram"");
+
+        return -1;
+
+    }
+
+    qemu_opts_del(opts);
+
+    return fd;
+
+}","BdrvChild *bdrv_root_attach_child(BlockDriverState *child_bs,
+
+                                  const char *child_name,
+
+                                  const BdrvChildRole *child_role,
+
+                                  uint64_t perm, uint64_t shared_perm,
+
+                                  void *opaque, Error **errp)
+
+{
+
+    BdrvChild *child;
+
+    int ret;
+
+
+
+    ret = bdrv_check_update_perm(child_bs, perm, shared_perm, NULL, errp);
+
+    if (ret < 0) {
+
+        return NULL;
+
+    }
+
+
+
+    child = g_new(BdrvChild, 1);
+
+    *child = (BdrvChild) {
+
+        .bs             = NULL,
+
+        .name           = g_strdup(child_name),
+
+        .role           = child_role,
+
+        .perm           = perm,
+
+        .shared_perm    = shared_perm,
+
+        .opaque         = opaque,
+
+    };
+
+
+
+    bdrv_replace_child(child, child_bs);
+
+
+
+    return child;
+
+}","Target packages_count >= UINT_MAX/sizeof(UID) chặn overflow trước av_malloc và get_buffer; if(!packages_refs) kiểm tra cấp phát. B g_new/g_strdup chỉ gần cấp phát, thiếu size-derived allocation và overflow guard; A socket không phù hợp.","Demo A liên quan an ninh hơn (cùng sink [bitwise_arithmetic, io_network_transport]; cùng guard [error_handling_guard]; biến chung (break)); trong khi Demo B (cùng guard [error_handling_guard]).","Target packages_count >= UINT_MAX/sizeof(UID) chặn overflow trước av_malloc và get_buffer; if(!packages_refs) kiểm tra cấp phát. B g_new/g_strdup chỉ gần cấp phát, thiếu size-derived allocation và overflow guard; A socket không phù hợp.",Count overflow trước allocation/read là cơ chế chính; socket và g_new child không tái hiện quan hệ này.,Neither,High,PROPOSED,"Hai người đọc biểu thức trong evidence, ghi quyết định kiểm tra lại riêng trước thảo luận.",,,Neither,"Target packages_count >= UINT_MAX/sizeof(UID) chặn overflow trước av_malloc và get_buffer; if(!packages_refs) kiểm tra cấp phát. B g_new/g_strdup chỉ gần cấp phát, thiếu size-derived allocation và overflow guard; A socket không phù hợp.",Neither,"Target packages_count >= UINT_MAX/sizeof(UID) chặn overflow trước av_malloc và get_buffer; if(!packages_refs) kiểm tra cấp phát. B g_new/g_strdup chỉ gần cấp phát, thiếu size-derived allocation và overflow guard; A socket không phù hợp.",Reviewed under uniform rubric using original snippets,TECHNICAL_REVIEW_COMPLETE,USER_CONFIRMED_ADJUDICATION,User confirmation in conversation; not two newly recorded independent votes
+24,id_162_label_True_qemu.c,Neither,Equal,"static uint64_t qdev_get_prop_mask64(Property *prop)
+
+{
+
+    assert(prop->info == &qdev_prop_bit);
+
+    return 0x1 << prop->bitnr;
+
+}","static void cpu_common_initfn(Object *obj)
+
+{
+
+    CPUState *cpu = CPU(obj);
+
+    CPUClass *cc = CPU_GET_CLASS(obj);
+
+
+
+    cpu->cpu_index = UNASSIGNED_CPU_INDEX;
+
+    cpu->gdb_num_regs = cpu->gdb_num_g_regs = cc->gdb_num_core_regs;
+
+    /* *-user doesn't have configurable SMP topology */
+
+    /* the default value is changed by qemu_init_vcpu() for softmmu */
+
+    cpu->nr_cores = 1;
+
+    cpu->nr_threads = 1;
+
+
+
+    qemu_mutex_init(&cpu->work_mutex);
+
+    QTAILQ_INIT(&cpu->breakpoints);
+
+    QTAILQ_INIT(&cpu->watchpoints);
+
+
+
+    cpu->trace_dstate = bitmap_new(trace_get_vcpu_event_count());
+
+
+
+    cpu_exec_initfn(cpu);
+
+}","static FlatView *address_space_get_flatview(AddressSpace *as)
+
+{
+
+    FlatView *view;
+
+
+
+    qemu_mutex_lock(&flat_view_mutex);
+
+    view = as->current_map;
+
+    flatview_ref(view);
+
+    qemu_mutex_unlock(&flat_view_mutex);
+
+    return view;
+
+}","Target return 0x1 << prop->bitnr cần xét độ rộng toán hạng/shift. A khởi tạo CPU, B khóa/ref FlatView; không có biến shift hay guard bitnr tương ứng. assert(prop->info...) không giới hạn bitnr.","Cả hai demo đều có ngữ nghĩa an ninh tương đồng: Demo A (cùng sink [bitwise_arithmetic, pointer_dereference]; cùng guard [numerical_bounds_check]); Demo B (cùng sink [bitwise_arithmetic, pointer_dereference]; cùng guard [numerical_bounds_check]).","Target return 0x1 << prop->bitnr cần xét độ rộng toán hạng/shift. A khởi tạo CPU, B khóa/ref FlatView; không có biến shift hay guard bitnr tương ứng. assert(prop->info...) không giới hạn bitnr.",Assert loại property không giới hạn bitnr/độ rộng shift; A/B thiếu cơ chế tương ứng.,Neither,High,PROPOSED,"Hai người đọc biểu thức trong evidence, ghi quyết định kiểm tra lại riêng trước thảo luận.",,,Neither,"Target return 0x1 << prop->bitnr cần xét độ rộng toán hạng/shift. A khởi tạo CPU, B khóa/ref FlatView; không có biến shift hay guard bitnr tương ứng. assert(prop->info...) không giới hạn bitnr.",Neither,"Target return 0x1 << prop->bitnr cần xét độ rộng toán hạng/shift. A khởi tạo CPU, B khóa/ref FlatView; không có biến shift hay guard bitnr tương ứng. assert(prop->info...) không giới hạn bitnr.",Reviewed under uniform rubric using original snippets,TECHNICAL_REVIEW_COMPLETE,USER_CONFIRMED_ADJUDICATION,User confirmation in conversation; not two newly recorded independent votes
+26,id_914_label_False_qemu.c,Equal,A,"static void cs_write (void *opaque, target_phys_addr_t addr,
+
+                      uint64_t val64, unsigned size)
+
+{
+
+    CSState *s = opaque;
+
+    uint32_t saddr, iaddr, val;
+
+
+
+    saddr = addr;
+
+    val = val64;
+
+
+
+    switch (saddr) {
+
+    case Index_Address:
+
+        if (!(s->regs[Index_Address] & MCE) && (val & MCE)
+
+            && (s->dregs[Interface_Configuration] & (3 << 3)))
+
+            s->aci_counter = conf.aci_counter;
+
+
+
+        s->regs[Index_Address] = val & ~(1 << 7);
+
+        break;
+
+
+
+    case Index_Data:
+
+        if (!(s->dregs[MODE_And_ID] & MODE2))
+
+            iaddr = s->regs[Index_Address] & 0x0f;
+
+        else
+
+            iaddr = s->regs[Index_Address] & 0x1f;
+
+
+
+        switch (iaddr) {
+
+        case RESERVED:
+
+        case RESERVED_2:
+
+        case RESERVED_3:
+
+            lwarn (""attempt to write %#x to reserved indirect register %d\n"",
+
+                   val, iaddr);
+
+            break;
+
+
+
+        case FS_And_Playback_Data_Format:
+
+            if (s->regs[Index_Address] & MCE) {
+
+                cs_reset_voices (s, val);
+
+            }
+
+            else {
+
+                if (s->dregs[Alternate_Feature_Status] & PMCE) {
+
+                    val = (val & ~0x0f) | (s->dregs[iaddr] & 0x0f);
+
+                    cs_reset_voices (s, val);
+
+                }
+
+                else {
+
+                    lwarn (""[P]MCE(%#x, %#x) is not set, val=%#x\n"",
+
+                           s->regs[Index_Address],
+
+                           s->dregs[Alternate_Feature_Status],
+
+                           val);
+
+                    break;
+
+                }
+
+            }
+
+            s->dregs[iaddr] = val;
+
+            break;
+
+
+
+        case Interface_Configuration:
+
+            val &= ~(1 << 5);   /* D5 is reserved */
+
+            s->dregs[iaddr] = val;
+
+            if (val & PPIO) {
+
+                lwarn (""PIO is not supported (%#x)\n"", val);
+
+                break;
+
+            }
+
+            if (val & PEN) {
+
+                if (!s->dma_running) {
+
+                    cs_reset_voices (s, s->dregs[FS_And_Playback_Data_Format]);
+
+                }
+
+            }
+
+            else {
+
+                if (s->dma_running) {
+
+                    DMA_release_DREQ (s->dma);
+
+                    AUD_set_active_out (s->voice, 0);
+
+                    s->dma_running = 0;
+
+                }
+
+            }
+
+            break;
+
+
+
+        case Error_Status_And_Initialization:
+
+            lwarn (""attempt to write to read only register %d\n"", iaddr);
+
+            break;
+
+
+
+        case MODE_And_ID:
+
+            dolog (""val=%#x\n"", val);
+
+            if (val & MODE2)
+
+                s->dregs[iaddr] |= MODE2;
+
+            else
+
+                s->dregs[iaddr] &= ~MODE2;
+
+            break;
+
+
+
+        case Alternate_Feature_Enable_I:
+
+            if (val & TE)
+
+                lerr (""timer is not yet supported\n"");
+
+            s->dregs[iaddr] = val;
+
+            break;
+
+
+
+        case Alternate_Feature_Status:
+
+            if ((s->dregs[iaddr] & P
+
+/* ... [Cắt gọn do vượt quá 3000 ký tự] */","static int qcow_read_extensions(BlockDriverState *bs, uint64_t start_offset,
+
+                                uint64_t end_offset)
+
+{
+
+    BDRVQcowState *s = bs->opaque;
+
+    QCowExtension ext;
+
+    uint64_t offset;
+
+
+
+#ifdef DEBUG_EXT
+
+    printf(""qcow_read_extensions: start=%ld end=%ld\n"", start_offset, end_offset);
+
+#endif
+
+    offset = start_offset;
+
+    while (offset < end_offset) {
+
+
+
+#ifdef DEBUG_EXT
+
+        /* Sanity check */
+
+        if (offset > s->cluster_size)
+
+            printf(""qcow_handle_extension: suspicious offset %lu\n"", offset);
+
+
+
+        printf(""attemting to read extended header in offset %lu\n"", offset);
+
+#endif
+
+
+
+        if (bdrv_pread(s->hd, offset, &ext, sizeof(ext)) != sizeof(ext)) {
+
+            fprintf(stderr, ""qcow_handle_extension: ERROR: pread fail from offset %llu\n"",
+
+                    (unsigned long long)offset);
+
+            return 1;
+
+        }
+
+        be32_to_cpus(&ext.magic);
+
+        be32_to_cpus(&ext.len);
+
+        offset += sizeof(ext);
+
+#ifdef DEBUG_EXT
+
+        printf(""ext.magic = 0x%x\n"", ext.magic);
+
+#endif
+
+        switch (ext.magic) {
+
+        case QCOW_EXT_MAGIC_END:
+
+            return 0;
+
+
+
+        case QCOW_EXT_MAGIC_BACKING_FORMAT:
+
+            if (ext.len >= sizeof(bs->backing_format)) {
+
+                fprintf(stderr, ""ERROR: ext_backing_format: len=%u too large""
+
+                        "" (>=%zu)\n"",
+
+                        ext.len, sizeof(bs->backing_format));
+
+                return 2;
+
+            }
+
+            if (bdrv_pread(s->hd, offset , bs->backing_format,
+
+                           ext.len) != ext.len)
+
+                return 3;
+
+            bs->backing_format[ext.len] = '\0';
+
+#ifdef DEBUG_EXT
+
+            printf(""Qcow2: Got format extension %s\n"", bs->backing_format);
+
+#endif
+
+            offse
+
+/* ... [Cắt gọn do vượt quá 1800 ký tự] */","static int tpm_passthrough_test_tpmdev(int fd)
+
+{
+
+    struct tpm_req_hdr req = {
+
+        .tag = cpu_to_be16(TPM_TAG_RQU_COMMAND),
+
+        .len = cpu_to_be32(sizeof(req)),
+
+        .ordinal = cpu_to_be32(TPM_ORD_GetTicks),
+
+    };
+
+    struct tpm_resp_hdr *resp;
+
+    fd_set readfds;
+
+    int n;
+
+    struct timeval tv = {
+
+        .tv_sec = 1,
+
+        .tv_usec = 0,
+
+    };
+
+    unsigned char buf[1024];
+
+
+
+    n = write(fd, &req, sizeof(req));
+
+    if (n < 0) {
+
+        return errno;
+
+    }
+
+    if (n != sizeof(req)) {
+
+        return EFAULT;
+
+    }
+
+
+
+    FD_ZERO(&readfds);
+
+    FD_SET(fd, &readfds);
+
+
+
+    /* wait for a second */
+
+    n = select(fd + 1, &readfds, NULL, NULL, &tv);
+
+    if (n != 1) {
+
+        return errno;
+
+    }
+
+
+
+    n = read(fd, &buf, sizeof(buf));
+
+    if (n < sizeof(struct tpm_resp_hdr)) {
+
+        return EFAULT;
+
+    }
+
+
+
+    resp = (struct tpm_resp_hdr *)buf;
+
+    /* check the header */
+
+    if (be16_to_cpu(resp->tag) != TPM_TAG_RSP_COMMAND ||
+
+        be32_to_cpu(resp->len) != n) {
+
+        return EBADMSG;
+
+    }
+
+
+
+    return 0;
+
+}","Target ghi s->dregs[iaddr] sau mask 0x0f/0x1f và dispatch thanh ghi. A ghi backing_format[ext.len] sau bound check, B đọc buf rồi cast header sau kiểm tra n: đều chỉ gần truy cập bộ nhớ/index một phần, không cùng mask thanh ghi. Target/A bị cắt; không xác định phần còn lại.","Demo A liên quan an ninh hơn (cùng sink [bitwise_arithmetic, format_logging]; cùng guard [error_handling_guard]; biến chung (do, n)); trong khi Demo B (cùng sink [bitwise_arithmetic, io_network_transport]; cùng guard [null_pointer_check]; biến chung (n, read)).","Target ghi s->dregs[iaddr] sau mask 0x0f/0x1f và dispatch thanh ghi. A ghi backing_format[ext.len] sau bound check, B đọc buf rồi cast header sau kiểm tra n: đều chỉ gần truy cập bộ nhớ/index một phần, không cùng mask thanh ghi. Target/A bị cắt; không xác định phần còn lại.",Chưa chốt: Equal chỉ dựa trên memory access chung. Cần đầy đủ target/A và kích thước dregs; phần thấy được nghiêng Neither.,,Low,NEEDS_CONTEXT,Chưa chốt: Equal chỉ dựa trên memory access chung. Cần đầy đủ target/A và kích thước dregs; phần thấy được nghiêng Neither.,,,Neither,"Đã đọc hết cs_write và qcow_read_extensions. Target chọn thanh ghi bằng mask 0x0f/0x1f, ghi dregs[iaddr] và điều khiển DMA/IRQ; A guard ext.len trước đọc chuỗi backing_format, B size-check phản hồi TPM. Không có demo cùng mask/register-write mechanism. Không kết luận dregs đủ lớn vì thiếu định nghĩa CSState.",Neither,"Đã đọc hết cs_write và qcow_read_extensions. Target chọn thanh ghi bằng mask 0x0f/0x1f, ghi dregs[iaddr] và điều khiển DMA/IRQ; A guard ext.len trước đọc chuỗi backing_format, B size-check phản hồi TPM. Không có demo cùng mask/register-write mechanism. Không kết luận dregs đủ lớn vì thiếu định nghĩa CSState.",Full local function bodies recovered; remaining macro/helper/caller limits stated in evidence,TECHNICAL_REVIEW_COMPLETE,USER_CONFIRMED_ADJUDICATION,User confirmation in conversation; not two newly recorded independent votes
+28,id_420_label_False_FFmpeg.c,B,A,"static int count_paired_channels(uint8_t (*layout_map)[3], int tags, int pos, int *current) {
+
+    int num_pos_channels = 0;
+
+    int first_cpe = 0;
+
+    int sce_parity = 0;
+
+    int i;
+
+    for (i = *current; i < tags; i++) {
+
+        if (layout_map[i][2] != pos)
+
+            break;
+
+        if (layout_map[i][0] == TYPE_CPE) {
+
+            if (sce_parity) {
+
+                if (pos == AAC_CHANNEL_FRONT || !first_cpe) {
+
+                    sce_parity = 0;
+
+                } else {
+
+                    return -1;
+
+                }
+
+            }
+
+            num_pos_channels += 2;
+
+            first_cpe = 1;
+
+        } else {
+
+            num_pos_channels++;
+
+            sce_parity ^= 1;
+
+        }
+
+    }
+
+    if (sce_parity &&
+
+        ((pos == AAC_CHANNEL_FRONT && first_cpe) || pos == AAC_CHANNEL_SIDE))
+
+            return -1;
+
+    *current = i;
+
+    return num_pos_channels;
+
+}","int tcg_gen_code(TCGContext *s, TranslationBlock *tb)
+
+{
+
+    int i, oi, oi_next, num_insns;
+
+
+
+#ifdef CONFIG_PROFILER
+
+    {
+
+        int n;
+
+
+
+        n = s->gen_last_op_idx + 1;
+
+        s->op_count += n;
+
+        if (n > s->op_count_max) {
+
+            s->op_count_max = n;
+
+        }
+
+
+
+        n = s->nb_temps;
+
+        s->temp_count += n;
+
+        if (n > s->temp_count_max) {
+
+            s->temp_count_max = n;
+
+        }
+
+    }
+
+#endif
+
+
+
+#ifdef DEBUG_DISAS
+
+    if (unlikely(qemu_loglevel_mask(CPU_LOG_TB_OP)
+
+                 && qemu_log_in_addr_range(tb->pc))) {
+
+        qemu_log(""OP:\n"");
+
+        tcg_dump_ops(s);
+
+        qemu_log(""\n"");
+
+    }
+
+#endif
+
+
+
+#ifdef CONFIG_PROFILER
+
+    s->opt_time -= profile_getclock();
+
+#endif
+
+
+
+#ifdef USE_TCG_OPTIMIZATIONS
+
+    tcg_optimize(s);
+
+#endif
+
+
+
+#ifdef CONFIG_PROFILER
+
+    s->opt_time += profile_getclock();
+
+    s->la_time -= profile_getclock();
+
+#endif
+
+
+
+    tcg_liveness_analysis(s);
+
+
+
+#ifdef CONFIG_PROFILER
+
+    s->la_time += profile_getclock();
+
+#endif
+
+
+
+#ifdef DEBUG_DISAS
+
+    if (unlikely(qemu_loglevel_mask(CPU_LOG_TB_OP_OPT)
+
+                 && qemu_log_in_addr_range(tb->pc))) {
+
+        qemu_log(""OP after optimization and liveness analysis:\n"");
+
+        tcg_dump_ops(s);
+
+        qemu_log(""\n"");
+
+    }
+
+#endif
+
+
+
+    tcg_reg_alloc_start(s);
+
+
+
+    s->code_buf = tb->tc_ptr;
+
+    s->code_ptr = tb->tc_ptr;
+
+
+
+    tcg_out_tb_init(s);
+
+
+
+    num_insns = -1;
+
+    for (oi = s->gen_first_op_idx; oi >= 0; oi = oi_next) {
+
+        TCGOp * const op = &s->gen_op_buf[oi];
+
+        TCGArg * const args = &s->gen_opparam_buf[op->args];
+
+        TCGOpcode opc = op->opc;
+
+        const TCGOpDef *def = &tcg_op_defs[opc];
+
+        uint16_t dead_args = s->op_dead_args[oi];
+
+        uint8_t sync_args = s->op_sync_args[oi];
+
+
+
+  
+
+/* ... [Cắt gọn do vượt quá 1800 ký tự] */","static int decode_wdlt(GetByteContext *gb, uint8_t *frame, int width, int height)
+
+{
+
+    const uint8_t *frame_end   = frame + width * height;
+
+    uint8_t *line_ptr;
+
+    int count, i, v, lines, segments;
+
+
+
+    lines = bytestream2_get_le16(gb);
+
+    if (lines > height)
+
+        return -1;
+
+
+
+    while (lines--) {
+
+        if (bytestream2_get_bytes_left(gb) < 2)
+
+            return -1;
+
+        segments = bytestream2_get_le16u(gb);
+
+        while ((segments & 0xC000) == 0xC000) {
+
+            unsigned delta = -((int16_t)segments * width);
+
+            if (frame_end - frame <= delta)
+
+                return -1;
+
+            frame    += delta;
+
+            segments = bytestream2_get_le16(gb);
+
+        }
+
+        if (segments & 0x8000) {
+
+            frame[width - 1] = segments & 0xFF;
+
+            segments = bytestream2_get_le16(gb);
+
+        }
+
+        line_ptr = frame;
+
+        frame += width;
+
+        while (segments--) {
+
+            if (frame - line_ptr <= bytestream2_peek_byte(gb))
+
+                return -1;
+
+            line_ptr += bytestream2_get_byte(gb);
+
+            count = (int8_t)bytestream2_get_byte(gb);
+
+            if (count >= 0) {
+
+                if (frame - line_ptr < count * 2)
+
+                    return -1;
+
+                if (bytestream2_get_buffer(gb, line_ptr, count * 2) != count * 2)
+
+                    return -1;
+
+                line_ptr += count * 2;
+
+            } else {
+
+                count = -count;
+
+                if (frame - line_ptr < count * 2)
+
+                    return -1;
+
+                v = bytestream2_get_le16(gb);
+
+                for (i = 0; i < count; i++)
+
+                    bytestream_put_le16(&line_ptr, v);
+
+            }
+
+        }
+
+    }
+
+
+
+    return 0;
+
+}","Target layout_map[i][0/2] trong i < tags và kiểm tra parity trước return -1. B giới hạn lines/count trước ghi frame, gần xử lý sequence có bound hơn A sinh mã TCG; guard parity chỉ khớp một phần với bound buffer. A bị cắt nên chưa xác định guard cuối.","Demo A liên quan an ninh hơn (cùng sink [bitwise_arithmetic, pointer_dereference]; cùng guard [numerical_bounds_check]; biến chung (i)); trong khi Demo B (cùng sink [bitwise_arithmetic]; cùng guard [error_handling_guard, numerical_bounds_check]; biến chung (i)).","Target layout_map[i][0/2] trong i < tags và kiểm tra parity trước return -1. B giới hạn lines/count trước ghi frame, gần xử lý sequence có bound hơn A sinh mã TCG; guard parity chỉ khớp một phần với bound buffer. A bị cắt nên chưa xác định guard cuối.",Chưa chốt: guard bound frame không mặc nhiên khớp parity/layout_map; cần đủ A và hợp đồng tags/kích thước layout_map. Cân nhắc Neither.,,Low,NEEDS_CONTEXT,Chưa chốt: guard bound frame không mặc nhiên khớp parity/layout_map; cần đủ A và hợp đồng tags/kích thước layout_map. Cân nhắc Neither.,,,Neither,"Đã đọc hết tcg_gen_code: có code_ptr > code_gen_highwater sau sinh mã. Target kiểm tra thứ tự/parity layout_map channel, B kiểm tra byte-count/frame-write. Cả hai demo không tái hiện parity/channel-layout, guard bộ đệm chung chưa đủ.",Neither,"Đã đọc hết tcg_gen_code: có code_ptr > code_gen_highwater sau sinh mã. Target kiểm tra thứ tự/parity layout_map channel, B kiểm tra byte-count/frame-write. Cả hai demo không tái hiện parity/channel-layout, guard bộ đệm chung chưa đủ.",Full local function bodies recovered; remaining macro/helper/caller limits stated in evidence,TECHNICAL_REVIEW_COMPLETE,USER_CONFIRMED_ADJUDICATION,User confirmation in conversation; not two newly recorded independent votes
+31,id_682_label_True_FFmpeg.c,Neither,A,"int av_seek_frame(AVFormatContext *s, int stream_index, int64_t timestamp, int flags)
+
+{
+
+    int ret;
+
+    AVStream *st;
+
+
+
+    ff_read_frame_flush(s);
+
+
+
+    if(flags & AVSEEK_FLAG_BYTE)
+
+        return av_seek_frame_byte(s, stream_index, timestamp, flags);
+
+
+
+    if(stream_index < 0){
+
+        stream_index= av_find_default_stream_index(s);
+
+        if(stream_index < 0)
+
+            return -1;
+
+
+
+        st= s->streams[stream_index];
+
+       /* timestamp for default must be expressed in AV_TIME_BASE units */
+
+        timestamp = av_rescale(timestamp, st->time_base.den, AV_TIME_BASE * (int64_t)st->time_base.num);
+
+    }
+
+
+
+    /* first, we try the format specific seek */
+
+    if (s->iformat->read_seek)
+
+        ret = s->iformat->read_seek(s, stream_index, timestamp, flags);
+
+    else
+
+        ret = -1;
+
+    if (ret >= 0) {
+
+        return 0;
+
+    }
+
+
+
+    if(s->iformat->read_timestamp)
+
+        return av_seek_frame_binary(s, stream_index, timestamp, flags);
+
+    else
+
+        return av_seek_frame_generic(s, stream_index, timestamp, flags);
+
+}","int socket_dgram(SocketAddress *remote, SocketAddress *local, Error **errp)
+
+{
+
+    QemuOpts *opts;
+
+    int fd;
+
+
+
+    opts = qemu_opts_create_nofail(&socket_optslist);
+
+    switch (remote->kind) {
+
+    case SOCKET_ADDRESS_KIND_INET:
+
+        qemu_opt_set(opts, ""host"", remote->inet->host);
+
+        qemu_opt_set(opts, ""port"", remote->inet->port);
+
+        if (local) {
+
+            qemu_opt_set(opts, ""localaddr"", local->inet->host);
+
+            qemu_opt_set(opts, ""localport"", local->inet->port);
+
+        }
+
+        fd = inet_dgram_opts(opts, errp);
+
+        break;
+
+
+
+    default:
+
+        error_setg(errp, ""socket type unsupported for datagram"");
+
+        return -1;
+
+    }
+
+    qemu_opts_del(opts);
+
+    return fd;
+
+}","BdrvChild *bdrv_root_attach_child(BlockDriverState *child_bs,
+
+                                  const char *child_name,
+
+                                  const BdrvChildRole *child_role,
+
+                                  uint64_t perm, uint64_t shared_perm,
+
+                                  void *opaque, Error **errp)
+
+{
+
+    BdrvChild *child;
+
+    int ret;
+
+
+
+    ret = bdrv_check_update_perm(child_bs, perm, shared_perm, NULL, errp);
+
+    if (ret < 0) {
+
+        return NULL;
+
+    }
+
+
+
+    child = g_new(BdrvChild, 1);
+
+    *child = (BdrvChild) {
+
+        .bs             = NULL,
+
+        .name           = g_strdup(child_name),
+
+        .role           = child_role,
+
+        .perm           = perm,
+
+        .shared_perm    = shared_perm,
+
+        .opaque         = opaque,
+
+    };
+
+
+
+    bdrv_replace_child(child, child_bs);
+
+
+
+    return child;
+
+}","Target chọn read_seek/read_timestamp callback, stream_index và ret trước fallback seek. A socket kind dispatch, B permission ret check chỉ giống điều khiển lỗi chung; đều không thể hiện seek/stream_index/timestamp hay callback capability guard tương ứng.","Demo A liên quan an ninh hơn (cùng sink [bitwise_arithmetic, io_network_transport]; cùng guard [error_handling_guard, numerical_bounds_check]; biến chung (default)); trong khi Demo B (cùng guard [error_handling_guard, numerical_bounds_check]; biến chung (ret)).","Target chọn read_seek/read_timestamp callback, stream_index và ret trước fallback seek. A socket kind dispatch, B permission ret check chỉ giống điều khiển lỗi chung; đều không thể hiện seek/stream_index/timestamp hay callback capability guard tương ứng.",Seek callback/stream_index/timestamp khác socket dispatch và permission check.,Neither,High,PROPOSED,"Hai người đọc biểu thức trong evidence, ghi quyết định kiểm tra lại riêng trước thảo luận.",,,Neither,"Target chọn read_seek/read_timestamp callback, stream_index và ret trước fallback seek. A socket kind dispatch, B permission ret check chỉ giống điều khiển lỗi chung; đều không thể hiện seek/stream_index/timestamp hay callback capability guard tương ứng.",Neither,"Target chọn read_seek/read_timestamp callback, stream_index và ret trước fallback seek. A socket kind dispatch, B permission ret check chỉ giống điều khiển lỗi chung; đều không thể hiện seek/stream_index/timestamp hay callback capability guard tương ứng.",Reviewed under uniform rubric using original snippets,TECHNICAL_REVIEW_COMPLETE,USER_CONFIRMED_ADJUDICATION,User confirmation in conversation; not two newly recorded independent votes
+33,id_22_label_True_qemu.c,A,Equal,"static void emulated_push_error(EmulatedState *card, uint64_t code)
+
+{
+
+    EmulEvent *event = (EmulEvent *)g_malloc(sizeof(EmulEvent));
+
+
+
+    assert(event);
+
+    event->p.error.type = EMUL_ERROR;
+
+    event->p.error.code = code;
+
+    emulated_push_event(card, event);
+
+}","static void cpu_common_initfn(Object *obj)
+
+{
+
+    CPUState *cpu = CPU(obj);
+
+    CPUClass *cc = CPU_GET_CLASS(obj);
+
+
+
+    cpu->cpu_index = UNASSIGNED_CPU_INDEX;
+
+    cpu->gdb_num_regs = cpu->gdb_num_g_regs = cc->gdb_num_core_regs;
+
+    /* *-user doesn't have configurable SMP topology */
+
+    /* the default value is changed by qemu_init_vcpu() for softmmu */
+
+    cpu->nr_cores = 1;
+
+    cpu->nr_threads = 1;
+
+
+
+    qemu_mutex_init(&cpu->work_mutex);
+
+    QTAILQ_INIT(&cpu->breakpoints);
+
+    QTAILQ_INIT(&cpu->watchpoints);
+
+
+
+    cpu->trace_dstate = bitmap_new(trace_get_vcpu_event_count());
+
+
+
+    cpu_exec_initfn(cpu);
+
+}","static void curl_multi_read(void *arg)
+
+{
+
+    CURLState *s = (CURLState *)arg;
+
+
+
+    aio_context_acquire(s->s->aio_context);
+
+    curl_multi_do_locked(s);
+
+    curl_multi_check_completion(s->s);
+
+    aio_context_release(s->s->aio_context);
+
+}","Target g_malloc(sizeof(EmulEvent)), assert(event), gán fields rồi emulated_push_event. A bitmap_new rồi gán cpu->trace_dstate gần cơ chế cấp phát/khởi tạo; không có assert kết quả tương ứng. B chỉ khóa và xử lý CURL.",Cả hai demo đều có ngữ nghĩa an ninh tương đồng: Demo A (cùng sink [pointer_dereference]); Demo B (cùng sink [pointer_dereference]).,"Target g_malloc(sizeof(EmulEvent)), assert(event), gán fields rồi emulated_push_event. A bitmap_new rồi gán cpu->trace_dstate gần cơ chế cấp phát/khởi tạo; không có assert kết quả tương ứng. B chỉ khóa và xử lý CURL.",Allocation/init event gần bitmap_new/gán field hơn CURL dưới khóa; không nói A tái hiện assert(event).,A,Medium,PROPOSED,"Hai người đọc biểu thức trong evidence, ghi quyết định kiểm tra lại riêng trước thảo luận.",,,A,"Target g_malloc(sizeof(EmulEvent)), assert(event), gán fields rồi emulated_push_event. A bitmap_new rồi gán cpu->trace_dstate gần cơ chế cấp phát/khởi tạo; không có assert kết quả tương ứng. B chỉ khóa và xử lý CURL.",A,"Target g_malloc(sizeof(EmulEvent)), assert(event), gán fields rồi emulated_push_event. A bitmap_new rồi gán cpu->trace_dstate gần cơ chế cấp phát/khởi tạo; không có assert kết quả tương ứng. B chỉ khóa và xử lý CURL.",Reviewed under uniform rubric using original snippets,TECHNICAL_REVIEW_COMPLETE,USER_CONFIRMED_ADJUDICATION,User confirmation in conversation; not two newly recorded independent votes
+34,id_1076_label_False_FFmpeg.c,B,A,"static int encode_frame(AVCodecContext * avctx, AVPacket *pkt,
+
+                        const AVFrame *pict, int *got_packet)
+
+{
+
+    TiffEncoderContext *s = avctx->priv_data;
+
+    AVFrame *const p = &s->picture;
+
+    int i;
+
+    uint8_t *ptr;
+
+    uint8_t *offset;
+
+    uint32_t strips;
+
+    uint32_t *strip_sizes = NULL;
+
+    uint32_t *strip_offsets = NULL;
+
+    int bytes_per_row;
+
+    uint32_t res[2] = { 72, 1 };        // image resolution (72/1)
+
+    uint16_t bpp_tab[] = { 8, 8, 8, 8 };
+
+    int ret;
+
+    int is_yuv = 0;
+
+    uint8_t *yuv_line = NULL;
+
+    int shift_h, shift_v;
+
+    const AVPixFmtDescriptor* pfd;
+
+
+
+    s->avctx = avctx;
+
+
+
+    *p = *pict;
+
+    p->pict_type = AV_PICTURE_TYPE_I;
+
+    p->key_frame = 1;
+
+    avctx->coded_frame= &s->picture;
+
+
+
+    s->width = avctx->width;
+
+    s->height = avctx->height;
+
+    s->subsampling[0] = 1;
+
+    s->subsampling[1] = 1;
+
+
+
+    switch (avctx->pix_fmt) {
+
+    case PIX_FMT_RGB48LE:
+
+    case PIX_FMT_GRAY16LE:
+
+    case PIX_FMT_RGB24:
+
+    case PIX_FMT_GRAY8:
+
+    case PIX_FMT_PAL8:
+
+        pfd = &av_pix_fmt_descriptors[avctx->pix_fmt];
+
+        s->bpp = av_get_bits_per_pixel(pfd);
+
+        if (pfd->flags & PIX_FMT_PAL) {
+
+            s->photometric_interpretation = 3;
+
+        } else if (pfd->flags & PIX_FMT_RGB) {
+
+            s->photometric_interpretation = 2;
+
+        } else {
+
+            s->photometric_interpretation = 1;
+
+        }
+
+        s->bpp_tab_size = pfd->nb_components;
+
+        for (i = 0; i < s->bpp_tab_size; i++) {
+
+            bpp_tab[i] = s->bpp / s->bpp_tab_size;
+
+        }
+
+        break;
+
+    case PIX_FMT_MONOBLACK:
+
+        s->bpp = 1;
+
+        s->photometric_interpretation = 1;
+
+        s->bpp_tab_size = 0;
+
+        break;
+
+    case PIX_FMT_MONOWHITE:
+
+        s->bpp = 1;
+
+        s->photometric_interpretation = 0;
+
+        s->bpp_tab_size = 0;
+
+        break;
+
+    case PIX_FMT_YUV420P:
+
+    case PIX_FMT_YUV422P:
+
+    case PIX_FMT_YUV444P:
+
+    case PIX_FMT_YUV410P:
+
+    case PIX_FMT_YUV411P:
+
+        s->photometric_interpretation = 6;
+
+        avcodec_get_chroma_sub_sample(avctx->pix_fmt,
+
+                &shift_h, &shift_v);
+
+        s->bpp = 8 + (16 >> (shift_h + shift_v));
+
+        s->subsampling[0] = 1 << shift_h;
+
+        s->subsampling[1] = 1 << shift_v;
+
+        s->bpp_tab_size = 3;
+
+        is_yuv = 1;
+
+        break;
+
+    default:
+
+        av_log(s->avctx, AV_LOG_ERROR,
+
+               ""This colors format is not supported\n"");
+
+        return -1;
+
+    }
+
+
+
+    if (s->compr == TIFF_DEFLATE || s->compr == TIFF_ADOBE_DEFLATE || s->compr == TIFF_LZW)
+
+        //best choose for DEFLATE
+
+        s->rps = s->height;
+
+    else
+
+        s->rps = FFMAX(8192 / (((s->width * s->bpp) >> 3) + 1), 1);     // suggest size of strip
+
+    s->rps = ((s->rps - 1) / s->subsampling[1] + 1) * s->subsampling[1]; // round rps up
+
+
+
+    strips = (s->height - 1) / s->rps + 1;
+
+
+
+    if (!pkt->data &&
+
+        (ret = av_new_packet(pkt, avctx->width * avctx->height * s->bpp * 2 +
+
+         
+
+/* ... [Cắt gọn do vượt quá 3000 ký tự] */","static int tpm_passthrough_test_tpmdev(int fd)
+
+{
+
+    struct tpm_req_hdr req = {
+
+        .tag = cpu_to_be16(TPM_TAG_RQU_COMMAND),
+
+        .len = cpu_to_be32(sizeof(req)),
+
+        .ordinal = cpu_to_be32(TPM_ORD_GetTicks),
+
+    };
+
+    struct tpm_resp_hdr *resp;
+
+    fd_set readfds;
+
+    int n;
+
+    struct timeval tv = {
+
+        .tv_sec = 1,
+
+        .tv_usec = 0,
+
+    };
+
+    unsigned char buf[1024];
+
+
+
+    n = write(fd, &req, sizeof(req));
+
+    if (n < 0) {
+
+        return errno;
+
+    }
+
+    if (n != sizeof(req)) {
+
+        return EFAULT;
+
+    }
+
+
+
+    FD_ZERO(&readfds);
+
+    FD_SET(fd, &readfds);
+
+
+
+    /* wait for a second */
+
+    n = select(fd + 1, &readfds, NULL, NULL, &tv);
+
+    if (n != 1) {
+
+        return errno;
+
+    }
+
+
+
+    n = read(fd, &buf, sizeof(buf));
+
+    if (n < sizeof(struct tpm_resp_hdr)) {
+
+        return EFAULT;
+
+    }
+
+
+
+    resp = (struct tpm_resp_hdr *)buf;
+
+    /* check the header */
+
+    if (be16_to_cpu(resp->tag) != TPM_TAG_RSP_COMMAND ||
+
+        be32_to_cpu(resp->len) != n) {
+
+        return EBADMSG;
+
+    }
+
+
+
+    return 0;
+
+}","static int decode_wdlt(GetByteContext *gb, uint8_t *frame, int width, int height)
+
+{
+
+    const uint8_t *frame_end   = frame + width * height;
+
+    uint8_t *line_ptr;
+
+    int count, i, v, lines, segments;
+
+
+
+    lines = bytestream2_get_le16(gb);
+
+    if (lines > height)
+
+        return -1;
+
+
+
+    while (lines--) {
+
+        if (bytestream2_get_bytes_left(gb) < 2)
+
+            return -1;
+
+        segments = bytestream2_get_le16u(gb);
+
+        while ((segments & 0xC000) == 0xC000) {
+
+            unsigned delta = -((int16_t)segments * width);
+
+            if (frame_end - frame <= delta)
+
+                return -1;
+
+            frame    += delta;
+
+            segments = bytestream2_get_le16(gb);
+
+        }
+
+        if (segments & 0x8000) {
+
+            frame[width - 1] = segments & 0xFF;
+
+            segments = bytestream2_get_le16(gb);
+
+        }
+
+        line_ptr = frame;
+
+        frame += width;
+
+        while (segments--) {
+
+            if (frame - line_ptr <= bytestream2_peek_byte(gb))
+
+                return -1;
+
+            line_ptr += bytestream2_get_byte(gb);
+
+            count = (int8_t)bytestream2_get_byte(gb);
+
+            if (count >= 0) {
+
+                if (frame - line_ptr < count * 2)
+
+                    return -1;
+
+                if (bytestream2_get_buffer(gb, line_ptr, count * 2) != count * 2)
+
+                    return -1;
+
+                line_ptr += count * 2;
+
+            } else {
+
+                count = -count;
+
+                if (frame - line_ptr < count * 2)
+
+                    return -1;
+
+                v = bytestream2_get_le16(gb);
+
+                for (i = 0; i < count; i++)
+
+                    bytestream_put_le16(&line_ptr, v);
+
+            }
+
+        }
+
+    }
+
+
+
+    return 0;
+
+}","Target tính width/height/bpp, strips và av_new_packet với tích kích thước. B frame_end=frame+width*height, ghi line_ptr kèm guard nên gần hình học buffer; A TPM read/write không gần bằng. Target bị cắt trước phần ghi packet nên chỉ khớp một phần.","Demo A liên quan an ninh hơn (cùng sink [bitwise_arithmetic, io_network_transport]; cùng guard [null_pointer_check]; biến chung (NULL, n)); trong khi Demo B (cùng sink [bitwise_arithmetic]; cùng guard [error_handling_guard, numerical_bounds_check]; biến chung (height, i)).","Target tính width/height/bpp, strips và av_new_packet với tích kích thước. B frame_end=frame+width*height, ghi line_ptr kèm guard nên gần hình học buffer; A TPM read/write không gần bằng. Target bị cắt trước phần ghi packet nên chỉ khớp một phần.",Chưa chốt: cần phần còn lại allocation và sink ghi packet của target; B mới là ứng viên Partial về width/height/buffer.,,Low,NEEDS_CONTEXT,Chưa chốt: cần phần còn lại allocation và sink ghi packet của target; B mới là ứng viên Partial về width/height/buffer.,,,B,"Code TIFF đầy đủ có check_size(s,8) trước bytestream_put_le16 và check_size(s,6+s->num_entries*12) trước ghi entries; có encode_strip/memcpy theo bytes_per_row. B decode_wdlt kiểm tra frame-line_ptr < count*2 trước ghi frame, cùng geometry/byte-count bound ở mức Partial. A TPM không gần bằng. Chưa có body check_size/encode_strip nên không xác nhận mọi write đều an toàn.",B,"Code TIFF đầy đủ có check_size(s,8) trước bytestream_put_le16 và check_size(s,6+s->num_entries*12) trước ghi entries; có encode_strip/memcpy theo bytes_per_row. B decode_wdlt kiểm tra frame-line_ptr < count*2 trước ghi frame, cùng geometry/byte-count bound ở mức Partial. A TPM không gần bằng. Chưa có body check_size/encode_strip nên không xác nhận mọi write đều an toàn.",Full local function bodies recovered; remaining macro/helper/caller limits stated in evidence,TECHNICAL_REVIEW_COMPLETE,USER_CONFIRMED_ADJUDICATION,User confirmation in conversation; not two newly recorded independent votes
+38,id_512_label_False_qemu.c,B,A,"static void rtas_display_character(sPAPREnvironment *spapr,
+
+                                   uint32_t token, uint32_t nargs,
+
+                                   target_ulong args,
+
+                                   uint32_t nret, target_ulong rets)
+
+{
+
+    uint8_t c = rtas_ld(args, 0);
+
+    VIOsPAPRDevice *sdev = vty_lookup(spapr, 0);
+
+
+
+    if (!sdev) {
+
+        rtas_st(rets, 0, -1);
+
+    } else {
+
+        vty_putchars(sdev, &c, sizeof(c));
+
+        rtas_st(rets, 0, 0);
+
+    }
+
+}","static void spapr_create_nvram(sPAPREnvironment *spapr)
+
+{
+
+    DeviceState *dev = qdev_create(&spapr->vio_bus->bus, ""spapr-nvram"");
+
+    DriveInfo *dinfo = drive_get(IF_PFLASH, 0, 0);
+
+
+
+    if (dinfo) {
+
+        qdev_prop_set_drive_nofail(dev, ""drive"",
+
+                                   blk_bs(blk_by_legacy_dinfo(dinfo)));
+
+    }
+
+
+
+    qdev_init_nofail(dev);
+
+
+
+    spapr->nvram = (struct sPAPRNVRAM *)dev;
+
+}","void qmp_block_dirty_bitmap_remove(const char *node, const char *name,
+
+                                   Error **errp)
+
+{
+
+    AioContext *aio_context;
+
+    BlockDriverState *bs;
+
+    BdrvDirtyBitmap *bitmap;
+
+
+
+    bitmap = block_dirty_bitmap_lookup(node, name, &bs, &aio_context, errp);
+
+    if (!bitmap || !bs) {
+
+        return;
+
+    }
+
+
+
+    if (bdrv_dirty_bitmap_frozen(bitmap)) {
+
+        error_setg(errp,
+
+                   ""Bitmap '%s' is currently frozen and cannot be removed"",
+
+                   name);
+
+        goto out;
+
+    }
+
+    bdrv_dirty_bitmap_make_anon(bitmap);
+
+    bdrv_release_dirty_bitmap(bs, bitmap);
+
+
+
+ out:
+
+    aio_context_release(aio_context);
+
+}","Target vty_lookup rồi if(!sdev) trả lỗi, else vty_putchars. B lookup bitmap/bs rồi if(!bitmap || !bs) return trước release, cùng lookup-null-before-use; A if(dinfo) chỉ optional drive property, không guard kết quả qdev_create. Đối tượng/sink khác nên khớp một phần.","Demo A liên quan an ninh hơn (cùng sink [bitwise_arithmetic]; biến chung (sPAPREnvironment, spapr)); trong khi Demo B (cùng sink [bitwise_arithmetic]).","Target vty_lookup rồi if(!sdev) trả lỗi, else vty_putchars. B lookup bitmap/bs rồi if(!bitmap || !bs) return trước release, cùng lookup-null-before-use; A if(dinfo) chỉ optional drive property, không guard kết quả qdev_create. Đối tượng/sink khác nên khớp một phần.",Lookup-null-before-use của B gần !sdev trước vty_putchars; if(dinfo) của A khác vai trò đối tượng.,B,Medium,PROPOSED,"Hai người đọc biểu thức trong evidence, ghi quyết định kiểm tra lại riêng trước thảo luận.",,,B,"Target vty_lookup rồi if(!sdev) trả lỗi, else vty_putchars. B lookup bitmap/bs rồi if(!bitmap || !bs) return trước release, cùng lookup-null-before-use; A if(dinfo) chỉ optional drive property, không guard kết quả qdev_create. Đối tượng/sink khác nên khớp một phần.",B,"Target vty_lookup rồi if(!sdev) trả lỗi, else vty_putchars. B lookup bitmap/bs rồi if(!bitmap || !bs) return trước release, cùng lookup-null-before-use; A if(dinfo) chỉ optional drive property, không guard kết quả qdev_create. Đối tượng/sink khác nên khớp một phần.",Reviewed under uniform rubric using original snippets,TECHNICAL_REVIEW_COMPLETE,USER_CONFIRMED_ADJUDICATION,User confirmation in conversation; not two newly recorded independent votes
+39,id_1021_label_True_FFmpeg.c,Neither,A,"static void RENAME(yuv2bgr24_1)(SwsContext *c, const int16_t *buf0,
+
+                                const int16_t *ubuf[2], const int16_t *bguf[2],
+
+                                const int16_t *abuf0, uint8_t *dest,
+
+                                int dstW, int uvalpha, int y)
+
+{
+
+    const int16_t *ubuf0 = ubuf[0], *ubuf1 = ubuf[1];
+
+    const int16_t *buf1= buf0; //FIXME needed for RGB1/BGR1
+
+
+
+    if (uvalpha < 2048) { // note this is not correct (shifts chrominance by 0.5 pixels) but it is a bit faster
+
+        __asm__ volatile(
+
+            ""mov %%""REG_b"", ""ESP_OFFSET""(%5)        \n\t""
+
+            ""mov        %4, %%""REG_b""               \n\t""
+
+            ""push %%""REG_BP""                        \n\t""
+
+            YSCALEYUV2RGB1(%%REGBP, %5)
+
+            ""pxor    %%mm7, %%mm7                   \n\t""
+
+            WRITEBGR24(%%REGb, 8280(%5), %%REGBP)
+
+            ""pop %%""REG_BP""                         \n\t""
+
+            ""mov ""ESP_OFFSET""(%5), %%""REG_b""        \n\t""
+
+            :: ""c"" (buf0), ""d"" (buf1), ""S"" (ubuf0), ""D"" (ubuf1), ""m"" (dest),
+
+               ""a"" (&c->redDither)
+
+        );
+
+    } else {
+
+        __asm__ volatile(
+
+            ""mov %%""REG_b"", ""ESP_OFFSET""(%5)        \n\t""
+
+            ""mov        %4, %%""REG_b""               \n\t""
+
+            ""push %%""REG_BP""                        \n\t""
+
+            YSCALEYUV2RGB1b(%%REGBP, %5)
+
+            ""pxor    %%mm7, %%mm7                   \n\t""
+
+            WRITEBGR24(%%REGb, 8280(%5), %%REGBP)
+
+            ""pop %%""REG_BP""                         \n\t""
+
+            ""mov ""ESP_OFFSET""(%5), %%""REG_b""        \n\t""
+
+            :: ""c"" (buf0), ""d"" (buf1), ""S"" (ubuf0), ""D"" (ubuf1), ""m"" (dest),
+
+               ""a"" (&c->redDither)
+
+        );
+
+    }
+
+}","static void read_sbr_single_channel_element(AACContext *ac,
+
+                                            SpectralBandReplication *sbr,
+
+                                            GetBitContext *gb)
+
+{
+
+    if (get_bits1(gb)) // bs_data_extra
+
+        skip_bits(gb, 4); // bs_reserved
+
+
+
+    read_sbr_grid(ac, sbr, gb, &sbr->data[0]);
+
+    read_sbr_dtdf(sbr, gb, &sbr->data[0]);
+
+    read_sbr_invf(sbr, gb, &sbr->data[0]);
+
+    read_sbr_envelope(sbr, gb, &sbr->data[0], 0);
+
+    read_sbr_noise(sbr, gb, &sbr->data[0], 0);
+
+
+
+    if ((sbr->data[0].bs_add_harmonic_flag = get_bits1(gb)))
+
+        get_bits1_vector(gb, sbr->data[0].bs_add_harmonic, sbr->n[1]);
+
+}","static int tight_palette_insert(QDict *palette, uint32_t rgb, int bpp, int max)
+
+{
+
+    uint8_t key[6];
+
+    int idx = qdict_size(palette);
+
+    bool present;
+
+
+
+    tight_palette_rgb2buf(rgb, bpp, key);
+
+    present = qdict_haskey(palette, (char *)key);
+
+    if (idx >= max && !present) {
+
+        return 0;
+
+    }
+
+    if (!present) {
+
+        qdict_put(palette, (char *)key, qint_from_int(idx));
+
+    }
+
+    return qdict_size(palette);
+
+}","Target macro WRITEBGR24 trong asm ghi dest và đọc ubuf theo uvalpha. A parse SBR bitstream; B tight_palette_rgb2buf chuyển màu và chặn palette size, không thể hiện asm pixel store/stride hay buffer bound tương ứng. Macro body không có để xác định guard.","Demo A liên quan an ninh hơn (cùng sink [bitwise_arithmetic, io_network_transport]; cùng guard [numerical_bounds_check]; biến chung (n)); trong khi Demo B (cùng sink [bitwise_arithmetic]; cùng guard [numerical_bounds_check]).","Target macro WRITEBGR24 trong asm ghi dest và đọc ubuf theo uvalpha. A parse SBR bitstream; B tight_palette_rgb2buf chuyển màu và chặn palette size, không thể hiện asm pixel store/stride hay buffer bound tương ứng. Macro body không có để xác định guard.",Chưa chốt: cần body WRITEBGR24/YSCALE và hợp đồng padding/stride; SBR/palette keyword không chứng minh pixel-store. Nghiêng Neither.,,Low,NEEDS_CONTEXT,Chưa chốt: cần body WRITEBGR24/YSCALE và hợp đồng padding/stride; SBR/palette keyword không chứng minh pixel-store. Nghiêng Neither.,,,Neither,"Đã có toàn bộ hàm yuv2bgr24_1, nhưng thiếu body WRITEBGR24/YSCALE và hợp đồng padding. A SBR bit flags, B palette dictionary capacity không cùng asm pixel-store/stride. Có thể chọn Neither về relevance; guard của target vẫn Unknown, không suy diễn vulnerability.",Neither,"Đã có toàn bộ hàm yuv2bgr24_1, nhưng thiếu body WRITEBGR24/YSCALE và hợp đồng padding. A SBR bit flags, B palette dictionary capacity không cùng asm pixel-store/stride. Có thể chọn Neither về relevance; guard của target vẫn Unknown, không suy diễn vulnerability.",Full local function bodies recovered; remaining macro/helper/caller limits stated in evidence,TECHNICAL_REVIEW_COMPLETE,USER_CONFIRMED_ADJUDICATION,User confirmation in conversation; not two newly recorded independent votes
+40,id_1018_label_True_FFmpeg.c,B,Equal,"static int hevc_decode_frame(AVCodecContext *avctx, void *data, int *got_output,
+
+                             AVPacket *avpkt)
+
+{
+
+    int ret;
+
+    int new_extradata_size;
+
+    uint8_t *new_extradata;
+
+    HEVCContext *s = avctx->priv_data;
+
+
+
+    if (!avpkt->size) {
+
+        ret = ff_hevc_output_frame(s, data, 1);
+
+        if (ret < 0)
+
+            return ret;
+
+
+
+        *got_output = ret;
+
+        return 0;
+
+    }
+
+
+
+    new_extradata = av_packet_get_side_data(avpkt, AV_PKT_DATA_NEW_EXTRADATA,
+
+                                            &new_extradata_size);
+
+    if (new_extradata && new_extradata_size > 0) {
+
+        ret = hevc_decode_extradata(s, new_extradata, new_extradata_size);
+
+        if (ret < 0)
+
+            return ret;
+
+    }
+
+
+
+    s->ref = NULL;
+
+    ret    = decode_nal_units(s, avpkt->data, avpkt->size);
+
+    if (ret < 0)
+
+        return ret;
+
+
+
+    if (avctx->hwaccel) {
+
+        if (s->ref && (ret = avctx->hwaccel->end_frame(avctx)) < 0) {
+
+            av_log(avctx, AV_LOG_ERROR,
+
+                   ""hardware accelerator failed to decode picture\n"");
+
+            ff_hevc_unref_frame(s, s->ref, ~0);
+
+            return ret;
+
+        }
+
+    } else {
+
+        /* verify the SEI checksum */
+
+        if (avctx->err_recognition & AV_EF_CRCCHECK && s->is_decoded &&
+
+            s->sei.picture_hash.is_md5) {
+
+            ret = verify_md5(s, s->ref->frame);
+
+            if (ret < 0 && avctx->err_recognition & AV_EF_EXPLODE) {
+
+                ff_hevc_unref_frame(s, s->ref, ~0);
+
+                return ret;
+
+            }
+
+        }
+
+    }
+
+    s->sei.picture_hash.is_md5 = 0;
+
+
+
+    if (s->is_decoded) {
+
+        av_log(avctx, AV_LOG_DEBUG, ""Decoded frame with POC %d.\n"", s->poc);
+
+        s->is_decoded = 0;
+
+    }
+
+
+
+    if (s->output_frame->buf[0]) {
+
+        av_frame_move_ref(data, s->output_frame);
+
+        *got_output = 1;
+
+    }
+
+
+
+    return avpkt->size;
+
+}","static int write_elf64_load(DumpState *s, MemoryMapping *memory_mapping,
+
+                            int phdr_index, hwaddr offset)
+
+{
+
+    Elf64_Phdr phdr;
+
+    int ret;
+
+    int endian = s->dump_info.d_endian;
+
+
+
+    memset(&phdr, 0, sizeof(Elf64_Phdr));
+
+    phdr.p_type = cpu_convert_to_target32(PT_LOAD, endian);
+
+    phdr.p_offset = cpu_convert_to_target64(offset, endian);
+
+    phdr.p_paddr = cpu_convert_to_target64(memory_mapping->phys_addr, endian);
+
+    if (offset == -1) {
+
+        /* When the memory is not stored into vmcore, offset will be -1 */
+
+        phdr.p_filesz = 0;
+
+    } else {
+
+        phdr.p_filesz = cpu_convert_to_target64(memory_mapping->length, endian);
+
+    }
+
+    phdr.p_memsz = cpu_convert_to_target64(memory_mapping->length, endian);
+
+    phdr.p_vaddr = cpu_convert_to_target64(memory_mapping->virt_addr, endian);
+
+
+
+    ret = fd_write_vmcore(&phdr, sizeof(Elf64_Phdr), s);
+
+    if (ret < 0) {
+
+        dump_error(s, ""dump: failed to write program header table.\n"");
+
+        return -1;
+
+    }
+
+
+
+    return 0;
+
+}","static void read_sbr_single_channel_element(AACContext *ac,
+
+                                            SpectralBandReplication *sbr,
+
+                                            GetBitContext *gb)
+
+{
+
+    if (get_bits1(gb)) // bs_data_extra
+
+        skip_bits(gb, 4); // bs_reserved
+
+
+
+    read_sbr_grid(ac, sbr, gb, &sbr->data[0]);
+
+    read_sbr_dtdf(sbr, gb, &sbr->data[0]);
+
+    read_sbr_invf(sbr, gb, &sbr->data[0]);
+
+    read_sbr_envelope(sbr, gb, &sbr->data[0], 0);
+
+    read_sbr_noise(sbr, gb, &sbr->data[0], 0);
+
+
+
+    if ((sbr->data[0].bs_add_harmonic_flag = get_bits1(gb)))
+
+        get_bits1_vector(gb, sbr->data[0].bs_add_harmonic, sbr->n[1]);
+
+}","Target decode_nal_units(s,avpkt->data,avpkt->size), xử lý ret và ref/output_frame. B read_sbr_* cùng parser multimedia từ bitstream nhưng không có ret guard tương đương trong snippet. A fd_write_vmcore có kiểm tra ret nhưng khác decode/lifecycle frame; ưu tiên B về thao tác, mức phù hợp chỉ một phần.","Cả hai demo đều có ngữ nghĩa an ninh tương đồng: Demo A (cùng sink [bitwise_arithmetic, io_network_transport]; cùng guard [error_handling_guard]; biến chung (failed, n)); Demo B (cùng sink [bitwise_arithmetic, io_network_transport]; cùng guard [numerical_bounds_check]; biến chung (data, n)).","Target decode_nal_units(s,avpkt->data,avpkt->size), xử lý ret và ref/output_frame. B read_sbr_* cùng parser multimedia từ bitstream nhưng không có ret guard tương đương trong snippet. A fd_write_vmcore có kiểm tra ret nhưng khác decode/lifecycle frame; ưu tiên B về thao tác, mức phù hợp chỉ một phần.","Đề xuất sửa Hiếu B thành Neither: cùng multimedia chưa đủ; SBR thiếu ret/ref lifecycle, ELF write chỉ giống kiểm tra lỗi chung.",Neither,Medium,PROPOSED,"Hai người đọc biểu thức trong evidence, ghi quyết định kiểm tra lại riêng trước thảo luận.",,,Neither,Target HEVC NAL decode và ref/output-frame lifecycle khác SBR flag parser và ELF writer. Cùng multimedia hoặc if(ret<0) chưa đủ để coi demo tương ứng cơ chế.,Neither,Target HEVC NAL decode và ref/output-frame lifecycle khác SBR flag parser và ELF writer. Cùng multimedia hoặc if(ret<0) chưa đủ để coi demo tương ứng cơ chế.,Reviewed under uniform rubric using original snippets,TECHNICAL_REVIEW_COMPLETE,USER_CONFIRMED_ADJUDICATION,User confirmation in conversation; not two newly recorded independent votes
+42,id_670_label_True_qemu.c,B,Equal,"static void pc_dimm_check_memdev_is_busy(Object *obj, const char *name,
+
+                                      Object *val, Error **errp)
+
+{
+
+    MemoryRegion *mr;
+
+
+
+    mr = host_memory_backend_get_memory(MEMORY_BACKEND(val), errp);
+
+    if (memory_region_is_mapped(mr)) {
+
+        char *path = object_get_canonical_path_component(val);
+
+        error_setg(errp, ""can't use already busy memdev: %s"", path);
+
+        g_free(path);
+
+    } else {
+
+        qdev_prop_allow_set_link_before_realize(obj, name, val, errp);
+
+    }
+
+}","static void cpu_common_initfn(Object *obj)
+
+{
+
+    CPUState *cpu = CPU(obj);
+
+    CPUClass *cc = CPU_GET_CLASS(obj);
+
+
+
+    cpu->cpu_index = UNASSIGNED_CPU_INDEX;
+
+    cpu->gdb_num_regs = cpu->gdb_num_g_regs = cc->gdb_num_core_regs;
+
+    /* *-user doesn't have configurable SMP topology */
+
+    /* the default value is changed by qemu_init_vcpu() for softmmu */
+
+    cpu->nr_cores = 1;
+
+    cpu->nr_threads = 1;
+
+
+
+    qemu_mutex_init(&cpu->work_mutex);
+
+    QTAILQ_INIT(&cpu->breakpoints);
+
+    QTAILQ_INIT(&cpu->watchpoints);
+
+
+
+    cpu->trace_dstate = bitmap_new(trace_get_vcpu_event_count());
+
+
+
+    cpu_exec_initfn(cpu);
+
+}","void qmp_block_dirty_bitmap_remove(const char *node, const char *name,
+
+                                   Error **errp)
+
+{
+
+    AioContext *aio_context;
+
+    BlockDriverState *bs;
+
+    BdrvDirtyBitmap *bitmap;
+
+
+
+    bitmap = block_dirty_bitmap_lookup(node, name, &bs, &aio_context, errp);
+
+    if (!bitmap || !bs) {
+
+        return;
+
+    }
+
+
+
+    if (bdrv_dirty_bitmap_frozen(bitmap)) {
+
+        error_setg(errp,
+
+                   ""Bitmap '%s' is currently frozen and cannot be removed"",
+
+                   name);
+
+        goto out;
+
+    }
+
+    bdrv_dirty_bitmap_make_anon(bitmap);
+
+    bdrv_release_dirty_bitmap(bs, bitmap);
+
+
+
+ out:
+
+    aio_context_release(aio_context);
+
+}","Target memory_region_is_mapped(mr) chặn gắn memdev bận, có g_free(path). B bdrv_dirty_bitmap_frozen chặn release bitmap, cùng kiểm tra trạng thái tài nguyên trước thay đổi. A khởi tạo CPU thiếu guard trạng thái tương ứng.","Cả hai demo đều có ngữ nghĩa an ninh tương đồng: Demo A (cùng sink [io_network_transport]; biến chung (Object, obj)); Demo B (cùng guard [error_handling_guard]; biến chung (Error, error_setg)).","Target memory_region_is_mapped(mr) chặn gắn memdev bận, có g_free(path). B bdrv_dirty_bitmap_frozen chặn release bitmap, cùng kiểm tra trạng thái tài nguyên trước thay đổi. A khởi tạo CPU thiếu guard trạng thái tương ứng.","State mapped/frozen chặn mutation tài nguyên, khác CPU init; vẫn chỉ khớp một phần và khác sink.",B,Medium,PROPOSED,"Hai người đọc biểu thức trong evidence, ghi quyết định kiểm tra lại riêng trước thảo luận.",,,B,"Target memory_region_is_mapped(mr) chặn gắn memdev bận, có g_free(path). B bdrv_dirty_bitmap_frozen chặn release bitmap, cùng kiểm tra trạng thái tài nguyên trước thay đổi. A khởi tạo CPU thiếu guard trạng thái tương ứng.",B,"Target memory_region_is_mapped(mr) chặn gắn memdev bận, có g_free(path). B bdrv_dirty_bitmap_frozen chặn release bitmap, cùng kiểm tra trạng thái tài nguyên trước thay đổi. A khởi tạo CPU thiếu guard trạng thái tương ứng.",Reviewed under uniform rubric using original snippets,TECHNICAL_REVIEW_COMPLETE,USER_CONFIRMED_ADJUDICATION,User confirmation in conversation; not two newly recorded independent votes
+45,id_498_label_False_qemu.c,Neither,Equal,"static void cpu_ioreq_pio(ioreq_t *req)
+
+{
+
+    int i;
+
+
+
+    if (req->dir == IOREQ_READ) {
+
+        if (!req->data_is_ptr) {
+
+            req->data = do_inp(req->addr, req->size);
+
+        } else {
+
+            uint32_t tmp;
+
+
+
+            for (i = 0; i < req->count; i++) {
+
+                tmp = do_inp(req->addr, req->size);
+
+                write_phys_req_item(req->data, req, i, &tmp);
+
+            }
+
+        }
+
+    } else if (req->dir == IOREQ_WRITE) {
+
+        if (!req->data_is_ptr) {
+
+            do_outp(req->addr, req->size, req->data);
+
+        } else {
+
+            for (i = 0; i < req->count; i++) {
+
+                uint32_t tmp = 0;
+
+
+
+                read_phys_req_item(req->data, req, i, &tmp);
+
+                do_outp(req->addr, req->size, tmp);
+
+            }
+
+        }
+
+    }
+
+}","static void parse_type_int64(Visitor *v, const char *name, int64_t *obj,
+
+                             Error **errp)
+
+{
+
+    StringInputVisitor *siv = to_siv(v);
+
+
+
+    if (!siv->string) {
+
+        error_setg(errp, QERR_INVALID_PARAMETER_TYPE, name ? name : ""null"",
+
+                   ""integer"");
+
+        return;
+
+    }
+
+
+
+    if (parse_str(siv, name, errp) < 0) {
+
+        return;
+
+    }
+
+
+
+    if (!siv->ranges) {
+
+        goto error;
+
+    }
+
+
+
+    if (!siv->cur_range) {
+
+        Range *r;
+
+
+
+        siv->cur_range = g_list_first(siv->ranges);
+
+        if (!siv->cur_range) {
+
+            goto error;
+
+        }
+
+
+
+        r = siv->cur_range->data;
+
+        if (!r) {
+
+            goto error;
+
+        }
+
+
+
+        siv->cur = r->begin;
+
+    }
+
+
+
+    *obj = siv->cur;
+
+    siv->cur++;
+
+    return;
+
+
+
+error:
+
+    error_setg(errp, QERR_INVALID_PARAMETER_VALUE, name ? name : ""null"",
+
+               ""an int64 value or range"");
+
+}","static void parse_type_int64(Visitor *v, const char *name, int64_t *obj,
+
+                             Error **errp)
+
+{
+
+    StringInputVisitor *siv = to_siv(v);
+
+
+
+    if (!siv->string) {
+
+        error_setg(errp, QERR_INVALID_PARAMETER_TYPE, name ? name : ""null"",
+
+                   ""integer"");
+
+        return;
+
+    }
+
+
+
+    if (parse_str(siv, name, errp) < 0) {
+
+        return;
+
+    }
+
+
+
+    if (!siv->ranges) {
+
+        goto error;
+
+    }
+
+
+
+    if (!siv->cur_range) {
+
+        Range *r;
+
+
+
+        siv->cur_range = g_list_first(siv->ranges);
+
+        if (!siv->cur_range) {
+
+            goto error;
+
+        }
+
+
+
+        r = siv->cur_range->data;
+
+        if (!r) {
+
+            goto error;
+
+        }
+
+
+
+        siv->cur = r->begin;
+
+    }
+
+
+
+    *obj = siv->cur;
+
+    siv->cur++;
+
+    return;
+
+
+
+error:
+
+    error_setg(errp, QERR_INVALID_PARAMETER_VALUE, name ? name : ""null"",
+
+               ""an int64 value or range"");
+
+}","A/B giống hệt parse_type_int64, kiểm tra string/ranges trước ghi *obj. Target do_inp/do_outp và read/write_phys_req_item theo req->count/size; khác port I/O, không demo cùng bound request. Chọn Neither vì cả hai không phù hợp, dù giống nhau.",Cả hai demo đều có ngữ nghĩa an ninh tương đồng: Demo A (cùng sink [pointer_dereference]; cùng guard [numerical_bounds_check]; biến chung (data)); Demo B (cùng sink [pointer_dereference]; cùng guard [numerical_bounds_check]; biến chung (data)).,"A/B giống hệt parse_type_int64, kiểm tra string/ranges trước ghi *obj. Target do_inp/do_outp và read/write_phys_req_item theo req->count/size; khác port I/O, không demo cùng bound request. Chọn Neither vì cả hai không phù hợp, dù giống nhau.",A/B giống hệt nhưng int64 parser khác port I/O/count/size. Hai demo không phù hợp thì Neither.,Neither,High,PROPOSED,"Hai người đọc biểu thức trong evidence, ghi quyết định kiểm tra lại riêng trước thảo luận.",,,Neither,"A/B giống hệt parse_type_int64, kiểm tra string/ranges trước ghi *obj. Target do_inp/do_outp và read/write_phys_req_item theo req->count/size; khác port I/O, không demo cùng bound request. Chọn Neither vì cả hai không phù hợp, dù giống nhau.",Neither,"A/B giống hệt parse_type_int64, kiểm tra string/ranges trước ghi *obj. Target do_inp/do_outp và read/write_phys_req_item theo req->count/size; khác port I/O, không demo cùng bound request. Chọn Neither vì cả hai không phù hợp, dù giống nhau.",Reviewed under uniform rubric using original snippets,TECHNICAL_REVIEW_COMPLETE,USER_CONFIRMED_ADJUDICATION,User confirmation in conversation; not two newly recorded independent votes
+47,id_859_label_True_qemu.c,Neither,A,"static int mp_pacl_removexattr(FsContext *ctx,
+
+                               const char *path, const char *name)
+
+{
+
+    int ret;
+
+    char *buffer;
+
+
+
+    buffer = rpath(ctx, path);
+
+    ret  = lremovexattr(buffer, MAP_ACL_ACCESS);
+
+    if (ret == -1 && errno == ENODATA) {
+
+        /*
+
+         * We don't get ENODATA error when trying to remove a
+
+         * posix acl that is not present. So don't throw the error
+
+         * even in case of mapped security model
+
+         */
+
+        errno = 0;
+
+        ret = 0;
+
+    }
+
+    g_free(buffer);
+
+    return ret;
+
+}","static void cpu_common_initfn(Object *obj)
+
+{
+
+    CPUState *cpu = CPU(obj);
+
+    CPUClass *cc = CPU_GET_CLASS(obj);
+
+
+
+    cpu->cpu_index = UNASSIGNED_CPU_INDEX;
+
+    cpu->gdb_num_regs = cpu->gdb_num_g_regs = cc->gdb_num_core_regs;
+
+    /* *-user doesn't have configurable SMP topology */
+
+    /* the default value is changed by qemu_init_vcpu() for softmmu */
+
+    cpu->nr_cores = 1;
+
+    cpu->nr_threads = 1;
+
+
+
+    qemu_mutex_init(&cpu->work_mutex);
+
+    QTAILQ_INIT(&cpu->breakpoints);
+
+    QTAILQ_INIT(&cpu->watchpoints);
+
+
+
+    cpu->trace_dstate = bitmap_new(trace_get_vcpu_event_count());
+
+
+
+    cpu_exec_initfn(cpu);
+
+}","BdrvChild *bdrv_root_attach_child(BlockDriverState *child_bs,
+
+                                  const char *child_name,
+
+                                  const BdrvChildRole *child_role,
+
+                                  uint64_t perm, uint64_t shared_perm,
+
+                                  void *opaque, Error **errp)
+
+{
+
+    BdrvChild *child;
+
+    int ret;
+
+
+
+    ret = bdrv_check_update_perm(child_bs, perm, shared_perm, NULL, errp);
+
+    if (ret < 0) {
+
+        return NULL;
+
+    }
+
+
+
+    child = g_new(BdrvChild, 1);
+
+    *child = (BdrvChild) {
+
+        .bs             = NULL,
+
+        .name           = g_strdup(child_name),
+
+        .role           = child_role,
+
+        .perm           = perm,
+
+        .shared_perm    = shared_perm,
+
+        .opaque         = opaque,
+
+    };
+
+
+
+    bdrv_replace_child(child, child_bs);
+
+
+
+    return child;
+
+}","Target rpath tạo buffer đường dẫn, lremovexattr, chuẩn hóa errno ENODATA rồi g_free(buffer). A khởi tạo CPU, B tạo/gắn block child; chỉ B có cấp phát chung, không path/xattr hay xử lý errno/cleanup tương ứng.","Demo A liên quan an ninh hơn (cùng sink [bitwise_arithmetic]; biến chung (is, t)); trong khi Demo B (cùng guard [error_handling_guard]; biến chung (name, ret)).","Target rpath tạo buffer đường dẫn, lremovexattr, chuẩn hóa errno ENODATA rồi g_free(buffer). A khởi tạo CPU, B tạo/gắn block child; chỉ B có cấp phát chung, không path/xattr hay xử lý errno/cleanup tương ứng.",Path/xattr/errno normalization khác CPU init/block attach; từ is/t trong comment không phải biến tương ứng.,Neither,High,PROPOSED,"Hai người đọc biểu thức trong evidence, ghi quyết định kiểm tra lại riêng trước thảo luận.",,,Neither,"Target rpath tạo buffer đường dẫn, lremovexattr, chuẩn hóa errno ENODATA rồi g_free(buffer). A khởi tạo CPU, B tạo/gắn block child; chỉ B có cấp phát chung, không path/xattr hay xử lý errno/cleanup tương ứng.",Neither,"Target rpath tạo buffer đường dẫn, lremovexattr, chuẩn hóa errno ENODATA rồi g_free(buffer). A khởi tạo CPU, B tạo/gắn block child; chỉ B có cấp phát chung, không path/xattr hay xử lý errno/cleanup tương ứng.",Reviewed under uniform rubric using original snippets,TECHNICAL_REVIEW_COMPLETE,USER_CONFIRMED_ADJUDICATION,User confirmation in conversation; not two newly recorded independent votes
+50,id_578_label_True_FFmpeg.c,Neither,B,"static int tta_decode_frame(AVCodecContext *avctx,
+
+        void *data, int *data_size,
+
+        AVPacket *avpkt)
+
+{
+
+    const uint8_t *buf = avpkt->data;
+
+    int buf_size = avpkt->size;
+
+    TTAContext *s = avctx->priv_data;
+
+    int i;
+
+
+
+    init_get_bits(&s->gb, buf, buf_size*8);
+
+    {
+
+        int32_t predictors[s->channels];
+
+        TTAFilter filters[s->channels];
+
+        TTARice rices[s->channels];
+
+        int cur_chan = 0, framelen = s->frame_length;
+
+        int32_t *p;
+
+
+
+        // FIXME: seeking
+
+        s->total_frames--;
+
+        if (!s->total_frames && s->last_frame_length)
+
+            framelen = s->last_frame_length;
+
+
+
+        // init per channel states
+
+        for (i = 0; i < s->channels; i++) {
+
+            predictors[i] = 0;
+
+            ttafilter_init(&(filters[i]), ttafilter_configs[s->bps-1][0], ttafilter_configs[s->bps-1][1]);
+
+            rice_init(&(rices[i]), 10, 10);
+
+        }
+
+
+
+        for (p = s->decode_buffer; p < s->decode_buffer + (framelen * s->channels); p++) {
+
+            int32_t *predictor = &(predictors[cur_chan]);
+
+            TTAFilter *filter = &(filters[cur_chan]);
+
+            TTARice *rice = &(rices[cur_chan]);
+
+            uint32_t unary, depth, k;
+
+            int32_t value;
+
+
+
+            unary = tta_get_unary(&s->gb);
+
+
+
+            if (unary == 0) {
+
+                depth = 0;
+
+                k = rice->k0;
+
+            } else {
+
+                depth = 1;
+
+                k = rice->k1;
+
+                unary--;
+
+            }
+
+
+
+            if (k)
+
+                value = (unary << k) + get_bits(&s->gb, k);
+
+            else
+
+                value = unary;
+
+
+
+            // FIXME: copy paste from original
+
+            switch (depth) {
+
+            case 1:
+
+                rice->sum1 += value - (rice->sum1 >> 4);
+
+                if (rice->k1 > 0 && rice->sum1 < shift_16[rice->k1])
+
+                    rice->k1--;
+
+                else if(rice->sum1 > shift_16[rice->k1 + 1])
+
+                    rice->k1++;
+
+                value += shift_1[rice->k0];
+
+            default:
+
+                rice->sum0 += value - (rice->sum0 >> 4);
+
+                if (rice->k0 > 0 && rice->sum0 < shift_16[rice->k0])
+
+                    rice->k0--;
+
+                else if(rice->sum0 > shift_16[rice->k0 + 1])
+
+                    rice->k0++;
+
+            }
+
+
+
+            // extract coded value
+
+#define UNFOLD(x) (((x)&1) ? (++(x)>>1) : (-(x)>>1))
+
+            *p = UNFOLD(value);
+
+
+
+            // run hybrid filter
+
+            ttafilter_process(filter, p, 0);
+
+
+
+            // fixed order prediction
+
+#define PRED(x, k) (int32_t)((((uint64_t)x << k) - x) >> k)
+
+            switch (s->bps) {
+
+                case 1: *p += PRED(*predictor, 4); break;
+
+                case 2:
+
+                case 3: *p += PRED(*predictor, 5); break;
+
+                case 4: *p += *predictor; break;
+
+            }
+
+            *predictor = *p;
+
+
+
+#if 0
+
+            // extract 32bit float from last two int samples
+
+           
+
+/* ... [Cắt gọn do vượt quá 3000 ký tự] */","static int megasas_ld_get_info_submit(SCSIDevice *sdev, int lun,
+
+                                      MegasasCmd *cmd)
+
+{
+
+    struct mfi_ld_info *info = cmd->iov_buf;
+
+    size_t dcmd_size = sizeof(struct mfi_ld_info);
+
+    uint8_t cdb[6];
+
+    SCSIRequest *req;
+
+    ssize_t len, resid;
+
+    BlockConf *conf = &sdev->conf;
+
+    uint16_t sdev_id = ((sdev->id & 0xFF) >> 8) | (lun & 0xFF);
+
+    uint64_t ld_size;
+
+
+
+    if (!cmd->iov_buf) {
+
+        cmd->iov_buf = g_malloc(dcmd_size);
+
+        memset(cmd->iov_buf, 0x0, dcmd_size);
+
+        info = cmd->iov_buf;
+
+        megasas_setup_inquiry(cdb, 0x83, sizeof(info->vpd_page83));
+
+        req = scsi_req_new(sdev, cmd->index, lun, cdb, cmd);
+
+        if (!req) {
+
+            trace_megasas_dcmd_req_alloc_failed(cmd->index,
+
+                                                ""LD get info vpd inquiry"");
+
+            g_free(cmd->iov_buf);
+
+            cmd->iov_buf = NULL;
+
+            return MFI_STAT_FLASH_ALLOC_FAIL;
+
+        }
+
+        trace_megasas_dcmd_internal_submit(cmd->index,
+
+                                           ""LD get info vpd inquiry"", lun);
+
+        len = scsi_req_enqueue(req);
+
+        if (len > 0) {
+
+            cmd->iov_size = len;
+
+            scsi_req_continue(req);
+
+        }
+
+        return MFI_STAT_INVALID_STATUS;
+
+    }
+
+
+
+    info->ld_config.params.state = MFI_LD_STATE_OPTIMAL;
+
+    info->ld_config.properties.ld.v.target_id = lun;
+
+    info->ld_config.params.stripe_size = 3;
+
+    info->ld_config.params.num_drives = 1;
+
+    info->ld_config.params.is_consistent = 1;
+
+    /* Logical device size is in blocks */
+
+    bdrv_get_geometry(conf->bs, &ld_size);
+
+    info->size = cpu_to_le64(ld_size);
+
+    memset(info->ld_config.span, 0, sizeof(info->ld_config.span));
+
+    info->ld_config.span[0].start_block = 0;
+
+
+
+/* ... [Cắt gọn do vượt quá 1800 ký tự] */","int socket_dgram(SocketAddress *remote, SocketAddress *local, Error **errp)
+
+{
+
+    QemuOpts *opts;
+
+    int fd;
+
+
+
+    opts = qemu_opts_create_nofail(&socket_optslist);
+
+    switch (remote->kind) {
+
+    case SOCKET_ADDRESS_KIND_INET:
+
+        qemu_opt_set(opts, ""host"", remote->inet->host);
+
+        qemu_opt_set(opts, ""port"", remote->inet->port);
+
+        if (local) {
+
+            qemu_opt_set(opts, ""localaddr"", local->inet->host);
+
+            qemu_opt_set(opts, ""localport"", local->inet->port);
+
+        }
+
+        fd = inet_dgram_opts(opts, errp);
+
+        break;
+
+
+
+    default:
+
+        error_setg(errp, ""socket type unsupported for datagram"");
+
+        return -1;
+
+    }
+
+    qemu_opts_del(opts);
+
+    return fd;
+
+}","Target giải mã TTA, predictors/filters/rices theo channels và shift_16[rice->k1+1]. A megasas dùng buffer/SCSI với if(!req), khác cơ chế Rice/filter/index; B socket không phù hợp. Target và A bị cắt; không suy diễn guard cuối hay nhãn lỗi.","Demo B liên quan an ninh hơn (cùng sink [bitwise_arithmetic, io_network_transport]; cùng guard [numerical_bounds_check]; biến chung (break, default)); trong khi Demo A (cùng sink [bitwise_arithmetic, pointer_dereference]; cùng guard [null_pointer_check]; biến chung (do, size)).","Target giải mã TTA, predictors/filters/rices theo channels và shift_16[rice->k1+1]. A megasas dùng buffer/SCSI với if(!req), khác cơ chế Rice/filter/index; B socket không phù hợp. Target và A bị cắt; không suy diễn guard cuối hay nhãn lỗi.",Chưa chốt: cần phần cuối TTA và hợp đồng channels/k/giới hạn shift_16; A/B thiếu Rice/filter mechanism. Nghiêng Neither.,,Low,NEEDS_CONTEXT,Chưa chốt: cần phần cuối TTA và hợp đồng channels/k/giới hạn shift_16; A/B thiếu Rice/filter mechanism. Nghiêng Neither.,,,Neither,"Đã đọc hết TTA: ghi output samples, cur_chan và Rice k0/k1/shift_16, skip CRC; đoạn overread-check chỉ là comment. A SCSI buffer, B socket options không minh họa cơ chế Rice/filter/index này. Không suy ra lỗ hổng chỉ từ comment; thiếu hợp đồng channels/k và capacity.",Neither,"Đã đọc hết TTA: ghi output samples, cur_chan và Rice k0/k1/shift_16, skip CRC; đoạn overread-check chỉ là comment. A SCSI buffer, B socket options không minh họa cơ chế Rice/filter/index này. Không suy ra lỗ hổng chỉ từ comment; thiếu hợp đồng channels/k và capacity.",Full local function bodies recovered; remaining macro/helper/caller limits stated in evidence,TECHNICAL_REVIEW_COMPLETE,USER_CONFIRMED_ADJUDICATION,User confirmation in conversation; not two newly recorded independent votes

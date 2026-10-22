@@ -1,0 +1,93 @@
+{
+  "date": "2026-10-21",
+  "acceptance": "User-confirmed technical adjudication",
+  "original_sheet_hashes": {
+    "hieu": "14808c7b1567f91800e585362aa8233faf51b4f11ae0799ffb7ad2a80fd2921b",
+    "dung": "c86665fc65983364e76153beb02cc00a9c10fd537e3d871fba36f2ba56688402"
+  },
+  "original_kappa": 0.3151,
+  "original_agreement_pct": 48.0,
+  "reviewed_samples": 50,
+  "neither_count": 30,
+  "neither_pct": 60.0,
+  "primary_failure_counts": {
+    "OPERATION_MISMATCH": 23,
+    "GUARD_ROLE_MISMATCH": 5,
+    "NO_MATCHING_REFERENCE_FOR_SMALL_TARGET": 2
+  },
+  "secondary_context_limit_count": 10,
+  "taxonomy_basis": "Explicit qualitative annotation of confirmed judgments; not an independent benchmark",
+  "review_selection_provenance": {
+    "security_demo_label_equals_target": 50,
+    "security_demo_matches_target_label_selected_B3_pair_member": 50,
+    "checked_samples": 50,
+    "source": "scripts/generate_blind_review_sheets.py::load_retrieval_demonstrations",
+    "finding": "Security-aware review arm is a target-label-selected B3 pair member, not an independently cached security top-1 ranking",
+    "scope": "Review sheet construction; does not establish that inference retrieval used target labels"
+  },
+  "reuse_statistics": {
+    "baseline": {
+      "unique_demos": 30,
+      "top_demo_count": 7,
+      "top_three_count": 17,
+      "top_five": [
+        [
+          "id_9958_label_False_qemu.c",
+          7
+        ],
+        [
+          "id_9940_label_False_FFmpeg.c",
+          7
+        ],
+        [
+          "id_10030_label_False_qemu.c",
+          3
+        ],
+        [
+          "id_10024_label_False_qemu.c",
+          2
+        ],
+        [
+          "id_9972_label_False_qemu.c",
+          2
+        ]
+      ]
+    },
+    "security_aware": {
+      "unique_demos": 20,
+      "top_demo_count": 11,
+      "top_three_count": 25,
+      "top_five": [
+        [
+          "id_1001_label_True_qemu.c",
+          11
+        ],
+        [
+          "id_1000_label_True_qemu.c",
+          9
+        ],
+        [
+          "id_1002_label_True_FFmpeg.c",
+          5
+        ],
+        [
+          "id_9946_label_False_qemu.c",
+          3
+        ],
+        [
+          "id_10024_label_False_qemu.c",
+          3
+        ]
+      ]
+    }
+  },
+  "candidate_stage_diagnosis": "Cannot distinguish candidate recall failure from reranker failure from selected demos alone",
+  "next_experiment": "Label-independent top-1 security reranker versus same-top-50 reranker with same-sink-family preference; candidate evidence audit first",
+  "sink_evidence_diagnostic": {
+    "code_only_empty": 25,
+    "code_plus_graph_empty": 25,
+    "cleaned_text_empty": 27,
+    "samples_with_noncode_token_sink_evidence": 2,
+    "scope": "30 Neither targets only; token stripping is diagnostic, not a C parser or a validated extractor replacement"
+  }
+}

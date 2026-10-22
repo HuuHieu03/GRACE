@@ -37,6 +37,8 @@ output/*
 !output/stage*/**
 log/
 scratch/
+artifacts/
+kaggle_notebooks/**/output/
 *.zip
 
 # OS & Editor

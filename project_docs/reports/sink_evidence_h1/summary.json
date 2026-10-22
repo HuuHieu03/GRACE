@@ -1,0 +1,120 @@
+{
+  "experiment": "H1 sink evidence E0 versus E1",
+  "date": "2026-10-21",
+  "production_extractor_changed": false,
+  "E1_source_sha256": "be2e988e1d8c5af85fd50a27488725bdc745286bfd112a59a5599e92d9783345",
+  "wrapper_rules": {
+    "av_malloc": [
+      "alloc",
+      "FFmpeg allocation API"
+    ],
+    "av_mallocz": [
+      "alloc",
+      "FFmpeg zeroed allocation API"
+    ],
+    "av_mallocz_array": [
+      "alloc",
+      "FFmpeg array allocation API"
+    ],
+    "av_free": [
+      "pointer_free",
+      "FFmpeg deallocation API"
+    ],
+    "av_freep": [
+      "pointer_free",
+      "FFmpeg deallocation through pointer API"
+    ],
+    "g_malloc": [
+      "alloc",
+      "GLib allocation API"
+    ],
+    "g_malloc0": [
+      "alloc",
+      "GLib zeroed allocation API"
+    ],
+    "g_free": [
+      "pointer_free",
+      "GLib deallocation API"
+    ],
+    "bdrv_pread": [
+      "block_read",
+      "Explicit block read wrapper; body not expanded"
+    ],
+    "bdrv_read": [
+      "block_read",
+      "Explicit sector read wrapper; body not expanded"
+    ],
+    "bdrv_pwrite": [
+      "block_write",
+      "Explicit block write wrapper; body not expanded"
+    ],
+    "get_buffer": [
+      "buffer_read",
+      "ByteIO buffer-read helper; body not expanded"
+    ],
+    "avio_read": [
+      "buffer_read",
+      "AVIO read helper; body not expanded"
+    ],
+    "av_new_packet": [
+      "alloc",
+      "Packet allocation API; body not expanded"
+    ],
+    "bytestream2_get_buffer": [
+      "buffer_read",
+      "Bytestream buffer-read helper"
+    ],
+    "bytestream_put_buffer": [
+      "buffer_write",
+      "Bytestream buffer-write helper"
+    ],
+    "lremovexattr": [
+      "filesystem_metadata_write",
+      "Path extended-attribute removal API"
+    ]
+  },
+  "authored_development_fixtures": {
+    "count": 24,
+    "E1_exact_callsite_passed": 24,
+    "metrics": {
+      "E0_api": {
+        "tp": 10,
+        "fp": 12,
+        "fn": 4,
+        "precision": 0.4545,
+        "recall": 0.7143
+      },
+      "E1_api": {
+        "tp": 14,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1.0,
+        "recall": 1.0
+      },
+      "E1_callsite": {
+        "tp": 15,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1.0,
+        "recall": 1.0
+      }
+    },
+    "comparison_unit": "E0/E1 compare unique API sets per fixture; E1 additionally scored exact callsite spans",
+    "independently_annotated": false
+  },
+  "verification_dev50": {
+    "samples": 50,
+    "E0_with_sink_apis": 11,
+    "E1_with_sink_apis": 14,
+    "E1_with_unknown_calls": 45,
+    "real_code_precision_recall": null,
+    "annotation_status": "PENDING",
+    "scope": "Coverage only; no real-code accuracy claim; no final test opened"
+  },
+  "H2_gate": "NOT_PASSED: real-code callsite annotations and semantic precision audit are pending",
+  "limits": [
+    "Lexical scanner cannot resolve all C/C++ declarations, shadowed functions, inactive preprocessor branches, indirect calls or macros.",
+    "Recognized operation is not proof of taint, guard efficacy or vulnerability.",
+    "Wrapper assignments are explicit hypotheses requiring annotation audit."
+  ]
+}
