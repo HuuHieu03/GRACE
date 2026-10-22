@@ -6,6 +6,7 @@ Tài liệu này định nghĩa quy chuẩn quản lý tài liệu, theo dõi ti
 
 ## Tài liệu hiện tại — cập nhật 2026-10-22
 
+- [Báo Cáo Tiến Độ Tổng Hợp & Nghiệm Thu](reports/bao_cao_tien_do_tong_hop_nghiem_thu_20261022.md): **Tài liệu chính thức gửi Thầy hướng dẫn** — tổng hợp toàn diện đối chiếu yêu cầu, ma trận ground-truth, kiểm định B3 vs B2, Ablation B3-NoDiff, và Blind Human Review 50 mẫu.
 - [Tiến độ tổng hợp H2 và E1.3](progress/v1.0.0_2026-10-22_h2_and_e13_progress.md): điểm bắt đầu để nắm trạng thái mới nhất.
 - [Kế hoạch sink evidence và retrieval ablation](plans/v1.0.0_2026-10-21_sink_evidence_and_retrieval_ablation_plan.md): checklist đã đồng bộ với kết quả thực tế.
 - [Báo cáo H2](reports/retrieval_h2/results_2026-10-22/report.md): R1 đổi 0/100 lựa chọn; không chạy paired LLM cho hai arm hiện tại.
