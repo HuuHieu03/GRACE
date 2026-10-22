@@ -4,6 +4,7 @@
 !.env.example
 *key*.json
 !project_docs/reports/blind_review_answer_key.json
+!project_docs/reports/blind_review_reveal_answer_key.json
 grace-research-*.json
 .gcp_key.json
 gcp_sa_key*.json

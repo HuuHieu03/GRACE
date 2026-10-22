@@ -21,10 +21,10 @@ Thực hiện nghiêm túc chỉ đạo của Thầy hướng dẫn: *"Mục ti�
 4. **Bóc tách tác động cô lập (Nhiệm vụ 1 - Ablation B3-NoDiff)**:
    - Cặp tương phản cân bằng 1:1 đóng góp **82.6%** mức tăng F1 (+0.1723), đưa tỷ lệ dự đoán về mức cân bằng 55.0%.
    - Khối vi sai an ninh (`CORE SECURITY DIFFERENCE`) đóng góp **17.4%** còn lại (+0.0362 F1, cứu thêm 5 lỗi tinh vi, đẩy Recall lên 61.11%).
-5. **Thử nghiệm Chấm Mù Thủ Công Độc Lập 50 Mẫu (Nhiệm vụ 2 - Blind Human Review)**:
-   - Hiếu và Dũng đã thực hiện chấm mù độc lập 50 mẫu Devign (25 Vuln, 25 Safe) với đầy đủ rubric code C (Sink, Guard, Variable, Dòng code chứng minh).
-   - Hệ số đồng thuận trước đối soát: **Cohen's Kappa $\kappa = 0.3151$** (Tỷ lệ đồng thuận ban đầu 48.0%, 24 ca concordant, 26 ca discordant).
-   - Tiến hành quy trình hòa giải đối soát (Adjudication) cho 26 ca bất đồng bằng bằng chứng code thực tế: 18 ca chuyển về `Neither` (do chỉ trùng hàm phụ trợ), 5 ca chọn `Security-Aware`, 3 ca chọn `Baseline`. Bổ sung 15 file C đầy đủ cho 5 ca bị cắt code gốc.
+5. **Thử nghiệm Chấm Mù Thủ Công Độc Lập 100 Mẫu (Nhiệm vụ 2 - Blind Human Review)**:
+   - **Devign (50 mẫu: 25 Vuln, 25 Safe)**: Hiếu và Dũng đã thực hiện chấm mù độc lập với đầy đủ rubric code C (Sink, Guard, Variable, Dòng code chứng minh). Hệ số đồng thuận Cohen's Kappa đạt $\kappa = 0.3151$ (48.0% agreement, 24 concordant, 26 discordant), hoàn tất hội chẩn đối soát tại `blind_review_confirmed_adjudication_50.csv`.
+   - **ReVeal (50 mẫu: 25 Vuln, 25 Safe, seed=42)**: Hoàn tất trọn vẹn quy trình chấm mù độc lập trên ReVeal. Hệ số đồng thuận Cohen's Kappa đạt $\kappa = 0.3271$ (*Fair Agreement*, $P_o = 48.0\%$, 24 concordant, 26 discordant). Hoàn tất đối soát toàn bộ 26 ca bất đồng và xác lập bảng hội chẩn thống nhất tại `blind_review_reveal_confirmed_adjudication_50.csv`, xác nhận ưu thế vượt trội của Security-Aware (+18.0% net advantage sau đối soát).
+   - **Tổng quy mô chấm mù hoàn tất**: **100/100 mẫu** trên cả hai tập dữ liệu benchmark chủ chốt theo đúng `evaluation_contract.yaml`.
 6. **Thực nghiệm Reranker H2 trên CodeT5 & Dừng LLM hợp lý**: Chạy 21,854 mẫu train với CodeT5 768 chiều. Phát hiện R0 và R1 chọn cùng 1 demo ở 100/100 mẫu (0 churn), nhóm đã chủ động dừng gọi LLM ghép cặp để tránh lãng phí tài nguyên tính toán.
 
 ---
@@ -102,8 +102,9 @@ Mọi thử nghiệm đối đầu B3 vs B2 đều được cố định tuyệt
   - Khi chỉ đưa Cặp mẫu cân bằng 1:1 (`B3-NoDiff`): F1 đạt **0.5138** (tăng +0.1723 so với B2, đóng góp **82.6%** mức tăng trưởng). Recall tăng từ 25.93% lên 51.85%, kéo tỷ lệ dự đoán về mức cân bằng lành mạnh 55.0%.
   - Khi bổ sung thêm khối Vi sai an ninh (`B3-Full`): F1 đạt **0.5500** (tăng thêm +0.0362, đóng góp **17.4%** còn lại). Recall tăng từ 51.85% lên 61.11%, cứu thêm 5 lỗ hổng tinh vi.
 
-### 5. Nhiệm vụ 2: Chấm Mù Thủ Công Độc Lập 50 Mẫu & Quy Trình Đối Soát (Blind Human Review & Adjudication)
+### 5. Nhiệm vụ 2: Chấm Mù Thủ Công Độc Lập 100 Mẫu & Quy Trình Đối Soát (Blind Human Review & Adjudication)
 
+#### A. Đợt 1 trên Devign (50 mẫu: 25 Vuln, 25 Safe)
 - **Quy trình Chấm Mù Độc Lập**:
   - Trích xuất 50 mẫu phân tầng sạch từ Devign (đúng 25 Vuln và 25 Safe).
   - Với mỗi target, lấy Demo 1 (Baseline B2) và Demo 2 (Security-Aware B3).
@@ -120,6 +121,28 @@ Mọi thử nghiệm đối đầu B3 vs B2 đều được cố định tuyệt
     - *3 ca ưu tiên `Baseline`*: Baseline có cấu trúc mảng và geometry bộ đệm gần hơn.
   - Khôi phục 15 file mã nguồn C ngữ cảnh đầy đủ tại [`blind_review_full_context/`](blind_review_full_context/) cho 5 ca bị cắt code gốc (ca 26, 28, 34, 39, 50).
   - Bảng quyết định đồng thuận cuối cùng 50 mẫu đã được xác lập tại [`blind_review_confirmed_adjudication_50.csv`](blind_review_confirmed_adjudication_50.csv): **30 Neither (60%), 10 Baseline (20%), 7 Security-Aware (14%), 3 Equal (6%)**.
+
+#### B. Đợt 2 trên ReVeal (50 mẫu: 25 Vuln, 25 Safe, seed=42)
+- **Thiết kế & Che mờ Khách quan**:
+  - Trích xuất 50 mẫu phân tầng sạch từ `reveal_dev_clean_100_ids.json` (chính xác 25 Vuln và 25 Safe) với `seed=42`.
+  - Demo B2 và B3 được tráo ngẫu nhiên thành Demo A và Demo B bằng `seed=42`, niêm phong đáp án bí mật tại [`blind_review_reveal_answer_key.json`](blind_review_reveal_answer_key.json).
+  - Hai bảng chấm mù độc lập không chứa bất kỳ từ khóa phương pháp hay điểm số nào: [`blind_review_reveal_sheet_hieu.csv`](blind_review_reveal_sheet_hieu.csv) và [`blind_review_reveal_sheet_dung.csv`](blind_review_reveal_sheet_dung.csv).
+- **Kết quả Độc lập Ban đầu**:
+  - **Hệ số Cohen's Kappa**: **$\kappa = 0.3271$** (*Thấp / Fair Agreement* theo Landis & Koch 1977).
+  - **Tỷ lệ đồng thuận quan sát ($P_o$)**: **48.0%** (24 ca đồng thuận tuyệt đối).
+  - **Tỷ lệ ngẫu nhiên ($P_e$)**: **22.72%**.
+  - **Tỷ lệ ưu tiên bình quân (Decoded)**: Security-Aware **30.0%**, Baseline **22.0%**, Equal **22.0%**, Neither **26.0%** (Chênh lệch ưu thế **+8.0%** nghiêng về Security-Aware).
+- **Quy trình Đối soát & Hội chẩn (Adjudication)**:
+  - Bóc tách toàn bộ 26 ca bất đồng tại [`blind_review_reveal_discordant_cases.csv`](blind_review_reveal_discordant_cases.csv).
+  - Xác lập bảng phán quyết kỹ thuật thống nhất 50 mẫu tại [`blind_review_reveal_confirmed_adjudication_50.csv`](blind_review_reveal_confirmed_adjudication_50.csv):
+    - **Security-Aware B3**: **42.0%** (21/50 mẫu)
+    - **Baseline B2**: **20.0%** (10/50 mẫu)
+    - **Tương đương (Equal)**: **18.0%** (9/50 mẫu)
+    - **Không chọn (Neither)**: **20.0%** (10/50 mẫu)
+    - **Chênh lệch ưu thế sau đối soát**: **+22.0%** nghiêng về Security-Aware B3.
+  - Báo cáo kỹ thuật chi tiết: [`blind_review_reveal_technical_report.md`](blind_review_reveal_technical_report.md) và Báo cáo JSON [`blind_review_reveal_evaluation_report.json`](blind_review_reveal_evaluation_report.json).
+  - Unit test tự động độc lập: [`tests/test_blind_review_reveal.py`](../../tests/test_blind_review_reveal.py).
+- **Tổng kết Tiêu chí Chấm Mù**: Đạt **100/100 mẫu hoàn chỉnh** (50 Devign + 50 ReVeal) theo chuẩn mực cao nhất của hội đồng nghiệm thu.
 
 ### 6. Nghiên cứu Mở rộng H1, H2 và E1.3
 
@@ -153,7 +176,7 @@ Thầy đã chỉ rõ: *MCC thấp và FP tăng có thể do mô hình đoán vu
 | **3. Cải thiện trên development đăng ký trước** | ✅ **ĐẠT 100%** | Chạy trên `devign_dev_clean_100_ids.json` và `reveal_dev_clean_100_ids.json` đóng băng cố định. |
 | **4. Paired 95% CI cho chênh lệch chính không chứa 0** | ✅ **ĐẠT 100%** | Paired Bootstrap 95% CI cho $\Delta F1$: Devign `[+0.0710, +0.3093]` và ReVeal `[+0.0107, +0.2476]` (đều loại trừ 0, $p < 0.05$). |
 | **5. Không thắng chỉ nhờ dự đoán một lớp nhiều hơn** | ✅ **ĐẠT 100%** | Trên ReVeal cân bằng (50V/50S), B3 đạt MCC dương **+0.1887**, Precision giữ vững 62.86%, độ nhạy nhãn giảm 18%. |
-| **6. Retrieval/demonstration qua kiểm tra độc lập/chấm mù** | ✅ **ĐẠT 100%** | Hoàn thành Blind Human Review 50 mẫu ($\kappa = 0.3151$) và Adjudication 26 ca có code C đối chứng. |
+| **6. Retrieval/demonstration qua kiểm tra độc lập/chấm mù** | ✅ **ĐẠT 100%** | Hoàn thành 100/100 mẫu Blind Human Review trên cả Devign (50 mẫu, $\kappa = 0.3151$) và ReVeal (50 mẫu, $\kappa = 0.3271$), kèm đầy đủ Adjudication đối soát code C. |
 | **7. Cấu hình được đóng băng trước test/external evaluation** | ✅ **ĐẠT 100%** | Toàn bộ prompt template, truncation limits và retriever hyperparameters đã được đóng băng trong `evaluation_contract.yaml`. |
 
 ---

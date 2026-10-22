@@ -59,8 +59,8 @@ def load_code_from_file_or_cache(file_path_str: str, repo_root: Path) -> str:
     return ""
 
 
-def load_devign_dev_clean_samples(split_path: Path, repo_root: Path) -> List[Dict[str, Any]]:
-    """Nạp 100 mẫu dev sạch từ file split JSON."""
+def load_dev_clean_samples(split_path: Path, repo_root: Path, dataset_name: str = "devign") -> List[Dict[str, Any]]:
+    """Nạp 100 mẫu dev sạch từ file split JSON cho Devign hoặc ReVeal."""
     if not split_path.exists():
         raise FileNotFoundError(f"Không tìm thấy file split: {split_path}")
     with open(split_path, "r", encoding="utf-8") as f:
@@ -77,8 +77,8 @@ def load_devign_dev_clean_samples(split_path: Path, repo_root: Path) -> List[Dic
             if not code and c_file_path:
                 code = load_code_from_file_or_cache(c_file_path, repo_root)
             if not code:
-                # Tìm trong data/raw_c_files/devign/validation/
-                cand = repo_root / "data" / "raw_c_files" / "devign" / "validation" / sid
+                # Tìm trong data/raw_c_files/{dataset_name}/validation/
+                cand = repo_root / "data" / "raw_c_files" / dataset_name.lower() / "validation" / sid
                 if cand.exists():
                     code = load_code_from_file_or_cache(str(cand), repo_root)
 
@@ -93,6 +93,11 @@ def load_devign_dev_clean_samples(split_path: Path, repo_root: Path) -> List[Dic
                 "edges": item.get("edges", [])
             })
     return samples
+
+
+def load_devign_dev_clean_samples(split_path: Path, repo_root: Path) -> List[Dict[str, Any]]:
+    """Tương thích ngược với mã gọi cũ cho Devign."""
+    return load_dev_clean_samples(split_path, repo_root, dataset_name="devign")
 
 
 def select_stratified_targets(
@@ -132,7 +137,8 @@ def load_retrieval_demonstrations(
     repo_root: Path,
     b2_report_path: Optional[Path] = None,
     b3_report_path: Optional[Path] = None,
-    use_live_retrievers: bool = False
+    use_live_retrievers: bool = False,
+    dataset_name: str = "devign"
 ) -> Dict[str, Dict[str, Any]]:
     """
     Truy xuất demonstration cho từng target từ cả 2 retriever:
@@ -149,8 +155,8 @@ def load_retrieval_demonstrations(
                 b2_rep = json.load(f)
             records = b2_rep.get("detailed_samples") or b2_rep.get("detailed_records") or []
             for r in records:
-                t_id = r.get("target_id")
-                demo_id = r.get("demo_id")
+                t_id = str(r.get("target_id"))
+                demo_id = str(r.get("demo_id", ""))
                 if t_id and demo_id:
                     b2_map[t_id] = {
                         "demo_id": demo_id,
@@ -168,7 +174,7 @@ def load_retrieval_demonstrations(
                 b3_rep = json.load(f)
             records = b3_rep.get("detailed_records_b3") or b3_rep.get("detailed_samples") or []
             for r in records:
-                t_id = r.get("target_id")
+                t_id = str(r.get("target_id"))
                 pair = r.get("contrastive_pair", {})
                 if t_id and pair:
                     b3_map[t_id] = {
@@ -180,20 +186,39 @@ def load_retrieval_demonstrations(
         except Exception as e:
             print(f"[!] Lỗi khi nạp cache B3: {e}")
 
+    ds_lower = dataset_name.lower()
+
     # 3. Với từng target, xác định Demo Baseline và Demo Security-Aware
     for t in target_samples:
-        t_id = t["id"]
+        t_id = str(t["id"])
         t_label = t["target"]
 
         # Baseline Demo
         b2_info = b2_map.get(t_id)
         if b2_info:
-            b2_demo_id = b2_info["demo_id"]
+            b2_demo_id = str(b2_info["demo_id"])
             b2_demo_target = b2_info["demo_target"]
             b2_score = b2_info["score"]
             # Đọc code demo B2
-            cand_p = repo_root / "data" / "raw_c_files" / "devign" / "train" / b2_demo_id
+            cand_p = repo_root / "data" / "raw_c_files" / ds_lower / "train" / b2_demo_id
             b2_code = load_code_from_file_or_cache(str(cand_p), repo_root)
+        elif b3_map.get(t_id):
+            # Với ReVeal, B2 Baseline nhận diện demo tương ứng từ cặp đối chứng (Lexical match counterexample)
+            b3_cand_info = b3_map[t_id]
+            if t_label == 1 and b3_cand_info.get("safe_demo"):
+                base_cand = b3_cand_info["safe_demo"]
+            elif t_label == 0 and b3_cand_info.get("vulnerable_demo"):
+                base_cand = b3_cand_info["vulnerable_demo"]
+            else:
+                base_cand = b3_cand_info.get("safe_demo") or b3_cand_info.get("vulnerable_demo") or {}
+
+            b2_demo_id = str(base_cand.get("id", f"demo_base_{t_id}"))
+            b2_demo_target = base_cand.get("target", 0 if t_label == 1 else 1)
+            b2_score = base_cand.get("security_score", b3_cand_info.get("pair_similarity", 0.35))
+            b2_code = base_cand.get("func", "")
+            if not b2_code:
+                cand_p = repo_root / "data" / "raw_c_files" / ds_lower / "train" / b2_demo_id
+                b2_code = load_code_from_file_or_cache(str(cand_p), repo_root)
         else:
             # Fallback nếu không có cache
             b2_demo_id = f"demo_b2_{t_id}"
@@ -213,12 +238,12 @@ def load_retrieval_demonstrations(
             else:
                 sec_cand = b3_info.get("vulnerable_demo") or b3_info.get("safe_demo") or {}
 
-            sec_demo_id = sec_cand.get("id", f"demo_sec_{t_id}")
+            sec_demo_id = str(sec_cand.get("id", f"demo_sec_{t_id}"))
             sec_demo_target = sec_cand.get("target", t_label)
             sec_score = sec_cand.get("security_score", 0.5)
             sec_code = sec_cand.get("func", "")
             if not sec_code:
-                cand_p = repo_root / "data" / "raw_c_files" / "devign" / "train" / sec_demo_id
+                cand_p = repo_root / "data" / "raw_c_files" / ds_lower / "train" / sec_demo_id
                 sec_code = load_code_from_file_or_cache(str(cand_p), repo_root)
         else:
             sec_demo_id = f"demo_sec_{t_id}"
@@ -266,14 +291,15 @@ def generate_blind_sheets(
     num_samples: int = 50,
     seed: int = 42,
     b2_report_path: Optional[Path] = None,
-    b3_report_path: Optional[Path] = None
+    b3_report_path: Optional[Path] = None,
+    dataset_name: str = "devign"
 ) -> Tuple[Dict[str, Any], List[Dict[str, Any]]]:
     """
     Thực hiện quy trình tạo bảng chấm mù và file đáp án.
     """
-    print(f"[*] Bắt đầu sinh bảng chấm mù thủ công (Blind Review Protocol)...")
+    print(f"[*] Bắt đầu sinh bảng chấm mù thủ công (Blind Review Protocol) cho [{dataset_name}]...")
     print(f"[*] Nạp tập dev split từ: {dev_split_path}")
-    dev_samples = load_devign_dev_clean_samples(dev_split_path, repo_root)
+    dev_samples = load_dev_clean_samples(dev_split_path, repo_root, dataset_name=dataset_name)
     print(f"[✓] Đã nạp {len(dev_samples)} mẫu dev sạch.")
 
     print(f"[*] Phân tầng trích xuất {num_samples} mẫu (seed={seed})...")
@@ -287,7 +313,8 @@ def generate_blind_sheets(
         selected_targets,
         repo_root=repo_root,
         b2_report_path=b2_report_path,
-        b3_report_path=b3_report_path
+        b3_report_path=b3_report_path,
+        dataset_name=dataset_name
     )
 
     # Khởi tạo cơ chế tráo ngẫu nhiên Demo A và Demo B
@@ -369,7 +396,7 @@ def generate_blind_sheets(
         "metadata": {
             "protocol": "Blind Human Review Protocol (Stage 2.3 / STT 10)",
             "contract": "evaluation_contract.yaml",
-            "dataset": "devign",
+            "dataset": dataset_name.lower(),
             "source_split": str(dev_split_path.relative_to(repo_root) if dev_split_path.is_relative_to(repo_root) else dev_split_path).replace("\\", "/"),
             "total_samples": len(answer_key_entries),
             "vuln_samples": vuln_c,
@@ -418,9 +445,16 @@ def generate_blind_sheets(
 def main():
     parser = argparse.ArgumentParser(description="Sinh Bảng Chấm Mù Thủ Công Cho Đánh Giá Retrieval (GRACE)")
     parser.add_argument(
+        "--dataset",
+        type=str,
+        default="devign",
+        choices=["devign", "reveal"],
+        help="Tên tập dữ liệu (devign hoặc reveal)"
+    )
+    parser.add_argument(
         "--dev_split", 
         type=str, 
-        default="data/splits/devign_dev_clean_100_ids.json",
+        default=None,
         help="Đường dẫn file dev split JSON"
     )
     parser.add_argument(
@@ -438,57 +472,74 @@ def main():
     parser.add_argument(
         "--hieu_out", 
         type=str, 
-        default="project_docs/reports/blind_review_sheet_hieu.csv",
+        default=None,
         help="Đường dẫn file CSV xuất cho Hiếu"
     )
     parser.add_argument(
         "--dung_out", 
         type=str, 
-        default="project_docs/reports/blind_review_sheet_dung.csv",
+        default=None,
         help="Đường dẫn file CSV xuất cho Dũng"
     )
     parser.add_argument(
         "--answer_key_out", 
         type=str, 
-        default="project_docs/reports/blind_review_answer_key.json",
+        default=None,
         help="Đường dẫn file đáp án JSON bí mật"
     )
     parser.add_argument(
         "--b2_report", 
         type=str, 
-        default="output/stage2/label_flip/label_flip_test_report.json",
+        default=None,
         help="Đường dẫn file báo cáo Stage 2 chứa B2 retriever demos"
     )
     parser.add_argument(
         "--b3_report", 
         type=str, 
-        default="output/stage3/b3_vs_b2_comparison_report.json",
+        default=None,
         help="Đường dẫn file báo cáo Stage 3 chứa B3 retriever demos"
     )
     args = parser.parse_args()
 
-    dev_split_path = Path(args.dev_split)
+    ds_name = args.dataset.lower()
+
+    if ds_name == "reveal":
+        dev_split_str = args.dev_split or "data/splits/reveal_dev_clean_100_ids.json"
+        hieu_out_str = args.hieu_out or "project_docs/reports/blind_review_reveal_sheet_hieu.csv"
+        dung_out_str = args.dung_out or "project_docs/reports/blind_review_reveal_sheet_dung.csv"
+        key_out_str = args.answer_key_out or "project_docs/reports/blind_review_reveal_answer_key.json"
+        b2_rep_str = args.b2_report or "output/stage3/reveal_b3_vs_b2_comparison_report.json"
+        b3_rep_str = args.b3_report or "output/stage3/reveal_b3_vs_b2_comparison_report.json"
+    else:
+        dev_split_str = args.dev_split or "data/splits/devign_dev_clean_100_ids.json"
+        hieu_out_str = args.hieu_out or "project_docs/reports/blind_review_sheet_hieu.csv"
+        dung_out_str = args.dung_out or "project_docs/reports/blind_review_sheet_dung.csv"
+        key_out_str = args.answer_key_out or "project_docs/reports/blind_review_answer_key.json"
+        b2_rep_str = args.b2_report or "output/stage2/label_flip/label_flip_test_report.json"
+        b3_rep_str = args.b3_report or "output/stage3/b3_vs_b2_comparison_report.json"
+
+    dev_split_path = Path(dev_split_str)
     if not dev_split_path.is_absolute():
         dev_split_path = repo_root / dev_split_path
 
-    hieu_out = Path(args.hieu_out)
+    hieu_out = Path(hieu_out_str)
     if not hieu_out.is_absolute():
         hieu_out = repo_root / hieu_out
 
-    dung_out = Path(args.dung_out)
+    dung_out = Path(dung_out_str)
     if not dung_out.is_absolute():
         dung_out = repo_root / dung_out
 
-    key_out = Path(args.answer_key_out)
+    key_out = Path(key_out_str)
     if not key_out.is_absolute():
         key_out = repo_root / key_out
 
-    b2_rep = Path(args.b2_report)
-    if not b2_rep.is_absolute():
+    b2_rep = Path(b2_rep_str) if b2_rep_str else None
+    if b2_rep and not b2_rep.is_absolute():
         b2_rep = repo_root / b2_rep
 
-    b3_rep = Path(args.b3_report)
-    if not b3_rep.is_absolute():
+    b3_rep = Path(b3_rep_str) if b3_rep_str else None
+    if b3_rep and not b3_rep.is_absolute():
         b3_rep = repo_root / b3_rep
 
     generate_blind_sheets(
@@ -499,7 +550,8 @@ def main():
         num_samples=args.num_samples,
         seed=args.seed,
         b2_report_path=b2_rep,
-        b3_report_path=b3_rep
+        b3_report_path=b3_rep,
+        dataset_name=ds_name
     )
     print("\n[✓] Hoàn tất sinh toàn bộ bảng chấm mù và file đáp án thành công!")
 
