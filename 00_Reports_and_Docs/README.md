@@ -17,7 +17,11 @@ status: "OFFICIAL_SUBMISSION_FOLDER"
 
 ## 1. Báo Cáo Tiến Độ & Nghiệm Thu Chính Thức Mới Nhất
 
-- 🎯 📄 [`BAO_CAO_TIEN_DO_NGHIEM_THU_GRACE_20261022.md`](BAO_CAO_TIEN_DO_NGHIEM_THU_GRACE_20261022.md) *(BẢN CHÍNH THỨC NỘP THẦY - CẬP NHẬT 24/10/2026)*:
+- 🎯 📄 [`bao_cao_chung_Dung_Hieu_gui_thay.md`](bao_cao_chung_Dung_Hieu_gui_thay.md) *(BÁO CÁO TIẾN ĐỘ CHUNG DŨNG & HIẾU - CẬP NHẬT 25/10/2026)*:
+  * Tổng hợp đối soát nền thực nghiệm Đợt 1, kết quả thăm dò Đợt 2 của cả hai bạn, rà soát các giới hạn kỹ thuật (Over-sensitization, FP/recall trade-off) và đề xuất kế hoạch thực hiện Đợt 3.
+  * Kèm theo: 📄 [`cac_diem_can_thong_nhat_Dung_Hieu.md`](cac_diem_can_thong_nhat_Dung_Hieu.md) *(Bảng 6 điểm kỹ thuật cần thống nhất giữa Dũng và Hiếu trước khi chạy Test Set)*.
+
+- 🎯 📄 [`BAO_CAO_TIEN_DO_NGHIEM_THU_GRACE_20261022.md`](BAO_CAO_TIEN_DO_NGHIEM_THU_GRACE_20261022.md) *(BÁO CÁO TOÀN DIỆN & ĐỐI SOÁT CHI TIẾT - PHÍA HIẾU)*:
   * **BÁO CÁO TIẾN ĐỘ TOÀN DIỆN VÀ KẾT QUẢ THỰC NGHIỆM ĐỀ TÀI GRACE (KIỂM ĐỊNH ĐỘC LẬP TÍNH ĐÁNG TIN CẬY KHOA HỌC & BÓC TÁCH KỸ THUẬT)**
   * **Trọng tâm đối soát & nghiệm thu**:
     1. **Stage 2 Label-Flip Control Test trên Baseline B2**: Net Sensitivity = 31.0%, Natural Variance = 4.0%, F1 = 0.3415 trên `devign_dev_clean_100_ids.json`.
