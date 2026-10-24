@@ -25,7 +25,6 @@ Nhóm nghiên cứu sinh viên (Hiếu và Dũng) xin trân trọng gửi tới 
 4. Minh định quy trình Chấm mù thủ công (Blind Human Review) trên 100 mẫu (50 Devign + 50 ReVeal) do Hiếu và Dũng độc lập đọc code bằng mắt và ngồi lại hòa giải kỹ thuật (Adjudication) từng dòng code C cụ thể.
 5. Sửa dứt điểm lỗi lệch mapping mã nguồn target của 50 mẫu ReVeal, bảo đảm khớp 100% với file canonical C trong `data/raw_c_files/reveal/validation/` và split sạch `data/splits/reveal_dev_clean_100_ids.json`.
 6. Minh bạch về hạ tầng Vertex AI MaaS (Google đã đóng endpoint Qwen3-Coder 480B sau ngày 21/10) và đề xuất phương án di chuyển sang Gemini 1.5 Flash/Pro cho các bước benchmark tiếp theo.
-7. Bổ sung nghiệm thu toàn diện nhánh kiến trúc H2 GuardedEvidence v3 trên 5,006 mẫu benchmark (Devign F1 = 44.55%, ReVeal Accuracy = 85.49%) với Invalid Rate = 0.0% sử dụng mô hình DeepSeek-V4.1-Flash qua Vertex AI MaaS.
 
 ---
 
@@ -60,11 +59,7 @@ Nhóm nghiên cứu sinh viên (Hiếu và Dũng) xin trân trọng gửi tới 
 │ 6. Mapping Code Canonical      │ 50/50 mẫu ReVeal khớp 100%│ Khắc phục triệt để lỗi   │
 │    (Mã nguồn C chuẩn xác)      │ c_file_path & split sạch  │ dán nhầm snippet Devign  │
 ├────────────────────────────────┼───────────────────────────┼──────────────────────────┤
-│ 7. Mở rộng H2 GuardedEvidence  │ 5,006 mẫu toàn diện:      │ Nghiệm thu hoàn tất;     │
-│    v3 trên Vertex AI MaaS      │ Devign 2,732: F1 = 44.55% │ Invalid rate: 0.0%;      │
-│    (DeepSeek-V4.1-Flash)       │ ReVeal 2,274: Acc = 85.49%│ Lưu tại output/h2_vertex/│
-├────────────────────────────────┼───────────────────────────┼──────────────────────────┤
-│ 8. Hạ tầng Vertex AI MaaS      │ Chạy xong ngày 21/10/2026 │ Endpoint đóng; Đề xuất   │
+│ 7. Hạ tầng Vertex AI MaaS      │ Chạy xong ngày 21/10/2026 │ Endpoint đóng; Đề xuất   │
 │    (Đóng endpoint Qwen MaaS)   │ Qwen3-Coder 480B hoàn tất │ chuyển Gemini 1.5 Flash  │
 └────────────────────────────────┴───────────────────────────┴──────────────────────────┘
 ```
@@ -328,42 +323,9 @@ Nhóm đã nghiêm túc tiếp thu và **khắc phục dứt điểm 100%**:
 
 ---
 
-## PHẦN 7. KẾT QUẢ NGHIỆM THU NHÁNH MỞ RỘNG H2 GUARDED-EVIDENCE V3 TRÊN VERTEX AI (5,006 MẪU TOÀN DIỆN)
+## PHẦN 7. ĐỐI CHIẾU "DEFINITION OF DONE" CỦA THẦY & KẾ HOẠCH HÀNH ĐỘNG
 
-Song song với các thực nghiệm đối đầu trên tập Dev 100 mẫu, nhóm đã hoàn tất việc mở rộng kiểm định nhánh kiến trúc **H2 GuardedEvidence v3** trên quy mô toàn diện **5,006 mẫu kiểm thử** (2,732 prompts Devign và 2,274 prompts ReVeal) thông qua **Google Cloud Vertex AI MaaS** sử dụng mô hình **DeepSeek-V4.1-Flash** (`deepseek-ai/deepseek-v4.1-flash-maas`).
-
-### 1. Cấu hình bảo vệ chặt chẽ (Conforming to `evaluation_contract.yaml`):
-- **Trình phân tích kết quả (Canonical Parser):** Triển khai `ExactLastLineBinaryParser` từ `strict_parser.py`, chỉ chấp nhận dòng ký tự cuối cùng là `0` hoặc `1`. Kết quả đạt **0.0% tỷ lệ cú pháp không hợp lệ (0 / 5,006 mẫu)**.
-- **Rào chắn chống tràn ngữ cảnh (Truncation Guard):** Kiểm soát cứng 8,192 UTF-8 bytes trước khi gửi request tới Vertex AI API, bảo đảm không có prompt nào bị lỗi HTTP 400 Payload Too Large.
-- **Thiết lập suy luận chuẩn xác:** `temperature = 0.0`, `seed = 42`, `max_output_tokens = 256`, `stream = false`.
-
-### Bảng 7.1: Ma trận kết quả định lượng của H2 GuardedEvidence v3 trên 5,006 mẫu toàn diện
-Nguồn artifact: [`output/h2_vertex_deepseek_v41/baseline_comparison_report.json`](file:///d:/tai%20lieu%20hoc%20tap/%C4%90%E1%BB%81%20t%C3%A0i%20nghi%C3%AAn%20c%E1%BB%A9u%20khoa%20h%E1%BB%8Dc/papers%20source%20code/GRACE/output/h2_vertex_deepseek_v41/baseline_comparison_report.json).
-
-| Chỉ số đánh giá | Devign Test Set (2,732 prompts) | ReVeal Test Set (2,274 prompts) | Tổng hợp 2 bộ benchmark (5,006 prompts) |
-| :--- | :---: | :---: | :---: |
-| **Quy mô tập kiểm thử** | 2,732 mẫu | 2,274 mẫu (Imbalance 10% Vuln) | **5,006 mẫu** |
-| **True Positives (TP - Bắt trúng lỗi)** | **431** | **63** | **494 lỗ hổng thực tế** |
-| **False Negatives (FN - Bỏ sót lỗi)** | 824 | 167 | 991 ca bỏ sót |
-| **False Positives (FP - Cảnh báo giả)** | 250 | 165 | 415 cảnh báo giả |
-| **True Negatives (TN - Đoán đúng an toàn)**| 1,227 | 1,879 | 3,106 hàm an toàn |
-| **Recall (Tỷ lệ bắt lỗ hổng)** | **34.34%** | **27.39%** | **33.27%** |
-| **Precision (Độ chuẩn xác cảnh báo)** | **63.30%** | **27.63%** | **54.35%** |
-| **F1-Score** | **44.55%** | **27.49%** | **41.27%** |
-| **Accuracy (Độ chính xác toàn cục)** | **61.35%** | **85.49%** | **72.31%** |
-| **Tỷ lệ lỗi cú pháp (Invalid Rate)** | **0.0%** (0 / 2,732) | **0.0%** (0 / 2,274) | **0.0%** (0 / 5,006) |
-| **Gói Artifact Lưu trữ** | [`output/h2_vertex_deepseek_v41/`](file:///d:/tai%20lieu%20hoc%20tap/%C4%90%E1%BB%81%20t%C3%A0i%20nghi%C3%AAn%20c%E1%BB%A9u%20khoa%20h%E1%BB%8Dc/papers%20source%20code/GRACE/output/h2_vertex_deepseek_v41/) | [`output/h2_vertex_deepseek_v41/`](file:///d:/tai%20lieu%20hoc%20tap/%C4%90%E1%BB%81%20t%C3%A0i%20nghi%C3%AAn%20c%E1%BB%A9u%20khoa%20h%E1%BB%8Dc/papers%20source%20code/GRACE/output/h2_vertex_deepseek_v41/) | Đầy đủ predictions, logs, reports (`H2_vertex_results.zip`) |
-
-### 2. Ý nghĩa khoa học từ kết quả thực nghiệm 5,006 mẫu:
-1. **Kiểm soát False Positives trên diện rộng:** So với việc bị đẩy FP lên cao khi dùng Qwen3-Coder ở Stage 3, việc áp dụng cơ chế GuardedEvidence v3 kết hợp DeepSeek-V4.1-Flash giúp Precision trên Devign tăng vọt lên **63.30%**, kéo F1 trên toàn bộ 2,732 mẫu Devign đạt **44.55%**.
-2. **Khả năng thích ứng với phân bổ mất cân bằng cực đoan (ReVeal):** Trên tập ReVeal (chỉ 10% mẫu có lỗi), mô hình đạt **Accuracy vượt trội 85.49%** với 1,879 hàm an toàn được phân loại chính xác, chứng minh rào chắn GuardedEvidence giúp triệt tiêu hiện tượng hallucination / over-prediction trên tập dữ liệu thiên lệch.
-3. **Đóng gói artifact nghiệm thu:** Toàn bộ file dự đoán `predictions.jsonl`, bản ghi raw `raw_responses.jsonl` và báo cáo đối soát JSON được lưu trữ và đóng gói chuẩn mực tại [`output/h2_vertex_deepseek_v41/`](file:///d:/tai%20lieu%20hoc%20tap/%C4%90%E1%BB%81%20t%C3%A0i%20nghi%C3%AAn%20c%E1%BB%A9u%20khoa%20h%E1%BB%8Dc/papers%20source%20code/GRACE/output/h2_vertex_deepseek_v41/) (`H2_vertex_results.zip`).
-
----
-
-## PHẦN 8. ĐỐI CHIẾU "DEFINITION OF DONE" CỦA THẦY & KẾ HOẠCH HÀNH ĐỘNG
-
-### Bảng 8.1: Bảng tự đánh giá khách quan 7 tiêu chí Definition of Done
+### Bảng 7.1: Bảng tự đánh giá khách quan 7 tiêu chí Definition of Done
 
 | Tiêu chí "Definition of Done" của Thầy | Trạng thái đạt được | Minh chứng kỹ thuật trong Repository |
 | :--- | :---: | :--- |
@@ -381,10 +343,8 @@ Nguồn artifact: [`output/h2_vertex_deepseek_v41/baseline_comparison_report.jso
 
 1. **Báo cáo trực tiếp và xin ý kiến Thầy hướng dẫn:**
    - Trình bày toàn bộ số liệu đối soát, giải trình rõ ràng sự đánh đổi kỹ thuật (Recall 2.2x vs FP tăng) và hệ số Cohen's Kappa trung thực.
-   - Báo cáo Thầy về việc endpoint Qwen3-Coder MaaS đã đóng và xin định hướng chuyển đổi sang Gemini 1.5 Flash/Pro và DeepSeek-V4.1-Flash cho pha Test.
-2. **Hoàn thiện công đoạn nhãn Relevance cho H2/E1.3:**
-   - Tiếp tục hoàn thành việc gán nhãn thủ công cho các truy vấn retrieval mở rộng nhằm thẩm định sâu hơn về chất lượng của retriever.
-3. **Đóng băng quy trình và sẵn sàng thực nghiệm trên Test Set:**
+   - Báo cáo Thầy về việc endpoint Qwen3-Coder MaaS đã đóng và xin định hướng chuyển đổi sang Gemini 1.5 Flash/Pro hoặc vLLM riêng cho pha Test.
+2. **Đóng băng quy trình và sẵn sàng thực nghiệm trên Test Set:**
    - Sau khi Thầy phê duyệt và nghiệm thu các kết quả trên tập Dev, nhóm sẽ kích hoạt pipeline kiểm định trên tập Test Set độc lập chưa từng được quan sát.
 
 ---

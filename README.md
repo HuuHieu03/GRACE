@@ -1,6 +1,6 @@
 > 🎯 **BÁO CÁO TIẾN ĐỘ & NGHIỆM THU CHÍNH THỨC NỘP THẦY HƯỚNG DẪN (CẬP NHẬT 24/10/2026)**:
 > - **Thầy Hướng dẫn và Hội đồng nghiệm thu vui lòng vào thẳng thư mục:** [`00_Reports_and_Docs/`](00_Reports_and_Docs/)  
->   Tài liệu báo cáo chính thức: 📄 [`00_Reports_and_Docs/BAO_CAO_TIEN_DO_NGHIEM_THU_GRACE_20261022.md`](00_Reports_and_Docs/BAO_CAO_TIEN_DO_NGHIEM_THU_GRACE_20261022.md) *(trình bày đầy đủ Confusion Matrix, Paired Bootstrap 95% CI, bóc tách Ablation B3-NoDiff, Thẩm định Chấm mù 100 mẫu độc lập do Hiếu & Dũng trực tiếp đọc mắt, khắc phục 100% canonical C mapping cho ReVeal, và nghiệm thu 5,006 mẫu nhánh H2 GuardedEvidence v3 trên Vertex AI)*.
+>   Tài liệu báo cáo chính thức: 📄 [`00_Reports_and_Docs/BAO_CAO_TIEN_DO_NGHIEM_THU_GRACE_20261022.md`](00_Reports_and_Docs/BAO_CAO_TIEN_DO_NGHIEM_THU_GRACE_20261022.md) *(trình bày đầy đủ Confusion Matrix, Paired Bootstrap 95% CI, bóc tách Ablation B3-NoDiff, Thẩm định Chấm mù 100 mẫu độc lập do Hiếu & Dũng trực tiếp đọc mắt, và khắc phục 100% canonical C mapping cho ReVeal)*.
 > - **Thư mục làm việc cá nhân & nội bộ nhóm nghiên cứu (Hiếu & Dũng):** [`project_docs/`](project_docs/) *(nơi lưu trữ kế hoạch chi tiết, nhật ký thực thi, log nội bộ và bảng chấm nháp)*.
 
 project: "GRACE: Vulnerability-Aware Contrastive Demonstration Retrieval"
@@ -124,11 +124,10 @@ GRACE/
 │   ├── README.md                        # Hướng dẫn mở xem output hoặc chạy lại
 │   ├── stage5_contrastive_demonstration.ipynb  # [SOTA Stage 5] Full Devign & ReVeal (1.39 MB)
 │   ├── devign_baseline_reproduce.ipynb         # [Baseline] Chạy trên 2,732 mẫu Devign (612.9 KB)
-│   ├── reveal_baseline_reproduce.ipynb         # [Baseline] Chạy trên 2,274 mẫu ReVeal (514.0 KB)
-│   └── run_h2_vertex_evaluation.ipynb          # [H2 Vertex AI] DeepSeek-V4.1-Flash (5,006 mẫu)
+│   └── reveal_baseline_reproduce.ipynb         # [Baseline] Chạy trên 2,274 mẫu ReVeal (514.0 KB)
 │
 ├── kaggle_notebooks/                    # Gói mã nguồn kernel đẩy tự động lên Kaggle Cloud
-├── output/                              # Artifacts kiểm toán và nghiệm thu (Stage 2, Stage 3, H2 Vertex)
+├── output/                              # Artifacts kiểm toán và nghiệm thu (Stage 2, Stage 3)
 ├── data/                                # Dữ liệu đồ thị JSON và split kiểm thử phân tầng sạch
 ├── tests/                               # Test suites kiểm thử hệ thống
 │

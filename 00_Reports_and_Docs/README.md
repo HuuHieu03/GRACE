@@ -26,8 +26,7 @@ status: "OFFICIAL_SUBMISSION_FOLDER"
     4. **Ablation B3-NoDiff**: Bóc tách định lượng đóng góp của Cặp tương phản 1:1 (82.6% mức tăng F1, nền tảng chống lệch nhãn) và khối Core Security Difference (17.4% mức tăng F1, cứu thêm 5 lỗi tinh vi, kiểm soát FP).
     5. **Blind Human Review 100 mẫu (50 Devign + 50 ReVeal)**: Do Hiếu và Dũng trực tiếp đọc mã C bằng mắt độc lập, hòa giải kỹ thuật (Adjudication) trên dòng code C cụ thể (Sink, Guard, Variable). Giữ nguyên hệ số Cohen's Kappa trước hòa giải: Devign $\kappa = 0.315$ (0.3151), ReVeal $\kappa = 0.340$ (0.3271 thô), $P_o = 48.0\%$.
     6. **Khắc phục triệt để mapping canonical C**: 50/50 mẫu ReVeal khớp 100% file canonical C trên đĩa và split sạch.
-    7. **Nghiệm thu nhánh mở rộng H2 GuardedEvidence v3 trên Vertex AI MaaS**: 5,006 mẫu toàn diện (Devign 2,732 prompts F1 = 44.55%, ReVeal 2,274 prompts Accuracy = 85.49%) với Invalid Rate = 0.0%.
-    8. **Minh bạch hạ tầng**: Giải trình sự cố đối tác Google Cloud đóng endpoint Qwen3-Coder MaaS sau 21/10 và đề xuất di chuyển sang Gemini 1.5 Flash/Pro.
+    7. **Minh bạch hạ tầng**: Giải trình sự cố đối tác Google Cloud đóng endpoint Qwen3-Coder MaaS sau 21/10 và đề xuất di chuyển sang Gemini 1.5 Flash/Pro.
 
 ---
 
