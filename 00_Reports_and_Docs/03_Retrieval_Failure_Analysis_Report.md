@@ -65,5 +65,6 @@ Khi mục tiêu là hàm có lỗ hổng (**Vulnerable Target = 1**), GRACE retr
 Kết quả của Experiment 0 đã cung cấp **bằng chứng thực nghiệm định lượng rõ ràng** để bước vào **Giai đoạn 2 (Security Signature Extraction)** và **Giai đoạn 3 (Vulnerability-Aware Contrastive Selector)**.
 
 Các file dữ liệu chi tiết:
-- File CSV Devign: [`project_docs/docs/reports/retrieval_failure_analysis_devign.csv`](file:///d:/tai%20lieu%20hoc%20tap/%C4%90%E1%BB%81%20t%C3%A0i%20nghi%C3%AAn%20c%E1%BB%A9u%20khoa%20h%E1%BB%8Dc/papers%20source%20code/GRACE/project_docs/docs/reports/retrieval_failure_analysis_devign.csv)
-- File CSV Reveal: [`project_docs/docs/reports/retrieval_failure_analysis_reveal.csv`](file:///d:/tai%20lieu%20hoc%20tap/%C4%90%E1%BB%81%20t%C3%A0i%20nghi%C3%AAn%20c%E1%BB%A9u%20khoa%20h%E1%BB%8Dc/papers%20source%20code/GRACE/project_docs/docs/reports/retrieval_failure_analysis_reveal.csv)
+- File CSV Devign: [`00_Reports_and_Docs/retrieval_failure_analysis_devign.csv`](file:///d:/tai%20lieu%20hoc%20tap/%C4%90%E1%BB%81%20t%C3%A0i%20nghi%C3%AAn%20c%E1%BB%A9u%20khoa%20h%E1%BB%8Dc/papers%20source%20code/GRACE/00_Reports_and_Docs/retrieval_failure_analysis_devign.csv)
+- File CSV Reveal: [`00_Reports_and_Docs/retrieval_failure_analysis_reveal.csv`](file:///d:/tai%20lieu%20hoc%20tap/%C4%90%E1%BB%81%20t%C3%A0i%20nghi%C3%AAn%20c%E1%BB%A9u%20khoa%20h%E1%BB%8Dc/papers%20source%20code/GRACE/00_Reports_and_Docs/retrieval_failure_analysis_reveal.csv)
+

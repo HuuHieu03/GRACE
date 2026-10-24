@@ -40,6 +40,7 @@ log/
 scratch/
 artifacts/
 kaggle_notebooks/**/output/
+kaggle_notebooks/**/dataset_staging/
 *.zip
 
 # OS & Editor

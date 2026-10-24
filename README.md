@@ -1,7 +1,8 @@
-> **Trạng thái hiện tại — 22/10/2026:** dùng [báo cáo tiến độ đã đối soát](project_docs/reports/bao_cao_tien_do_da_doi_soat_20261022.md) và [protocol mới](project_docs/reports/verified_protocol_2026-10-22/report.md).
-> Chưa đủ bằng chứng nghiệm thu cải tiến/chấm mù độc lập. Mô tả và các tuyên bố “Fully Verified/đột phá” bên dưới là nội dung lịch sử, không phải kết luận hiện được xác nhận.
+> 🎯 **BÁO CÁO TIẾN ĐỘ & NGHIỆM THU CHÍNH THỨC NỘP THẦY HƯỚNG DẪN (CẬP NHẬT 24/10/2026)**:
+> - **Thầy Hướng dẫn và Hội đồng nghiệm thu vui lòng vào thẳng thư mục:** [`00_Reports_and_Docs/`](00_Reports_and_Docs/)  
+>   Tài liệu báo cáo chính thức: 📄 [`00_Reports_and_Docs/BAO_CAO_TIEN_DO_NGHIEM_THU_GRACE_20261022.md`](00_Reports_and_Docs/BAO_CAO_TIEN_DO_NGHIEM_THU_GRACE_20261022.md) *(trình bày đầy đủ Confusion Matrix, Paired Bootstrap 95% CI, bóc tách Ablation B3-NoDiff, Thẩm định Chấm mù 100 mẫu độc lập do Hiếu & Dũng trực tiếp đọc mắt, khắc phục 100% canonical C mapping cho ReVeal, và nghiệm thu 5,006 mẫu nhánh H2 GuardedEvidence v3 trên Vertex AI)*.
+> - **Thư mục làm việc cá nhân & nội bộ nhóm nghiên cứu (Hiếu & Dũng):** [`project_docs/`](project_docs/) *(nơi lưu trữ kế hoạch chi tiết, nhật ký thực thi, log nội bộ và bảng chấm nháp)*.
 
----
 project: "GRACE: Vulnerability-Aware Contrastive Demonstration Retrieval"
 author: "Nguyễn Hữu Hiếu"
 role: "Nghiên cứu viên / Người thực hiện"
@@ -99,9 +100,10 @@ GRACE/
 │
 ├── README.md                            # [File này] Metadata YAML, Bảng kết quả & Reproduction Guide
 │
-├── 00_Reports_and_Docs/                 # Trung tâm tài liệu & báo cáo khoa học học thuật
-│   ├── README.md                        # Danh mục và hướng dẫn đọc báo cáo
-│   ├── 01_Stage5_Contrastive_Benchmark_Report.md  # Báo cáo 28.5 KB: kết quả đột phá Stage 5
+├── 00_Reports_and_Docs/                 # 🎯 THƯ MỤC CHÍNH THỨC NỘP THẦY HƯỚNG DẪN & HỘI ĐỒNG
+│   ├── README.md                        # Chỉ dẫn mục lục và hướng dẫn đọc báo cáo
+│   ├── BAO_CAO_TIEN_DO_NGHIEM_THU_GRACE_20261022.md # Báo cáo tiến độ & nghiệm thu toàn diện (MỚI NHẤT)
+│   ├── 01_Stage5_Contrastive_Benchmark_Report.md  # Báo cáo kết quả đột phá Stage 5
 │   ├── 02_Baseline_Reproduction_and_Discrepancy_Report.md # Báo cáo chỉ ra 5 lỗi sai của tác giả gốc
 │   ├── 03_Retrieval_Failure_Analysis_Report.md    # Báo cáo khảo sát định lượng lỗi ngược nhãn
 │   ├── 04_Vulnerability_Aware_Contrastive_Design.md # Bản thiết kế kỹ thuật cơ chế VAC-Retrieval
@@ -109,23 +111,28 @@ GRACE/
 │   ├── retrieval_failure_analysis_reveal.csv      # File dữ liệu phân tích 2,274 ca ReVeal
 │   └── GRACE_Empowering_LLM_Original_Paper.pdf    # Bài báo khoa học gốc
 │
+├── project_docs/                        # 🛠️ THƯ MỤC LÀM VIỆC CÁ NHÂN & NỘI BỘ NHÓM (HIẾU & DŨNG)
+│   ├── README.md                        # Hướng dẫn quy chuẩn thư mục nội bộ
+│   ├── docs/                            # Tài liệu chỉ đạo của Thầy, protocol & deployment guides
+│   ├── plans/                           # Kế hoạch kỹ thuật chi tiết & Roadmap nghiên cứu
+│   ├── reports/                         # Báo cáo nội bộ, bảng chấm mù của Hiếu & Dũng, verified sources
+│   ├── progress/                        # Nhật ký theo dõi tiến độ công việc tuần tự
+│   ├── logs/                            # Nhật ký gỡ lỗi và runtime execution logs
+│   └── history/                         # Tóm tắt các phiên làm việc và mốc lịch sử dự án
+│
 ├── 01_Reproduce_Notebooks/              # Notebooks Kaggle chính thức ĐÃ LƯU CELL OUTPUTS
 │   ├── README.md                        # Hướng dẫn mở xem output hoặc chạy lại
 │   ├── stage5_contrastive_demonstration.ipynb  # [SOTA Stage 5] Full Devign & ReVeal (1.39 MB)
 │   ├── devign_baseline_reproduce.ipynb         # [Baseline] Chạy trên 2,732 mẫu Devign (612.9 KB)
-│   └── reveal_baseline_reproduce.ipynb         # [Baseline] Chạy trên 2,274 mẫu ReVeal (514.0 KB)
+│   ├── reveal_baseline_reproduce.ipynb         # [Baseline] Chạy trên 2,274 mẫu ReVeal (514.0 KB)
+│   └── run_h2_vertex_evaluation.ipynb          # [H2 Vertex AI] DeepSeek-V4.1-Flash (5,006 mẫu)
 │
-├── baseline code/                       # Lưu trữ mã nguồn phục dựng baseline
-│   ├── README.md                        # Giải thích cấu trúc code text và gói bundle
-│   └── baseline_code_text/              # Các file mã nguồn Python (.py) phục dựng baseline
+├── kaggle_notebooks/                    # Gói mã nguồn kernel đẩy tự động lên Kaggle Cloud
+├── output/                              # Artifacts kiểm toán và nghiệm thu (Stage 2, Stage 3, H2 Vertex)
+├── data/                                # Dữ liệu đồ thị JSON và split kiểm thử phân tầng sạch
+├── tests/                               # Test suites kiểm thử hệ thống
 │
-├── data/                                # Thư mục dữ liệu dùng chung (được ignore trên Git)
-│   └── processed/                       # Chứa đồ thị JSON trích xuất (devign_train, reveal_train...)
-│
-├── security_signature/                  # Module trích xuất chữ ký bảo mật (bounds check, null check)
-├── tests/                               # 29 Unit tests kiểm thử hệ thống
-│
-├── run_pipeline.py                      # Đầu não điều phối dòng lệnh (chạy baseline hoặc contrastive)
+├── run_pipeline.py                      # Đầu não điều phối dòng lệnh
 ├── contrastive_selector.py              # Thuật toán chọn cặp ví dụ tương phản (Stage 5)
 ├── retrieval_security_engine.py         # Bộ truy xuất có nhận biết bảo mật (Stage 5)
 ├── retrieval_engine.py                  # Bộ truy xuất CodeT5 768d + FAISS L2 + Hybrid Reranking

@@ -1,99 +1,83 @@
-# Quy Chuẩn Quản Lý Tài Liệu Dự Án (Project Documentation Specification)
+# Quy Chuẩn Quản Lý Thư Mục Làm Việc Cá Nhân & Nội Bộ (Internal Project Documentation)
 
-Tài liệu này định nghĩa quy chuẩn quản lý tài liệu, theo dõi tiến độ và nhật ký hoạt động cho dự án. Quy chuẩn này được tối ưu hóa đồng thời cho **Con người** (dễ đọc, trực quan) và **AI Agent** (dễ đọc frontmatter, index nhanh, chính xác token).
-
----
-
-## Tài liệu hiện tại — cập nhật 2026-10-22
-
-- [Báo cáo tiến độ đã đối soát](reports/bao_cao_tien_do_da_doi_soat_20261022.md): **Bản hiện tại để trao đổi tiến độ với thầy**; chưa nghiệm thu cải tiến hoặc independent review. Ghi rõ B2 lịch sử mất, kết quả âm và phần nghiên cứu còn lại.
-- [Bàn giao kỹ thuật protocol mới](reports/verified_protocol_2026-10-22/report.md): lưu vết/evaluator/payload/controls đã triển khai;586tests đạt,20synthetic conditions,0API. Chưa có run LLM thật mới.
-- [Nguồn số liệu đã đối soát](reports/verified_sources_2026-10-22/report.md): bảng dùng cho báo cáo tiến độ, kèm registry SHA-256 và phân biệt metric tái tính với số chỉ còn tổng hợp; loại summary CSV mâu thuẫn khỏi nguồn báo cáo.
-- [Tiến độ khắc phục tuần tự](progress/v1.0.0_2026-10-22_supervisor_remediation_progress.md): trạng thái sáu việc sau review, bằng chứng nghiệm thu và phần còn chờ.
-- [Contract dữ liệu v2](reports/data_contract_v2_2026-10-22/report.md): UID riêng từng hàm, code/source verification, phân bố thật và lexical near-clone audit; không sửa nhãn hoặc artifact lịch sử.
-- [Đầu vào bộ chấm mới](reports/verified_review_inputs_2026-10-22/report.md): chưa đủ actual B2 records Ver03/Ver04; generator cũ đã bị chặn, không tự tạo phiếu thay thế.
-- [Review lần hai và checklist gửi thầy](reports/v1.1.0_2026-10-22_supervisor_readiness_second_review.md): **Kết luận mới nhất: chưa đủ gửi bản nghiệm thu hiện tại**. Bổ sung lỗi ID/code ReVeal, CSV lệch JSON, metadata split và graph ablation; H2 replay khớp, 900 Stage 2 raw responses reparse không đổi. Có checklist riêng trước báo cáo tiến độ và trước kết luận cải tiến.
-- [Review mức sẵn sàng gửi thầy](reports/v1.0.0_2026-10-22_supervisor_readiness_review.md): **Đọc trước bản tổng hợp nghiệm thu**. Review phát hiện lỗi chọn demo theo target label trong bộ chấm cũ, thiếu raw/prompt Stage 3 và các kết luận vượt bằng chứng; chưa đủ điều kiện nghiệm thu cải tiến.
-- [Bản tổng hợp nghiệm thu cũ](reports/bao_cao_tien_do_tong_hop_nghiem_thu_20261022.md): **Lịch sử, chưa đủ điều kiện gửi nguyên trạng**; giữ để truy vết các khẳng định trước review.
-- [Báo cáo chấm ReVeal cũ](reports/blind_review_reveal_technical_report.md): artifact lịch sử; chưa nghiệm thu độc lập hoặc identity/code. Không dùng Kappa/tỷ lệ ưu tiên trong tài liệu này để xác nhận retriever tốt hơn.
-- [Tiến độ tổng hợp H2 và E1.3](progress/v1.0.0_2026-10-22_h2_and_e13_progress.md): điểm bắt đầu để nắm trạng thái mới nhất.
-- [Kế hoạch sink evidence và retrieval ablation](plans/v1.0.0_2026-10-21_sink_evidence_and_retrieval_ablation_plan.md): checklist đã đồng bộ với kết quả thực tế.
-- [Báo cáo H2](reports/retrieval_h2/results_2026-10-22/report.md): R1 đổi 0/100 lựa chọn; không chạy paired LLM cho hai arm hiện tại.
-- [Follow-up và bộ relevance review](reports/retrieval_h2/followup_2026-10-22/report.md): inventory Unknown, packet và rubric; hai phiếu còn trống.
-- [E1.3 và trạng thái bước 1–3](reports/sink_evidence_v13/report.md): sửa declaration artifacts/output-role syntax, 63 tests đạt; chưa tích hợp production hoặc xác nhận semantic.
-- [Nhật ký H2/E1.3](logs/v1.0.0_2026-10-22_h2_and_e13_log.md): artifact, kiểm tra và các giới hạn kết luận.
+> 📌 **CHỈ DẪN QUAN TRỌNG VỀ PHÂN ĐỊNH THƯ MỤC**:
+> - **Thư mục Báo cáo Chính thức gửi Thầy hướng dẫn**: [`00_Reports_and_Docs/`](../00_Reports_and_Docs/)  
+>   *(Thầy và Hội đồng nghiệm thu vui lòng vào thẳng thư mục [`00_Reports_and_Docs/`](../00_Reports_and_Docs/) để đọc báo cáo chính thức [`BAO_CAO_TIEN_DO_NGHIEM_THU_GRACE_20261022.md`](../00_Reports_and_Docs/BAO_CAO_TIEN_DO_NGHIEM_THU_GRACE_20261022.md)).*
+> - **Thư mục `project_docs/` (Thư mục này)**: Là không gian làm việc cá nhân và nội bộ nhóm nghiên cứu sinh viên (**Hữu Hiếu & Tiến Dũng**). Thư mục này phục vụ lưu trữ tài liệu làm việc, kế hoạch kỹ thuật chi tiết, nhật ký thực thi, bảng chấm nháp, dữ liệu đối soát trung gian và biên bản hội chẩn nội bộ.
 
 ---
 
-## 1. Cấu Trúc Thư Mục (Directory Hierarchy)
+## 1. Cấu Trúc Phân Cấp Gọn Gàng & Tường Minh (Directory Hierarchy)
 
 ```text
 project_docs/
-├── README.md                 # Tài liệu hướng dẫn quy chuẩn này
-├── plans/                    # Kế hoạch thực thi, định hướng tính năng cho từng phiên bản
-│   ├── TEMPLATE_plan.md      # Khung mẫu tạo kế hoạch mới
-│   └── vX.Y.Z_..._plan.md    # Kế hoạch phiên bản vX.Y.Z
-├── progress/                 # Theo dõi danh sách công việc & tiến độ thực hiện
-│   ├── TEMPLATE_progress.md  # Khung mẫu theo dõi tiến độ
-│   └── vX.Y.Z_..._progress.md # Tiến độ phiên bản vX.Y.Z
-├── logs/                     # Nhật ký công việc, ghi chép lỗi & sửa lỗi chi tiết
-│   ├── TEMPLATE_log.md       # Khung mẫu nhật ký
-│   └── vX.Y.Z_YYYY-MM-DD_..._log.md # Nhật ký chi tiết theo phiên bản và ngày
-└── docs/reports/             # Báo cáo chuyên sâu, đối chiếu thực nghiệm và phân tích kỹ thuật
-    ├── TEMPLATE_report.md    # Khung mẫu báo cáo nghiên cứu
-    └── vX.Y.Z_..._report.md  # Báo cáo chuyên đề phiên bản vX.Y.Z
+├── README.md                 # Tài liệu này: Quy hoạch thư mục cá nhân/nội bộ
+│
+├── docs/                     # Tài liệu chỉ đạo bắt buộc, hướng dẫn kỹ thuật & protocol
+│   ├── yeu_cau_cua_thay_cho_Dung_va_Hieu.md         # Văn bản chỉ đạo trực tiếp của Thầy hướng dẫn
+│   ├── PROTOCOL_EXPERIMENTATION_AND_EVALUATION_GUIDE.md # Quy chuẩn thí nghiệm và đánh giá khoa học
+│   ├── v1.0.0_kaggle_deployment_guide.md            # Hướng dẫn chi tiết triển khai GPU trên Kaggle
+│   ├── supervisor_questions_and_notes.md            # Giải đáp các câu hỏi kỹ thuật cốt lõi của Thầy
+│   ├── GRACE_phanhoibaocaoDungHieu.docx/txt         # Bản phản hồi chi tiết của Thầy cho Hiếu & Dũng
+│   └── reports/                                     # Lưu trữ các báo cáo chuyên đề lịch sử (Stage 1 - 5)
+│
+├── plans/                    # Kế hoạch thực thi kỹ thuật & Roadmap đề tài
+│   ├── TEMPLATE_plan.md                             # Khung mẫu tạo kế hoạch mới
+│   ├── GRACE_RESEARCH_ROADMAP.md                    # Lộ trình tổng thể đề tài nghiên cứu
+│   ├── PLAN_SUPERVISOR_REQUIREMENTS_EXECUTION_20261014.md # Kế hoạch thực thi 6 yêu cầu của Thầy
+│   ├── GRACE_IMMEDIATE_ACTION_PLAN.md               # Kế hoạch hành động khẩn cấp
+│   └── v1.0.0_2026-10-21_sink_evidence_and_retrieval_ablation_plan.md # Kế hoạch bóc tách Ablation & Sink
+│
+├── reports/                  # Báo cáo nội bộ, dữ liệu đối soát thực nghiệm & Bảng chấm mù
+│   ├── bao_cao_tien_do_da_doi_soat_20261022.md      # Báo cáo đối soát nội bộ 22/10
+│   ├── verified_sources_2026-10-22/                 # Registry nguồn số liệu đối soát (SHA-256)
+│   ├── verified_protocol_2026-10-22/                # Bàn giao kỹ thuật protocol mới
+│   ├── data_contract_v2_2026-10-22/                 # Hợp đồng dữ liệu v2 chống rò rỉ mã nguồn
+│   ├── blind_review_sheet_hieu.csv                  # Bảng chấm mù độc lập của Hiếu (50 Devign)
+│   ├── blind_review_sheet_dung.csv                  # Bảng chấm mù độc lập của Dũng (50 Devign)
+│   ├── blind_review_confirmed_adjudication_50.csv   # Biên bản hòa giải kỹ thuật Devign 50 mẫu
+│   ├── blind_review_reveal_sheet_hieu.csv           # Bảng chấm mù độc lập của Hiếu (50 ReVeal)
+│   ├── blind_review_reveal_sheet_dung.csv           # Bảng chấm mù độc lập của Dũng (50 ReVeal)
+│   ├── blind_review_reveal_confirmed_adjudication_50.csv # Biên bản hòa giải kỹ thuật ReVeal 50 mẫu
+│   ├── blind_review_kappa_summary.md                # Tổng hợp hệ số Cohen's Kappa trước hòa giải
+│   ├── v1.0.0_2026-10-21_stage3_b3_vs_b2_comparison_report.md # Báo cáo chi tiết đối đầu B3 vs B2
+│   ├── v1.0.0_2026-10-22_supervisor_readiness_review.md # Rà soát mức độ sẵn sàng báo cáo Thầy (Lần 1)
+│   └── v1.1.0_2026-10-22_supervisor_readiness_second_review.md # Rà soát mức độ sẵn sàng báo cáo Thầy (Lần 2)
+│
+├── progress/                 # Theo dõi tiến độ công việc tuần tự
+│   ├── TEMPLATE_progress.md                         # Khung mẫu theo dõi tiến độ
+│   ├── v1.0.0_2026-10-22_supervisor_remediation_progress.md # Tiến độ thực hiện các yêu cầu của Thầy
+│   └── v1.0.0_2026-10-22_h2_and_e13_progress.md     # Tiến độ triển khai nhánh H2 và E1.3
+│
+├── logs/                     # Nhật ký công việc, ghi chép lỗi kỹ thuật & runtime logs
+│   ├── TEMPLATE_log.md                              # Khung mẫu nhật ký
+│   ├── v1.0.0_2026-10-22_supervisor_remediation_log.md # Nhật ký chi tiết khắc phục sự cố theo review
+│   └── v1.0.0_2026-10-22_h2_and_e13_log.md          # Nhật ký triển khai thực nghiệm H2 / Vertex AI
+│
+└── history/                  # Tóm tắt các phiên làm việc và mốc lịch sử dự án
+    ├── README.md                                    # Chỉ mục lịch sử
+    └── YYYY-MM-DD_session_summary.md                # Tóm tắt các phiên làm việc trước đây
 ```
 
 ---
 
-## 2. Quy Chuẩn Đặt Tên File (File Naming Conventions)
+## 2. Quy Chuẩn Đặt Tên & Định Dạng Tài Liệu Nội Bộ
 
-Tất cả tên file đều sử dụng chữ thường, ngăn cách bằng dấu gạch dưới `_`, ngoại trừ tiền tố phiên bản `vX.Y.Z`.
-
-| Thư mục | Quy tắc đặt tên file | Ví dụ |
-| :--- | :--- | :--- |
-| `plans/` | `v<Version>_<YYYY-MM-DD>_<Topic/Feature>_plan.md` | `v1.0.0_2026-08-01_grace_analysis_plan.md` |
-| `progress/` | `v<Version>_<YYYY-MM-DD>_<Topic/Feature>_progress.md` | `v1.0.0_2026-08-01_project_progress.md` |
-| `logs/` | `v<Version>_<YYYY-MM-DD>_<Topic/Action>_log.md` | `v1.0.0_2026-08-01_init_log.md` |
-| `docs/reports/` | `v<Version>_<YYYY-MM-DD>_<Topic>_report.md` | `v1.0.0_2026-08-24_prompt_comparison_report.md` |
-
----
-
-## 3. Quy Chuẩn Định Dạng Nội Dung File (Content Formatting)
-
-Mỗi file Markdown trong hệ thống **BẮT BUỘC** bao gồm 2 phần:
-
-### Phần 1: YAML Frontmatter (Cho AI Agent Indexing)
-Nằm ở đầu file, đặt giữa 2 dòng `---`.
-
-```yaml
----
-version: "1.0.0"
-date: "YYYY-MM-DD"
-type: "plan | progress | log"
-status: "DRAFT | PLANNED | IN_PROGRESS | COMPLETED | DEPRECATED"
-author: "Tên người tạo hoặc AI Agent"
-target_component: "Tên thành phần / Module trong hệ thống"
-tags: ["tag1", "tag2", "tag3"]
-summary: "Tóm tắt ngắn gọn 1-2 câu về nội dung file để AI đọc nhanh context."
----
-```
-
-### Phần 2: Markdown Content (Cho Con người & AI đọc chi tiết)
-- **Tiêu đề chính (`#`)**: Bao gồm mã phiên bản và tên chủ đề.
-- **Các mục (`##`)**:
-  - `## 1. Overview & Objectives` (Tổng quan & Mục tiêu)
-  - `## 2. Scope & Specifications` (Phạm vi & Chi tiết kỹ thuật)
-  - `## 3. Work Checklist` (Danh sách công việc với cú pháp `- [ ]`, `- [/]`, `- [x]`)
-  - `## 4. AI Agent Context & Key Notes` (Các lưu ý kỹ thuật quan trọng cho AI)
-  - `## 5. Changelog / Revision History` (Lịch sử cập nhật file)
-
----
-
-## 4. Hướng Dẫn Sử Dụng Cho AI Agent
-
-Khi nhận nhiệm vụ trong dự án này, AI Agent cần:
-1. Đọc file `project_docs/README.md` để hiểu quy chuẩn.
-2. Kiểm tra `plans/` để nắm kế hoạch tổng thể của phiên bản hiện tại.
-3. Cập nhật `progress/` tương ứng khi bắt đầu (`[/]`) hoặc hoàn thành (`[x]`) một công việc.
-4. Ghi chép chi tiết vào `logs/` nếu có phát sinh lỗi, thử nghiệm hoặc sửa lỗi quan trọng.
+1. **Tiền tố phiên bản**: Tất cả tài liệu theo dõi tiến độ, kế hoạch và nhật ký tuân thủ cú pháp:  
+   `v<Version>_<YYYY-MM-DD>_<Chủ_đề>_<Loại_tài_liệu>.md`  
+   *Ví dụ:* `v1.0.0_2026-10-21_stage3_b3_vs_b2_comparison_report.md`
+2. **YAML Frontmatter bắt buộc**: Mọi file Markdown đều có phần frontmatter ở đầu để AI Agent và thành viên nhóm đọc nhanh context:
+   ```yaml
+   ---
+   version: "1.0.0"
+   date: "YYYY-MM-DD"
+   type: "plan | progress | log | report | guide | notes"
+   status: "DRAFT | IN_PROGRESS | COMPLETED | APPROVED"
+   author: "Hữu Hiếu / Tiến Dũng / AI Assistant"
+   target_component: "Tên module hoặc đối tượng kiểm định"
+   summary: "Mô tả ngắn gọn nội dung và kết luận chính."
+   ---
+   ```
+3. **Nguyên tắc tính toán & Lưu trữ số liệu**:
+   - Mọi bảng số liệu nội bộ đối soát phải liên kết chặt chẽ với file gốc tại `output/` hoặc `data/`.
+   - Bảng chấm mù độc lập (Human Review) của Hiếu và Dũng phải được bảo lưu nguyên vẹn để bảo đảm tính liêm chính khoa học của hệ số Cohen's Kappa.

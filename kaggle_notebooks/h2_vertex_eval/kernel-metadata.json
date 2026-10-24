@@ -1,0 +1,11 @@
+{
+  "id": "huuhieu3333/grace-h2-vertex-deepseek-evaluation",
+  "title": "GRACE H2 Vertex DeepSeek Evaluation",
+  "code_file": "h2_vertex_eval_kaggle.ipynb",
+  "language": "python",
+  "kernel_type": "notebook",
+  "is_private": true,
+  "enable_gpu": false,
+  "enable_internet": true,
+  "dataset_sources": []
+}
