@@ -24,20 +24,29 @@ retrieval_pool:
   keep_full_train_pool_when_running_subset: true
 
 backbone_llm:
-  model: publishers/qwen/models/qwen3-coder-480b-a35b-instruct-maas
-  provider: Vertex AI
+  model: Qwen/Qwen3-Coder-30B-A3B-Instruct
+  provider: vLLM / Local
+  reference_protocol: grace_diag_kit/configs/protocol.yaml
 
 inference_config:
   temperature: 0.0
   seed: 42
-  max_tokens: 256
+  max_tokens: 1
+  top_logprobs: 5
   retry_policy: max_attempts=5; exponential_backoff=5s..120s; exhausted_request=invalid
   parser: https://github.com/HuuHieu03/GRACE/blob/main/src/evaluator.py::parse_llm_prediction
 
 prompt_context_policy:
+  layout_version: "figure6_v2"
   graph: true
   context_limit: 8192
-  truncation_policy: "target_code_max_chars=3000; standard_demo_max_chars=1500; contrastive_demo_max_chars=1200; graph_nodes_max=25; graph_edges_max=25; preserve_prefix"
+  token_budget:
+    target_code_max_tokens: 3000
+    graph_max_tokens: 1500
+    demonstration_max_tokens: 1500
+    output_reserve_tokens: 64
+  reference_tokenizer: "Qwen/Qwen2.5-Coder-32B-Instruct"
+  truncation_policy: "strict_token_budget; no_silent_empty_demo; audit_integrity=true"
 
 evaluation_metrics:
   metrics:

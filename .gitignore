@@ -48,3 +48,7 @@ kaggle_notebooks/**/dataset_staging/
 Thumbs.db
 .vscode/
 .idea/
+
+# Experiment run outputs
+runs/final/
+runs/*/records.jsonl

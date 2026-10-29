@@ -1,0 +1,24 @@
+# Định nghĩa arm/probe. Mỗi arm khác arm gốc đúng một điểm (cột "khác gì").
+# graph: none | prefix | fill | h2 | shuffle      demo: none | retrieved | random | nolabel | labelonly | contrastive
+# label: true | flip | none                        order: normal | swap        diff: true | false
+arms:
+  - {name: B0,           graph: none,    demo: none,                        base: null,  rq: [RQ1],       note: "zero-shot thuần"}
+  - {name: B1,           graph: prefix,  demo: none,                        base: B0,    rq: [RQ1, RQ3],  note: "thêm graph prefix 25/25 (= GRACE w/o demonstration)"}
+  - {name: B1-full,      graph: fill,    demo: none,                        base: B1,    rq: [RQ3],       note: "graph lấp đầy 1.500 token"}
+  - {name: B1-H2,        graph: h2,      demo: none,                        base: B1,    rq: [RQ3],       note: "cụm evidence H2, cùng ngân sách"}
+  - {name: B1-shuf,      graph: shuffle, demo: none,                        base: B1,    rq: [RQ3],       note: "CPG của hàm khác cùng cỡ ±10%"}
+  - {name: B2,           graph: prefix,  demo: retrieved,   label: true,    base: B1,    rq: [RQ1, RQ2],  note: "GRACE đầy đủ"}
+  - {name: B2-rand,      graph: prefix,  demo: random,      label: true,    base: B2,    rq: [RQ2],       note: "demo ngẫu nhiên kèm nhãn thật của nó"}
+  - {name: B2-nolabel,   graph: prefix,  demo: retrieved,   label: none,    base: B2,    rq: [RQ2],       note: "bỏ nhãn demo"}
+  - {name: B2-labelonly, graph: prefix,  demo: labelonly,   label: true,    base: B2,    rq: [RQ2],       note: "chỉ câu gợi ý nhãn, không mã demo"}
+  - {name: B2-flip,      graph: prefix,  demo: retrieved,   label: flip,    base: B2,    rq: [RQ2],       note: "đảo nhãn demo"}
+  - {name: B2-rep,       graph: prefix,  demo: retrieved,   label: true,    base: B2,    rq: [RQ2],       repeat: true, note: "chạy lại cùng prompt"}
+  - {name: B3,           graph: prefix,  demo: contrastive, label: true,    base: B1,    rq: [RQ2, RQ4],  diff: true,  note: "cặp tương phản + Key difference"}
+  - {name: B3-nodiff,    graph: prefix,  demo: contrastive, label: true,    base: B3,    rq: [RQ2],       diff: false, note: "bỏ khối Key difference"}
+  - {name: B3-swap,      graph: prefix,  demo: contrastive, label: true,    base: B3,    rq: [RQ2],       diff: true,  order: swap, note: "đảo thứ tự hai demo"}
+  - {name: B3-flip,      graph: prefix,  demo: contrastive, label: flip,    base: B3,    rq: [RQ2],       diff: true,  note: "đảo nhãn cả hai demo"}
+# Các arm không gọi LLM (tính bằng supervised_anchor.py và complementarity.py):
+#   ALL-1, ALL-0, RAND            mốc sàn theo phân bố nhãn
+#   SUP-LR, SUP-MLP, SUP-METRIC   mốc có giám sát (embedding CodeT5 đóng băng; 26 code metrics)
+#   P-PRE, P-POST                 cặp meta-model 34 / 34+4 đặc trưng
+#   ROUTE-random/confidence/benefit/oracle  đường chất lượng theo ngân sách

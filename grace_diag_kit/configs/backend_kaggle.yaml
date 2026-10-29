@@ -1,0 +1,15 @@
+# Cấu hình backend kết nối tới Kaggle Server tự host (0 USD)
+# Chạy notebook kaggle_notebooks/host_llm_kaggle_server.ipynb hoặc script scripts/kaggle_host_runner.py
+# để lấy public Cloudflared/Ngrok URL hoặc trỏ tới http://localhost:8080/v1 nếu chạy qua SSH tunnel.
+backend:
+  kind: llamacpp
+  base_url: http://127.0.0.1:8080/v1
+  model: qwen2.5-coder-7b-instruct          # Phải trùng với --alias hoặc tên model trên Kaggle
+  api_key: EMPTY
+  temperature: 0.0
+  max_tokens: 1
+  top_logprobs: 5
+  seed: 42
+  guided_choice: false
+  timeout_s: 300
+  system_prompt: null

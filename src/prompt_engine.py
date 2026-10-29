@@ -10,7 +10,7 @@ Cấu trúc chuẩn theo bài báo:
 4. Output Formatting Constraint (Dự đoán nhị phân 1/0 hoặc Vulnerable/Non-vulnerable).
 """
 
-from typing import Dict, Any, List, Union
+from typing import Dict, Any, List, Union, Optional, Tuple
 
 
 def format_node_information(nodes: List[Any], max_nodes: int = 30) -> str:
@@ -79,26 +79,13 @@ def format_graph_structure(nodes: List[Any], edges: List[Any], max_nodes: int = 
     )
 
 
-def build_grace_prompt(sample: Dict[str, Any], include_demonstration: bool = True) -> str:
+def build_grace_prompt_legacy(sample: Dict[str, Any], include_demonstration: bool = True) -> str:
     """
-    Xây dựng toàn bộ Prompt tuân thủ 100% thiết kế tại Mục 3.3 & Hình 6 (Figure 6) bài báo GRACE:
-    
-    1. Identity & Domain Setting:
-       - 'You are now an excellent programmer.' (Pi)
-       - 'You are conducting a function vulnerability detection task for C/C++ language.' (Pd)
-       
-    2. Demonstration Section (In-Context Learning - Nếu được kích hoạt):
-       - 'Here is an example for you to learn from:'
-       - [Demonstration Code Snippet] (Chỉ mã nguồn, KHÔNG đưa graph và reasoning tự chế)
-       - [Demonstration Ground Truth Label] ('Vulnerable' (1) hoặc 'Non-vulnerable' (0))
-       
-    3. Target Query Function (Hàm cần kiểm tra):
-       - [Target Code Snippet]
-       - The node information of the function is as follows: [Node info]
-       - The edge information of the function is as follows: [Edge info]
-       
-    4. Task Instruction & Output Constraint:
-       - 'In the above target code snippet, check for potential security vulnerabilities and output either '1' if Vulnerable or '0' if Non-vulnerable.'
+    Xây dựng toàn bộ Prompt theo thiết kế cũ (Legacy):
+    1. Basic Prompt, Identity & Domain Information (Pi, Pd, Pb).
+    2. Demonstration Example (Chỉ bao gồm Mã nguồn ví dụ + Nhãn Ground Truth).
+    3. Target Query Function (Mã nguồn mục tiêu + Thông tin Nút Node & Cạnh Edge của Đồ thị CPG).
+    4. Output Formatting Constraint (Dự đoán nhị phân 1/0 hoặc Vulnerable/Non-vulnerable).
     """
     prompt_parts = []
     
@@ -161,6 +148,174 @@ def build_grace_prompt(sample: Dict[str, Any], include_demonstration: bool = Tru
     prompt_parts.append(format_constraint)
     
     return "\n\n".join(prompt_parts)
+
+
+def build_grace_prompt_canonical_with_metadata(
+    sample: Dict[str, Any],
+    include_demonstration: bool = True,
+    budget_manager: Optional[Any] = None,
+    include_graph: bool = True,
+) -> Tuple[str, Dict[str, Any]]:
+    """
+    Xây dựng toàn bộ Prompt tuân thủ 100% Hình 6 (Figure 6) của bài báo gốc GRACE:
+    1. Target Code ([CODE SNIPPET])
+    2. Task Instruction (In the above code snippet, check for potential security vulnerabilities and answer with a single digit: 1 if Vulnerable, 0 if Non-vulnerable. You are now an excellent programmer. You are conducting a function vulnerability detection task for C/C++ language.)
+    3. Node Info (The node information of the code snippet is as follows: ...)
+    4. Edge Info (The edge information of the code snippet is as follows: ...)
+    5. Demonstration (ở cuối cùng): The following is an example, and it is [Vulnerable | Non-vulnerable].\n[DEMO CODE]
+    6. Answer Indicator (Answer (0 or 1):)
+    """
+    if budget_manager is None:
+        try:
+            from token_budget import TokenBudgetManager
+            budget_manager = TokenBudgetManager(force_offline=True)
+        except Exception:
+            budget_manager = None
+
+    # 1. Target Code
+    raw_query_code = str(sample.get("func") or sample.get("code") or sample.get("functionSource") or sample.get("query_code") or "").strip()
+    if budget_manager is not None:
+        target_code, code_stats = budget_manager.truncate_target_code(raw_query_code)
+    else:
+        target_code = raw_query_code[:3000] if len(raw_query_code) > 3000 else raw_query_code
+        code_stats = {"was_truncated": len(raw_query_code) > 3000}
+
+    # 2. Task Instruction (Exact Figure 6 text)
+    task_instruction = (
+        "In the above code snippet, check for potential security vulnerabilities and answer with a single digit: 1 if Vulnerable, 0 if Non-vulnerable. "
+        "You are now an excellent programmer. You are conducting a function vulnerability detection task for C/C++ language."
+    )
+
+    # 3 & 4. Node & Edge Info
+    graph_text = ""
+    graph_stats = {"was_truncated": False}
+    render_graph = include_graph and sample.get("include_graph", True)
+    if render_graph:
+        nodes = sample.get("nodes", [])
+        edges = sample.get("edges", [])
+        node_str = format_node_information(nodes, max_nodes=25)
+        edge_str = format_edge_information(edges, max_edges=25)
+
+        node_section = f"The node information of the code snippet is as follows:\n{node_str}"
+        edge_section = f"The edge information of the code snippet is as follows:\n{edge_str}"
+        graph_full = f"{node_section}\n\n{edge_section}"
+
+        if budget_manager is not None:
+            graph_text, graph_stats = budget_manager.truncate_graph(graph_full)
+        else:
+            graph_text = graph_full
+
+    # 5. Demonstration (ở cuối cùng)
+    demo_section = ""
+    demo_stats: Dict[str, Any] = {"was_truncated": False, "truncated_demo": False, "empty_demo": False}
+
+    if include_demonstration:
+        demo_sample = sample.get("example")
+        if demo_sample is None and sample.get("contrastive_obj"):
+            demo_sample = sample["contrastive_obj"].vulnerable_example
+        if demo_sample is None and sample.get("demonstrations") and isinstance(sample["demonstrations"], list) and len(sample["demonstrations"]) > 0:
+            demo_sample = sample["demonstrations"][0]
+
+        if demo_sample:
+            if isinstance(demo_sample, dict):
+                demo_label_val = demo_sample.get("target", sample.get("example_target", 0))
+                demo_raw_code = str(demo_sample.get("func") or demo_sample.get("code") or demo_sample.get("functionSource") or "").strip()
+            else:
+                demo_label_val = sample.get("example_target", 0)
+                demo_raw_code = str(demo_sample).strip()
+
+            demo_label_str = "Vulnerable" if (demo_label_val == 1 or str(demo_label_val).lower() in ("1", "vulnerable")) else "Non-vulnerable"
+
+            if budget_manager is not None:
+                truncated_demo_code, demo_stats = budget_manager.truncate_demonstration(demo_raw_code)
+            else:
+                truncated_demo_code = demo_raw_code[:1500] if len(demo_raw_code) > 1500 else demo_raw_code
+                demo_stats = {
+                    "was_truncated": len(demo_raw_code) > 1500,
+                    "truncated_demo": len(demo_raw_code) > 1500 and len(truncated_demo_code) < len(demo_raw_code) * 0.25,
+                    "empty_demo": not truncated_demo_code.strip()
+                }
+
+            demo_section = f"The following is an example, and it is {demo_label_str}.\n{truncated_demo_code}"
+
+    # 6. Answer Indicator
+    answer_indicator = "Answer (0 or 1):"
+
+    # Assemble in exact Figure 6 order
+    parts = [target_code, task_instruction]
+    if graph_text:
+        parts.append(graph_text)
+    if demo_section:
+        parts.append(demo_section)
+    parts.append(answer_indicator)
+
+    prompt = "\n\n".join(parts)
+
+    audit_stats = {}
+    if budget_manager is not None:
+        audit_stats = budget_manager.audit_prompt_tokens(
+            code_text=target_code,
+            graph_text=graph_text,
+            demo_text=demo_section,
+            instruction_text=task_instruction,
+            format_text=answer_indicator,
+        )
+
+    metadata = {
+        "layout_version": "figure6_v2",
+        "tokens_code": audit_stats.get("tokens_code", 0),
+        "tokens_graph": audit_stats.get("tokens_graph", 0),
+        "tokens_demo": audit_stats.get("tokens_demo", 0),
+        "tokens_total": audit_stats.get("tokens_total", 0),
+        "output_reserve": audit_stats.get("output_reserve", 64),
+        "context_limit": audit_stats.get("context_limit", 8192),
+        "truncated_demo": demo_stats.get("truncated_demo", False),
+        "empty_demo": demo_stats.get("empty_demo", False),
+        "code_stats": code_stats,
+        "graph_stats": graph_stats,
+        "demo_stats": demo_stats,
+        "audit": audit_stats,
+    }
+    return prompt, metadata
+
+
+def build_grace_prompt_canonical(
+    sample: Dict[str, Any],
+    include_demonstration: bool = True,
+    budget_manager: Optional[Any] = None,
+    include_graph: bool = True,
+) -> str:
+    """Wrapper trả về prompt string Figure 6 canonical."""
+    prompt_str, _ = build_grace_prompt_canonical_with_metadata(
+        sample=sample,
+        include_demonstration=include_demonstration,
+        budget_manager=budget_manager,
+        include_graph=include_graph,
+    )
+    return prompt_str
+
+
+def build_grace_prompt(
+    sample: Dict[str, Any],
+    include_demonstration: bool = True,
+    canonical: bool = False,
+    budget_manager: Optional[Any] = None,
+    include_graph: bool = True,
+) -> str:
+    """
+    Xây dựng prompt GRACE với hỗ trợ tương thích ngược (Zero Regression).
+    - canonical=False (mặc định): giữ nguyên định dạng legacy trừ khi sample yêu cầu layout_version="figure6_v2"
+    - canonical=True: sử dụng layout Figure 6 chuẩn bài báo
+    """
+    use_canonical = canonical or sample.get("layout_version") == "figure6_v2" or sample.get("layout") == "figure6_v2"
+    if use_canonical:
+        return build_grace_prompt_canonical(
+            sample=sample,
+            include_demonstration=include_demonstration,
+            budget_manager=budget_manager,
+            include_graph=include_graph,
+        )
+    return build_grace_prompt_legacy(sample=sample, include_demonstration=include_demonstration)
 
 
 def build_contrastive_prompt(
@@ -279,10 +434,14 @@ def build_prompt(sample: Dict[str, Any], mode: str = "contrastive_2shot") -> str
         return build_grace_prompt(sample, include_demonstration=False)
     elif mode == "standard_1shot":
         return build_grace_prompt(sample, include_demonstration=True)
+    elif mode in ("standard_1shot_canonical", "canonical_1shot", "figure6_v2"):
+        return build_grace_prompt_canonical(sample, include_demonstration=True)
+    elif mode in ("zero_shot_canonical", "figure6_v2_zero_shot"):
+        return build_grace_prompt_canonical(sample, include_demonstration=False)
     elif mode == "contrastive_2shot":
         return build_contrastive_prompt(sample, include_security_diff=True)
     elif mode == "contrastive_2shot_nodiff":
         return build_contrastive_prompt(sample, include_security_diff=False)
     else:
-        raise ValueError(f"Chế độ mode '{mode}' không hợp lệ. Chọn: 'zero_shot', 'standard_1shot', 'contrastive_2shot', 'contrastive_2shot_nodiff'.")
+        raise ValueError(f"Chế độ mode '{mode}' không hợp lệ. Chọn: 'zero_shot', 'standard_1shot', 'figure6_v2', 'contrastive_2shot', 'contrastive_2shot_nodiff'.")
 

@@ -1,0 +1,8 @@
+Metadata-Version: 2.1
+Name: grace-diag
+Version: 0.1.0
+Summary: Bộ công cụ chẩn đoán GRACE: probe thay-một-thành-phần, chấm điểm logprob, mốc có giám sát, thống kê ghép cặp
+Requires-Python: >=3.10
+Provides-Extra: tokenizer
+Provides-Extra: figures
+Provides-Extra: test

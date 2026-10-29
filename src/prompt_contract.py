@@ -5,11 +5,13 @@ from pathlib import Path
 import re
 
 from dataset_contract import code_hash, stable_hash, validate_identities
-from prompt_engine import format_graph_structure
+from prompt_engine import format_graph_structure, format_node_information, format_edge_information
 
 CAPS = {"target_chars": 3000, "standard_demo_chars": 1500, "contrastive_demo_chars": 1200,
         "nodes": 25, "edges": 25}
 CONDITIONS = {"original", "label_flip", "order_swap", "repeat_original", "graph_omitted", "no_difference"}
+CONDITIONS_V2 = {"original", "label_flip", "order_swap", "repeat_original", "graph_omitted",
+                 "graph_shuffled", "demo_random", "demo_nolabel", "demo_labelonly", "no_difference"}
 
 
 def closed_graph(nodes, edges):
@@ -41,7 +43,206 @@ def closed_graph(nodes, edges):
                             "source_graph_sha256": stable_hash({"nodes": nodes, "edges": edges})}
 
 
-def render_control(spec, condition="original"):
+def render_control_v2(spec, condition="original", budget_manager=None):
+    if condition not in CONDITIONS_V2:
+        raise ValueError(f"Unknown control condition: {condition}")
+    if any(k in spec for k in ["target", "target_label", "ground_truth"]):
+        raise ValueError("Query labels cannot enter the renderer")
+    code = spec.get("query_code") or spec.get("func")
+    if not isinstance(code, str) or not code.strip():
+        raise ValueError("Empty target code")
+    demos = spec.get("demonstrations")
+    if not isinstance(demos, list) or len(demos) not in (1, 2) or len({d["function_uid"] for d in demos}) != len(demos):
+        raise ValueError("One or two unique frozen demonstrations required")
+    for d in demos:
+        if type(d["target"]) is not int or d["target"] not in (0, 1) or not str(d.get("func", "")).strip():
+            raise ValueError("Demo code/label contract failed")
+
+    if condition == "demo_random":
+        rand_demos = spec.get("random_demonstrations")
+        if not isinstance(rand_demos, list) or len(rand_demos) == 0:
+            raise ValueError("demo_random control requires nonempty random_demonstrations list in spec")
+        for rd in rand_demos:
+            if type(rd.get("target")) is not int or rd.get("target") not in (0, 1) or not str(rd.get("func", "")).strip():
+                raise ValueError("Random demonstration code/label contract failed")
+        ordered = list(rand_demos[:len(demos)])
+    elif condition == "order_swap":
+        if len(demos) != 2:
+            raise ValueError("Order swap needs two demonstrations")
+        ordered = demos[::-1]
+    else:
+        ordered = list(demos)
+
+    diff = spec.get("security_difference", "")
+    if condition == "no_difference" and not diff:
+        raise ValueError("No-difference ablation needs a nonempty original difference block")
+    if condition == "graph_omitted" and not spec.get("include_graph", True):
+        raise ValueError("Graph ablation needs a graph in the original prompt")
+    if diff and re.search(r"\b(?:safe|vulnerable|non-vulnerable|first|second)\b|example\s*[12]", diff, re.I):
+        raise ValueError("Difference clues must use code identifiers, not class/position labels that contradict controls")
+
+    if budget_manager is None:
+        try:
+            from token_budget import TokenBudgetManager
+            budget_manager = TokenBudgetManager(force_offline=True)
+        except Exception:
+            budget_manager = None
+
+    # 1. Target code
+    full_code = code.strip()
+    if budget_manager is not None:
+        truncated_target, target_stats = budget_manager.truncate_target_code(full_code)
+        target_cut = target_stats.get("cut_char_index", len(full_code))
+    else:
+        target_cut = min(len(full_code), CAPS["target_chars"])
+        truncated_target = full_code[:target_cut]
+        if len(full_code) > target_cut:
+            truncated_target += "\n/* [TRUNCATED TARGET] */"
+        target_stats = {
+            "was_truncated": len(full_code) > target_cut,
+            "cut_char_index": target_cut,
+        }
+    target_omitted = full_code[target_cut:] if target_stats.get("was_truncated") else ""
+
+    # 2. Task instruction (Figure 6)
+    task_instruction = (
+        "In the above code snippet, check for potential security vulnerabilities and answer with a single digit: 1 if Vulnerable, 0 if Non-vulnerable. "
+        "You are now an excellent programmer. You are conducting a function vulnerability detection task for C/C++ language."
+    )
+
+    # 3 & 4. Target graph
+    include_graph = spec.get("include_graph", True) and condition != "graph_omitted"
+    ns, es, graph_meta = closed_graph(spec.get("nodes", []), spec.get("edges", []))
+    if condition == "graph_shuffled":
+        ns = list(reversed(ns))
+        es = list(reversed(es))
+
+    if include_graph:
+        if not ns or not es:
+            raise ValueError("Graph requested but no closed node/edge structure is available")
+        node_str = format_node_information(ns, max_nodes=25)
+        edge_str = format_edge_information(es, max_edges=25)
+        raw_graph = (
+            f"The node information of the code snippet is as follows:\n{node_str}\n\n"
+            f"The edge information of the code snippet is as follows:\n{edge_str}"
+        )
+        if budget_manager is not None:
+            graph_text, graph_stats = budget_manager.truncate_graph(raw_graph)
+        else:
+            graph_text = raw_graph
+            graph_stats = {"was_truncated": False}
+    else:
+        graph_text = ""
+        graph_stats = {"was_truncated": False}
+
+    graph_meta["included"] = include_graph
+    if not include_graph:
+        graph_meta.update(rendered_nodes=0, rendered_edges=0)
+
+    # 5. Demonstrations (at the end)
+    demo_blocks = []
+    omitted = []
+    displayed = []
+    demo_stats_list = []
+
+    for i, demo in enumerate(ordered, 1):
+        full_demo = demo["func"].strip()
+        demo_cap = 1500 if len(ordered) == 1 else 750
+
+        if budget_manager is not None:
+            truncated_demo, d_stats = budget_manager.truncate_demonstration(full_demo, max_tokens=demo_cap)
+            demo_cut = d_stats.get("cut_char_index", len(full_demo))
+        else:
+            demo_cut = min(len(full_demo), demo_cap)
+            truncated_demo = full_demo[:demo_cut]
+            if len(full_demo) > demo_cut:
+                truncated_demo += "\n/* [TRUNCATED DEMONSTRATION] */"
+            d_stats = {
+                "was_truncated": len(full_demo) > demo_cut,
+                "truncated_demo": len(full_demo) > demo_cut and demo_cut < len(full_demo) * 0.25,
+                "empty_demo": not full_demo[:demo_cut].strip(),
+                "cut_char_index": demo_cut,
+            }
+
+        if d_stats.get("empty_demo") or not full_demo[:demo_cut].strip():
+            raise ValueError("Demonstration truncated to empty")
+
+        demo_omitted = full_demo[demo_cut:] if d_stats.get("was_truncated") else ""
+        demo_stats_list.append(d_stats)
+
+        target_val = demo["target"]
+        label_val = 1 - target_val if condition == "label_flip" else target_val
+        label_str = "Vulnerable" if label_val == 1 else "Non-vulnerable"
+
+        if condition == "demo_nolabel":
+            demo_text = f"The following is an example.\n{truncated_demo}"
+        elif condition == "demo_labelonly":
+            demo_text = f"The following is an example, and it is {label_str}."
+        else:
+            demo_text = f"The following is an example, and it is {label_str}.\n{truncated_demo}"
+
+        demo_blocks.append(demo_text)
+        displayed.append({"function_uid": demo["function_uid"], "displayed_label": label_val})
+        omitted.append({
+            "function_uid": demo["function_uid"],
+            "omitted_code": demo_omitted,
+            "stats": d_stats,
+        })
+
+    if diff and condition != "no_difference":
+        demo_blocks.append(f"--- SECURITY DIFFERENCE CLUES ---\nHeuristic observations only; not a verified vulnerability diagnosis.\n{diff}")
+
+    demos_combined = "\n\n".join(demo_blocks)
+
+    # 6. Answer indicator
+    answer_indicator = "Answer (0 or 1):"
+
+    # Assemble in Figure 6 order
+    parts = [truncated_target, task_instruction]
+    if include_graph and graph_text:
+        parts.append(graph_text)
+    if demos_combined:
+        parts.append(demos_combined)
+    parts.append(answer_indicator)
+
+    prompt = "\n\n".join(parts)
+
+    audit_stats = {}
+    if budget_manager is not None:
+        audit_stats = budget_manager.audit_prompt_tokens(
+            code_text=truncated_target,
+            graph_text=graph_text,
+            demo_text=demos_combined,
+            instruction_text=task_instruction,
+            format_text=answer_indicator,
+        )
+
+    integrity_report = {
+        "target_label_leaked": False,
+        "truncated_demo": any(d.get("truncated_demo", False) for d in demo_stats_list),
+        "empty_demo": any(d.get("empty_demo", False) for d in demo_stats_list),
+        "audit": audit_stats,
+    }
+
+    return {
+        "prompt": prompt,
+        "evidence": {
+            "layout_version": "figure6_v2",
+            "target_code_sha256": code_hash(code),
+            "graph": graph_meta,
+            "caps": dict(CAPS),
+            "target_omitted_code": target_omitted,
+            "demo_omitted_code": omitted,
+            "displayed_demonstrations": displayed,
+            "token_budget": audit_stats,
+            "integrity_report": integrity_report,
+        }
+    }
+
+
+def render_control(spec, condition="original", layout=None, budget_manager=None):
+    if layout == "figure6_v2" or spec.get("layout_version") == "figure6_v2" or spec.get("layout") == "figure6_v2":
+        return render_control_v2(spec, condition=condition, budget_manager=budget_manager)
     if condition not in CONDITIONS:
         raise ValueError("Unknown control")
     if any(k in spec for k in ["target", "target_label", "ground_truth"]):

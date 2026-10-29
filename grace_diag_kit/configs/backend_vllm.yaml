@@ -1,0 +1,21 @@
+# vLLM tự host (GPU thuê). Khởi động server:
+#   pip install vllm
+#   # 80 GB (A100/H100): bf16
+#   vllm serve Qwen/Qwen3-Coder-30B-A3B-Instruct --max-model-len 8192 --seed 42 \
+#       --gpu-memory-utilization 0.92 --enable-prefix-caching --port 8000
+#   # 48 GB (L40S/A6000 Ada): FP8 chính thức
+#   vllm serve Qwen/Qwen3-Coder-30B-A3B-Instruct-FP8 --max-model-len 8192 --seed 42 --port 8000
+#   # 24 GB (L4/4090): bản AWQ 4-bit cộng đồng (kiểm tra vLLM hỗ trợ MoE+AWQ trước), hoặc chuyển sang llama.cpp
+# Dự phòng: Qwen/Qwen2.5-Coder-32B-Instruct-AWQ --quantization awq
+backend:
+  kind: vllm
+  base_url: http://localhost:8000/v1
+  model: Qwen/Qwen3-Coder-30B-A3B-Instruct
+  api_key: EMPTY
+  temperature: 0.0
+  max_tokens: 1
+  top_logprobs: 5
+  seed: 42
+  guided_choice: false        # bật nếu smoke test < 99% prompt có token 0/1 trong top-5
+  timeout_s: 120
+  system_prompt: null

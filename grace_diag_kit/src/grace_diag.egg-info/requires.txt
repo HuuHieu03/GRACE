@@ -1,0 +1,14 @@
+numpy>=1.23
+scipy>=1.10
+scikit-learn>=1.2
+pyyaml>=6
+openai>=1.0
+
+[figures]
+matplotlib>=3.7
+
+[test]
+pytest>=7
+
+[tokenizer]
+transformers>=4.51

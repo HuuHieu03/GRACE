@@ -1,0 +1,241 @@
+# ==============================================================================
+# GRACE: Plug-in Model Registry for Kaggle Free GPU Hosting (0 USD)
+# ==============================================================================
+# Kiến trúc Plug-in / Modular Model Registry cho phép chuyển đổi tức thì giữa các
+# model và inference engine trên Kaggle GPU (2x Tesla T4 16GB = 32GB hoặc 1x P100 16GB).
+# Tương thích 100% chuẩn OpenAI API endpoint (/v1/chat/completions) có top_logprobs
+# phục vụ smoke_test_backend.py và run_matrix.py của Thầy.
+# ==============================================================================
+
+version: "1.0.0"
+default_model: "qwen2.5-coder-7b-instruct"
+default_engine: "llamacpp"
+
+server_defaults:
+  host: "0.0.0.0"
+  port: 8080
+  api_prefix: "/v1"
+  enable_logprobs: true
+  top_logprobs: 5
+  temperature: 0.0
+  max_tokens: 1
+  seed: 42
+  timeout_s: 180
+  tunnel: "cloudflared"  # Lựa chọn: "cloudflared" | "ngrok" | "localtunnel" | "none"
+  ngrok_token_env: "NGROK_AUTHTOKEN"
+
+hardware_profiles:
+  kaggle_2xt4:
+    name: "Kaggle 2x Tesla T4 (32GB VRAM)"
+    gpus: 2
+    gpu_type: "Tesla T4"
+    vram_per_gpu_gb: 16.0
+    total_vram_gb: 32.0
+    supports_tensor_parallel: true
+    supports_split_mode: true
+    recommended_engine: "llamacpp"
+  kaggle_1xp100:
+    name: "Kaggle 1x Tesla P100 (16GB VRAM)"
+    gpus: 1
+    gpu_type: "Tesla P100"
+    vram_per_gpu_gb: 16.0
+    total_vram_gb: 16.0
+    supports_tensor_parallel: false
+    supports_split_mode: false
+    recommended_engine: "llamacpp"
+
+models:
+  # ----------------------------------------------------------------------------
+  # 1. Qwen2.5-Coder-7B-Instruct (Nhẹ, tốc độ cao, vừa vặn 1x GPU 16GB)
+  # ----------------------------------------------------------------------------
+  qwen2.5-coder-7b-instruct:
+    display_name: "Qwen2.5-Coder-7B-Instruct"
+    parameters: "7.6B"
+    context_window: 8192
+    hf_repo: "Qwen/Qwen2.5-Coder-7B-Instruct"
+    gguf_repo: "Qwen/Qwen2.5-Coder-7B-Instruct-GGUF"
+    gguf_file: "qwen2.5-coder-7b-instruct-q4_k_m.gguf"
+    awq_repo: "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ"
+    recommended_hardware: ["kaggle_1xp100", "kaggle_2xt4"]
+    engines:
+      llamacpp:
+        supported: true
+        weight_format: "gguf"
+        quantization: "Q4_K_M"
+        vram_required_gb: 5.5
+        server_binary: "llama-server"
+        python_module: "llama_cpp.server"
+        cli_args:
+          - "--n-gpu-layers"
+          - "99"
+          - "--ctx-size"
+          - "8192"
+          - "--parallel"
+          - "1"
+          - "--alias"
+          - "qwen2.5-coder-7b-instruct"
+      vllm:
+        supported: true
+        weight_format: "bfloat16"
+        quantization: null
+        vram_required_gb: 14.5
+        tensor_parallel_size: 1
+        cli_args:
+          - "--max-model-len"
+          - "8192"
+          - "--gpu-memory-utilization"
+          - "0.90"
+          - "--enforce-eager"
+      transformers:
+        supported: true
+        weight_format: "bfloat16"
+        vram_required_gb: 15.0
+        device_map: "auto"
+
+  # ----------------------------------------------------------------------------
+  # 2. Qwen2.5-Coder-14B-Instruct (Cân bằng độ chính xác & tài nguyên)
+  # ----------------------------------------------------------------------------
+  qwen2.5-coder-14b-instruct:
+    display_name: "Qwen2.5-Coder-14B-Instruct"
+    parameters: "14.7B"
+    context_window: 8192
+    hf_repo: "Qwen/Qwen2.5-Coder-14B-Instruct"
+    gguf_repo: "Qwen/Qwen2.5-Coder-14B-Instruct-GGUF"
+    gguf_file: "qwen2.5-coder-14b-instruct-q4_k_m.gguf"
+    awq_repo: "Qwen/Qwen2.5-Coder-14B-Instruct-AWQ"
+    recommended_hardware: ["kaggle_1xp100", "kaggle_2xt4"]
+    engines:
+      llamacpp:
+        supported: true
+        weight_format: "gguf"
+        quantization: "Q4_K_M"
+        vram_required_gb: 9.8
+        server_binary: "llama-server"
+        python_module: "llama_cpp.server"
+        cli_args:
+          - "--n-gpu-layers"
+          - "99"
+          - "--ctx-size"
+          - "8192"
+          - "--parallel"
+          - "1"
+          - "--alias"
+          - "qwen2.5-coder-14b-instruct"
+      vllm:
+        supported: true
+        weight_format: "awq"
+        quantization: "awq"
+        vram_required_gb: 11.0
+        tensor_parallel_size: 1
+        cli_args:
+          - "--max-model-len"
+          - "8192"
+          - "--gpu-memory-utilization"
+          - "0.90"
+          - "--quantization"
+          - "awq"
+      transformers:
+        supported: true
+        weight_format: "4bit"
+        vram_required_gb: 10.5
+        device_map: "auto"
+
+  # ----------------------------------------------------------------------------
+  # 3. Qwen2.5-Coder-32B-Instruct (Model cỡ lớn, tối ưu hóa qua 2xT4 layer-split)
+  # ----------------------------------------------------------------------------
+  qwen2.5-coder-32b-instruct:
+    display_name: "Qwen2.5-Coder-32B-Instruct"
+    parameters: "32.5B"
+    context_window: 8192
+    hf_repo: "Qwen/Qwen2.5-Coder-32B-Instruct"
+    gguf_repo: "Qwen/Qwen2.5-Coder-32B-Instruct-GGUF"
+    gguf_file: "qwen2.5-coder-32b-instruct-q4_k_m.gguf"
+    awq_repo: "Qwen/Qwen2.5-Coder-32B-Instruct-AWQ"
+    recommended_hardware: ["kaggle_2xt4"]
+    engines:
+      llamacpp:
+        supported: true
+        weight_format: "gguf"
+        quantization: "Q4_K_M"
+        vram_required_gb: 20.5
+        server_binary: "llama-server"
+        python_module: "llama_cpp.server"
+        cli_args:
+          - "--n-gpu-layers"
+          - "99"
+          - "--split-mode"
+          - "layer"
+          - "--ctx-size"
+          - "8192"
+          - "--parallel"
+          - "1"
+          - "--alias"
+          - "qwen2.5-coder-32b-instruct"
+      vllm:
+        supported: true
+        weight_format: "awq"
+        quantization: "awq"
+        vram_required_gb: 21.0
+        tensor_parallel_size: 2
+        cli_args:
+          - "--max-model-len"
+          - "8192"
+          - "--gpu-memory-utilization"
+          - "0.90"
+          - "--tensor-parallel-size"
+          - "2"
+          - "--quantization"
+          - "awq"
+      transformers:
+        supported: true
+        weight_format: "4bit"
+        vram_required_gb: 21.0
+        device_map: "auto"
+
+  # ----------------------------------------------------------------------------
+  # 4. Qwen3-Coder-30B-A3B-Instruct (MoE Baseline trong Đề cương của Thầy)
+  # ----------------------------------------------------------------------------
+  qwen3-coder-30b-a3b-instruct:
+    display_name: "Qwen3-Coder-30B-A3B-Instruct (MoE)"
+    parameters: "30B (MoE Active 3B)"
+    context_window: 8192
+    hf_repo: "Qwen/Qwen3-Coder-30B-A3B-Instruct"
+    gguf_repo: "bartowski/Qwen3-Coder-30B-A3B-Instruct-GGUF"
+    gguf_file: "Qwen3-Coder-30B-A3B-Instruct-UD-Q4_K_XL.gguf"
+    awq_repo: null
+    recommended_hardware: ["kaggle_2xt4"]
+    engines:
+      llamacpp:
+        supported: true
+        weight_format: "gguf"
+        quantization: "Q4_K_XL"
+        vram_required_gb: 18.5
+        server_binary: "llama-server"
+        python_module: "llama_cpp.server"
+        cli_args:
+          - "--n-gpu-layers"
+          - "all"
+          - "--split-mode"
+          - "layer"
+          - "--ctx-size"
+          - "8192"
+          - "--parallel"
+          - "1"
+          - "--alias"
+          - "qwen3-coder-30b-q4"
+      vllm:
+        supported: true
+        weight_format: "fp8"
+        quantization: "fp8"
+        vram_required_gb: 22.0
+        tensor_parallel_size: 2
+        cli_args:
+          - "--max-model-len"
+          - "8192"
+          - "--gpu-memory-utilization"
+          - "0.90"
+          - "--tensor-parallel-size"
+          - "2"
+      transformers:
+        supported: false
+        vram_required_gb: 32.0

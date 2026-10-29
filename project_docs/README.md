@@ -42,12 +42,14 @@ project_docs/
 │   ├── blind_review_kappa_summary.md                # Tổng hợp hệ số Cohen's Kappa trước hòa giải
 │   ├── v1.0.0_2026-10-21_stage3_b3_vs_b2_comparison_report.md # Báo cáo chi tiết đối đầu B3 vs B2
 │   ├── v1.0.0_2026-10-22_supervisor_readiness_review.md # Rà soát mức độ sẵn sàng báo cáo Thầy (Lần 1)
-│   └── v1.1.0_2026-10-22_supervisor_readiness_second_review.md # Rà soát mức độ sẵn sàng báo cáo Thầy (Lần 2)
+│   ├── v1.1.0_2026-10-22_supervisor_readiness_second_review.md # Rà soát mức độ sẵn sàng báo cáo Thầy (Lần 2)
+│   └── v1.0.0_2026-10-29_chuan_hoa_figure6_va_tich_hop_step0_step1_report.md # Báo cáo chuẩn hóa Hình 6, grace_diag_kit, Bước 0 & Bước 1
 │
 ├── progress/                 # Theo dõi tiến độ công việc tuần tự
 │   ├── TEMPLATE_progress.md                         # Khung mẫu theo dõi tiến độ
 │   ├── v1.0.0_2026-10-22_supervisor_remediation_progress.md # Tiến độ thực hiện các yêu cầu của Thầy
-│   └── v1.0.0_2026-10-22_h2_and_e13_progress.md     # Tiến độ triển khai nhánh H2 và E1.3
+│   ├── v1.0.0_2026-10-22_h2_and_e13_progress.md     # Tiến độ triển khai nhánh H2 và E1.3
+│   └── v1.0.0_2026-10-29_chuan_hoa_figure6_va_tich_hop_step0_step1_progress.md # Tiến độ chuẩn hóa Hình 6, adapter 2-split và Kaggle hosting
 │
 ├── logs/                     # Nhật ký công việc, ghi chép lỗi kỹ thuật & runtime logs
 │   ├── TEMPLATE_log.md                              # Khung mẫu nhật ký
