@@ -14,10 +14,10 @@
     "note": "bỏ khối Key difference"
   },
   "seed": 42,
-  "protocol_sha256": "d970f9b844de628dccf3deade81e5fd6443bdc0f2ddef64635d4c9a1892e538c",
-  "specs_sha256": "590736a2000379992485d906177b5b7114e8d3c2693b0f01d4517c79bc1c81dc",
+  "protocol_sha256": "dde205a583548ce7aa62b3eb2f6d841ad85d06e2afe5f4422bfff6dba57ff2bf",
+  "specs_sha256": "88f749c000a7b110ed87641d9d5dc4bc912b9f2fdb3dcc2a97753238a4dbcdfd",
   "backend": "dry-run",
   "tokenizer": "grace_diag_kit/tokenizer",
   "python": "3.10.11",
-  "started_utc": "2026-10-30T23:51:45Z"
+  "started_utc": "2026-10-31T01:18:27Z"
 }

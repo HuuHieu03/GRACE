@@ -13,10 +13,10 @@
     "note": "demo ngẫu nhiên kèm nhãn thật của nó"
   },
   "seed": 42,
-  "protocol_sha256": "d970f9b844de628dccf3deade81e5fd6443bdc0f2ddef64635d4c9a1892e538c",
-  "specs_sha256": "172cac25e86c4ed2dc3431fdba8bfd581799c769b4f2cafe3eec61c671f7c495",
+  "protocol_sha256": "dde205a583548ce7aa62b3eb2f6d841ad85d06e2afe5f4422bfff6dba57ff2bf",
+  "specs_sha256": "72ce24b2629588a7edf5206c99b26865b630a489580a6b03964c368fad79858e",
   "backend": "dry-run",
   "tokenizer": "grace_diag_kit/tokenizer",
   "python": "3.10.11",
-  "started_utc": "2026-10-30T23:55:00Z"
+  "started_utc": "2026-10-31T01:21:20Z"
 }

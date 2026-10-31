@@ -1,0 +1,91 @@
+# Giao thức đăng ký trước — bản để commit + tag prereg-v1 (điền các ô "fill:" trước khi tag)
+study_id: grace_diag_replication_v1
+version: prereg-v1
+registered_at: "2026-10-31"            # ngày tag; mọi lượt test sau ngày này mới có giá trị xác nhận
+test_exposure_disclosure: >
+  Test Devign/ReVeal đã được xem trong giai đoạn thăm dò (36 run qua API, dev-100, H1–H3).
+  Mọi lựa chọn cấu hình, ngưỡng và arm của lượt xác nhận được chốt trên official validation
+  trước khi chạy test; kết quả lịch sử chỉ là bằng chứng động cơ (phụ lục).
+
+datasets:
+  devign:  {hf: "DetectVul/devign@main",  retrieval_bank: train, threshold_split: validation, conclusion_split: test}
+  reveal:  {hf: "claudios/ReVeal@main",    retrieval_bank: train, threshold_split: validation, conclusion_split: test}
+dedup:
+  normalize: strip_comments_and_whitespace
+  exact_overlap_with_eval: remove_from_bank
+  near_duplicate_jaccard_3gram: 0.9          # chỉ gắn cờ; báo cáo cả test đầy đủ và test không gần trùng
+  label_conflict_groups: remove_from_bank
+  manifest_sha256:
+    devign: "5a084a10e5c191039e56e351bf8d722fe017424f159a84d6b92be86a1d0f4952"
+    reveal: "59498c4a4ab038babe558675c183c2b104b0145590fb0accf8b02cd5440d57f7"
+
+backend:                                       # chi tiết trong configs/backend_*.yaml
+  primary_model: "Qwen/Qwen3-Coder-30B-A3B-Instruct"
+  serving: "llama.cpp GGUF Q4_K_XL (Kaggle 2×T4) hoặc vLLM (FP8/bf16 trên GPU thuê)"
+  fallback_models: ["Qwen/Qwen2.5-Coder-32B-Instruct", "Qwen/Qwen2.5-Coder-14B-Instruct"]
+  decoding: {temperature: 0.0, max_tokens: 1, logprobs: true, top_logprobs: 5, seed: 42}
+  guided_choice: "auto: bật nếu smoke test < 99% prompt có token 0/1 trong top-5; ghi vào bài"
+  quantization_note: "Qwen3-Coder-30B-A3B-Instruct-UD-Q4_K_XL.gguf (16.45 GB, MoE 30.5B total / 3.3B active per token, llama.cpp b3920 / Kaggle 2x Tesla T4, Kaggle model slug: tnthnhneee/qwen3-30b-a3b/gguf/coder-instruct-ud-q4_k_xl)"
+
+token_budget: {total: 8192, target_code: 3000, demo: 1500, graph: 1500, reserve: 64}
+graph_prefix: {nodes: 25, edges: 25}
+prompt_order: [role_domain, target_code, question, node_info, edge_info, demonstration, answer]   # Hình 6 + mã tác giả
+
+arms_file: configs/arms.yaml
+tiers:
+  1: [B0, B1, B2, B2-flip, B2-rep]
+  2: [B2-rand, B2-nolabel, B2-labelonly, B1-shuf]
+  3: [B1-full, B1-H2, B3, B3-nodiff, B3-swap, B3-flip]
+seeds: {headline: 42, all: [42, 43, 44], stochastic_arms: [B2-rand, B1-shuf, SUP-LR, SUP-MLP, SUP-METRIC]}
+
+scoring:
+  score: "s = p(1) / (p(0) + p(1)) từ top-5 logprob của token đầu tiên"
+  invalid: "cả hai token vắng mặt trong top-5 → invalid; báo tỷ lệ; không ép về 0"
+  thresholds: "s >= 0.5 (câu trả lời của model) và τ* = argmax MCC trên validation, lưới 0.01..0.99 bước 0.01"
+thresholds: {grid: null}                       # null = linspace(0.01, 0.99, 99)
+
+metrics:
+  threshold_free: [auroc, auprc]
+  thresholded: [mcc, balanced_accuracy, f1, precision, recall, positive_rate, invalid_rate]
+  baselines: [ALL-1, ALL-0, RAND]
+  complementarity: [repair_harm_by_class, oracle_ceiling_with_random_reference, delta_mcc_post_minus_pre, routing_curves]
+  cost: [tokens_per_prompt, gpu_seconds_per_1000, cpu_seconds_per_1000_anchor, cold_vs_warm_cache]
+
+stats:
+  n_boot: 5000
+  bootstrap_seed: 20261117
+  cluster_unit: "commit_id nếu dataset có (Devign); nếu không, từng mẫu và ghi rõ"
+  family_correction: holm
+  margins: {mcc: 0.03, auroc: 0.02, ba: 0.01, mcc_meta: 0.02}     # δ: mức lợi ích nhỏ nhất đáng quan tâm, khai báo trước
+  verdict_rule: "benefit: CI>0 và Δ>=δ | no_meaningful_benefit: cận trên CI<δ | harm: CI<0 | inconclusive: còn lại"
+
+primary_contrasts:                             # Bảng B; metric đầu tiên là chính
+  - {name: H1.1, hypothesis: "GRACE không vượt zero-shot", a: B0, b: B2, metrics: [mcc, auroc], margins: {mcc: 0.03, auroc: 0.02}}
+  - {name: H2.1, hypothesis: "Demo tác động qua nhãn (net sensitivity >= 15 điểm)", a: B2, b: B2-flip, metrics: [mcc]}
+  - {name: H2.2a, hypothesis: "Nội dung demo không mang tín hiệu", a: B2, b: B2-rand, metrics: [auroc, mcc], margins: {auroc: 0.02, mcc: 0.03}}
+  - {name: H2.2b, hypothesis: "Demo bỏ nhãn không hơn không demo", a: B1, b: B2-nolabel, metrics: [auroc, mcc], margins: {auroc: 0.02, mcc: 0.03}}
+  - {name: H2.2c, hypothesis: "Chỉ gợi ý nhãn đã tái tạo tác dụng của demo", a: B2-labelonly, b: B2, metrics: [auroc, mcc], margins: {auroc: 0.02, mcc: 0.03}}
+  - {name: H2.3, hypothesis: "Cặp tương phản chỉ dịch chuyển điểm hoạt động", a: B2, b: B3, metrics: [auroc, mcc], margins: {auroc: 0.02, mcc: 0.03}}
+  - {name: H3.1a, hypothesis: "Graph không thêm tín hiệu", a: B0, b: B1, metrics: [auroc, mcc], margins: {auroc: 0.02, mcc: 0.03}}
+  - {name: H3.1b, hypothesis: "Graph xáo trộn không khác graph thật", a: B1-shuf, b: B1, metrics: [auroc, mcc], margins: {auroc: 0.02, mcc: 0.03}}
+  - {name: H3.1c, hypothesis: "Đóng gói H2 không khác prefix", a: B1, b: B1-H2, metrics: [auroc, mcc], margins: {auroc: 0.02, mcc: 0.03}}
+  - {name: H5.1, hypothesis: "Mốc có giám sát thắng rõ", a: B2, b: SUP-LR, metrics: [mcc, auroc], margins: {mcc: 0.15, auroc: 0.05}}
+  - {name: H5.3, hypothesis: "LLM không bổ sung tín hiệu sau truy vấn", a: P-PRE, b: P-POST, metrics: [mcc], margins: {mcc: 0.02}}
+
+complementarity:
+  pre_features: "34 đặc trưng nền của H3-B (logit 5 view, p, |p−0.5|, |mlp−lexical|, 26 numeric)"
+  expert_features: "[s, valid, s·p, s−p]; invalid → s=0.5, valid=0; P_post fallback về P_pre"
+  meta_model: {type: logistic_regression, C: 1.0, folds: 3, oof: true, scaler: standard}
+  routing: {budgets: [0.05, 0.10, 0.25], random_seeds: 20, confidence: "|logit p − logit τ|", benefit: ridge_alpha_10, oracle: repairs_only}
+  reference_experts: [ALL-0, ALL-1, "RANDOM cùng tỷ lệ đoán 1 (20 seed)"]
+
+blind_review:
+  retrieval_relevance: {targets_per_dataset: 100, raters: 2, adjudicator: third_rater, rubric: [sink, variable, guard, evidence_line]}
+  error_packets: {cells: [FN_repaired, FN_created, FP_repaired, FP_created], per_cell: 15, raters: 2}
+  label_audit: {per_dataset: 100, source: "50 FN + 50 FP của SUP-LR", verdicts: [label_ok, label_suspicious, not_enough_context]}
+
+stop_rules:
+  - "Nếu lợi thế của SUP-LR biến mất sau khử trùng/kiểm toán nhãn: sửa dữ liệu trước, không viết."
+  - "Nếu audit cho thấy graph/demo không thực sự tới model (demo rỗng, graph thiếu > 5%): sửa contract, chạy lại arm liên quan."
+  - "Nếu smoke test không đạt: không đăng ký trước cho đến khi backend ổn định."
+  - "Không mở thêm model/ngưỡng/arm sau khi đã xem test; mọi bổ sung ghi 'thăm dò' và để bản tạp chí."

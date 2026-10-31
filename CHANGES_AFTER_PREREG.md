@@ -17,6 +17,6 @@ Mọi thay đổi cần được ghi rõ:
 - **Trạng thái:** Bản gốc đăng ký trước chính thức (Original Preregistered Protocol).
 - **Git Commit / Tag:** `prereg-v1`
 - **Mã băm Manifest:**
-  - Devign: `8e9722a165d65e8d73309de1cb1013d3ff218468fd597b79051b8c1d7c070246`
-  - ReVeal: `5bf4cba74c426e142832c0dc814aee7e127dce72c207d1fdf14eb1508b9e87ab`
+  - Devign: `5a084a10e5c191039e56e351bf8d722fe017424f159a84d6b92be86a1d0f4952`
+  - ReVeal: `59498c4a4ab038babe558675c183c2b104b0145590fb0accf8b02cd5440d57f7`
 - **Ghi chú:** Chưa có thay đổi nào sau thời điểm đăng ký.

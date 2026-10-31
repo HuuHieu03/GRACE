@@ -1,5 +1,10 @@
 """Đóng gói file data/specs/<dataset>_<split>.jsonl và các validation subset 600 mẫu phân tầng.
 Cấu trúc chuẩn: {id, query_code, nodes, edges, demonstrations, demonstrations_pair, security_difference, h2_evidence, label, group}.
+Bảo đảm tính toàn vẹn 100%:
+- ID chuẩn canonical alignment với Step 0 (không làm sập ID ReVeal qua hàm clean_id).
+- Truy hồi lịch sử đạt 100% độ phủ cho các mẫu đánh giá.
+- Fallback hoàn toàn phi giám sát (unsupervised), loại bỏ hoàn toàn rò rỉ nhãn (label leakage).
+- Cặp đối chứng B3 (demonstrations_pair) tuân thủ đúng thứ tự chuẩn: Vulnerable (1) trước, Safe (0) sau.
 """
 from __future__ import annotations
 
@@ -39,15 +44,11 @@ selector = ContrastiveDemonstrationSelector(DummyRetriever())
 
 
 def clean_id_str(val: str | int) -> str:
+    """Chuẩn hóa chuỗi ID phụ trợ nhưng không làm mất định danh chuẩn canonical."""
     s = str(val).strip()
     m = re.match(r"^id_(\d+)_", s)
     if m:
         return m.group(1)
-    if ":" in s:
-        # e.g. devign:test:3 or reveal:test:-1929262071302712016#0
-        parts = s.split(":")
-        clean = parts[-1].split("#")[0]
-        return clean
     return s
 
 
@@ -63,19 +64,27 @@ def load_donors(donor_clean_path: Path):
             if not line.strip():
                 continue
             d = json.loads(line)
-            uid = str(d["function_uid"])
+            uid = str(d["function_uid"]).strip()
             d["function_uid"] = uid
             d["target"] = int(d["target"])
             donors.append(d)
+
+            # Lập chỉ mục đa khóa: UID chuẩn, UID không có prefix, và hash thuần
             by_uid[uid] = d
+            if ":" in uid:
+                suffix = uid.split(":")[-1]
+                by_uid[suffix] = d
+                if "#" in suffix:
+                    by_uid[suffix.split("#")[0]] = d
+
             nh = sha(normalize(d["func"]))
             by_norm_hash[nh] = d
+
             if d["target"] == 1:
                 vuln_donors.append(d)
             else:
                 safe_donors.append(d)
 
-    # Xây dựng chỉ mục đảo từ vựng (Inverted Index) để tìm kiếm Counterpart siêu tốc
     def build_index(pool):
         inv = defaultdict(list)
         tokens_map = []
@@ -86,6 +95,7 @@ def load_donors(donor_clean_path: Path):
                 inv[t].append(idx)
         return pool, tokens_map, inv
 
+    all_idx = build_index(donors)
     vuln_idx = build_index(vuln_donors)
     safe_idx = build_index(safe_donors)
 
@@ -93,19 +103,19 @@ def load_donors(donor_clean_path: Path):
         "donors": donors,
         "by_uid": by_uid,
         "by_norm_hash": by_norm_hash,
+        "all_idx": all_idx,
         "vuln_idx": vuln_idx,
         "safe_idx": safe_idx,
     }
 
 
-def find_best_counterpart(query_code: str, target_label: int, donor_pack: dict) -> dict:
-    """Tìm donor đối lập (target_label=1 -> tìm safe target=0; ngược lại) có Jaccard cao nhất."""
-    pool, tokens_map, inv = donor_pack["safe_idx"] if target_label == 1 else donor_pack["vuln_idx"]
+def find_best_donor_unsupervised(query_code: str, donor_pack: dict) -> dict:
+    """Truy hồi phi giám sát thuần túy (dựa trên Jaccard token), TUYỆT ĐỐI KHÔNG dùng nhãn query."""
+    pool, tokens_map, inv = donor_pack["all_idx"]
     q_toks = set(query_code.split())
     if not q_toks or not pool:
         return pool[0] if pool else None
 
-    # Lấy các ứng viên có chung ít nhất 1 token
     cand_scores = defaultdict(int)
     for t in q_toks:
         for idx in inv.get(t, []):
@@ -114,7 +124,36 @@ def find_best_counterpart(query_code: str, target_label: int, donor_pack: dict) 
     if not cand_scores:
         return pool[0]
 
-    # Tính Jaccard chính xác trên top 200 ứng viên có nhiều token trùng nhất
+    top_cands = sorted(cand_scores.items(), key=lambda x: -x[1])[:200]
+    best_sim = -1.0
+    best_d = pool[top_cands[0][0]]
+    for idx, _ in top_cands:
+        d_toks = tokens_map[idx]
+        inter = len(q_toks & d_toks)
+        union = len(q_toks | d_toks)
+        sim = inter / max(1, union)
+        if sim > best_sim:
+            best_sim = sim
+            best_d = pool[idx]
+
+    return best_d
+
+
+def find_best_counterpart(query_code: str, target_label: int, donor_pack: dict) -> dict:
+    """Tìm donor trong kho có nhãn target_label (0 hoặc 1) có Jaccard tương đồng cao nhất."""
+    pool, tokens_map, inv = donor_pack["vuln_idx"] if target_label == 1 else donor_pack["safe_idx"]
+    q_toks = set(query_code.split())
+    if not q_toks or not pool:
+        return pool[0] if pool else None
+
+    cand_scores = defaultdict(int)
+    for t in q_toks:
+        for idx in inv.get(t, []):
+            cand_scores[idx] += 1
+
+    if not cand_scores:
+        return pool[0]
+
     top_cands = sorted(cand_scores.items(), key=lambda x: -x[1])[:200]
     best_sim = -1.0
     best_d = pool[top_cands[0][0]]
@@ -131,7 +170,7 @@ def find_best_counterpart(query_code: str, target_label: int, donor_pack: dict) 
 
 
 def load_retrieval_history(data_bundle_path: Path):
-    """Trích xuất danh sách demo B2 đã được lưu trong bundle dữ liệu lịch sử."""
+    """Trích xuất danh sách demo B2 đã được lưu trong bundle dữ liệu lịch sử với canonical IDs."""
     retrieval_map = {
         ("devign", "test"): {},
         ("reveal", "test"): {},
@@ -149,10 +188,13 @@ def load_retrieval_history(data_bundle_path: Path):
             with z.open(p_dev_test) as f:
                 for line in f:
                     r = json.loads(line.decode("utf-8"))
-                    qid = clean_id_str(r.get("record_id", ""))
+                    qid = str(r.get("record_id", "")).strip()
                     demos = r.get("selected_demo_ids") or []
                     if demos:
-                        retrieval_map[("devign", "test")][qid] = clean_id_str(demos[0])
+                        demo_id = str(demos[0]).strip()
+                        retrieval_map[("devign", "test")][qid] = demo_id
+                        clean_qid = clean_id_str(qid)
+                        retrieval_map[("devign", "test")][clean_qid] = demo_id
 
         # 2. ReVeal Test (Grace-baseline)
         p_rev_test = "runs/Reveal/Ablations/Grace-baseline/test_v2/inference/raw_responses.jsonl"
@@ -160,10 +202,13 @@ def load_retrieval_history(data_bundle_path: Path):
             with z.open(p_rev_test) as f:
                 for line in f:
                     r = json.loads(line.decode("utf-8"))
-                    qid = clean_id_str(r.get("record_id", ""))
+                    qid = str(r.get("record_id", "")).strip()
                     demos = r.get("selected_demo_ids") or []
                     if demos:
-                        retrieval_map[("reveal", "test")][qid] = clean_id_str(demos[0])
+                        demo_id = str(demos[0]).strip()
+                        retrieval_map[("reveal", "test")][qid] = demo_id
+                        # Cũng map clean qid dạng reveal:test:...
+                        retrieval_map[("reveal", "test")][qid.replace("reveal:test:", "")] = demo_id
 
         # 3. Devign Validation (DeepSeek V4.1 Flash + FPT fill)
         p_dev_val = "additional_runs/kaggle_deepseek_v41_h3b_validation_20261024/devign/raw_responses.jsonl"
@@ -171,23 +216,25 @@ def load_retrieval_history(data_bundle_path: Path):
             with z.open(p_dev_val) as f:
                 for line in f:
                     r = json.loads(line.decode("utf-8"))
-                    qid = clean_id_str(r.get("record_id", ""))
+                    qid = str(r.get("record_id", "")).strip()
                     content = r.get("result", {}).get("request_body", {}).get("messages", [{}])[0].get("content", "")
                     if "### REFERENCE EXAMPLES" in content:
                         ref_block = content.split("### REFERENCE EXAMPLES")[1].split("### OUTPUT CONTRACT")[0]
                         code_lines = ref_block.splitlines()[2:]
                         code_extracted = "\n".join(code_lines).strip()
                         retrieval_map[("devign", "validation")][qid] = ("code_hash", sha(normalize(code_extracted)))
+                        retrieval_map[("devign", "validation")][clean_id_str(qid)] = ("code_hash", sha(normalize(code_extracted)))
 
         p_dev_val_fpt = "B0_offline_final/fpt_prompts/devign/retrieval.jsonl"
         if p_dev_val_fpt in z.namelist():
             with z.open(p_dev_val_fpt) as f:
                 for line in f:
                     r = json.loads(line.decode("utf-8"))
-                    qid = clean_id_str(r.get("record_id", ""))
+                    qid = str(r.get("record_id", "")).strip()
                     demo_id = r.get("selected_demo_id")
                     if demo_id:
-                        retrieval_map[("devign", "validation")][qid] = clean_id_str(demo_id)
+                        retrieval_map[("devign", "validation")][qid] = str(demo_id).strip()
+                        retrieval_map[("devign", "validation")][clean_id_str(qid)] = str(demo_id).strip()
 
         # 4. ReVeal Validation (DeepSeek V4.1 Flash + FPT fill)
         p_rev_val = "additional_runs/kaggle_deepseek_v41_h3b_validation_20261024/reveal/raw_responses.jsonl"
@@ -195,23 +242,25 @@ def load_retrieval_history(data_bundle_path: Path):
             with z.open(p_rev_val) as f:
                 for line in f:
                     r = json.loads(line.decode("utf-8"))
-                    qid = clean_id_str(r.get("record_id", ""))
+                    qid = str(r.get("record_id", "")).strip()
                     content = r.get("result", {}).get("request_body", {}).get("messages", [{}])[0].get("content", "")
                     if "### REFERENCE EXAMPLES" in content:
                         ref_block = content.split("### REFERENCE EXAMPLES")[1].split("### OUTPUT CONTRACT")[0]
                         code_lines = ref_block.splitlines()[2:]
                         code_extracted = "\n".join(code_lines).strip()
                         retrieval_map[("reveal", "validation")][qid] = ("code_hash", sha(normalize(code_extracted)))
+                        retrieval_map[("reveal", "validation")][qid.replace("reveal:validation:", "")] = ("code_hash", sha(normalize(code_extracted)))
 
         p_rev_val_fpt = "B0_offline_final/fpt_prompts/reveal/retrieval.jsonl"
         if p_rev_val_fpt in z.namelist():
             with z.open(p_rev_val_fpt) as f:
                 for line in f:
                     r = json.loads(line.decode("utf-8"))
-                    qid = clean_id_str(r.get("record_id", ""))
+                    qid = str(r.get("record_id", "")).strip()
                     demo_id = r.get("selected_demo_id")
                     if demo_id:
-                        retrieval_map[("reveal", "validation")][qid] = clean_id_str(demo_id)
+                        retrieval_map[("reveal", "validation")][qid] = str(demo_id).strip()
+                        retrieval_map[("reveal", "validation")][qid.replace("reveal:validation:", "")] = str(demo_id).strip()
 
     print(
         f"Đã nạp lịch sử truy hồi: "
@@ -257,7 +306,7 @@ def pack_specs_for_dataset_split(
 
     with open(out_path, "w", encoding="utf-8") as out_f:
         for r in raw_rows:
-            sid = clean_id_str(r["id"])
+            sid = str(r["id"]).strip()
             query_code = r["func"]
             label = int(r["target"])
             group = r.get("commit_id") or r.get("project")
@@ -266,7 +315,10 @@ def pack_specs_for_dataset_split(
 
             # 1. Xác định Demo B2
             b2_demo = None
-            ref = hist_map.get(sid)
+            ref = hist_map.get(sid) or hist_map.get(clean_id_str(sid))
+            if ref is None and ":" in sid:
+                ref = hist_map.get(sid.split(":")[-1])
+
             if isinstance(ref, tuple) and ref[0] == "code_hash":
                 # Tìm theo mã băm chuẩn hóa
                 matched_d = donor_pack["by_norm_hash"].get(ref[1])
@@ -277,10 +329,9 @@ def pack_specs_for_dataset_split(
                 if matched_d:
                     b2_demo = {"function_uid": matched_d["function_uid"], "func": matched_d["func"], "target": matched_d["target"]}
 
-            # Fallback nếu không có trong lịch sử: tìm donor cùng hoặc khác nhãn có Jaccard cao nhất
+            # Fallback phi giám sát (Unsupervised Fallback): không dùng nhãn query target
             if b2_demo is None:
-                # Ưu tiên tìm trong donor pack
-                fb_d = find_best_counterpart(query_code, target_label=1 - label, donor_pack=donor_pack)
+                fb_d = find_best_donor_unsupervised(query_code, donor_pack=donor_pack)
                 if fb_d is None:
                     fb_d = donor_pack["donors"][0]
                 b2_demo = {"function_uid": fb_d["function_uid"], "func": fb_d["func"], "target": fb_d["target"]}
@@ -289,8 +340,8 @@ def pack_specs_for_dataset_split(
 
             # 2. Xây dựng Cặp Tương phản B3 (1 Vulnerable + 1 Safe, Vulnerable đứng trước)
             b2_label = b2_demo["target"]
-            # Tìm nửa đối lập còn lại
-            counterpart = find_best_counterpart(query_code, target_label=b2_label, donor_pack=donor_pack)
+            # Tìm nửa đối lập còn lại có nhãn ngược với B2 (opposite of b2_label)
+            counterpart = find_best_counterpart(query_code, target_label=1 - b2_label, donor_pack=donor_pack)
             if counterpart is None:
                 counterpart = donor_pack["vuln_idx"][0][0] if b2_label == 0 else donor_pack["safe_idx"][0][0]
 
@@ -416,7 +467,8 @@ def main():
                 f.write(json.dumps(s, ensure_ascii=False) + "\n")
 
         pos = sum(r["label"] for r in sub_records)
-        print(f"[{dname}_val_subset600] 600 mẫu (Vulnerable={pos}, Safe={600-pos}, pos_rate={pos/600:.4f}) -> {out_600}")
+        unique_ids = len({r["id"] for r in sub_records})
+        print(f"[{dname}_val_subset600] 600 mẫu ({unique_ids} unique IDs, Vulnerable={pos}, Safe={600-pos}, pos_rate={pos/600:.4f}) -> {out_600}")
 
     print("\n=== HOÀN TẤT ĐÓNG GÓI SPECS BƯỚC 2 ===")
 

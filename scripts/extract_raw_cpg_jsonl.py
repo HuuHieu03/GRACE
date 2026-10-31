@@ -1,5 +1,8 @@
-"""Trích xuất dữ liệu CPG (stream streaming) từ data/processed/*.json sang data/raw/*.jsonl.
+"""Trích xuất dữ liệu CPG chuẩn từ data/processed/*.json sang data/raw/*.jsonl.
 Các trường chuẩn: {id, func, target, nodes, edges, commit_id, project}.
+Bảo đảm tính nhất quán 100% với định danh chuẩn Step 0:
+- Devign: devign:<split>:<id>
+- ReVeal: reveal:<split>:<hash>#<index>
 """
 from __future__ import annotations
 
@@ -19,47 +22,18 @@ if hasattr(sys.stderr, "reconfigure"):
     sys.stderr.reconfigure(encoding="utf-8")
 
 
-def stream_json_array(file_path: Path | str, chunk_size: int = 1048576):
-    """Bộ phân tích cú pháp streaming cho mảng JSON lớn để tiết kiệm RAM."""
-    decoder = json.JSONDecoder()
-    with open(file_path, "r", encoding="utf-8") as f:
-        buffer = ""
-        while True:
-            chunk = f.read(chunk_size)
-            if not chunk:
-                return
-            buffer += chunk
-            idx = buffer.find("[")
-            if idx != -1:
-                buffer = buffer[idx + 1 :]
-                break
-        while True:
-            buffer = buffer.lstrip(" \t\r\n,")
-            if not buffer:
-                chunk = f.read(chunk_size)
-                if not chunk:
-                    break
-                buffer += chunk
-                buffer = buffer.lstrip(" \t\r\n,")
-            if buffer.startswith("]"):
-                break
-            try:
-                obj, idx = decoder.raw_decode(buffer)
-                yield obj
-                buffer = buffer[idx:]
-            except json.JSONDecodeError:
-                chunk = f.read(chunk_size)
-                if not chunk:
-                    break
-                buffer += chunk
+def normalize_ws(s: str) -> str:
+    return re.sub(r"\s+", " ", (s or "").strip())
 
 
 def extract_clean_id(raw_id: str | int) -> str:
     s = str(raw_id).strip()
-    # Nếu là dạng id_10000_label_False_qemu.c -> lấy '10000'
     m = re.match(r"^id_(\d+)_", s)
     if m:
         return m.group(1)
+    if ":" in s:
+        parts = s.split(":")
+        return parts[-1].split("#")[0]
     return s
 
 
@@ -82,25 +56,31 @@ def clean_graph(nodes_raw: list | None, edges_raw: list | None) -> tuple[list[di
     return nodes, edges
 
 
-def load_metadata_map(meta_path: Path) -> dict[str, dict]:
-    """Tạo map từ clean_id / legacy_id / filename sang thông tin commit_id, project."""
-    if not meta_path.exists():
-        return {}
-    with open(meta_path, "r", encoding="utf-8") as f:
-        meta_list = json.load(f)
-    mapping = {}
-    for m in meta_list:
-        clean_id = extract_clean_id(m.get("id", ""))
-        mapping[clean_id] = m
-        if "id" in m:
-            mapping[str(m["id"])] = m
-        if "c_file_path" in m:
-            fn = Path(str(m["c_file_path"]).replace("\\", "/")).name
-            mapping[fn] = m
-            m_fn = re.match(r"^id_(\d+)_", fn)
-            if m_fn:
-                mapping[m_fn.group(1)] = m
-    return mapping
+def load_processed_graph_map(processed_path: Path, is_reveal: bool = False):
+    """Nạp CPG từ processed JSON và lập chỉ mục theo ID và mã chuẩn hóa."""
+    print(f"  Đang nạp file processed: {processed_path.name}...", flush=True)
+    with open(processed_path, "r", encoding="utf-8") as f:
+        data = json.load(f)
+
+    by_id = {}
+    by_norm_func = {}
+
+    for item in data:
+        raw_id = item.get("id", "")
+        cid = extract_clean_id(raw_id)
+        n, e = clean_graph(item.get("nodes"), item.get("edges"))
+        graph_tuple = (n, e)
+
+        by_id[cid] = graph_tuple
+        by_id[str(raw_id)] = graph_tuple
+
+        func_str = item.get("func", "")
+        if func_str:
+            nf = normalize_ws(func_str)
+            by_norm_func.setdefault(nf, []).append(graph_tuple)
+
+    print(f"  -> Đã lập chỉ mục {len(data)} graphs.", flush=True)
+    return by_id, by_norm_func
 
 
 def process_dataset_split(
@@ -111,28 +91,52 @@ def process_dataset_split(
     split: str,
 ) -> int:
     out_path.parent.mkdir(parents=True, exist_ok=True)
-    meta_map = load_metadata_map(metadata_path)
-    count = 0
     t0 = time.time()
-    with open(out_path, "w", encoding="utf-8") as out_f:
-        for item in stream_json_array(processed_path):
-            raw_id = item.get("id", "")
-            clean_id = extract_clean_id(raw_id)
-            meta = meta_map.get(clean_id) or meta_map.get(str(raw_id)) or {}
+    is_reveal = dataset.lower() == "reveal"
 
-            func_code = item.get("func") or meta.get("func") or ""
-            target_val = item.get("target")
+    print(f"[{dataset}/{split}] Nạp metadata: {metadata_path.name}...", flush=True)
+    with open(metadata_path, "r", encoding="utf-8") as f:
+        meta_list = json.load(f)
+
+    by_id, by_norm_func = load_processed_graph_map(processed_path, is_reveal=is_reveal)
+
+    count = 0
+    matched_graphs = 0
+    with open(out_path, "w", encoding="utf-8") as out_f:
+        for idx, m in enumerate(meta_list):
+            raw_id = m.get("id", "")
+            if is_reveal:
+                canonical_id = f"reveal:{split}:{raw_id}#{idx}"
+            else:
+                canonical_id = f"devign:{split}:{raw_id}"
+
+            func_code = m.get("func") or m.get("functionSource") or ""
+            target_val = m.get("target")
             if target_val is None:
-                target_val = meta.get("target", 0)
+                target_val = m.get("label", 0)
             target = 1 if bool(target_val) else 0
 
-            commit_id = meta.get("commit_id") or item.get("commit_id")
-            project = meta.get("project") or item.get("project")
+            commit_id = m.get("commit_id")
+            project = m.get("project")
 
-            nodes, edges = clean_graph(item.get("nodes"), item.get("edges"))
+            # Ghép CPG
+            nodes, edges = [], []
+            clean_id = extract_clean_id(raw_id)
+            if not is_reveal and clean_id in by_id:
+                nodes, edges = by_id[clean_id]
+                matched_graphs += 1
+            else:
+                # Với reveal hoặc fallback devign: tra theo normalized func
+                nf = normalize_ws(func_code)
+                if nf in by_norm_func and len(by_norm_func[nf]) > 0:
+                    nodes, edges = by_norm_func[nf][0]
+                    matched_graphs += 1
+                elif clean_id in by_id:
+                    nodes, edges = by_id[clean_id]
+                    matched_graphs += 1
 
             row = {
-                "id": clean_id,
+                "id": canonical_id,
                 "func": func_code,
                 "target": target,
                 "nodes": nodes,
@@ -142,11 +146,13 @@ def process_dataset_split(
             }
             out_f.write(json.dumps(row, ensure_ascii=False) + "\n")
             count += 1
-            if count % 5000 == 0:
-                print(f"[{dataset}/{split}] Đã trích xuất {count} mẫu...", flush=True)
 
     elapsed = time.time() - t0
-    print(f"[{dataset}/{split}] Hoàn thành {count} mẫu -> {out_path} ({elapsed:.2f}s)", flush=True)
+    print(
+        f"[{dataset}/{split}] Hoàn thành: {count} mẫu (Ghép được {matched_graphs}/{count} graph CPG) "
+        f"-> {out_path} ({elapsed:.2f}s)",
+        flush=True,
+    )
     return count
 
 
