@@ -1,0 +1,1088 @@
+{
+  "scope": "36 historical test runs in SHARE_36_RUNS_CONTEXT8192_20261020_205918/runs",
+  "n_run": 36,
+  "n_canonical_rows": 90108,
+  "n_unique_run_id_target_pairs": 90108,
+  "runs": [
+    {
+      "run_id": "runs/Devign/Ablations/Full-cai-tien/test_v2",
+      "dataset": "devign",
+      "split": "test",
+      "n_targets": 2732,
+      "n_valid": 2732,
+      "n_invalid": 0,
+      "tn_fp_fn_tp": [
+        1144,
+        333,
+        893,
+        362
+      ],
+      "accuracy": 0.5512445095168375,
+      "precision": 0.520863309352518,
+      "recall": 0.28844621513944224,
+      "f1": 0.3712820512820513,
+      "mcc": 0.07207594403499726,
+      "balanced_accuracy": 0.5314946038459567,
+      "stored_metric_abs_diff": {
+        "accuracy": 0.0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "mcc": 0.0,
+        "balanced_accuracy": 0.0
+      },
+      "max_abs_diff": 0.0,
+      "stored_eval": true
+    },
+    {
+      "run_id": "runs/Devign/Ablations/Grace-baseline/test_v2",
+      "dataset": "devign",
+      "split": "test",
+      "n_targets": 2732,
+      "n_valid": 2732,
+      "n_invalid": 0,
+      "tn_fp_fn_tp": [
+        1149,
+        328,
+        901,
+        354
+      ],
+      "accuracy": 0.5501464128843339,
+      "precision": 0.5190615835777126,
+      "recall": 0.28207171314741036,
+      "f1": 0.36551368094992254,
+      "mcc": 0.06908660518371869,
+      "balanced_accuracy": 0.5299999730259733,
+      "stored_metric_abs_diff": {
+        "accuracy": 0.0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "mcc": 0.0,
+        "balanced_accuracy": 0.0
+      },
+      "max_abs_diff": 0.0,
+      "stored_eval": true
+    },
+    {
+      "run_id": "runs/Devign/Ablations/No-C1-hybrid-retrieval/test_v2",
+      "dataset": "devign",
+      "split": "test",
+      "n_targets": 2732,
+      "n_valid": 2732,
+      "n_invalid": 0,
+      "tn_fp_fn_tp": [
+        1143,
+        334,
+        896,
+        359
+      ],
+      "accuracy": 0.5497803806734992,
+      "precision": 0.5180375180375181,
+      "recall": 0.2860557768924303,
+      "f1": 0.36858316221765913,
+      "mcc": 0.06863113184986333,
+      "balanced_accuracy": 0.5299608606872442,
+      "stored_metric_abs_diff": {
+        "accuracy": 0.0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 5.551115123125783e-17,
+        "mcc": 0.0,
+        "balanced_accuracy": 0.0
+      },
+      "max_abs_diff": 5.551115123125783e-17,
+      "stored_eval": true
+    },
+    {
+      "run_id": "runs/Devign/Ablations/No-C2-stratified-demo-selection/test_v2",
+      "dataset": "devign",
+      "split": "test",
+      "n_targets": 2732,
+      "n_valid": 2726,
+      "n_invalid": 6,
+      "tn_fp_fn_tp": [
+        1145,
+        328,
+        919,
+        334
+      ],
+      "accuracy": 0.5425531914893617,
+      "precision": 0.5045317220543807,
+      "recall": 0.266560255387071,
+      "f1": 0.3488250652741514,
+      "mcc": 0.05100509318064982,
+      "balanced_accuracy": 0.5219427210404466,
+      "stored_metric_abs_diff": {
+        "accuracy": 0.0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "mcc": 0.0,
+        "balanced_accuracy": 0.0
+      },
+      "max_abs_diff": 0.0,
+      "stored_eval": true
+    },
+    {
+      "run_id": "runs/Devign/Ablations/No-C3-GEPA-prompt-optimization/test_v2",
+      "dataset": "devign",
+      "split": "test",
+      "n_targets": 2732,
+      "n_valid": 2732,
+      "n_invalid": 0,
+      "tn_fp_fn_tp": [
+        1209,
+        268,
+        953,
+        302
+      ],
+      "accuracy": 0.5530746705710102,
+      "precision": 0.5298245614035088,
+      "recall": 0.24063745019920318,
+      "f1": 0.33095890410958906,
+      "mcc": 0.07259131534470012,
+      "balanced_accuracy": 0.5295942836642596,
+      "stored_metric_abs_diff": {
+        "accuracy": 0.0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 5.551115123125783e-17,
+        "mcc": 0.0,
+        "balanced_accuracy": 0.0
+      },
+      "max_abs_diff": 5.551115123125783e-17,
+      "stored_eval": true
+    },
+    {
+      "run_id": "runs/Devign/Ablations/No-C5-graph-verbalization/test_v2",
+      "dataset": "devign",
+      "split": "test",
+      "n_targets": 2732,
+      "n_valid": 2732,
+      "n_invalid": 0,
+      "tn_fp_fn_tp": [
+        1159,
+        318,
+        892,
+        363
+      ],
+      "accuracy": 0.5571010248901903,
+      "precision": 0.5330396475770925,
+      "recall": 0.2892430278884462,
+      "f1": 0.375,
+      "mcc": 0.08518152273519244,
+      "balanced_accuracy": 0.5369708707485562,
+      "stored_metric_abs_diff": {
+        "accuracy": 0.0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 5.551115123125783e-17,
+        "mcc": 0.0,
+        "balanced_accuracy": 0.0
+      },
+      "max_abs_diff": 5.551115123125783e-17,
+      "stored_eval": true
+    },
+    {
+      "run_id": "runs/Devign/Ablations/No-C6-graph-slicing/test_v2",
+      "dataset": "devign",
+      "split": "test",
+      "n_targets": 2732,
+      "n_valid": 2732,
+      "n_invalid": 0,
+      "tn_fp_fn_tp": [
+        1232,
+        245,
+        982,
+        273
+      ],
+      "accuracy": 0.5508784773060029,
+      "precision": 0.527027027027027,
+      "recall": 0.21752988047808766,
+      "f1": 0.3079526226734349,
+      "mcc": 0.06566815894633943,
+      "balanced_accuracy": 0.5258265516134514,
+      "stored_metric_abs_diff": {
+        "accuracy": 0.0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "mcc": 0.0,
+        "balanced_accuracy": 0.0
+      },
+      "max_abs_diff": 0.0,
+      "stored_eval": true
+    },
+    {
+      "run_id": "runs/Devign/Ablations/No-C7-security-cot/test_v2",
+      "dataset": "devign",
+      "split": "test",
+      "n_targets": 2732,
+      "n_valid": 2731,
+      "n_invalid": 1,
+      "tn_fp_fn_tp": [
+        1114,
+        362,
+        860,
+        395
+      ],
+      "accuracy": 0.5525448553643354,
+      "precision": 0.5217965653896962,
+      "recall": 0.3147410358565737,
+      "f1": 0.3926441351888668,
+      "mcc": 0.07736165191681046,
+      "balanced_accuracy": 0.534741791641024,
+      "stored_metric_abs_diff": {
+        "accuracy": 0.0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "mcc": 0.0,
+        "balanced_accuracy": 0.0
+      },
+      "max_abs_diff": 0.0,
+      "stored_eval": true
+    },
+    {
+      "run_id": "runs/Devign/Ablations/No-C8-mmr-demo-selection/test_v2",
+      "dataset": "devign",
+      "split": "test",
+      "n_targets": 2732,
+      "n_valid": 2732,
+      "n_invalid": 0,
+      "tn_fp_fn_tp": [
+        1136,
+        341,
+        891,
+        364
+      ],
+      "accuracy": 0.5490483162518301,
+      "precision": 0.5163120567375886,
+      "recall": 0.2900398406374502,
+      "f1": 0.37142857142857144,
+      "mcc": 0.06738545729314367,
+      "balanced_accuracy": 0.5295832243133087,
+      "stored_metric_abs_diff": {
+        "accuracy": 0.0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 5.551115123125783e-17,
+        "mcc": 0.0,
+        "balanced_accuracy": 0.0
+      },
+      "max_abs_diff": 5.551115123125783e-17,
+      "stored_eval": true
+    },
+    {
+      "run_id": "runs/Devign/Ablations/Plus-C1-tri-signal-retrieval/test_v2",
+      "dataset": "devign",
+      "split": "test",
+      "n_targets": 2732,
+      "n_valid": 2732,
+      "n_invalid": 0,
+      "tn_fp_fn_tp": [
+        1129,
+        348,
+        887,
+        368
+      ],
+      "accuracy": 0.5479502196193266,
+      "precision": 0.5139664804469274,
+      "recall": 0.2932270916334661,
+      "f1": 0.37341451040081175,
+      "mcc": 0.06528916300599857,
+      "balanced_accuracy": 0.5288071815648712,
+      "stored_metric_abs_diff": {
+        "accuracy": 0.0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "mcc": 0.0,
+        "balanced_accuracy": 0.0
+      },
+      "max_abs_diff": 0.0,
+      "stored_eval": true
+    },
+    {
+      "run_id": "runs/Devign/Ablations/Plus-C2-stratified-demos/test_v2",
+      "dataset": "devign",
+      "split": "test",
+      "n_targets": 2732,
+      "n_valid": 2728,
+      "n_invalid": 4,
+      "tn_fp_fn_tp": [
+        1147,
+        329,
+        853,
+        399
+      ],
+      "accuracy": 0.5667155425219942,
+      "precision": 0.5480769230769231,
+      "recall": 0.31869009584664537,
+      "f1": 0.403030303030303,
+      "mcc": 0.10791616219062984,
+      "balanced_accuracy": 0.5478951834246777,
+      "stored_metric_abs_diff": {
+        "accuracy": 0.0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 5.551115123125783e-17,
+        "mcc": 0.0,
+        "balanced_accuracy": 0.0
+      },
+      "max_abs_diff": 5.551115123125783e-17,
+      "stored_eval": true
+    },
+    {
+      "run_id": "runs/Devign/Ablations/Plus-C3-gepa-prompt/test_v2",
+      "dataset": "devign",
+      "split": "test",
+      "n_targets": 2732,
+      "n_valid": 2603,
+      "n_invalid": 129,
+      "tn_fp_fn_tp": [
+        1156,
+        252,
+        922,
+        273
+      ],
+      "accuracy": 0.5489819439108721,
+      "precision": 0.52,
+      "recall": 0.22845188284518828,
+      "f1": 0.3174418604651163,
+      "mcc": 0.06144198489112519,
+      "balanced_accuracy": 0.5247373050589578,
+      "stored_metric_abs_diff": {
+        "accuracy": 0.0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "mcc": 0.0,
+        "balanced_accuracy": 0.0
+      },
+      "max_abs_diff": 0.0,
+      "stored_eval": true
+    },
+    {
+      "run_id": "runs/Devign/Ablations/Plus-C5-graph-verbalization/test_v2",
+      "dataset": "devign",
+      "split": "test",
+      "n_targets": 2732,
+      "n_valid": 2267,
+      "n_invalid": 465,
+      "tn_fp_fn_tp": [
+        978,
+        239,
+        799,
+        251
+      ],
+      "accuracy": 0.5421261579179533,
+      "precision": 0.5122448979591837,
+      "recall": 0.23904761904761904,
+      "f1": 0.32597402597402597,
+      "mcc": 0.051683302479551774,
+      "balanced_accuracy": 0.5213315334350667,
+      "stored_metric_abs_diff": {
+        "accuracy": 0.0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "mcc": 0.0,
+        "balanced_accuracy": 0.0
+      },
+      "max_abs_diff": 0.0,
+      "stored_eval": true
+    },
+    {
+      "run_id": "runs/Devign/Ablations/Plus-C6-graph-slicing/test_v2",
+      "dataset": "devign",
+      "split": "test",
+      "n_targets": 2732,
+      "n_valid": 2730,
+      "n_invalid": 2,
+      "tn_fp_fn_tp": [
+        1071,
+        405,
+        844,
+        410
+      ],
+      "accuracy": 0.5424908424908425,
+      "precision": 0.5030674846625767,
+      "recall": 0.3269537480063796,
+      "f1": 0.39632672788786855,
+      "mcc": 0.057241771127956906,
+      "balanced_accuracy": 0.5262817520519703,
+      "stored_metric_abs_diff": {
+        "accuracy": 0.0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "mcc": 0.0,
+        "balanced_accuracy": 0.0
+      },
+      "max_abs_diff": 0.0,
+      "stored_eval": true
+    },
+    {
+      "run_id": "runs/Devign/Ablations/Plus-C7-security-cot/test_v2",
+      "dataset": "devign",
+      "split": "test",
+      "n_targets": 2732,
+      "n_valid": 2627,
+      "n_invalid": 105,
+      "tn_fp_fn_tp": [
+        1268,
+        144,
+        1049,
+        166
+      ],
+      "accuracy": 0.5458698134754473,
+      "precision": 0.535483870967742,
+      "recall": 0.13662551440329218,
+      "f1": 0.21770491803278688,
+      "mcc": 0.05353909110474394,
+      "balanced_accuracy": 0.5173212557852155,
+      "stored_metric_abs_diff": {
+        "accuracy": 0.0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 2.7755575615628914e-17,
+        "mcc": 0.0,
+        "balanced_accuracy": 0.0
+      },
+      "max_abs_diff": 2.7755575615628914e-17,
+      "stored_eval": true
+    },
+    {
+      "run_id": "runs/Devign/Ablations/Plus-C8-mmr-selection/test_v2",
+      "dataset": "devign",
+      "split": "test",
+      "n_targets": 2732,
+      "n_valid": 2732,
+      "n_invalid": 0,
+      "tn_fp_fn_tp": [
+        1303,
+        174,
+        1042,
+        213
+      ],
+      "accuracy": 0.554904831625183,
+      "precision": 0.5503875968992248,
+      "recall": 0.1697211155378486,
+      "f1": 0.25943970767356883,
+      "mcc": 0.07419522945481057,
+      "balanced_accuracy": 0.5259573756429934,
+      "stored_metric_abs_diff": {
+        "accuracy": 0.0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "mcc": 0.0,
+        "balanced_accuracy": 0.0
+      },
+      "max_abs_diff": 0.0,
+      "stored_eval": true
+    },
+    {
+      "run_id": "runs/Reproduced-Code-Based/devign/test",
+      "dataset": "devign",
+      "split": "test",
+      "n_targets": 2732,
+      "n_valid": 2732,
+      "n_invalid": 0,
+      "tn_fp_fn_tp": [
+        1152,
+        325,
+        911,
+        344
+      ],
+      "accuracy": 0.5475841874084919,
+      "precision": 0.5142002989536621,
+      "recall": 0.27410358565737053,
+      "f1": 0.3575883575883576,
+      "mcc": 0.06265406885667975,
+      "balanced_accuracy": 0.5270314813865729,
+      "stored_metric_abs_diff": {
+        "accuracy": 0.0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "mcc": 0.0,
+        "balanced_accuracy": 0.0
+      },
+      "max_abs_diff": 0.0,
+      "stored_eval": true
+    },
+    {
+      "run_id": "runs/Reproduced-Code-Based/reveal/test",
+      "dataset": "reveal",
+      "split": "test",
+      "n_targets": 2274,
+      "n_valid": 2274,
+      "n_invalid": 0,
+      "tn_fp_fn_tp": [
+        1798,
+        246,
+        198,
+        32
+      ],
+      "accuracy": 0.8047493403693932,
+      "precision": 0.11510791366906475,
+      "recall": 0.1391304347826087,
+      "f1": 0.12598425196850394,
+      "mcc": 0.017284439241879623,
+      "balanced_accuracy": 0.5093890921466859,
+      "stored_metric_abs_diff": {
+        "accuracy": 0.0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 2.7755575615628914e-17,
+        "mcc": 0.0,
+        "balanced_accuracy": 0.0
+      },
+      "max_abs_diff": 2.7755575615628914e-17,
+      "stored_eval": true
+    },
+    {
+      "run_id": "runs/Reproduced-Paper-Based/devign/test",
+      "dataset": "devign",
+      "split": "test",
+      "n_targets": 2732,
+      "n_valid": 2719,
+      "n_invalid": 13,
+      "tn_fp_fn_tp": [
+        1163,
+        311,
+        910,
+        335
+      ],
+      "accuracy": 0.5509378447958808,
+      "precision": 0.5185758513931888,
+      "recall": 0.26907630522088355,
+      "f1": 0.35430988894764676,
+      "mcc": 0.06799664837425894,
+      "balanced_accuracy": 0.5290429015928027,
+      "stored_metric_abs_diff": {
+        "accuracy": 0.0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "mcc": 0.0,
+        "balanced_accuracy": 0.0
+      },
+      "max_abs_diff": 0.0,
+      "stored_eval": true
+    },
+    {
+      "run_id": "runs/Reproduced-Paper-Based/reveal/test",
+      "dataset": "reveal",
+      "split": "test",
+      "n_targets": 2274,
+      "n_valid": 2274,
+      "n_invalid": 0,
+      "tn_fp_fn_tp": [
+        1793,
+        251,
+        202,
+        28
+      ],
+      "accuracy": 0.8007915567282322,
+      "precision": 0.1003584229390681,
+      "recall": 0.12173913043478261,
+      "f1": 0.1100196463654224,
+      "mcc": -0.00097353468104962,
+      "balanced_accuracy": 0.4994703479962563,
+      "stored_metric_abs_diff": {
+        "accuracy": 0.0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "mcc": 0.0,
+        "balanced_accuracy": 0.0
+      },
+      "max_abs_diff": 0.0,
+      "stored_eval": true
+    },
+    {
+      "run_id": "runs/Reveal/Ablations/Full-cai-tien/test_v2",
+      "dataset": "reveal",
+      "split": "test",
+      "n_targets": 2274,
+      "n_valid": 2274,
+      "n_invalid": 0,
+      "tn_fp_fn_tp": [
+        1794,
+        250,
+        189,
+        41
+      ],
+      "accuracy": 0.806948109058927,
+      "precision": 0.140893470790378,
+      "recall": 0.1782608695652174,
+      "f1": 0.15738963531669867,
+      "mcc": 0.05050211663003475,
+      "balanced_accuracy": 0.527975835956777,
+      "stored_metric_abs_diff": {
+        "accuracy": 0.0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 2.7755575615628914e-17,
+        "mcc": 0.0,
+        "balanced_accuracy": 0.0
+      },
+      "max_abs_diff": 2.7755575615628914e-17,
+      "stored_eval": true
+    },
+    {
+      "run_id": "runs/Reveal/Ablations/Grace-baseline/test_v2",
+      "dataset": "reveal",
+      "split": "test",
+      "n_targets": 2274,
+      "n_valid": 2224,
+      "n_invalid": 50,
+      "tn_fp_fn_tp": [
+        1755,
+        245,
+        191,
+        33
+      ],
+      "accuracy": 0.8039568345323741,
+      "precision": 0.11870503597122302,
+      "recall": 0.14732142857142858,
+      "f1": 0.13147410358565736,
+      "mcc": 0.02258769757263128,
+      "balanced_accuracy": 0.5124107142857143,
+      "stored_metric_abs_diff": {
+        "accuracy": 0.0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "mcc": 0.0,
+        "balanced_accuracy": 0.0
+      },
+      "max_abs_diff": 0.0,
+      "stored_eval": true
+    },
+    {
+      "run_id": "runs/Reveal/Ablations/No-C1-hybrid-retrieval/test_v2",
+      "dataset": "reveal",
+      "split": "test",
+      "n_targets": 2274,
+      "n_valid": 2128,
+      "n_invalid": 146,
+      "tn_fp_fn_tp": [
+        1694,
+        223,
+        177,
+        34
+      ],
+      "accuracy": 0.8120300751879699,
+      "precision": 0.13229571984435798,
+      "recall": 0.16113744075829384,
+      "f1": 0.1452991452991453,
+      "mcc": 0.041098150268610995,
+      "balanced_accuracy": 0.5224049227787295,
+      "stored_metric_abs_diff": {
+        "accuracy": 0.0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "mcc": 0.0,
+        "balanced_accuracy": 0.0
+      },
+      "max_abs_diff": 0.0,
+      "stored_eval": true
+    },
+    {
+      "run_id": "runs/Reveal/Ablations/No-C2-stratified-demo-selection/test_v2",
+      "dataset": "reveal",
+      "split": "test",
+      "n_targets": 2274,
+      "n_valid": 2274,
+      "n_invalid": 0,
+      "tn_fp_fn_tp": [
+        1849,
+        195,
+        209,
+        21
+      ],
+      "accuracy": 0.8223394898856641,
+      "precision": 0.09722222222222222,
+      "recall": 0.09130434782608696,
+      "f1": 0.09417040358744394,
+      "mcc": -0.004213105731536658,
+      "balanced_accuracy": 0.4979515868288948,
+      "stored_metric_abs_diff": {
+        "accuracy": 0.0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "mcc": 0.0,
+        "balanced_accuracy": 0.0
+      },
+      "max_abs_diff": 0.0,
+      "stored_eval": true
+    },
+    {
+      "run_id": "runs/Reveal/Ablations/No-C3-GEPA-prompt-optimization/test_v2",
+      "dataset": "reveal",
+      "split": "test",
+      "n_targets": 2274,
+      "n_valid": 2273,
+      "n_invalid": 1,
+      "tn_fp_fn_tp": [
+        1925,
+        118,
+        208,
+        22
+      ],
+      "accuracy": 0.8565772107347118,
+      "precision": 0.15714285714285714,
+      "recall": 0.09565217391304348,
+      "f1": 0.11891891891891893,
+      "mcc": 0.04753448818837279,
+      "balanced_accuracy": 0.5189469875928409,
+      "stored_metric_abs_diff": {
+        "accuracy": 0.0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "mcc": 0.0,
+        "balanced_accuracy": 0.0
+      },
+      "max_abs_diff": 0.0,
+      "stored_eval": true
+    },
+    {
+      "run_id": "runs/Reveal/Ablations/No-C5-graph-verbalization/test_v2",
+      "dataset": "reveal",
+      "split": "test",
+      "n_targets": 2274,
+      "n_valid": 2273,
+      "n_invalid": 1,
+      "tn_fp_fn_tp": [
+        1929,
+        115,
+        206,
+        23
+      ],
+      "accuracy": 0.858776946766388,
+      "precision": 0.16666666666666666,
+      "recall": 0.10043668122270742,
+      "f1": 0.12534059945504086,
+      "mcc": 0.05567892708501498,
+      "balanced_accuracy": 0.5220872251514711,
+      "stored_metric_abs_diff": {
+        "accuracy": 0.0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "mcc": 0.0,
+        "balanced_accuracy": 0.0
+      },
+      "max_abs_diff": 0.0,
+      "stored_eval": true
+    },
+    {
+      "run_id": "runs/Reveal/Ablations/No-C6-graph-slicing/test_v2",
+      "dataset": "reveal",
+      "split": "test",
+      "n_targets": 2274,
+      "n_valid": 2273,
+      "n_invalid": 1,
+      "tn_fp_fn_tp": [
+        1850,
+        193,
+        192,
+        38
+      ],
+      "accuracy": 0.8306203255609327,
+      "precision": 0.1645021645021645,
+      "recall": 0.16521739130434782,
+      "f1": 0.1648590021691974,
+      "mcc": 0.07061245540893087,
+      "balanced_accuracy": 0.5353742365234416,
+      "stored_metric_abs_diff": {
+        "accuracy": 0.0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 2.7755575615628914e-17,
+        "mcc": 0.0,
+        "balanced_accuracy": 0.0
+      },
+      "max_abs_diff": 2.7755575615628914e-17,
+      "stored_eval": true
+    },
+    {
+      "run_id": "runs/Reveal/Ablations/No-C7-security-cot/test_v2",
+      "dataset": "reveal",
+      "split": "test",
+      "n_targets": 2274,
+      "n_valid": 2272,
+      "n_invalid": 2,
+      "tn_fp_fn_tp": [
+        1738,
+        304,
+        186,
+        44
+      ],
+      "accuracy": 0.784330985915493,
+      "precision": 0.12643678160919541,
+      "recall": 0.19130434782608696,
+      "f1": 0.1522491349480969,
+      "mcc": 0.035536918953229996,
+      "balanced_accuracy": 0.521215347272495,
+      "stored_metric_abs_diff": {
+        "accuracy": 0.0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "mcc": 0.0,
+        "balanced_accuracy": 0.0
+      },
+      "max_abs_diff": 0.0,
+      "stored_eval": true
+    },
+    {
+      "run_id": "runs/Reveal/Ablations/No-C8-mmr-demo-selection/test_v2",
+      "dataset": "reveal",
+      "split": "test",
+      "n_targets": 2274,
+      "n_valid": 1699,
+      "n_invalid": 575,
+      "tn_fp_fn_tp": [
+        1350,
+        194,
+        128,
+        27
+      ],
+      "accuracy": 0.8104767510300177,
+      "precision": 0.12217194570135746,
+      "recall": 0.17419354838709677,
+      "f1": 0.14361702127659576,
+      "mcc": 0.04155358720657097,
+      "balanced_accuracy": 0.5242729399966573,
+      "stored_metric_abs_diff": {
+        "accuracy": 0.0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 2.7755575615628914e-17,
+        "mcc": 0.0,
+        "balanced_accuracy": 0.0
+      },
+      "max_abs_diff": 2.7755575615628914e-17,
+      "stored_eval": true
+    },
+    {
+      "run_id": "runs/Reveal/Ablations/Plus-C1-tri-signal-retrieval/test_v2",
+      "dataset": "reveal",
+      "split": "test",
+      "n_targets": 2274,
+      "n_valid": 2274,
+      "n_invalid": 0,
+      "tn_fp_fn_tp": [
+        1886,
+        158,
+        214,
+        16
+      ],
+      "accuracy": 0.8364116094986808,
+      "precision": 0.09195402298850575,
+      "recall": 0.06956521739130435,
+      "f1": 0.07920792079207921,
+      "mcc": -0.00877273961724861,
+      "balanced_accuracy": 0.49613290223772655,
+      "stored_metric_abs_diff": {
+        "accuracy": 0.0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "mcc": 0.0,
+        "balanced_accuracy": 0.0
+      },
+      "max_abs_diff": 0.0,
+      "stored_eval": true
+    },
+    {
+      "run_id": "runs/Reveal/Ablations/Plus-C2-stratified-demos/test_v2",
+      "dataset": "reveal",
+      "split": "test",
+      "n_targets": 2274,
+      "n_valid": 2274,
+      "n_invalid": 0,
+      "tn_fp_fn_tp": [
+        1880,
+        164,
+        199,
+        31
+      ],
+      "accuracy": 0.8403693931398417,
+      "precision": 0.15897435897435896,
+      "recall": 0.13478260869565217,
+      "f1": 0.14588235294117646,
+      "mcc": 0.05874039385211202,
+      "balanced_accuracy": 0.5272738875180805,
+      "stored_metric_abs_diff": {
+        "accuracy": 0.0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "mcc": 0.0,
+        "balanced_accuracy": 0.0
+      },
+      "max_abs_diff": 0.0,
+      "stored_eval": true
+    },
+    {
+      "run_id": "runs/Reveal/Ablations/Plus-C3-gepa-prompt/test_v2",
+      "dataset": "reveal",
+      "split": "test",
+      "n_targets": 2274,
+      "n_valid": 1905,
+      "n_invalid": 369,
+      "tn_fp_fn_tp": [
+        1480,
+        234,
+        155,
+        36
+      ],
+      "accuracy": 0.7958005249343832,
+      "precision": 0.13333333333333333,
+      "recall": 0.18848167539267016,
+      "f1": 0.1561822125813449,
+      "mcc": 0.04474468557665549,
+      "balanced_accuracy": 0.5259794608001858,
+      "stored_metric_abs_diff": {
+        "accuracy": 0.0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "mcc": 0.0,
+        "balanced_accuracy": 0.0
+      },
+      "max_abs_diff": 0.0,
+      "stored_eval": true
+    },
+    {
+      "run_id": "runs/Reveal/Ablations/Plus-C5-graph-verbalization/test_v2",
+      "dataset": "reveal",
+      "split": "test",
+      "n_targets": 2274,
+      "n_valid": 2092,
+      "n_invalid": 182,
+      "tn_fp_fn_tp": [
+        1651,
+        227,
+        183,
+        31
+      ],
+      "accuracy": 0.8040152963671128,
+      "precision": 0.12015503875968993,
+      "recall": 0.14485981308411214,
+      "f1": 0.13135593220338984,
+      "mcc": 0.02210613585137969,
+      "balanced_accuracy": 0.5119932718242712,
+      "stored_metric_abs_diff": {
+        "accuracy": 0.0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 2.7755575615628914e-17,
+        "mcc": 0.0,
+        "balanced_accuracy": 0.0
+      },
+      "max_abs_diff": 2.7755575615628914e-17,
+      "stored_eval": true
+    },
+    {
+      "run_id": "runs/Reveal/Ablations/Plus-C6-graph-slicing/test_v2",
+      "dataset": "reveal",
+      "split": "test",
+      "n_targets": 2274,
+      "n_valid": 2134,
+      "n_invalid": 140,
+      "tn_fp_fn_tp": [
+        1605,
+        311,
+        181,
+        37
+      ],
+      "accuracy": 0.7694470477975632,
+      "precision": 0.10632183908045977,
+      "recall": 0.16972477064220184,
+      "f1": 0.13074204946996468,
+      "mcc": 0.006072450187216893,
+      "balanced_accuracy": 0.5037037214380111,
+      "stored_metric_abs_diff": {
+        "accuracy": 0.0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "mcc": 0.0,
+        "balanced_accuracy": 0.0
+      },
+      "max_abs_diff": 0.0,
+      "stored_eval": true
+    },
+    {
+      "run_id": "runs/Reveal/Ablations/Plus-C7-security-cot/test_v2",
+      "dataset": "reveal",
+      "split": "test",
+      "n_targets": 2274,
+      "n_valid": 2274,
+      "n_invalid": 0,
+      "tn_fp_fn_tp": [
+        1970,
+        74,
+        212,
+        18
+      ],
+      "accuracy": 0.8742304309586632,
+      "precision": 0.1956521739130435,
+      "recall": 0.0782608695652174,
+      "f1": 0.11180124223602485,
+      "mcc": 0.06436132128834553,
+      "balanced_accuracy": 0.5210286735301626,
+      "stored_metric_abs_diff": {
+        "accuracy": 0.0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "mcc": 0.0,
+        "balanced_accuracy": 0.0
+      },
+      "max_abs_diff": 0.0,
+      "stored_eval": true
+    },
+    {
+      "run_id": "runs/Reveal/Ablations/Plus-C8-mmr-selection/test_v2",
+      "dataset": "reveal",
+      "split": "test",
+      "n_targets": 2274,
+      "n_valid": 1479,
+      "n_invalid": 795,
+      "tn_fp_fn_tp": [
+        1172,
+        159,
+        126,
+        22
+      ],
+      "accuracy": 0.8073022312373225,
+      "precision": 0.12154696132596685,
+      "recall": 0.14864864864864866,
+      "f1": 0.1337386018237082,
+      "mcc": 0.026728299285102144,
+      "balanced_accuracy": 0.5145947976526489,
+      "stored_metric_abs_diff": {
+        "accuracy": 0.0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "mcc": 0.0,
+        "balanced_accuracy": 0.0
+      },
+      "max_abs_diff": 0.0,
+      "stored_eval": true
+    }
+  ]
+}

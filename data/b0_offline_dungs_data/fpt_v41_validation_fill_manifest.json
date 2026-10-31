@@ -1,0 +1,25 @@
+{
+  "base_url": "https://token-api.fpt.ai/v1",
+  "count": 85,
+  "datasets": {
+    "devign": {
+      "count": 8,
+      "valid": 8
+    },
+    "reveal": {
+      "count": 77,
+      "valid": 77
+    }
+  },
+  "invalid_or_failed": 0,
+  "max_tokens": 256,
+  "model": "DeepSeek-V4.1-Flash",
+  "note": "These are new FPT outputs, not the archived Vertex validation responses. Do not merge without recording mixed provider provenance.",
+  "prompt_source": "H3-B validation prompt pipeline freshly prepared for the omitted IDs",
+  "provider": "FPT AI Factory",
+  "purpose": "fill only validation IDs omitted from archived prompt cohort",
+  "seed": 42,
+  "temperature": 0.0,
+  "thinking": false,
+  "valid": 85
+}

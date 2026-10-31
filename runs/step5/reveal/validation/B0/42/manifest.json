@@ -1,0 +1,31 @@
+{
+  "dataset": "reveal",
+  "split": "validation",
+  "arm": "B0",
+  "arm_config": {
+    "graph": "none",
+    "demo": "none",
+    "base": null,
+    "rq": [
+      "RQ1"
+    ],
+    "note": "zero-shot thuần"
+  },
+  "seed": 42,
+  "protocol_sha256": "378ccf927401980207f5d9889a4a266caba6e43ebdfdfe9c2652acb4e9273023",
+  "specs_sha256": "72ce24b2629588a7edf5206c99b26865b630a489580a6b03964c368fad79858e",
+  "backend": {
+    "kind": "llamacpp",
+    "model": "qwen3-coder-30b-q4",
+    "temperature": 0.0,
+    "max_tokens": 1,
+    "top_logprobs": 5,
+    "seed": 42,
+    "guided_choice": false,
+    "system_prompt": null,
+    "parser_version": "logprob_binary_v1"
+  },
+  "tokenizer": "/tmp/GRACE/grace_diag_kit/tokenizer",
+  "python": "3.13.15",
+  "started_utc": "2026-10-31T13:20:30Z"
+}

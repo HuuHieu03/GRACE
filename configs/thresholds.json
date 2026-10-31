@@ -10,25 +10,25 @@
       0.01,
       0.99
     ],
-    "locked_utc": "2026-10-31T06:13:51Z",
+    "locked_utc": "2026-10-31T17:09:18Z",
     "total_thresholds_locked": 14,
     "protocol_sha256": "378ccf927401980207f5d9889a4a266caba6e43ebdfdfe9c2652acb4e9273023"
   },
   "thresholds": {
-    "devign|B0|42": 0.14,
-    "devign|B1|42": 0.06999999999999999,
-    "devign|B2|42": 0.08,
-    "devign|B2-flip|42": 0.11,
-    "devign|B2-rep|42": 0.08,
-    "reveal|B0|42": 0.92,
-    "reveal|B1|42": 0.56,
-    "reveal|B2|42": 0.060000000000000005,
-    "reveal|B2-flip|42": 0.42000000000000004,
-    "reveal|B2-rep|42": 0.060000000000000005,
+    "devign|B0|42": 0.08,
+    "devign|B1|42": 0.88,
+    "devign|B2|42": 0.98,
+    "devign|B2-flip|42": 0.5,
+    "devign|B2-rep|42": 0.98,
+    "reveal|B0|42": 0.44,
+    "reveal|B1|42": 0.74,
+    "reveal|B2|42": 0.99,
+    "reveal|B2-flip|42": 0.46,
+    "reveal|B2-rep|42": 0.99,
     "devign|P-PRE|42": 0.54,
     "devign|P-POST|42": 0.6,
     "reveal|P-PRE|42": 0.38,
-    "reveal|P-POST|42": 0.39
+    "reveal|P-POST|42": 0.09999999999999999
   },
   "details": {
     "devign|B0|42": {
@@ -38,8 +38,8 @@
       "split": "validation",
       "n_total": 600,
       "n_valid": 600,
-      "tau_star": 0.14,
-      "mcc_at_tau": 0.05497717457127321,
+      "tau_star": 0.08,
+      "mcc_at_tau": 0.0861071975352044,
       "source_records": "devign\\validation\\B0\\42\\records.jsonl"
     },
     "devign|B1|42": {
@@ -49,8 +49,8 @@
       "split": "validation",
       "n_total": 600,
       "n_valid": 600,
-      "tau_star": 0.06999999999999999,
-      "mcc_at_tau": 0.03545185058693884,
+      "tau_star": 0.88,
+      "mcc_at_tau": 0.11401931961809313,
       "source_records": "devign\\validation\\B1\\42\\records.jsonl"
     },
     "devign|B2|42": {
@@ -59,9 +59,9 @@
       "seed": 42,
       "split": "validation",
       "n_total": 600,
-      "n_valid": 600,
-      "tau_star": 0.08,
-      "mcc_at_tau": 0.03814174052190791,
+      "n_valid": 566,
+      "tau_star": 0.98,
+      "mcc_at_tau": 0.07686236260863098,
       "source_records": "devign\\validation\\B2\\42\\records.jsonl"
     },
     "devign|B2-flip|42": {
@@ -70,9 +70,9 @@
       "seed": 42,
       "split": "validation",
       "n_total": 600,
-      "n_valid": 600,
-      "tau_star": 0.11,
-      "mcc_at_tau": 0.07435753273873588,
+      "n_valid": 566,
+      "tau_star": 0.5,
+      "mcc_at_tau": 0.09543224139911846,
       "source_records": "devign\\validation\\B2-flip\\42\\records.jsonl"
     },
     "devign|B2-rep|42": {
@@ -81,9 +81,9 @@
       "seed": 42,
       "split": "validation",
       "n_total": 600,
-      "n_valid": 600,
-      "tau_star": 0.08,
-      "mcc_at_tau": 0.03814174052190791,
+      "n_valid": 566,
+      "tau_star": 0.98,
+      "mcc_at_tau": 0.07686236260863098,
       "source_records": "devign\\validation\\B2-rep\\42\\records.jsonl"
     },
     "reveal|B0|42": {
@@ -93,8 +93,8 @@
       "split": "validation",
       "n_total": 600,
       "n_valid": 600,
-      "tau_star": 0.92,
-      "mcc_at_tau": 0.049378778544364746,
+      "tau_star": 0.44,
+      "mcc_at_tau": 0.07866658522257568,
       "source_records": "reveal\\validation\\B0\\42\\records.jsonl"
     },
     "reveal|B1|42": {
@@ -104,8 +104,8 @@
       "split": "validation",
       "n_total": 600,
       "n_valid": 600,
-      "tau_star": 0.56,
-      "mcc_at_tau": 0.10796360953740197,
+      "tau_star": 0.74,
+      "mcc_at_tau": 0.05289641402696352,
       "source_records": "reveal\\validation\\B1\\42\\records.jsonl"
     },
     "reveal|B2|42": {
@@ -114,9 +114,9 @@
       "seed": 42,
       "split": "validation",
       "n_total": 600,
-      "n_valid": 600,
-      "tau_star": 0.060000000000000005,
-      "mcc_at_tau": 0.036928973315962746,
+      "n_valid": 577,
+      "tau_star": 0.99,
+      "mcc_at_tau": 0.03974070856235861,
       "source_records": "reveal\\validation\\B2\\42\\records.jsonl"
     },
     "reveal|B2-flip|42": {
@@ -125,9 +125,9 @@
       "seed": 42,
       "split": "validation",
       "n_total": 600,
-      "n_valid": 600,
-      "tau_star": 0.42000000000000004,
-      "mcc_at_tau": 0.09127306971777548,
+      "n_valid": 577,
+      "tau_star": 0.46,
+      "mcc_at_tau": 0.025281118206381906,
       "source_records": "reveal\\validation\\B2-flip\\42\\records.jsonl"
     },
     "reveal|B2-rep|42": {
@@ -136,9 +136,9 @@
       "seed": 42,
       "split": "validation",
       "n_total": 600,
-      "n_valid": 600,
-      "tau_star": 0.060000000000000005,
-      "mcc_at_tau": 0.036928973315962746,
+      "n_valid": 577,
+      "tau_star": 0.99,
+      "mcc_at_tau": 0.03974070856235861,
       "source_records": "reveal\\validation\\B2-rep\\42\\records.jsonl"
     },
     "devign|P-PRE|42": {
@@ -169,7 +169,7 @@
       "dataset": "reveal",
       "arm": "P-POST",
       "seed": 42,
-      "tau_star": 0.39,
+      "tau_star": 0.09999999999999999,
       "split": "validation",
       "n_evaluated": 600
     }

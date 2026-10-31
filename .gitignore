@@ -38,6 +38,14 @@ data/manifests/*.jsonl
 !data/specs/
 data/specs/*.jsonl
 !data/specs/*.jsonl.gz
+!data/b0_offline_dungs_data/
+data/b0_offline_dungs_data/*
+!data/b0_offline_dungs_data/*.csv
+data/b0_offline_dungs_data/canonical_historical_36.csv
+!data/b0_offline_dungs_data/*.npz
+!data/b0_offline_dungs_data/*.py
+!data/b0_offline_dungs_data/*.md
+!data/b0_offline_dungs_data/*.json
 checkpoints/
 !output/
 output/*
@@ -58,6 +66,8 @@ Thumbs.db
 
 # Experiment run outputs
 runs/final/
+!runs/step5/
+!runs/step5/**
 runs/*/records.jsonl
 
 runs/dryrun/*.jsonl

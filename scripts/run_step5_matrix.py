@@ -490,13 +490,13 @@ def verify_test_readiness(
     arms_to_test: List[str],
     dataset: str,
     seeds_map: Optional[Dict[str, List[int]]] = None,
-    require_meta: bool = True,
+    require_meta: Optional[bool] = None,
 ) -> bool:
     """Kiểm tra xem toàn bộ các arm chuẩn bị chạy test đã có ngưỡng tau* được khóa hay chưa.
 
     Bảo đảm:
     1. Mọi seed của từng arm (ví dụ: 42, 43, 44 cho stochastic arms) đều đã có ngưỡng trong thresholds.json.
-    2. Các mô hình meta P-PRE và P-POST (nếu require_meta=True) đều đã được khóa ngưỡng.
+    2. Các mô hình meta P-PRE và P-POST (nếu require_meta=True hoặc nằm trong arms_to_test) đều đã được khóa ngưỡng.
     """
     if not thresholds_path.exists():
         print(f"[!] LỖI: Tệp {thresholds_path} chưa tồn tại!")
@@ -521,6 +521,9 @@ def verify_test_readiness(
             key = f"{dataset}|{arm}|{s}"
             if key not in taus:
                 missing.append(key)
+
+    if require_meta is None:
+        require_meta = any(a in ("P-PRE", "P-POST") for a in arms_to_test)
 
     if require_meta:
         for meta_arm in ("P-PRE", "P-POST"):
