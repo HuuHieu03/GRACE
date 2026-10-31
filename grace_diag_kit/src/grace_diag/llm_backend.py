@@ -37,6 +37,8 @@ class BackendConfig:
     timeout_s: float = 120.0
     system_prompt: Optional[str] = None     # None = chỉ một message role=user (giống mã tác giả)
 
+    max_attempts: int = 5                   # Số lần retry tối đa khi gặp lỗi mạng/timeout (tuân thủ evaluation_contract.yaml)
+
     def inference_identity(self) -> Dict[str, Any]:
         return {"kind": self.kind, "model": self.model, "temperature": self.temperature,
                 "max_tokens": self.max_tokens, "top_logprobs": self.top_logprobs,
@@ -62,8 +64,11 @@ class ScoreResult:
         return asdict(self)
 
 
-def request_key(prompt: str, cfg: BackendConfig) -> str:
-    payload = json.dumps({"prompt": prompt, **cfg.inference_identity()}, sort_keys=True, ensure_ascii=False)
+def request_key(prompt: str, cfg: BackendConfig, seed: Optional[int] = None) -> str:
+    ident = cfg.inference_identity()
+    if seed is not None:
+        ident["seed"] = seed
+    payload = json.dumps({"prompt": prompt, **ident}, sort_keys=True, ensure_ascii=False)
     return hashlib.sha256(payload.encode("utf-8")).hexdigest()
 
 
@@ -93,15 +98,19 @@ class FirstTokenScorer:
     """Client mỏng trên SDK openai; dùng được với vLLM và llama.cpp server."""
 
     def __init__(self, cfg: BackendConfig, cache_dir: Optional[Path] = None):
-        from openai import OpenAI  # import muộn để test không cần SDK
         self.cfg = cfg
-        self.client = OpenAI(base_url=cfg.base_url, api_key=cfg.api_key, max_retries=0, timeout=cfg.timeout_s)
         self.cache_dir = Path(cache_dir) if cache_dir else None
         if self.cache_dir:
             self.cache_dir.mkdir(parents=True, exist_ok=True)
+        if cfg.kind == "mock":
+            self.client = None
+        else:
+            from openai import OpenAI  # import muộn để test không cần SDK
+            self.client = OpenAI(base_url=cfg.base_url, api_key=cfg.api_key, max_retries=0, timeout=cfg.timeout_s)
 
     # -- payload -----------------------------------------------------------
-    def build_payload(self, prompt: str) -> Dict[str, Any]:
+    def build_payload(self, prompt: str, seed: Optional[int] = None) -> Dict[str, Any]:
+        eff_seed = seed if seed is not None else self.cfg.seed
         messages = []
         if self.cfg.system_prompt:
             messages.append({"role": "system", "content": self.cfg.system_prompt})
@@ -109,7 +118,7 @@ class FirstTokenScorer:
         payload: Dict[str, Any] = {
             "model": self.cfg.model, "messages": messages,
             "temperature": self.cfg.temperature, "max_tokens": self.cfg.max_tokens,
-            "logprobs": True, "top_logprobs": self.cfg.top_logprobs, "seed": self.cfg.seed,
+            "logprobs": True, "top_logprobs": self.cfg.top_logprobs, "seed": eff_seed,
         }
         if self.cfg.guided_choice:
             if self.cfg.kind == "vllm":
@@ -138,18 +147,44 @@ class FirstTokenScorer:
             tmp.replace(path)
 
     # -- scoring -----------------------------------------------------------
-    def score(self, prompt: str, use_cache: bool = True) -> ScoreResult:
-        key = request_key(prompt, self.cfg)
+    def score(self, prompt: str, use_cache: bool = True, seed: Optional[int] = None) -> ScoreResult:
+        eff_seed = seed if seed is not None else self.cfg.seed
+        key = request_key(prompt, self.cfg, seed=eff_seed)
         if use_cache:
             hit = self._read_cache(key)
             if hit is not None:
                 return hit
-        payload = self.build_payload(prompt)
         t0 = time.time()
-        try:
-            resp = self.client.chat.completions.create(**payload)
-        except Exception as exc:  # lỗi mạng/server: trả invalid kèm thông báo, không retry ngầm
-            return ScoreResult(float("nan"), 0.0, 0.0, None, False, "", {}, None, time.time() - t0, False, type(exc).__name__ + ": " + str(exc)[:200])
+        if self.cfg.kind == "mock":
+            h_hex = hashlib.sha256((prompt + str(eff_seed)).encode("utf-8")).hexdigest()
+            h_int = int(h_hex[:12], 16)
+            raw_s = 0.05 + 0.90 * ((h_int % 10000) / 10000.0)
+            p1 = float(raw_s)
+            p0 = float(1.0 - raw_s)
+            pred_argmax = int(p1 >= p0)
+            raw = str(pred_argmax)
+            top = {"0": math.log(max(p0, 1e-6)), "1": math.log(max(p1, 1e-6))}
+            latency = max(0.001, time.time() - t0)
+            usage = {"prompt_tokens": len(prompt.split()), "completion_tokens": 1}
+            result = ScoreResult(s=raw_s, p0=p0, p1=p1, pred_argmax=pred_argmax, valid=True,
+                                 raw=raw, top=top, usage=usage, latency_s=latency, cached=False, error=None)
+            self._write_cache(key, result)
+            return result
+        payload = self.build_payload(prompt, seed=eff_seed)
+        max_attempts = getattr(self.cfg, "max_attempts", 5)
+        last_exc = None
+        for attempt in range(1, max_attempts + 1):
+            try:
+                resp = self.client.chat.completions.create(**payload)
+                last_exc = None
+                break
+            except Exception as exc:
+                last_exc = exc
+                if attempt < max_attempts:
+                    backoff = min(120.0, 5.0 * (2 ** (attempt - 1)))
+                    time.sleep(backoff)
+        if last_exc is not None:
+            return ScoreResult(float("nan"), 0.0, 0.0, None, False, "", {}, None, time.time() - t0, False, type(last_exc).__name__ + ": " + str(last_exc)[:200])
         latency = time.time() - t0
         result = self.parse_response(resp, latency)
         if result.error is None:
@@ -181,5 +216,9 @@ class FirstTokenScorer:
 
 def load_backend_config(path: Path) -> BackendConfig:
     import yaml
+    import dataclasses
     data = yaml.safe_load(Path(path).read_text(encoding="utf-8"))
-    return BackendConfig(**data["backend"])
+    raw = data.get("backend", {})
+    field_names = {f.name for f in dataclasses.fields(BackendConfig)}
+    filtered = {k: v for k, v in raw.items() if k in field_names}
+    return BackendConfig(**filtered)

@@ -60,21 +60,23 @@ def arrays(records: Dict[str, Dict], ids: List[str]):
     return y, s, valid, pred, grp
 
 
-def table_a(data, out_dir: Path, grid=None) -> Dict[Tuple[str, str, int], float]:
+def table_a(data, out_dir: Path, grid=None, prelocked_taus: Optional[Dict[Tuple[str, str, int], float]] = None) -> Dict[Tuple[str, str, int], float]:
     rows, taus = [], {}
+    if prelocked_taus:
+        taus.update(prelocked_taus)
     keys = sorted({(d, a, sd) for (d, a, sd, sp) in data})
     for d, a, sd in keys:
         val, test = data.get((d, a, sd, "validation")), data.get((d, a, sd, "test"))
+        tau = taus.get((d, a, sd), 0.5)
+        if val and (d, a, sd) not in taus:
+            vids = sorted(val)
+            yv, sv, vv, _, _ = arrays(val, vids)
+            tau, _ = S.pick_threshold(yv[vv], sv[vv], grid)
+            taus[(d, a, sd)] = tau
         if not test:
             continue
         ids = sorted(test)
         y, s, valid, pred, _ = arrays(test, ids)
-        tau = 0.5
-        if val:
-            vids = sorted(val)
-            yv, sv, vv, _, _ = arrays(val, vids)
-            tau, _ = S.pick_threshold(yv[vv], sv[vv], grid)
-        taus[(d, a, sd)] = tau
         ok = valid
         m05 = S.thresholded_metrics(y[ok], pred[ok])
         mt = S.thresholded_metrics(y[ok], (s[ok] >= tau).astype(int))
@@ -90,8 +92,9 @@ def table_a(data, out_dir: Path, grid=None) -> Dict[Tuple[str, str, int], float]
             for name, m in S.constant_baselines(y).items():
                 rows.append({"dataset": d, "arm": name, "seed": 0, "n": len(y), **{f"{k}@0.5": v for k, v in m.items() if k in ("mcc", "f1")},
                              "ba@0.5": m["balanced_accuracy"]})
-    write_csv(out_dir / "table_A_metrics.csv", rows)
-    write_latex(out_dir / "table_A_metrics.tex", rows, ["dataset", "arm", "seed", "auroc", "auprc", "mcc@0.5", "mcc@tau", "ba@tau", "f1@tau", "ppr@0.5", "invalid_rate"])
+    if rows:
+        write_csv(out_dir / "table_A_metrics.csv", rows)
+        write_latex(out_dir / "table_A_metrics.tex", rows, ["dataset", "arm", "seed", "auroc", "auprc", "mcc@0.5", "mcc@tau", "ba@tau", "f1@tau", "ppr@0.5", "invalid_rate"])
     return taus
 
 
@@ -218,6 +221,7 @@ def _main():
     ap.add_argument("--runs", required=True, type=Path)
     ap.add_argument("--protocol", required=True, type=Path)
     ap.add_argument("--anchor-csv", type=Path)
+    ap.add_argument("--thresholds", type=Path, help="Đường dẫn file thresholds.json đã khóa từ Validation")
     ap.add_argument("--out", required=True, type=Path)
     a = ap.parse_args()
     proto = yaml.safe_load(a.protocol.read_text(encoding="utf-8"))
@@ -227,11 +231,23 @@ def _main():
         labels.setdefault((d, sp), {}).update({i: r["label"] for i, r in rec.items()})
     load_anchor(a.anchor_csv, labels, data)
     a.out.mkdir(parents=True, exist_ok=True)
-    taus = table_a(data, a.out, proto.get("thresholds", {}).get("grid"))
+    prelocked = None
+    if a.thresholds and a.thresholds.exists():
+        raw_t = json.loads(a.thresholds.read_text(encoding="utf-8"))
+        raw_dict = raw_t.get("thresholds", raw_t)
+        prelocked = {}
+        for k, v in raw_dict.items():
+            parts = k.split("|")
+            if len(parts) == 3:
+                prelocked[(parts[0], parts[1], int(parts[2]))] = float(v)
+    taus = table_a(data, a.out, proto.get("thresholds", {}).get("grid"), prelocked_taus=prelocked)
     table_b(data, taus, proto["primary_contrasts"], a.out, proto["stats"]["n_boot"], proto["stats"]["bootstrap_seed"])
     table_c(data, a.out)
     figures(data, taus, a.out)
-    json.dump({f"{k[0]}|{k[1]}|{k[2]}": v for k, v in taus.items()}, open(a.out / "thresholds.json", "w"), indent=2)
+    if a.thresholds and a.thresholds.exists():
+        (a.out / "thresholds.json").write_text(a.thresholds.read_text(encoding="utf-8"), encoding="utf-8")
+    elif not (a.out / "thresholds.json").exists():
+        json.dump({f"{k[0]}|{k[1]}|{k[2]}": v for k, v in taus.items()}, open(a.out / "thresholds.json", "w"), indent=2)
     print("wrote", a.out)
 
 

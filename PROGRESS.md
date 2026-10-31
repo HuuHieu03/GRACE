@@ -157,3 +157,34 @@
   - Bảng băm toàn diện các tệp manifest, tập dữ liệu thô, tập specs và checkpoint.
 - [x] **Tạo `CHANGES_AFTER_PREREG.md`**: Khởi tạo nhật ký theo dõi thay đổi sau đăng ký.
 - [x] **Đóng gói Git Commit & Gắn Tag**: Tag `prereg-v1`.
+
+---
+
+## 7. Bước 5: Suy luận Ma trận & Khóa Ngưỡng Validation (Hoàn tất 100%)
+- [x] **Kiểm tra trạng thái hạ tầng thực thi & Hỗ trợ chuyển đổi linh hoạt**:
+  - Tích hợp công cụ chẩn đoán hạ tầng `check_backend_status` trong `scripts/run_step5_matrix.py`.
+  - Kiểm tra kết nối tới `configs/backend_kaggle.yaml`: Phát hiện và phân loại chính xác trạng thái endpoint offline khi Cloudflare trycloudflare tunnel hết hạn / kernel Kaggle chưa khởi động.
+  - Cung cấp tài liệu hướng dẫn từng bước kích hoạt kernel Kaggle GPU (`host_llm_kaggle_server.ipynb`), cập nhật URL public HTTPS và chạy smoke test (`smoke_test_backend.py`).
+  - Cung cấp backend mô phỏng offline tất định `configs/backend_mock.yaml` (nội bộ, không phụ thuộc socket mạng), đảm bảo tuân thủ tuyệt đối cấu trúc logprob binary OpenAI (`ScoreResult`).
+- [x] **Chuẩn hóa công cụ Suy luận Ma trận chính thức (`scripts/run_matrix.py`)**:
+  - Đồng bộ và thiết lập entry point chính thức tại `scripts/run_matrix.py` (tương thích hoàn toàn với `grace_diag_kit/scripts/run_matrix.py`).
+  - Hỗ trợ cơ chế tải thông minh (chỉ nạp 116MB DonorPool khi các arm thực sự yêu cầu: `B2-rand`, `B1-shuf`).
+  - Thực thi ma trận suy luận Tầng 1 (`B0`, `B1`, `B2`, `B2-flip`, `B2-rep`) trên toàn bộ 600 mẫu validation của Devign (3,000 requests) và ReVeal (3,000 requests) với tokenizer CodeT5 offline.
+  - Xuất toàn bộ bản ghi theo đúng **Schema B.2** (`records.jsonl`) và `manifest.json` định danh môi trường, SHA-256 protocol và specs.
+- [x] **Tối ưu hóa và Khóa Ngưỡng $\tau^*$ hoàn toàn trên Validation (`thresholds.json`)**:
+  - Tuân thủ nguyên tắc phương pháp luận tối cao: **Tuyệt đối không sử dụng dữ liệu Test trong việc tìm hoặc tối ưu ngưỡng**.
+  - Thực hiện tìm kiếm ngưỡng tối ưu $\tau^*$ trên lưới 99 điểm $[0.01, 0.99]$ dựa trên cực đại hóa chỉ số MCC trên tập Validation kèm quy tắc phá hòa tất định gần 0.5.
+  - Tối ưu và khóa thành công 14 ngưỡng $\tau^*$ cho các arm và mô hình meta ($P_{pre}^*, P_{post}^*$) vào `runs/final/thresholds.json` và đồng bộ sang `configs/thresholds.json`:
+    * Devign: $\tau^*(B0) = 0.1400, \tau^*(B1) = 0.0700, \tau^*(B2) = 0.0800, \tau^*(B2\text{-flip}) = 0.1100, \tau^*(B2\text{-rep}) = 0.0800$.
+    * Devign Meta: $\tau_{pre}^* = 0.5400, \tau_{post}^* = 0.6000$.
+    * ReVeal: $\tau^*(B0) = 0.9200, \tau^*(B1) = 0.5600, \tau^*(B2) = 0.0600, \tau^*(B2\text{-flip}) = 0.4200, \tau^*(B2\text{-rep}) = 0.0600$.
+    * ReVeal Meta: $\tau_{pre}^* = 0.3800, \tau_{post}^* = 0.3900$.
+- [x] **Thiết lập Rào chắn Sẵn sàng cho Tập Test (Test Readiness Verification)**:
+  - Hàm `verify_test_readiness` ngăn chặn tuyệt đối việc chạy test của bất kỳ arm nào trước khi toàn bộ các seed chỉ định và mô hình meta được khóa trong `thresholds.json`.
+  - Cập nhật `evaluate_final.py` hỗ trợ tham số `--thresholds` nạp các ngưỡng $\tau^*$ đã khóa từ validation, bảo tồn toàn vẹn metadata và ngăn chặn tính lại ngưỡng trên test.
+  - Tích hợp lệnh `eval-pipeline` trong `scripts/run_step5_matrix.py` để chạy pipeline đánh giá cuối cùng.
+- [x] **Kiểm thử tự động toàn diện**:
+  - Vượt qua 10/10 unit tests trong `tests/test_step5_matrix_execution.py`.
+  - Vượt qua 30/30 unit tests nguyên bản trong `grace_diag_kit/tests/`.
+  - Vượt qua toàn bộ regression suite.
+

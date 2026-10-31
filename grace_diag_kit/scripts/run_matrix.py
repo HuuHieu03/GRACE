@@ -27,6 +27,7 @@ import time
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+REPO_ROOT = ROOT.parent if (ROOT.parent / "configs").exists() else ROOT
 sys.path.insert(0, str(ROOT / "src"))
 
 from grace_diag.probes import ARMS, DonorPool, render_arm, load_arms   # noqa: E402
@@ -55,11 +56,11 @@ def main():
     ap.add_argument("--specs", required=True, type=Path)
     ap.add_argument("--donors", type=Path, help="JSONL hàm train (đã khử trùng) cho B2-rand/B1-shuf")
     ap.add_argument("--arms", nargs="+", required=True)
-    ap.add_argument("--arms-config", type=Path, default=ROOT / "configs" / "arms.yaml")
+    ap.add_argument("--arms-config", type=Path, default=REPO_ROOT / "configs" / "arms.yaml" if (REPO_ROOT / "configs" / "arms.yaml").exists() else ROOT / "configs" / "arms.yaml")
     ap.add_argument("--seeds", nargs="+", type=int, default=[42])
-    ap.add_argument("--protocol", type=Path, default=ROOT / "configs" / "protocol.yaml")
-    ap.add_argument("--backend", type=Path, help="configs/backend_vllm.yaml hoặc backend_llamacpp.yaml")
-    ap.add_argument("--tokenizer", help="model/thư mục tokenizer; mặc định lấy từ backend")
+    ap.add_argument("--protocol", type=Path, default=REPO_ROOT / "configs" / "protocol.yaml" if (REPO_ROOT / "configs" / "protocol.yaml").exists() else ROOT / "configs" / "protocol.yaml")
+    ap.add_argument("--backend", type=Path, help="configs/backend_vllm.yaml, backend_llamacpp.yaml, backend_kaggle.yaml hoặc backend_mock.yaml")
+    ap.add_argument("--tokenizer", help="model/thư mục tokenizer; mặc định lấy từ local grace_diag_kit/tokenizer nếu có")
     ap.add_argument("--out", required=True, type=Path)
     ap.add_argument("--dry-run", action="store_true", help="chỉ dựng prompt, ghi prompts.jsonl để audit")
     ap.add_argument("--limit", type=int, help="chỉ chạy N target đầu (smoke test)")
@@ -79,9 +80,18 @@ def main():
     scorer = None
     if not a.dry_run:
         from grace_diag.llm_backend import FirstTokenScorer, load_backend_config
+        if not a.backend:
+            raise SystemExit("Chạy thật bắt buộc phải có --backend (ví dụ: configs/backend_kaggle.yaml hoặc configs/backend_mock.yaml)")
         backend_cfg = load_backend_config(a.backend)
         scorer = FirstTokenScorer(backend_cfg, cache_dir=a.out / "_cache")
-    tok_name = a.tokenizer or (backend_cfg.model if backend_cfg and not a.allow_approx_tokens else None)
+
+    default_tok = ROOT / "tokenizer"
+    if not default_tok.exists() and (REPO_ROOT / "grace_diag_kit" / "tokenizer").exists():
+        default_tok = REPO_ROOT / "grace_diag_kit" / "tokenizer"
+    tok_name = a.tokenizer or (str(default_tok) if default_tok.exists() else None)
+    if not tok_name and backend_cfg and not a.allow_approx_tokens:
+        tok_name = backend_cfg.model
+
     counter = TokenCounter(tok_name)
     if counter.approx and not a.dry_run and not a.allow_approx_tokens:
         raise SystemExit("Lượt chạy thật phải có tokenizer của model (--tokenizer)")
@@ -89,7 +99,8 @@ def main():
     specs = read_jsonl(a.specs)
     if a.limit:
         specs = specs[: a.limit]
-    donors = DonorPool(read_jsonl(a.donors)) if a.donors else None
+    needs_donors = any(arms_cfg[arm].get("demo") == "random" or arms_cfg[arm].get("graph") == "shuffle" for arm in a.arms)
+    donors = DonorPool(read_jsonl(a.donors)) if (a.donors and needs_donors) else None
 
     a.out.mkdir(parents=True, exist_ok=True)
     dry_path = a.out / f"prompts_{a.dataset}_{a.split}.jsonl"
@@ -125,7 +136,7 @@ def main():
                 if a.dry_run:
                     append_jsonl(dry_path, {"id": sid, "arm": arm, "seed": seed, "prompt": rendered.prompt, "evidence": rendered.evidence})
                     continue
-                res = scorer.score(rendered.prompt)
+                res = scorer.score(rendered.prompt, seed=seed)
                 row = {"id": sid, "dataset": a.dataset, "split": a.split, "arm": arm, "seed": seed,
                        "prompt_sha256": rendered.evidence["prompt_sha256"],
                        "demo_ids": [d["function_uid"] for d in rendered.evidence["demo"].get("demos", [])],

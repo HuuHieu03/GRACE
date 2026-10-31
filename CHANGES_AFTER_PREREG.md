@@ -22,3 +22,12 @@ Mọi thay đổi cần được ghi rõ:
 - **Ghi chú kỹ thuật bổ sung:**
   - Sao chép bản sao tệp cấu hình `configs/arms.yaml` (từ `grace_diag_kit/configs/arms.yaml`) ra thư mục gốc `configs/` để bảo đảm độ tương thích 100% với đường dẫn `arms_file: configs/arms.yaml` trong `configs/protocol.yaml` (theo khuyến nghị của Báo cáo kiểm toán độc lập).
   - Không làm thay đổi bất kỳ định nghĩa arm, giả thuyết hay mã băm manifest nào.
+
+### [step5-threshold-locking] — 2026-10-31
+- **Mục tiêu:** Thực hiện Bước 5: Tối ưu hóa và Khóa ngưỡng $\tau^*$ trên tập Validation chính thức.
+- **Tệp bị ảnh hưởng:**
+  - `configs/thresholds.json` (tạo mới): Khóa 14 ngưỡng tối ưu $\tau^*$ được chọn 100% trên Validation. Cam kết Zero-Test-Exposure.
+  - `scripts/run_step5_matrix.py` (tạo mới): Bộ điều phối suy luận ma trận 15 arm theo 3 tầng (Tiers 1, 2, 3), kèm rào chắn cấm chạy split Test nếu chưa khóa ngưỡng.
+  - `grace_diag_kit/src/grace_diag/llm_backend.py`: Cập nhật `FirstTokenScorer` tuân thủ chính sách Retry tối đa 5 lần với exponential backoff theo Hợp đồng thực nghiệm (`evaluation_contract.yaml`).
+  - `grace_diag_kit/src/grace_diag/evaluate_final.py`: Bảo tồn nguyên vẹn metadata và chữ ký băm trong `thresholds.json`.
+- **Tác động tới các giả thuyết H1.1–H6.1:** Hoàn toàn độc lập và trung lập; ngưỡng được khóa trước khi mở tập Test, ngăn chặn tuyệt đối thiên vị rò rỉ dữ liệu (p-hacking).

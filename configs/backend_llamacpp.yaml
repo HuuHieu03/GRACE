@@ -1,0 +1,17 @@
+# llama.cpp server (Kaggle 2×T4 hoặc máy 24 GB) với GGUF đã dùng trong notebook kaggle_qwen3coder30b_gguf:
+#   llama-server -m Qwen3-Coder-30B-A3B-Instruct-UD-Q4_K_XL.gguf --alias qwen3-coder-30b-q4 \
+#       --n-gpu-layers all --split-mode layer --ctx-size 8192 --parallel 1 --host 127.0.0.1 --port 8080 --seed 42
+# Endpoint OpenAI-compatible của llama.cpp hỗ trợ logprobs/top_logprobs; nếu phiên bản cũ không trả
+# top_logprobs, nâng cấp llama.cpp (>= b4400) trước khi smoke test.
+backend:
+  kind: llamacpp
+  base_url: http://127.0.0.1:8080/v1
+  model: qwen3-coder-30b-q4          # phải trùng --alias của server
+  api_key: EMPTY
+  temperature: 0.0
+  max_tokens: 1
+  top_logprobs: 5
+  seed: 42
+  guided_choice: false               # với llama.cpp, true = gửi grammar root ::= "0" | "1"
+  timeout_s: 300
+  system_prompt: null
