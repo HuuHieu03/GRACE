@@ -19,4 +19,6 @@ Mọi thay đổi cần được ghi rõ:
 - **Mã băm Manifest:**
   - Devign: `5a084a10e5c191039e56e351bf8d722fe017424f159a84d6b92be86a1d0f4952`
   - ReVeal: `59498c4a4ab038babe558675c183c2b104b0145590fb0accf8b02cd5440d57f7`
-- **Ghi chú:** Chưa có thay đổi nào sau thời điểm đăng ký.
+- **Ghi chú kỹ thuật bổ sung:**
+  - Sao chép bản sao tệp cấu hình `configs/arms.yaml` (từ `grace_diag_kit/configs/arms.yaml`) ra thư mục gốc `configs/` để bảo đảm độ tương thích 100% với đường dẫn `arms_file: configs/arms.yaml` trong `configs/protocol.yaml` (theo khuyến nghị của Báo cáo kiểm toán độc lập).
+  - Không làm thay đổi bất kỳ định nghĩa arm, giả thuyết hay mã băm manifest nào.
