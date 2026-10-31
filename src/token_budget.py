@@ -117,6 +117,9 @@ class OfflineFallbackTokenizer:
         return "".join(tokens[:max_tokens])
 
 
+_TOKENIZER_CACHE: Dict[str, Tuple[Any, str]] = {}
+
+
 class TokenBudgetManager:
     """
     Bộ quản lý ngân sách ngữ cảnh cắm-rút (Pluggable Token Budget Manager).
@@ -151,6 +154,8 @@ class TokenBudgetManager:
             self.tokenizer = OfflineFallbackTokenizer()
             self.tokenizer_type = "offline_fallback"
             self.fallback_reason = "force_offline requested"
+        elif tokenizer_name in _TOKENIZER_CACHE:
+            self.tokenizer, self.tokenizer_type = _TOKENIZER_CACHE[tokenizer_name]
         else:
             loaded = False
             has_local = _is_model_locally_cached(tokenizer_name)
@@ -171,6 +176,7 @@ class TokenBudgetManager:
                                 local_files_only=True,
                             )
                             self.tokenizer_type = "transformers_local"
+                            _TOKENIZER_CACHE[tokenizer_name] = (self.tokenizer, self.tokenizer_type)
                             loaded = True
                         except Exception:
                             pass
@@ -184,6 +190,7 @@ class TokenBudgetManager:
                                 local_files_only=False,
                             )
                             self.tokenizer_type = "transformers"
+                            _TOKENIZER_CACHE[tokenizer_name] = (self.tokenizer, self.tokenizer_type)
                             loaded = True
                         except Exception as exc:
                             self.fallback_reason = f"Online tokenizer load failed: {exc}"
