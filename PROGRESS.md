@@ -29,16 +29,22 @@
 
 ---
 
+- [x] **Thực hiện pilot smoke test trên Kaggle GPU (Thành công 100%)**:
+  - Đã đóng gói và đẩy kernel `huuhieu3333/grace-host-llm-server` lên Kaggle Linux Cloud có GPU.
+  - Server `llama-server` đã nạp thành công mô hình `Qwen2.5-Coder-7B-Instruct-GGUF` (Q4_K_M) vào GPU memory.
+  - Tốc độ suy luận prompt cực nhanh: **430.37 tokens/giây** (99.92 ms cho 43 tokens).
+  - Cả Python Client và `curl` CLI đều nhận kết quả `HTTP 200 OK` có đầy đủ `top_logprobs=5` theo chuẩn của Thầy.
+  - Khởi tạo thành công đường hầm công khai HTTPS qua Cloudflared Tunnel và xuất file `backend_kaggle.yaml`.
+  - Kernel hoàn thành trọn vẹn với trạng thái: **`KernelWorkerStatus.COMPLETE`**.
+
+---
+
 ## 2. Việc đang kẹt / Chờ đợi (Blocked / Awaiting)
 
-- [ ] **Chờ Dũng xuất 4 tệp dữ liệu thực nghiệm H3-B**:
-  - Để hoàn thành kết xuất báo cáo chính thức Bước 0 cho Thầy, Dũng cần xuất 4 file cho mỗi dataset (Devign và ReVeal) theo đúng hướng dẫn tại `INTEGRATION.md`:
-    1. `gate_validation.csv` & `gate_test.csv` (các cột `id, y, p_gate`).
-    2. `xpre_validation.npz` & `xpre_test.npz` (mảng 34 đặc trưng mã nguồn).
-    3. File kết quả dự đoán của LLM (`predictions.jsonl` hoặc `records.jsonl`).
-  - *(Khi có file, script `scripts/run_step0_offline_diagnostic.py` chỉ cần 30 giây để hoàn tất toàn bộ phân tích).*
-- [ ] **Thực hiện pilot smoke test trên Kaggle GPU**:
-  - Cần chạy notebook `host_llm_kaggle_server.ipynb` trên session Kaggle active để kiểm tra tốc độ thực tế của `qwen2.5-coder-7b-instruct` và `qwen2.5-coder-32b-instruct-q4`.
+- [ ] **Chốt kết quả Bước 0 từ gói dữ liệu Dũng gửi**:
+  - Gói dữ liệu `requested_data_bundle_20261029_FINAL.zip` đã được đối soát và có đầy đủ 100% dữ liệu của cả Devign và ReVeal.
+  - Đã chạy thử nghiệm thành công trên Devign (ra $\Delta$MCC = 0.0023, 95% CI chứa 0 $\to$ No meaningful benefit).
+  - Sẵn sàng xuất báo cáo chính thức Bước 0 cho cả 2 bộ dữ liệu nộp Thầy.
 
 ---
 
@@ -70,3 +76,84 @@
 | `oracle` | 10% | 10 | 1.0000 | 1.0000 | 9 | 0 |
 | `random` | 10% | 10 | 0.8260 | 0.9060 | — | — |
 | `full_expert` | 100% | 100 | 0.8610 | 0.9247 | — | — |
+
+---
+
+## 3. Bước 1: Hạ tầng Phục vụ Mô hình LLM (Kaggle Cloud 0 USD)
+
+Đã hoàn tất thử nghiệm và đưa vào vận hành thành công hạ tầng tự host mô hình mã nguồn mở trên **Kaggle 2× Tesla T4 GPU (0 USD)** theo đúng đề cương nghiên cứu của Thầy:
+
+### A. Mô hình & Kiến trúc Phục vụ
+* **Mô hình mục tiêu**: `Qwen3-Coder-30B-A3B-Instruct` (MoE 30B tham số, 3.3B tham số kích hoạt per token; bản lượng tử hóa GGUF UD-Q4_K_XL dung lượng 16.45 GB).
+* **Lưu trữ & Persistence**: Gắn trực tiếp qua Kaggle Model (`tnthnhneee/qwen3-30b-a3b/gguf/coder-instruct-ud-q4_k_xl`), mount tự động vào `/kaggle/input/` trong **0 giây** (không cần tải lại từ Hugging Face).
+* **Phân bổ tài nguyên GPU (Layer Split)**:
+  - Offload toàn bộ **49/49 layers** của mô hình trải đều qua 2 card GPU:
+    * `CUDA0` (Tesla T4 #0): 8,485 MiB VRAM (~8.48 GB / 15 GB).
+    * `CUDA1` (Tesla T4 #1): 8,189 MiB VRAM (~8.18 GB / 15 GB).
+  - Tổng VRAM an toàn tuyệt đối, không có nguy cơ OOM.
+* **Thời gian nạp trọng số**: ~126 giây hoàn tất nạp 16.45 GB và mở cổng HTTP server.
+* **Engine phục vụ**: `llama-cpp-python` / `llama.cpp` FastAPI server hỗ trợ đầy đủ OpenAI-compatible API (`/v1/models`, `/v1/chat/completions`).
+* **Đặc tính đầu ra**:
+  - `top_logprobs=5`, `max_tokens=1`, `seed=42`, `temperature=0.0`.
+  - Tính toán trực tiếp điểm xác suất liên tục $s = \frac{p(1)}{p(0) + p(1)}$.
+* **Đường hầm mạng**: Cloudflare HTTPS Tunnel công khai (`trycloudflare.com`).
+* **File cấu hình**: Tự động sinh `configs/backend_kaggle.yaml` phục vụ gọi từ máy trạm local.
+
+
+---
+
+## 4. Bước 2: Đóng băng dữ liệu, kho retrieval và specs (Hoàn tất 100%)
+- [x] **Trích xuất dữ liệu CPG thô (Streaming Extraction)**:
+  - Trích xuất toàn bộ 6 file JSONL thô vào `data/raw/` từ archive:
+    * `devign_train.jsonl` (21,854 mẫu), `devign_validation.jsonl` (2,732 mẫu), `devign_test.jsonl` (2,732 mẫu).
+    * `reveal_train.jsonl` (18,187 mẫu), `reveal_validation.jsonl` (2,273 mẫu), `reveal_test.jsonl` (2,274 mẫu).
+    * Đầy đủ schema: `{id, func, target, nodes, edges, commit_id, project}`.
+- [x] **Xây dựng Manifest & Khử trùng Kho Donor (`scripts/build_manifests.py`)**:
+  - Chuẩn hóa mã nguồn (bỏ comment, khoảng trắng thừa), băm SHA-256 từng hàm.
+  - Lọc trùng tuyệt đối (exact overlap with eval) và loại bỏ nhóm mâu thuẫn nhãn khỏi donor bank.
+  - Gắn cờ gần trùng (Jaccard token 3-gram >= 0.9): Devign 607 cờ; ReVeal 998 cờ.
+  - Kho donor sạch: Devign (21,711 hàm), ReVeal (17,620 hàm).
+  - Băm manifest:
+    * Devign: `8e9722a165d65e8d73309de1cb1013d3ff218468fd597b79051b8c1d7c070246`
+    * ReVeal: `5bf4cba74c426e142832c0dc814aee7e127dce72c207d1fdf14eb1508b9e87ab`
+- [x] **Đóng gói Specs (`scripts/build_specs.py`)**:
+  - Ghép demo B2 từ lịch sử truy hồi (hoặc donor tương đồng), cặp tương phản B3 (1 vuln + 1 safe), khối khác biệt an ninh `security_difference`, và `h2_evidence` theo ngân sách 1,500 token.
+  - Sinh toàn bộ file specs:
+    * `data/specs/devign_validation.jsonl` (2,732 dòng)
+    * `data/specs/devign_test.jsonl` (2,732 dòng)
+    * `data/specs/reveal_validation.jsonl` (2,273 dòng)
+    * `data/specs/reveal_test.jsonl` (2,274 dòng)
+- [x] **Tạo Validation Subset 600 mẫu phân tầng (Stratified, Seed 42)**:
+  - `data/specs/devign_val_subset600.jsonl` (261 vuln, 339 safe, pos_rate=0.4350)
+  - `data/specs/reveal_val_subset600.jsonl` (55 vuln, 545 safe, pos_rate=0.0917)
+
+---
+
+## 5. Bước 3: Bộ dựng prompt, 15 Probes và Kiểm tra Toàn vẹn (Hoàn tất 100%)
+- [x] **15 Arm / Probes**: Hoàn tất `render_arm` hỗ trợ đủ 15 arm từ B0 đến B3-flip, đảm bảo mỗi probe chỉ khác arm gốc đúng 1 khối (`diff_blocks`).
+- [x] **Kiểm thử Unit Test**: 59/59 tests PASSED 100% (`grace_diag_kit/tests`, root regression tests).
+- [x] **Dry-run ma trận 15 Arms trên Validation Subset 600**:
+  - Chạy `run_matrix.py --dry-run` với tokenizer offline CodeT5 (`grace_diag_kit/tokenizer`) trên 600 mẫu validation của cả Devign (9,000 prompts) và ReVeal (9,000 prompts).
+- [x] **Kiểm tra Toàn vẹn Prompt (`prompt_audit.py`)**:
+  - `n_label_leak`: **0** trên toàn bộ 15 arms của cả 2 dataset.
+  - `any_approx_tokens`: **false** trên toàn bộ 15 arms.
+  - `rate_demo_empty`: $\le 1\%$ trên mọi arm (cao nhất 1.0% ở B2-rand, trung bình 0.3% - 0.6%).
+  - `rate_graph_missing`: **0.0%**.
+  - `tokens_max`: $\le 6,992$ (nằm an toàn trong ngân sách 8,192).
+  - Xuất đủ `audit_summary.json`, `audit_rows.csv`, và `manual_sample.jsonl` (30 mẫu/dataset phân tầng theo tam phân vị độ dài $\times$ cờ cắt).
+
+---
+
+## 6. Bước 4: Đăng ký trước Giao thức Nghiên cứu (Preregistration - Hoàn tất 100%)
+- [x] **Cập nhật `grace_diag_kit/configs/protocol.yaml`**:
+  - Điền `registered_at: "2026-10-31"`.
+  - Khóa mã băm `manifest_sha256` cho Devign và ReVeal.
+  - Điền ghi chú cấu hình lượng tử hóa mô hình `Qwen3-Coder-30B-A3B-Instruct` GGUF Q4_K_XL (16.45 GB).
+- [x] **Soạn thảo `preregistration.md`**:
+  - Tuyên bố công khai tiếp xúc dữ liệu test và quy tắc cô lập.
+  - Bảng 11 giả thuyết nghiên cứu (H1.1 - H6.1, Bảng 4.3 đề cương).
+  - Quy tắc phân tích thống kê Mục 6 (ngưỡng tối ưu $\tau^*$, bootstrap 5000, Holm correction, meta-model $P_{pre}/P_{post}$, routing 5%/10%/25%).
+  - Các quy tắc dừng (stopping rules).
+  - Bảng băm toàn diện các tệp manifest, tập dữ liệu thô, tập specs và checkpoint.
+- [x] **Tạo `CHANGES_AFTER_PREREG.md`**: Khởi tạo nhật ký theo dõi thay đổi sau đăng ký.
+- [x] **Đóng gói Git Commit & Gắn Tag**: Tag `prereg-v1`.

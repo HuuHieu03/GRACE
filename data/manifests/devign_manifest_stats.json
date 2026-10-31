@@ -1,0 +1,32 @@
+{
+  "dataset": "devign",
+  "near_threshold": 0.9,
+  "per_split": {
+    "train": {
+      "n": 21854,
+      "n_pos": 10018,
+      "pos_rate": 0.45840578383819897,
+      "exact_overlap_flags": 18,
+      "near_flags": 607,
+      "label_conflicts": 124
+    },
+    "validation": {
+      "n": 2732,
+      "n_pos": 1187,
+      "pos_rate": 0.43448023426061494,
+      "exact_overlap_flags": 8,
+      "near_flags": 0,
+      "label_conflicts": 0
+    },
+    "test": {
+      "n": 2732,
+      "n_pos": 1255,
+      "pos_rate": 0.45937042459736455,
+      "exact_overlap_flags": 10,
+      "near_flags": 0,
+      "label_conflicts": 0
+    }
+  },
+  "n_donors_clean": 21711,
+  "manifest_sha256": "8e9722a165d65e8d73309de1cb1013d3ff218468fd597b79051b8c1d7c070246"
+}

@@ -8,7 +8,7 @@ import numpy as np
 import pytest
 
 from scripts.generate_step0_mock_data import generate_all_step0_mock_data, generate_mock_step0_data
-from scripts.run_step0_offline_diagnostic import run_offline_diagnostic
+from scripts.run_step0_offline_diagnostic import resolve_cluster_unit, run_offline_diagnostic
 
 
 @pytest.fixture(scope="module")
@@ -211,4 +211,70 @@ def test_offline_diagnostic_string_paths(mock_dataset_dir, tmp_path):
     meta = report_dict["matched_meta_model"]
     assert meta["tau_pre"] is not None
     assert meta["tau_post"] is not None
+
+
+def test_resolve_cluster_unit_logic():
+    """Kiểm tra logic phân giải đơn vị bootstrap theo protocol.yaml dòng 55."""
+    # 1. Không có group -> luôn là sample
+    g, unit = resolve_cluster_unit(None, cluster_unit="auto")
+    assert g is None and unit == "sample"
+
+    # 2. Ít hơn 10 nhóm duy nhất (ví dụ ReVeal có 2 dự án debian/chrome)
+    reveal_groups = ["debian", "chrome"] * 10
+    g_auto, unit_auto = resolve_cluster_unit(reveal_groups, cluster_unit="auto")
+    assert g_auto is None and unit_auto == "sample"
+
+    g_commit, unit_commit = resolve_cluster_unit(reveal_groups, cluster_unit="commit")
+    assert g_commit is not None and "cluster" in unit_commit
+
+    g_sample, unit_sample = resolve_cluster_unit(reveal_groups, cluster_unit="sample")
+    assert g_sample is None and unit_sample == "sample"
+
+    # 3. >= 10 nhóm duy nhất (ví dụ Devign có commit IDs)
+    devign_groups = [f"commit_{i}" for i in range(50)]
+    g_auto_d, unit_auto_d = resolve_cluster_unit(devign_groups, cluster_unit="auto")
+    assert g_auto_d is not None and "cluster" in unit_auto_d
+
+    g_commit_d, unit_commit_d = resolve_cluster_unit(devign_groups, cluster_unit="commit")
+    assert g_commit_d is not None and "cluster" in unit_commit_d
+
+    g_sample_d, unit_sample_d = resolve_cluster_unit(devign_groups, cluster_unit="sample")
+    assert g_sample_d is None and unit_sample_d == "sample"
+
+    # 4. Kiểm tra xử lý khoảng trắng và chữ hoa chữ thường
+    g_ws, unit_ws = resolve_cluster_unit(devign_groups, cluster_unit="  COMMIT  ")
+    assert g_ws is not None and "cluster" in unit_ws
+
+    # 5. Tham số không hợp lệ -> ném ValueError
+    with pytest.raises(ValueError, match="cluster_unit"):
+        resolve_cluster_unit(devign_groups, cluster_unit="invalid_unit")
+
+
+def test_offline_diagnostic_cluster_unit_argument(mock_dataset_dir, tmp_path):
+    """Kiểm tra việc tích hợp tham số cluster_unit trong pipeline 2-split."""
+    _, files = mock_dataset_dir
+    out_dir = tmp_path / "runs_cluster_unit_test"
+
+    report_dict, json_path, md_path = run_offline_diagnostic(
+        gate_val_path=files["gate_val"],
+        gate_test_path=files["gate_test"],
+        llm_val_path=files["llm_val"],
+        llm_test_path=files["llm_test"],
+        xpre_val_path=files["xpre_val"],
+        xpre_test_path=files["xpre_test"],
+        dataset="devign",
+        tau=0.5,
+        output_dir=out_dir,
+        seed=20261117,
+        n_boot=100,
+        n_folds=2,
+        cluster_unit="sample",
+    )
+
+    assert json_path.exists()
+    assert report_dict["metadata"]["cluster_unit_arg"] == "sample"
+    assert report_dict["metadata"]["bootstrap_unit"] == "sample"
+    md_text = md_path.read_text(encoding="utf-8")
+    assert "Sample Bootstrap" in md_text
+
 

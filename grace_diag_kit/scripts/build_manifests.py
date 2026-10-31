@@ -24,6 +24,12 @@ import numpy as np
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
+
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8")
+if hasattr(sys.stderr, "reconfigure"):
+    sys.stderr.reconfigure(encoding="utf-8")
+
 from grace_diag.supervised_anchor import TOKEN_RE  # noqa: E402
 
 COMMENT_RE = re.compile(r"/\*.*?\*/|//[^\n]*", re.S)
@@ -120,12 +126,24 @@ def main():
         stats["per_split"][name] = {"n": len(rows), "n_pos": pos, "pos_rate": pos / max(1, len(rows)),
                                     "exact_overlap_flags": n_exact, "near_flags": n_near, "label_conflicts": n_conflict}
     # kho donor: train giữ lại trong bank, kèm graph để B1-shuf
-    with open(a.out / f"{a.dataset}_donors.jsonl", "w", encoding="utf-8") as f:
-        for r in splits["train"]:
-            if r["norm_sha256"] in eval_hashes or len(labels_by_hash[r["norm_sha256"]]) > 1:
-                continue
-            f.write(json.dumps({"function_uid": str(r["id"]), "func": r["func"], "target": int(r["target"]),
-                                "nodes": r.get("nodes") or [], "edges": r.get("edges") or []}, ensure_ascii=False) + "\n")
+    seen_donor_repr = set()
+    donor_paths = [a.out / f"{a.dataset}_donors.jsonl", a.out / f"{a.dataset}_donor_clean.jsonl"]
+    donor_files = [open(p, "w", encoding="utf-8") for p in donor_paths]
+    n_donor_saved = 0
+    for r in splits["train"]:
+        if r["norm_sha256"] in eval_hashes or len(labels_by_hash[r["norm_sha256"]]) > 1:
+            continue
+        if r["norm_sha256"] in seen_donor_repr:
+            continue
+        seen_donor_repr.add(r["norm_sha256"])
+        payload = json.dumps({"function_uid": str(r["id"]), "func": r["func"], "target": int(r["target"]),
+                              "nodes": r.get("nodes") or [], "edges": r.get("edges") or []}, ensure_ascii=False) + "\n"
+        for df in donor_files:
+            df.write(payload)
+        n_donor_saved += 1
+    for df in donor_files:
+        df.close()
+    stats["n_donors_clean"] = n_donor_saved
     manifest_hash = hashlib.sha256(b"".join((a.out / f"{a.dataset}_{s}.jsonl").read_bytes() for s in splits)).hexdigest()
     stats["manifest_sha256"] = manifest_hash
     (a.out / f"{a.dataset}_manifest_stats.json").write_text(json.dumps(stats, indent=2, ensure_ascii=False), encoding="utf-8")

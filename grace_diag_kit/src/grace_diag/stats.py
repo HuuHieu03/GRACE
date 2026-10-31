@@ -167,12 +167,20 @@ class PairedCI:
         return asdict(self)
 
 
+_resample_cache: Dict[int, Tuple[Any, List[np.ndarray]]] = {}
+
+
 def _resample_indices(rng: np.random.Generator, n: int, groups: Optional[np.ndarray]) -> np.ndarray:
     if groups is None:
         return rng.integers(0, n, n)
-    uniq, inv = np.unique(groups, return_inverse=True)
-    members = [np.flatnonzero(inv == g) for g in range(len(uniq))]
-    picked = rng.integers(0, len(uniq), len(uniq))
+    key = id(groups)
+    if key not in _resample_cache or _resample_cache[key][0] is not groups:
+        if len(_resample_cache) >= 32:
+            _resample_cache.clear()
+        uniq, inv = np.unique(groups, return_inverse=True)
+        _resample_cache[key] = (groups, [np.flatnonzero(inv == g) for g in range(len(uniq))])
+    members = _resample_cache[key][1]
+    picked = rng.integers(0, len(members), len(members))
     return np.concatenate([members[g] for g in picked])
 
 

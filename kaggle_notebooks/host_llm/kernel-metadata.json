@@ -1,0 +1,17 @@
+{
+  "id": "huuhieu3333/grace-host-llm-server",
+  "title": "GRACE Host LLM Server",
+  "code_file": "host_llm_kaggle_server.ipynb",
+  "language": "python",
+  "kernel_type": "notebook",
+  "is_private": "true",
+  "enable_gpu": "true",
+  "enable_tpu": "false",
+  "enable_internet": "true",
+  "dataset_sources": [],
+  "competition_sources": [],
+  "kernel_sources": [],
+  "model_sources": [
+    "tnthnhneee/qwen3-30b-a3b/gguf/coder-instruct-ud-q4_k_xl"
+  ]
+}

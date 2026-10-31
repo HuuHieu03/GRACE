@@ -1,9 +1,9 @@
 # Giao thức đăng ký trước — bản để commit + tag prereg-v1 (điền các ô "fill:" trước khi tag)
 study_id: grace_diag_replication_v1
 version: prereg-v1
-registered_at: "fill: YYYY-MM-DD"            # ngày tag; mọi lượt test sau ngày này mới có giá trị xác nhận
+registered_at: "2026-10-31"            # ngày tag; mọi lượt test sau ngày này mới có giá trị xác nhận
 test_exposure_disclosure: >
-  Test Devign/ReVeal đã được xem trong giai đoạn thăm dó (36 run qua API, dev-100, H1–H3).
+  Test Devign/ReVeal đã được xem trong giai đoạn thăm dò (36 run qua API, dev-100, H1–H3).
   Mọi lựa chọn cấu hình, ngưỡng và arm của lượt xác nhận được chốt trên official validation
   trước khi chạy test; kết quả lịch sử chỉ là bằng chứng động cơ (phụ lục).
 
@@ -15,7 +15,9 @@ dedup:
   exact_overlap_with_eval: remove_from_bank
   near_duplicate_jaccard_3gram: 0.9          # chỉ gắn cờ; báo cáo cả test đầy đủ và test không gần trùng
   label_conflict_groups: remove_from_bank
-  manifest_sha256: "fill: từ build_manifests.py"
+  manifest_sha256:
+    devign: "8e9722a165d65e8d73309de1cb1013d3ff218468fd597b79051b8c1d7c070246"
+    reveal: "5bf4cba74c426e142832c0dc814aee7e127dce72c207d1fdf14eb1508b9e87ab"
 
 backend:                                       # chi tiết trong configs/backend_*.yaml
   primary_model: "Qwen/Qwen3-Coder-30B-A3B-Instruct"
@@ -23,7 +25,7 @@ backend:                                       # chi tiết trong configs/backen
   fallback_models: ["Qwen/Qwen2.5-Coder-32B-Instruct", "Qwen/Qwen2.5-Coder-14B-Instruct"]
   decoding: {temperature: 0.0, max_tokens: 1, logprobs: true, top_logprobs: 5, seed: 42}
   guided_choice: "auto: bật nếu smoke test < 99% prompt có token 0/1 trong top-5; ghi vào bài"
-  quantization_note: "fill: tên file/quant thực dùng, băm SHA-256 của checkpoint"
+  quantization_note: "Qwen3-Coder-30B-A3B-Instruct-UD-Q4_K_XL.gguf (16.45 GB, MoE 30B total / 3.3B active per token, llama.cpp b3920 / vLLM fallback)"
 
 token_budget: {total: 8192, target_code: 3000, demo: 1500, graph: 1500, reserve: 64}
 graph_prefix: {nodes: 25, edges: 25}

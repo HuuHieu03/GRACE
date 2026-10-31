@@ -1,0 +1,24 @@
+{
+  "dataset": "reveal",
+  "split": "validation",
+  "arm": "B3",
+  "arm_config": {
+    "graph": "prefix",
+    "demo": "contrastive",
+    "label": true,
+    "base": "B1",
+    "rq": [
+      "RQ2",
+      "RQ4"
+    ],
+    "diff": true,
+    "note": "cặp tương phản + Key difference"
+  },
+  "seed": 42,
+  "protocol_sha256": "d970f9b844de628dccf3deade81e5fd6443bdc0f2ddef64635d4c9a1892e538c",
+  "specs_sha256": "172cac25e86c4ed2dc3431fdba8bfd581799c769b4f2cafe3eec61c671f7c495",
+  "backend": "dry-run",
+  "tokenizer": "grace_diag_kit/tokenizer",
+  "python": "3.10.11",
+  "started_utc": "2026-10-30T23:55:43Z"
+}

@@ -83,11 +83,26 @@ def stratified_manual_sample(flat: List[Dict], n: int = 30, seed: int = 42) -> L
         items = cells[key]
         idx = rng.choice(len(items), size=min(per_cell, len(items)), replace=False)
         picked.extend({**items[i], "stratum": {"length_tertile": key[0], "truncated": key[1]}} for i in idx)
+    if len(picked) < n and len(flat) > len(picked):
+        picked_keys = {(p["id"], p["arm"], p.get("seed", 42)) for p in picked}
+        remain = [r for r in flat if (r["id"], r["arm"], r.get("seed", 42)) not in picked_keys]
+        extra_idx = rng.choice(len(remain), size=min(n - len(picked), len(remain)), replace=False)
+        for i in extra_idx:
+            r = remain[i]
+            t = r["tokens_total"]
+            tert = 0 if t <= q1 else (1 if t <= q2 else 2)
+            cut = bool(r["code_truncated"] or r["graph_truncated"] or r["demo_truncated"])
+            picked.append({**r, "stratum": {"length_tertile": tert, "truncated": cut}})
     return picked[:n]
 
 
 def _main():
     import argparse
+    import sys
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8")
+    if hasattr(sys.stderr, "reconfigure"):
+        sys.stderr.reconfigure(encoding="utf-8")
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--prompts", required=True, help="JSONL từ run_matrix.py --dry-run")
     ap.add_argument("--out-dir", required=True)

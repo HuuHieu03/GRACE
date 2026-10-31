@@ -45,6 +45,81 @@ except ImportError:
     from grace_diag import complementarity as C
     from grace_diag import stats as S
 
+# Tối ưu hóa bộ sinh chỉ số bootstrap theo cụm (caching group membership)
+# Giữ nguyên 100% tính tất định và thứ tự rút ngẫu nhiên của grace_diag.stats
+_resample_cache: Dict[int, Tuple[Any, List[np.ndarray]]] = {}
+
+
+def _cached_resample_indices(rng: np.random.Generator, n: int, groups: Optional[np.ndarray]) -> np.ndarray:
+    if groups is None:
+        return rng.integers(0, n, n)
+    key = id(groups)
+    if key not in _resample_cache or _resample_cache[key][0] is not groups:
+        if len(_resample_cache) >= 32:
+            _resample_cache.clear()
+        uniq, inv = np.unique(groups, return_inverse=True)
+        _resample_cache[key] = (groups, [np.flatnonzero(inv == g) for g in range(len(uniq))])
+    members = _resample_cache[key][1]
+    picked = rng.integers(0, len(members), len(members))
+    return np.concatenate([members[g] for g in picked])
+
+
+S._resample_indices = _cached_resample_indices
+
+
+def resolve_cluster_unit(
+    groups: Optional[List[str] | np.ndarray],
+    cluster_unit: str = "auto",
+    split_name: str = "Test",
+) -> Tuple[Optional[List[str] | np.ndarray], str]:
+    """Xác định đơn vị bootstrap (cluster vs sample) theo protocol.yaml line 55.
+
+    protocol.yaml: cluster_unit: "commit_id nếu dataset có (Devign); nếu không, từng mẫu và ghi rõ"
+    - "auto": nếu groups có < 10 giá trị duy nhất (như ReVeal chỉ có 2 nhóm: 'debian' và 'chrome'),
+              đặt groups = None để chuyển sang Sample Bootstrap chuẩn, tránh sụp đổ 2-cluster bootstrap.
+              Nếu groups có >= 10 giá trị duy nhất (như Devign có 2.068 commit IDs), giữ nguyên groups.
+    - "commit": bắt buộc dùng cluster bootstrap theo groups (hoặc fallback về sample nếu không có groups).
+    - "sample": cưỡng chế dùng sample bootstrap (groups = None).
+    """
+    unit_mode = (cluster_unit or "auto").strip().lower()
+
+    if unit_mode not in ("auto", "commit", "sample"):
+        raise ValueError(
+            f"Tham số cluster_unit='{cluster_unit}' không hợp lệ! "
+            f"Chỉ chấp nhận các giá trị: 'auto', 'commit', 'sample'."
+        )
+
+    if unit_mode == "sample":
+        print(f"[*] [{split_name}] Đơn vị Bootstrap: Sample Bootstrap (chỉ định tường minh bởi --cluster-unit sample).")
+        return None, "sample"
+
+    if groups is None or len(groups) == 0:
+        print(f"[*] [{split_name}] Đơn vị Bootstrap: Sample Bootstrap (không có thông tin group/commit).")
+        return None, "sample"
+
+    uniq_groups = set(groups)
+    n_unique = len(uniq_groups)
+
+    if unit_mode == "commit":
+        print(f"[*] [{split_name}] Đơn vị Bootstrap: Cluster Bootstrap với {n_unique} cụm (commit IDs) (chỉ định bởi --cluster-unit commit).")
+        return groups, f"{n_unique} clusters (commit IDs)"
+
+    # unit_mode == "auto"
+    if n_unique < 10:
+        names = ", ".join(f"'{x}'" for x in sorted(str(x) for x in uniq_groups))
+        print(
+            f"[*] [{split_name}] Đơn vị Bootstrap: Sample Bootstrap "
+            f"(auto: phát hiện {n_unique} nhóm < 10 duy nhất [{names}], "
+            f"chuyển sang Sample Bootstrap để tránh sụp đổ 2-cluster bootstrap - tuân thủ protocol.yaml dòng 55)."
+        )
+        return None, "sample"
+    else:
+        print(
+            f"[*] [{split_name}] Đơn vị Bootstrap: Cluster Bootstrap với {n_unique} cụm (commit IDs) "
+            f"(auto: phát hiện {n_unique} >= 10 cụm - tuân thủ protocol.yaml dòng 55)."
+        )
+        return groups, f"{n_unique} clusters (commit IDs)"
+
 
 def parse_float_safe(val: Any, default: Optional[float] = None) -> Optional[float]:
     if val is None:
@@ -297,10 +372,11 @@ def run_offline_diagnostic_2split(
     dataset: str = "devign",
     tau: float = 0.5,
     output_dir: Path | str = Path("runs/step0"),
-    seed: int = 42,
-    n_boot: int = 1000,
-    n_folds: int = 5,
+    seed: int = 20261117,
+    n_boot: int = 5000,
+    n_folds: int = 3,
     margin_mcc: float = 0.02,
+    cluster_unit: str = "auto",
 ) -> Tuple[Dict[str, Any], Path, Path]:
     """Thực thi chẩn đoán theo chuẩn 2-Split (Validation fit meta-model, Test áp mô hình độc lập)."""
     gate_val_path = Path(gate_val_path)
@@ -325,6 +401,7 @@ def run_offline_diagnostic_2split(
     print(f"  Bootstrap reps:   {n_boot}")
     print(f"  Folds CV (Val):   {n_folds}")
     print(f"  Seed:             {seed}")
+    print(f"  Cluster unit:     {cluster_unit}")
     print(f"=======================================================\n")
 
     # 1. Đọc và khớp nối canonical cho cả hai split
@@ -339,6 +416,10 @@ def run_offline_diagnostic_2split(
     ids_t, y_t, p_gate_t, s_llm_t, valid_t, groups_t, X_pre_t = build_canonical_table(
         test_gate, test_llm, xpre_test_path, split_name="test"
     )
+
+    # Phân giải đơn vị bootstrap theo protocol.yaml line 55
+    groups_v, boot_unit_v = resolve_cluster_unit(groups_v, cluster_unit=cluster_unit, split_name="Validation")
+    groups_t, boot_unit_t = resolve_cluster_unit(groups_t, cluster_unit=cluster_unit, split_name="Test")
 
     # Xuất file canonical CSV cho cả 2 split
     canonical_val_path = output_dir / f"canonical_{dataset}_val.csv"
@@ -359,7 +440,7 @@ def run_offline_diagnostic_2split(
         y_v,
         n_folds=n_folds,
         seed=seed,
-        n_boot=min(n_boot, 1000),
+        n_boot=n_boot,
         margin_mcc=margin_mcc,
         groups=groups_v,
     )
@@ -506,6 +587,10 @@ def run_offline_diagnostic_2split(
             "n_boot": n_boot,
             "n_folds": n_folds,
             "margin_mcc_delta": margin_mcc,
+            "cluster_unit_arg": cluster_unit,
+            "bootstrap_unit_val": boot_unit_v,
+            "bootstrap_unit_test": boot_unit_t,
+            "bootstrap_unit": "sample" if groups_t is None else "cluster",
         },
         "verdict": {
             "delta_verdict": verdict_test,
@@ -572,10 +657,11 @@ def run_offline_diagnostic_single_split(
     dataset: str,
     tau: float = 0.5,
     output_dir: Path | str = Path("runs/step0"),
-    seed: int = 42,
-    n_boot: int = 1000,
-    n_folds: int = 5,
+    seed: int = 20261117,
+    n_boot: int = 5000,
+    n_folds: int = 3,
     margin_mcc: float = 0.02,
+    cluster_unit: str = "auto",
 ) -> Tuple[Dict[str, Any], Path, Path]:
     """Chế độ single-split tương thích ngược (kèm cảnh báo phương pháp luận)."""
     gate_csv_path = Path(gate_csv_path)
@@ -601,7 +687,9 @@ def run_offline_diagnostic_single_split(
     print(f"  X_pre NPZ:       {xpre_path or 'None (fallback logit p_gate)'}")
     print(f"  Ngưỡng Gate tau: {tau}")
     print(f"  Bootstrap reps:  {n_boot}")
+    print(f"  Folds CV (OOF):  {n_folds}")
     print(f"  Seed:            {seed}")
+    print(f"  Cluster unit:    {cluster_unit}")
     print(f"=======================================================\n")
 
     gate_data = load_gate_data(gate_csv_path)
@@ -609,6 +697,9 @@ def run_offline_diagnostic_single_split(
     ids, y, p_gate, s_llm, valid, groups, X_pre = build_canonical_table(
         gate_data, llm_data, xpre_path, split_name="single"
     )
+
+    # Phân giải đơn vị bootstrap theo protocol.yaml line 55
+    groups, boot_unit = resolve_cluster_unit(groups, cluster_unit=cluster_unit, split_name="Single-Split")
 
     n_samples = len(y)
     n_valid = int(valid.sum())
@@ -715,6 +806,9 @@ def run_offline_diagnostic_single_split(
             "n_boot": n_boot,
             "n_folds": n_folds,
             "margin_mcc_delta": margin_mcc,
+            "cluster_unit_arg": cluster_unit,
+            "bootstrap_unit": "sample" if groups is None else "cluster",
+            "bootstrap_unit_details": boot_unit,
         },
         "verdict": {
             "delta_verdict": pp_result.verdict_mcc,
@@ -772,10 +866,11 @@ def run_offline_diagnostic(
     dataset: str = "devign",
     tau: float = 0.5,
     output_dir: Path = Path("runs/step0"),
-    seed: int = 42,
-    n_boot: int = 1000,
-    n_folds: int = 5,
+    seed: int = 20261117,
+    n_boot: int = 5000,
+    n_folds: int = 3,
     margin_mcc: float = 0.02,
+    cluster_unit: str = "auto",
     gate_val_path: Optional[Path] = None,
     gate_test_path: Optional[Path] = None,
     llm_val_path: Optional[Path] = None,
@@ -801,6 +896,7 @@ def run_offline_diagnostic(
             n_boot=n_boot,
             n_folds=n_folds,
             margin_mcc=margin_mcc,
+            cluster_unit=cluster_unit,
         )
     elif gate_csv_path and llm_path:
         return run_offline_diagnostic_single_split(
@@ -814,6 +910,7 @@ def run_offline_diagnostic(
             n_boot=n_boot,
             n_folds=n_folds,
             margin_mcc=margin_mcc,
+            cluster_unit=cluster_unit,
         )
     else:
         raise ValueError(
@@ -870,6 +967,12 @@ def render_markdown_summary(d: Dict[str, Any]) -> str:
         else "⚠️ **Single-Split Fallback** — Đánh giá OOF CV trên một split duy nhất (Dữ liệu đánh giá trùng tập fit)."
     )
 
+    unit_badge = (
+        f"**Sample Bootstrap** (từng mẫu độc lập | {meta.get('n_boot', 5000)} reps | seed={meta.get('seed')})"
+        if (vrd.get("delta_mcc", {}).get("unit") == "sample" or meta.get("bootstrap_unit") == "sample")
+        else f"**Cluster Bootstrap** ({meta.get('bootstrap_unit_test') or meta.get('bootstrap_unit_details') or 'theo commit_id'} | {meta.get('n_boot', 5000)} reps | seed={meta.get('seed')})"
+    )
+
     lines = [
         f"# BÁO CÁO CHẨN ĐOÁN OFFLINE BƯỚC 0 — ĐỀ TÀI GRACE",
         f"**Bộ dữ liệu**: `{meta['dataset'].upper()}` | **Quy chuẩn**: {mode_badge} | **Tài nguyên**: Offline (0 GPU)",
@@ -888,6 +991,7 @@ def render_markdown_summary(d: Dict[str, Any]) -> str:
 
     lines.extend([
         f"- **Tính hợp lệ phản hồi LLM**: {meta['n_valid_llm']} hợp lệ ({meta['n_valid_llm']/meta['n_samples']*100:.1f}%), {meta['n_invalid_llm']} lỗi format (được fallback đối xứng về Gate)",
+        f"- **Đơn vị Bootstrap (Cluster Unit)**: {unit_badge} (tuân thủ `protocol.yaml` line 55)",
         f"- **Chênh lệch $\\Delta$MCC ghép cặp**: **{f_fmt(vrd['delta_mcc']['delta'])}** (95% CI: [{f_fmt(vrd['delta_mcc']['lo'])}, {f_fmt(vrd['delta_mcc']['hi'])}])",
         f"- **Chênh lệch $\\Delta$F1 ghép cặp**: **{f_fmt(vrd['delta_f1']['delta'])}** (95% CI: [{f_fmt(vrd['delta_f1']['lo'])}, {f_fmt(vrd['delta_f1']['hi'])}])",
         f"- **Chênh lệch $\\Delta$AUROC**: **{f_fmt(vrd['delta_auroc']['delta'])}** (95% CI: [{f_fmt(vrd['delta_auroc']['lo'])}, {f_fmt(vrd['delta_auroc']['hi'])}])",
@@ -956,6 +1060,7 @@ def render_markdown_summary(d: Dict[str, Any]) -> str:
 
     if mode == "2_split":
         lines.append(f"> **Quy chuẩn 2-Split**: Ngưỡng tối ưu $\\tau_{{pre}}^* = {f_fmt(meta_m['tau_pre'], 2)}$, $\\tau_{{post}}^* = {f_fmt(meta_m['tau_post'], 2)}$ được xác định hoàn toàn từ tập Validation và khóa chặt khi đánh giá tập Test.")
+    lines.append(f"> **Quy chuẩn Bootstrap**: 95% Paired Bootstrap CI được tính toán qua {unit_badge}.")
 
     lines.extend([
         "",
@@ -1043,10 +1148,17 @@ def main():
     parser.add_argument("--dataset", type=str, default="devign", choices=["devign", "reveal"], help="Tên dataset")
     parser.add_argument("--tau", type=float, default=0.5, help="Ngưỡng phân loại của Gate (mặc định 0.5)")
     parser.add_argument("--output-dir", type=Path, default=Path("runs/step0"), help="Thư mục xuất báo cáo")
-    parser.add_argument("--seed", type=int, default=42, help="Random seed tái lập kết quả")
-    parser.add_argument("--n-boot", type=int, default=1000, help="Số lượt Paired Bootstrap CI")
-    parser.add_argument("--n-folds", type=int, default=5, help="Số fold cross-validation")
+    parser.add_argument("--seed", type=int, default=20261117, help="Random seed tái lập kết quả")
+    parser.add_argument("--n-boot", type=int, default=5000, help="Số lượt Paired Bootstrap CI")
+    parser.add_argument("--n-folds", type=int, default=3, help="Số fold cross-validation")
     parser.add_argument("--margin-mcc", type=float, default=0.02, help="Biên delta tối thiểu để kết luận có lợi ích")
+    parser.add_argument(
+        "--cluster-unit",
+        type=str,
+        default="auto",
+        choices=["auto", "commit", "sample"],
+        help="Đơn vị bootstrap: auto (<10 nhóm -> sample, >=10 nhóm -> cluster), commit (luôn theo group/commit_id), sample (luôn từng mẫu độc lập)",
+    )
 
     args = parser.parse_args()
 
@@ -1068,6 +1180,7 @@ def main():
             n_boot=args.n_boot,
             n_folds=args.n_folds,
             margin_mcc=args.margin_mcc,
+            cluster_unit=args.cluster_unit,
         )
     elif args.gate_csv:
         if not args.llm_predictions:
@@ -1083,6 +1196,7 @@ def main():
             n_boot=args.n_boot,
             n_folds=args.n_folds,
             margin_mcc=args.margin_mcc,
+            cluster_unit=args.cluster_unit,
         )
     else:
         parser.error(

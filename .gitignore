@@ -31,6 +31,9 @@ data/*
 data/processed/*
 !data/processed/*compact_cpg.json.gz
 !data/processed/*codet5_embeddings.npy
+!data/manifests/
+data/manifests/*.jsonl
+!data/manifests/*.json
 checkpoints/
 !output/
 output/*
@@ -52,3 +55,5 @@ Thumbs.db
 # Experiment run outputs
 runs/final/
 runs/*/records.jsonl
+
+runs/dryrun/*.jsonl

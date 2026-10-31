@@ -1,0 +1,22 @@
+{
+  "dataset": "devign",
+  "split": "validation",
+  "arm": "B1",
+  "arm_config": {
+    "graph": "prefix",
+    "demo": "none",
+    "base": "B0",
+    "rq": [
+      "RQ1",
+      "RQ3"
+    ],
+    "note": "thêm graph prefix 25/25 (= GRACE w/o demonstration)"
+  },
+  "seed": 42,
+  "protocol_sha256": "d970f9b844de628dccf3deade81e5fd6443bdc0f2ddef64635d4c9a1892e538c",
+  "specs_sha256": "590736a2000379992485d906177b5b7114e8d3c2693b0f01d4517c79bc1c81dc",
+  "backend": "dry-run",
+  "tokenizer": "grace_diag_kit/tokenizer",
+  "python": "3.10.11",
+  "started_utc": "2026-10-30T23:49:09Z"
+}

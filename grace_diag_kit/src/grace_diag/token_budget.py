@@ -24,8 +24,10 @@ class TokenCounter:
         self.ratio = approx_chars_per_token
         self.tok = None
         if model_or_path is not None:
+            from pathlib import Path
             from transformers import AutoTokenizer
-            self.tok = AutoTokenizer.from_pretrained(model_or_path, trust_remote_code=False)
+            is_local = Path(model_or_path).exists()
+            self.tok = AutoTokenizer.from_pretrained(model_or_path, trust_remote_code=False, local_files_only=is_local)
 
     def count(self, text: str) -> int:
         if self.tok is None:

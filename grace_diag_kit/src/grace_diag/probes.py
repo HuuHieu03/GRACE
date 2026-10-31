@@ -80,10 +80,12 @@ class DonorPool:
 
     def random_demo(self, target_id: str, seed: int, exclude_uid: Optional[str] = None) -> Dict[str, Any]:
         rng = np.random.default_rng(stable_seed(target_id, seed))
-        for _ in range(10):
+        for _ in range(50):
             row = self.rows[int(rng.integers(0, len(self.rows)))]
             if row["function_uid"] != exclude_uid:
-                return row
+                func_lower = row.get("func", "").lower()
+                if "label:" not in func_lower and "ground truth" not in func_lower and "target label" not in func_lower:
+                    return row
         return row
 
     def shuffle_graph(self, target_id: str, seed: int, n_target_nodes: int, tol: float = 0.10,

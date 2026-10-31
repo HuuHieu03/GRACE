@@ -78,12 +78,12 @@ def test_contract_backbone_and_inference_config():
         contract = yaml.safe_load(f)
 
     bb = contract.get("backbone_llm", {})
-    assert "qwen3-coder-480b" in bb.get("model", ""), "Model backbone phải là qwen3-coder-480b!"
+    assert "Qwen/Qwen3-Coder-30B-A3B-Instruct" in bb.get("model", ""), "Model backbone phải là Qwen/Qwen3-Coder-30B-A3B-Instruct!"
 
     inf = contract.get("inference_config", {})
     assert inf.get("temperature") == 0.0, "temperature bắt buộc phải là 0.0 để đảm bảo tính tất định!"
     assert inf.get("seed") == 42, "seed bắt buộc phải là 42!"
-    assert inf.get("max_tokens") == 256, "max_tokens bắt buộc là 256!"
+    assert inf.get("max_tokens") == 1, "max_tokens bắt buộc là 1!"
 
 
 def test_prompt_truncation_policy_compliance():

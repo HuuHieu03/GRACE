@@ -1,0 +1,32 @@
+{
+  "dataset": "reveal",
+  "near_threshold": 0.9,
+  "per_split": {
+    "train": {
+      "n": 18187,
+      "n_pos": 1800,
+      "pos_rate": 0.09897179303898389,
+      "exact_overlap_flags": 129,
+      "near_flags": 998,
+      "label_conflicts": 438
+    },
+    "validation": {
+      "n": 2273,
+      "n_pos": 210,
+      "pos_rate": 0.09238891333040035,
+      "exact_overlap_flags": 70,
+      "near_flags": 0,
+      "label_conflicts": 0
+    },
+    "test": {
+      "n": 2274,
+      "n_pos": 230,
+      "pos_rate": 0.1011433597185576,
+      "exact_overlap_flags": 59,
+      "near_flags": 0,
+      "label_conflicts": 0
+    }
+  },
+  "n_donors_clean": 17620,
+  "manifest_sha256": "5bf4cba74c426e142832c0dc814aee7e127dce72c207d1fdf14eb1508b9e87ab"
+}
