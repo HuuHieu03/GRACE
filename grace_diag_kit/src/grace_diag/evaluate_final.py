@@ -216,7 +216,11 @@ def write_latex(path: Path, rows: List[Dict], cols: List[str]) -> None:
 
 
 def _main():
-    import argparse, yaml
+    import argparse, sys, yaml
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8")
+    if hasattr(sys.stderr, "reconfigure"):
+        sys.stderr.reconfigure(encoding="utf-8")
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--runs", required=True, type=Path)
     ap.add_argument("--protocol", required=True, type=Path)

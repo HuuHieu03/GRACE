@@ -35,7 +35,20 @@ from grace_diag.token_budget import TokenCounter                      # noqa: E4
 
 
 def read_jsonl(path):
-    with open(path, encoding="utf-8") as f:
+    p = Path(path)
+    if not p.exists():
+        if p.with_suffix(p.suffix + ".gz").exists():
+            p = p.with_suffix(p.suffix + ".gz")
+        elif str(p).endswith(".gz") and Path(str(p)[:-3]).exists():
+            p = Path(str(p)[:-3])
+        else:
+            raise FileNotFoundError(f"[Errno 2] No such file or directory: '{path}' (or '{path}.gz')")
+
+    if str(p).endswith(".gz"):
+        import gzip
+        with gzip.open(p, "rt", encoding="utf-8") as f:
+            return [json.loads(l) for l in f if l.strip()]
+    with open(p, encoding="utf-8") as f:
         return [json.loads(l) for l in f if l.strip()]
 
 

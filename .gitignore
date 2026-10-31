@@ -34,6 +34,10 @@ data/processed/*
 !data/manifests/
 data/manifests/*.jsonl
 !data/manifests/*.json
+!data/manifests/*.jsonl.gz
+!data/specs/
+data/specs/*.jsonl
+!data/specs/*.jsonl.gz
 checkpoints/
 !output/
 output/*

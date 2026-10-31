@@ -24,11 +24,10 @@ import urllib.error
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
-if sys.platform == "win32":
-    if hasattr(sys.stdout, "reconfigure"):
-        sys.stdout.reconfigure(encoding="utf-8", errors="backslashreplace")
-    if hasattr(sys.stderr, "reconfigure"):
-        sys.stderr.reconfigure(encoding="utf-8", errors="backslashreplace")
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8", errors="backslashreplace")
+if hasattr(sys.stderr, "reconfigure"):
+    sys.stderr.reconfigure(encoding="utf-8", errors="backslashreplace")
 
 import numpy as np
 import yaml
@@ -152,6 +151,24 @@ TIER_DEFINITIONS = {
         "stochastic_seeds": {},
     },
 }
+
+
+def ensure_specs_available(target_path: Path) -> Path:
+    """Nếu target_path chưa tồn tại nhưng có file .gz tương ứng, tự động giải nén."""
+    if target_path.exists():
+        return target_path
+    gz_cand = target_path.with_suffix(target_path.suffix + ".gz")
+    if gz_cand.exists():
+        import gzip, shutil
+        print(f"[*] Tự động giải nén specs: {gz_cand.name} -> {target_path.name}...")
+        with gzip.open(gz_cand, "rb") as f_in, open(target_path, "wb") as f_out:
+            shutil.copyfileobj(f_in, f_out)
+        return target_path
+    if str(target_path).endswith(".gz"):
+        uncompressed = Path(str(target_path)[:-3])
+        if uncompressed.exists():
+            return uncompressed
+    return target_path
 
 
 # ---------------------------------------------------------------------------
@@ -617,11 +634,12 @@ def main():
 
         for ds in datasets:
             if args.full_split:
-                specs_file = REPO_ROOT / "data" / "specs" / f"{ds}_{args.split}.jsonl"
+                base_specs = REPO_ROOT / "data" / "specs" / f"{ds}_{args.split}.jsonl"
             else:
-                specs_file = REPO_ROOT / "data" / "specs" / f"{ds}_val_subset600.jsonl" if args.split == "validation" else REPO_ROOT / "data" / "specs" / f"{ds}_{args.split}.jsonl"
+                base_specs = REPO_ROOT / "data" / "specs" / (f"{ds}_val_subset600.jsonl" if args.split == "validation" else f"{ds}_{args.split}.jsonl")
 
-            donors_file = REPO_ROOT / "data" / "manifests" / f"{ds}_donors.jsonl"
+            specs_file = ensure_specs_available(base_specs)
+            donors_file = ensure_specs_available(REPO_ROOT / "data" / "manifests" / f"{ds}_donors.jsonl")
 
             execute_tier(
                 tier=args.tier,
@@ -674,8 +692,8 @@ def main():
         print(f"\n[*] Chạy ma trận suy luận Validation cho {args.tier.upper()} ({len(t_info['arms'])} arms)...")
 
         for ds in ("devign", "reveal"):
-            specs_val = REPO_ROOT / "data" / "specs" / f"{ds}_val_subset600.jsonl"
-            donors = REPO_ROOT / "data" / "manifests" / f"{ds}_donors.jsonl"
+            specs_val = ensure_specs_available(REPO_ROOT / "data" / "specs" / f"{ds}_val_subset600.jsonl")
+            donors = ensure_specs_available(REPO_ROOT / "data" / "manifests" / f"{ds}_donors.jsonl")
             execute_tier(
                 tier=args.tier,
                 dataset=ds,
@@ -725,7 +743,10 @@ def main():
             "--thresholds", str(args.thresholds),
             "--out", str(args.out),
         ]
-        res = subprocess.run(cmd, cwd=str(REPO_ROOT))
+        env = os.environ.copy()
+        grace_pkg_dir = str(REPO_ROOT / "grace_diag_kit" / "src")
+        env["PYTHONPATH"] = f"{grace_pkg_dir}{os.pathsep}{env.get('PYTHONPATH', '')}"
+        res = subprocess.run(cmd, cwd=str(REPO_ROOT), env=env)
         if res.returncode != 0:
             raise RuntimeError(f"evaluate_final.py thất bại với mã {res.returncode}")
         print(f"[✓] Đã xuất toàn bộ bảng kết quả và hình vẽ vào: {args.out}")
