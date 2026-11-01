@@ -189,6 +189,8 @@ class FirstTokenScorer:
                 last_exc = exc
                 # Kiểm tra lỗi client không thể thử lại (HTTP 400 Bad Request, context length exceeded, etc.)
                 status_code = getattr(exc, "status_code", None)
+                if status_code is None and hasattr(exc, "response"):
+                    status_code = getattr(exc.response, "status_code", None)
                 exc_str = str(exc).lower()
                 is_non_retryable = (
                     status_code in (400, 401, 403, 404, 422)
@@ -211,6 +213,14 @@ class FirstTokenScorer:
         if result.error is None:
             self._write_cache(key, result)
         return result
+
+    def close(self) -> None:
+        """Đóng kết nối client và dọn dẹp tài nguyên connection pool."""
+        if self.client is not None and hasattr(self.client, "close"):
+            try:
+                self.client.close()
+            except Exception:
+                pass
 
     @staticmethod
     def parse_response(resp: Any, latency: float = 0.0) -> ScoreResult:

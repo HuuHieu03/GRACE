@@ -335,8 +335,30 @@ def test_backend_fail_fast_on_bad_request_or_context_exceeded():
         assert attempts == 1, f"Expected 1 attempt but got {attempts}"
         assert res.valid is False
         assert "400" in res.error or "context length" in res.error
+
+        # Kiểm tra thêm nhánh httpx.HTTPStatusError với status_code nằm trong exc.response
+        class MockResponse:
+            status_code = 400
+
+        class MockHTTPStatusError(Exception):
+            def __init__(self, msg):
+                super().__init__(msg)
+                self.response = MockResponse()
+
+        attempts_httpx = 0
+        def fake_httpx_err(**kwargs):
+            nonlocal attempts_httpx
+            attempts_httpx += 1
+            raise MockHTTPStatusError("Client error: generic 400 without keywords")
+
+        scorer.client.chat.completions.create.side_effect = fake_httpx_err
+        res_httpx = scorer.score("Another prompt with generic 400", use_cache=False)
+        assert attempts_httpx == 1, f"Expected 1 attempt for httpx error but got {attempts_httpx}"
+        assert res_httpx.valid is False
     finally:
         time.sleep = orig_sleep
+        scorer.close()
+
 
 
 def test_meta_model_subset_matching_no_dummy_pollution(tmp_path):

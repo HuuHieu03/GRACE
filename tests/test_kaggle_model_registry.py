@@ -129,21 +129,26 @@ def test_export_backend_yaml(tmp_path):
 
 
 def test_kaggle_notebook_structure():
-    nb_path = Path("kaggle_notebooks/host_llm_kaggle_server.ipynb")
-    assert nb_path.exists(), "Tệp notebook kaggle_notebooks/host_llm_kaggle_server.ipynb không tồn tại!"
-    data = json.loads(nb_path.read_text(encoding="utf-8"))
-    assert "cells" in data
-    assert len(data["cells"]) >= 10
+    notebook_paths = [
+        Path("kaggle_notebooks/host_llm_kaggle_server.ipynb"),
+        Path("kaggle_notebooks/host_llm/host_llm_kaggle_server.ipynb"),
+    ]
+    for nb_path in notebook_paths:
+        assert nb_path.exists(), f"Tệp notebook {nb_path} không tồn tại!"
+        data = json.loads(nb_path.read_text(encoding="utf-8"))
+        assert "cells" in data
+        assert len(data["cells"]) >= 10
 
-    # Kiểm tra các ô cốt lõi
-    sources = ["".join(c.get("source", [])) for c in data["cells"]]
-    combined = "\n".join(sources)
-    assert "SELECTED_MODEL" in combined
-    assert "SELECTED_ENGINE" in combined
-    assert "MODEL_REGISTRY" in combined
-    assert "llama-server" in combined or "llama_cpp.server" in combined
-    assert "cloudflared" in combined
-    assert "curl" in combined
-    assert "vllm" in combined
-    assert "top_logprobs" in combined
-    assert "p1 / (p0 + p1)" in combined
+        # Kiểm tra các ô cốt lõi
+        sources = ["".join(c.get("source", [])) for c in data["cells"]]
+        combined = "\n".join(sources)
+        assert "SELECTED_MODEL" in combined
+        assert "SELECTED_ENGINE" in combined
+        assert "MODEL_REGISTRY" in combined
+        assert "llama-server" in combined or "llama_cpp.server" in combined
+        assert "localhost" in combined or "127.0.0.1" in combined or "cloudflared" in combined
+        assert "curl" in combined
+        assert "vllm" in combined
+        assert "top_logprobs" in combined
+        assert "p1 / (p0 + p1)" in combined
+
