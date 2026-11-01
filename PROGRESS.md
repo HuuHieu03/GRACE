@@ -1,10 +1,19 @@
 # BÁO CÁO TIẾN ĐỘ TUẦN — ĐỀ TÀI GRACE (DIAGNOSTIC REPLICATION)
-**Ngày cập nhật**: 29/10/2026 | **Phiên họp**: Thứ Sáu hàng tuần (Mục 9.1 Đề cương)  
+**Ngày cập nhật**: 02/11/2026 | **Phiên họp**: Thứ Sáu hàng tuần (Mục 9.1 Đề cương)  
 **Thành viên thực hiện**: Hữu Hiếu & Tiến Dũng
 
 ---
 
 ## 1. Việc đã xong (Done)
+
+- [x] **Hoàn tất 100% Thực thi Bước 5 trên Kaggle 2× Tesla T4 GPU (Kernel Version 10 - Tối ưu Toàn diện)**:
+  - **Khắc phục triệt để lỗi 400 Bad Request**: Mở rộng context window lên `--n_ctx 8192` và tối ưu `--n_batch 2048`, `--n_ubatch 512`. Tỷ lệ lỗi trên tập Test giảm về **0.00% (2.732/2.732 mẫu hợp lệ)** cho cả Arm B0 (Zero-shot) và Arm B2 (GRACE Đầy đủ).
+  - **Tối ưu tốc độ gấp 2 lần**: Thời gian chạy rút ngắn từ 7.5 giờ (Version 9) xuống còn **3.92 giờ (14.141 giây)** nhờ loại bỏ hoàn toàn 2.5 giờ retry vô ích và tối ưu prefill batching trên GPU.
+  - **Bảo toàn nguyên tắc Zero Test Exposure**: 14/14 ngưỡng $\tau^*$ được khóa cứng trước khi suy luận Test (`devign|B0|42` = 0.08, `devign|B2|42` = 0.98).
+  - **Kết quả Kiểm định Đối kháng H1.1 (Devign Test, 2.732 mẫu)**:
+    - **AUROC**: B0 = 0.5392, B2 = 0.5394 $\rightarrow \Delta = +0.0002$ (95% CI: $[-0.0194, +0.0203]$). Phán quyết: `inconclusive`.
+    - **MCC@$\tau^*$**: B0 = 0.0484, B2 = 0.0743 $\rightarrow \Delta = +0.0259$ (95% CI: $[-0.0206, +0.0701]$). Phán quyết: `inconclusive` (chưa vượt mức tối thiểu $\delta = 0.03$). Kiểm định McNemar ra $p = 0.0074$.
+  - Xuất bản đầy đủ Bảng A (`table_A_metrics.csv`), Bảng B (`table_B_contrasts.csv`) và các biểu đồ ROC tại `runs/final/evaluation/`.
 
 - [x] **Chuẩn hóa cấu trúc Prompt theo Hình 6 bài gốc (Figure 6 Canonical)**:
   - Khôi phục thứ tự 6 khối chuẩn xác: `[Target Code -> Task Instruction -> Node Info -> Edge Info -> Demonstration -> Answer Indicator]`.
