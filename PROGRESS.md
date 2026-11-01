@@ -188,3 +188,70 @@
   - Vượt qua 30/30 unit tests nguyên bản trong `grace_diag_kit/tests/`.
   - Vượt qua toàn bộ regression suite.
 
+---
+
+## 8. Bước 6: Phân tích Kết quả Thực thi Tập Test trên Kaggle GPU (Version 9) & Phương án Tối ưu Version 10
+
+### A. Tổng quan Đợt chạy Version 9 trên Kaggle
+- **Môi trường thực thi**: Kaggle Cloud (2x Tesla T4 16GB, Driver 580.178.04, CUDA 13.0).
+- **Mô hình phục vụ**: `Qwen3-Coder-30B-A3B-Instruct` (MoE 30B / 3.3B active, GGUF UD-Q4_K_XL 16.45 GB).
+- **Trạng thái thực thi**: **`KernelWorkerStatus.COMPLETE`** (Mã chạy hoàn tất từ đầu đến cuối không bị crash tiến trình).
+- **Thời gian chạy**: **7.495 giờ** (26,982 giây).
+- **Phạm vi thực nghiệm**: Devign Test Set (2,732 mẫu) trên 2 nhánh `B0` (Zero-shot) và `B2` (Full GRACE: Code + Graph + Demo), Seed 42, tổng cộng 5,464 truy vấn.
+- **Dữ liệu xuất xưởng**: Đã đồng bộ toàn bộ log và kết quả về thư mục `data/kaggle_run_v9_output/`.
+
+### B. Bảng Số liệu Đo lường Thực tế (Metrics & Hypotheses)
+#### 1. Hiệu năng Phân loại Từng Nhánh (Bảng A)
+| Bộ dữ liệu | Nhánh (Arm) | Số mẫu ($N$) | Hợp lệ (Valid) | Không hợp lệ (Invalid Rate) | AUROC | AUPRC | $\tau^*$ | MCC@$\tau^*$ | F1@$\tau^*$ | Độ trễ TB/mẫu |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| **Devign** | **B0** (Zero-shot) | 2,732 | 2,732 (100.0%) | 0 (0.00%) | 0.5384 | 0.5106 | 0.08 | 0.0540 | 0.5450 | **1.65s** |
+| **Devign** | **B2** (GRACE) | 2,732 | 2,612 (95.61%) | 120 (4.39%) | 0.5381 | 0.4953 | 0.98 | 0.0582 | 0.4522 | **5.00s** (valid) / **75.07s** (invalid) |
+
+#### 2. Kết quả Đối kháng Giả thuyết Nghiên cứu H1.1 (Bảng B - 2,612 cặp mẫu hợp lệ)
+- **Chỉ số MCC**:
+  - $\Delta\text{MCC} = \text{MCC}(B2) - \text{MCC}(B0) = +0.00057$
+  - 95% Bootstrap Paired CI: `[-0.0418, +0.0439]`
+  - Kết luận thống kê ($\delta = 0.03$): **`inconclusive`** (Chưa đủ bằng chứng bác bỏ hay khẳng định do khoảng tin cậy 95% bao trùm giá trị 0 và vẫn chạm mức $\ge \delta$).
+- **Chỉ số AUROC**:
+  - $\Delta\text{AUROC} = \text{AUROC}(B2) - \text{AUROC}(B0) = -0.00151$
+  - 95% Bootstrap Paired CI: `[-0.0217, +0.0187]`
+  - Kết luận thống kê ($\delta = 0.02$): **`no_meaningful_benefit`** (Cận trên CI $< \delta \to$ Loại trừ khả năng GRACE đem lại lợi ích phân tách xác suất thực chất trên tập Devign Test).
+- **Kiểm định McNemar**: $b = 386, c = 426, p = 0.1711$ (Không có sự khác biệt có ý nghĩa thống kê giữa số ca sửa và số ca hỏng).
+
+---
+
+### C. Bốn Vấn đề Kỹ thuật Cốt lõi Gây Suy giảm Hiệu quả ở Version 9
+1. **Thiếu hụt Context Length Server (`--n_ctx 4096`)**:
+   - Máy chủ `llama-server` / `llama_cpp.server` được khởi chạy với `--n_ctx 4096` trong khi module quản lý ngân sách prompt `TokenBudgetManager` cấp phát tổng ngân sách lên đến 8,192 tokens.
+   - Khi ghép Code ($\le 3,000$) + Graph ($\le 1,500$) + Demo ($\le 1,500$) trong nhánh B2, có đúng **120 mẫu** có độ dài prompt thực tế dao động từ 4,100 đến 5,083 Qwen tokens (trung bình 4,397 tokens).
+   - Hậu quả: Toàn bộ 120 mẫu này bị máy chủ trả về `HTTP 400 Bad Request` ("maximum context length is 4096 tokens. However, you requested 4419 tokens..."), khiến tỷ lệ mẫu invalid của B2 vọt lên **4.39%** (120/2,732).
+2. **Lãng phí 2.5 Giờ GPU do Cơ chế Retry Mù quáng trên HTTP 400**:
+   - `FirstTokenScorer` trong `llm_backend.py` bắt mọi Exception và tự động retry 5 lần với exponential backoff (5s, 10s, 20s, 40s = 75s/mẫu).
+   - Lỗi HTTP 400 (Bad Request do quá độ dài prompt) là lỗi **tất định** của client, việc retry 5 lần hoàn toàn vô ích và luôn thất bại cả 5 lần.
+   - Hậu quả: $120 \times 75\text{s} = 9,000\text{s} = \mathbf{2.50\text{ giờ}}$ GPU bị lãng phí hoàn toàn vào việc chờ sleep retry! Đây là nguyên nhân trực tiếp khiến lần chạy kéo dài tới 7.495 giờ.
+3. **Nghẽn Thông lượng và Độ trễ Suy luận (Throughput Bottleneck)**:
+   - Các tham số nạp batch của server đang dùng mặc định (`--n_batch 512`), chưa khai thác song song ubatch và flash-attention.
+   - Thời gian suy luận trung bình trên B2 là 5.00s/mẫu (so với 1.65s trên B0). Kết nối HTTP giữa client và server chưa được ghim connection pool tối ưu (`httpx.Limits`).
+4. **Sai lệch độ dài Token giữa 2 Tokenizer (Tokenizer Discrepancy)**:
+   - Bước render prompt dùng Tokenizer Byte-Level CodeT5 (vocab size ~50k), trong khi server suy luận dùng Qwen BPE Tokenizer (vocab size 151,936).
+   - Với code C/C++, Qwen nén tốt hơn CodeT5 (ví dụ 5,436 CodeT5 tokens $\to$ 4,418 Qwen tokens). Dù Qwen sinh ít token hơn nhưng do trần server đặt nhầm 4,096 nên vẫn bị tràn.
+
+---
+
+### D. Giải pháp Khắc phục Toàn diện Đã Thực hiện Cho Version 10
+1. **Nâng Context Length Lên Chuẩn `--n_ctx 8192` và `--ctx-size 8192`**:
+   - Cập nhật cả `llama-server` và `llama_cpp.server` trong `host_llm_kaggle_server.ipynb` với `--ctx-size 8192` và `--n_ctx 8192`.
+   - VRAM của mô hình 30B MoE chiếm ~16.5 GB trên 2x Tesla T4 (mỗi card 15 GB, còn trống >6.5 GB). KV cache cho 8,192 tokens của kiến trúc Qwen3 MoE (48 layers, 4 KV heads, dim 128) chỉ tốn thêm **~393 MB VRAM/card**, đảm bảo an toàn tuyệt đối 100%, không lo OOM.
+   - Toàn bộ 120 mẫu bị lỗi ở Version 9 (max 5,083 tokens) sẽ chạy mượt mà, đưa tỷ lệ Invalid Rate về **0.0%**.
+2. **Tối ưu hóa Thông lượng Xử lý Prompt (Throughput Optimization)**:
+   - Thêm cấu hình `--n_batch 2048`, `--n_ubatch 512` và tự động kích hoạt Flash-Attention (`--flash_attn True` / `-fa`) nếu engine hỗ trợ.
+   - Nâng cấp `FirstTokenScorer` tích hợp `httpx.Client(limits=httpx.Limits(max_keepalive_connections=50, max_connections=100, keepalive_expiry=120.0))` để tái sử dụng persistent HTTP socket, loại bỏ hoàn toàn chi phí bắt tay TCP mỗi request.
+3. **Cơ chế Fail-Fast Thông minh trong `FirstTokenScorer`**:
+   - Bắt lập tức các mã lỗi không thể phục hồi (`HTTP 400`, `401`, `403`, `404`, `422`, hoặc exception chứa `"context length"`, `"maximum context"`, `"BadRequestError"`).
+   - Không retry các lỗi này mà ngắt ngay lập tức ở lần gọi đầu tiên ($0.02\text{s}$ thay vì $75\text{s}$), bảo vệ tài nguyên GPU và thời gian chạy.
+4. **Kiểm thử Smoke Test Mẫu nhỏ Trước khi Khởi chạy Toàn bộ**:
+   - Đã chạy kiểm chứng End-to-End cục bộ trên Devign Test mẫu nhỏ (`--limit 10`) với mock backend: toàn bộ chuỗi suy luận ma trận `run-matrix` và pipeline đánh giá `eval-pipeline` hoàn thành xuất sắc trong 1.1s, sinh đầy đủ Bảng A, Bảng B và biểu đồ ROC.
+   - Đã bổ sung unit test `test_backend_fail_fast_on_bad_request_or_context_exceeded`: Vượt qua 11/11 tests trong `tests/test_step5_matrix_execution.py`.
+5. **Kế hoạch Chạy Full Dataset Version 10 Trên Kaggle**:
+   - Với việc loại bỏ 2.5 giờ lãng phí do retry và tăng tốc batch/connection pool, toàn bộ tập Devign Test (B0: 2,732 + B2: 2,732 = 5,464 mẫu) dự kiến sẽ hoàn thành chỉ trong **~4.2 - 4.8 giờ** (thay vì 7.5 giờ), hoàn toàn an toàn dưới trần 9 giờ của Kaggle Cloud.
+

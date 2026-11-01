@@ -305,6 +305,40 @@ def test_backend_retry_policy_on_failure():
         time.sleep = orig_sleep
 
 
+def test_backend_fail_fast_on_bad_request_or_context_exceeded():
+    """Kiểm thử: FirstTokenScorer fail-fast lập tức (0 retry) khi gặp HTTP 400 hoặc context length exceeded."""
+    from unittest.mock import MagicMock
+    cfg = BackendConfig(kind="vllm", max_attempts=5)
+    scorer = FirstTokenScorer(cfg)
+
+    attempts = 0
+
+    class MockBadRequestError(Exception):
+        def __init__(self, msg, status_code=400):
+            super().__init__(msg)
+            self.status_code = status_code
+
+    def fake_create_context_err(**kwargs):
+        nonlocal attempts
+        attempts += 1
+        raise MockBadRequestError("Error code: 400 - This model's maximum context length is 4096 tokens. However, you requested 4419 tokens.")
+
+    scorer.client = MagicMock()
+    scorer.client.chat.completions.create.side_effect = fake_create_context_err
+
+    import time
+    orig_sleep = time.sleep
+    time.sleep = lambda s: None
+    try:
+        res = scorer.score("Test prompt exceeding context length", use_cache=False)
+        # Bắt buộc chỉ thực hiện đúng 1 lần gọi (fail-fast), không retry lãng phí 5 lần
+        assert attempts == 1, f"Expected 1 attempt but got {attempts}"
+        assert res.valid is False
+        assert "400" in res.error or "context length" in res.error
+    finally:
+        time.sleep = orig_sleep
+
+
 def test_meta_model_subset_matching_no_dummy_pollution(tmp_path):
     """Kiểm thử: optimize_and_lock_thresholds khớp chính xác theo tập mẫu đã đánh giá và không bị ô nhiễm dummy data."""
     runs_dir = tmp_path / "runs"

@@ -106,7 +106,14 @@ class FirstTokenScorer:
             self.client = None
         else:
             from openai import OpenAI  # import muộn để test không cần SDK
-            self.client = OpenAI(base_url=cfg.base_url, api_key=cfg.api_key, max_retries=0, timeout=cfg.timeout_s)
+            try:
+                import httpx
+                # Tái sử dụng connection pool qua HTTP keep-alive để giảm overhead bắt tay TCP
+                limits = httpx.Limits(max_keepalive_connections=50, max_connections=100, keepalive_expiry=120.0)
+                http_client = httpx.Client(limits=limits, timeout=cfg.timeout_s)
+                self.client = OpenAI(base_url=cfg.base_url, api_key=cfg.api_key, max_retries=0, timeout=cfg.timeout_s, http_client=http_client)
+            except Exception:
+                self.client = OpenAI(base_url=cfg.base_url, api_key=cfg.api_key, max_retries=0, timeout=cfg.timeout_s)
 
     # -- payload -----------------------------------------------------------
     def build_payload(self, prompt: str, seed: Optional[int] = None) -> Dict[str, Any]:
@@ -180,6 +187,20 @@ class FirstTokenScorer:
                 break
             except Exception as exc:
                 last_exc = exc
+                # Kiểm tra lỗi client không thể thử lại (HTTP 400 Bad Request, context length exceeded, etc.)
+                status_code = getattr(exc, "status_code", None)
+                exc_str = str(exc).lower()
+                is_non_retryable = (
+                    status_code in (400, 401, 403, 404, 422)
+                    or "badrequesterror" in type(exc).__name__.lower()
+                    or "context length" in exc_str
+                    or "maximum context" in exc_str
+                    or "too many tokens" in exc_str
+                    or "prompt length" in exc_str
+                )
+                if is_non_retryable:
+                    # Fail fast: Lỗi vượt quá context hoặc 400 Bad Request là lỗi tất định, không thử lại
+                    break
                 if attempt < max_attempts:
                     backoff = min(120.0, 5.0 * (2 ** (attempt - 1)))
                     time.sleep(backoff)

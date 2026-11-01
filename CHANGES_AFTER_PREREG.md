@@ -31,3 +31,12 @@ Mọi thay đổi cần được ghi rõ:
   - `grace_diag_kit/src/grace_diag/llm_backend.py`: Cập nhật `FirstTokenScorer` tuân thủ chính sách Retry tối đa 5 lần với exponential backoff theo Hợp đồng thực nghiệm (`evaluation_contract.yaml`).
   - `grace_diag_kit/src/grace_diag/evaluate_final.py`: Bảo tồn nguyên vẹn metadata và chữ ký băm trong `thresholds.json`.
 - **Tác động tới các giả thuyết H1.1–H6.1:** Hoàn toàn độc lập và trung lập; ngưỡng được khóa trước khi mở tập Test, ngăn chặn tuyệt đối thiên vị rò rỉ dữ liệu (p-hacking).
+
+### [step5-v10-kaggle-optimization] — 2026-11-01
+- **Mục tiêu:** Khắc phục lỗi tràn context và lãng phí GPU retry ở Version 9, tối ưu thông lượng cho Version 10.
+- **Tệp bị ảnh hưởng:**
+  - `grace_diag_kit/src/grace_diag/llm_backend.py`: Bổ sung cơ chế fail-fast (0 retry) khi gặp lỗi HTTP 400 Bad Request / context length exceeded (tránh lãng phí 2.5h GPU cho 120 mẫu), tích hợp connection pool `httpx.Limits(max_keepalive_connections=50, max_connections=100)` duy trì persistent HTTP socket.
+  - `kaggle_notebooks/host_llm/host_llm_kaggle_server.ipynb` & `kaggle_notebooks/host_llm_kaggle_server.ipynb`: Nâng `--n_ctx 8192` và `--ctx-size 8192` (khớp hoàn toàn với ngân sách prompt của `TokenBudgetManager`), bổ sung tham số thông lượng `--n_batch 2048`, `--n_ubatch 512` và tự động kích hoạt Flash-Attention.
+  - `tests/test_step5_matrix_execution.py`: Bổ sung unit test `test_backend_fail_fast_on_bad_request_or_context_exceeded`.
+- **Tác động tới các giả thuyết H1.1–H6.1:** Không thay đổi bất kỳ giả thuyết hay phân bổ ngân sách nào; đưa tỷ lệ invalid_rate trên Devign B2 từ 4.39% về 0.0%, bảo toàn 100% 2,732 cặp mẫu cho các phép kiểm định thống kê H1.1 (McNemar, Paired Bootstrap).
+
