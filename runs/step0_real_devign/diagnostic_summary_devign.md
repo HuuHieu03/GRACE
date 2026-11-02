@@ -5,14 +5,14 @@
 
 ## 1. Tóm tắt Kết luận Chẩn đoán (Executive Summary)
 
-- **Đánh giá Thống kê ($\delta$-Verdict)**: 🟡 **NO MEANINGFUL BENEFIT (KHÔNG ĐẠT NGƯỠNG HIỆU ỨNG δ)**
-- **Giải thích chi tiết**: Có bằng chứng loại trừ lợi ích ≥ δ (cận trên CI < δ)
+- **Đánh giá Thống kê ($\delta$-Verdict)**: ⚪ **INCONCLUSIVE (CHƯA ĐỦ BẰNG CHỨNG THỐNG KÊ)**
+- **Giải thích chi tiết**: Chưa đủ bằng chứng: CI chứa 0 và vẫn chứa mức ≥ δ
 - **Tổng số mẫu kiểm thử**: **2732** (Lỗ hổng: 1255 [45.9%], An toàn: 1477)
 - **Phân bổ mẫu**: Validation Split = **2732** mẫu | Test Split = **2732** mẫu
 - **Tính hợp lệ phản hồi LLM**: 2732 hợp lệ (100.0%), 0 lỗi format (được fallback đối xứng về Gate)
 - **Đơn vị Bootstrap (Cluster Unit)**: **Cluster Bootstrap** (2068 clusters (commit IDs) | 5000 reps | seed=20261117) (tuân thủ `protocol.yaml` line 55)
-- **Chênh lệch $\Delta$MCC ghép cặp**: **-0.0080** (95% CI: [-0.0286, 0.0124])
-- **Chênh lệch $\Delta$F1 ghép cặp**: **-0.0398** (95% CI: [-0.0536, -0.0263])
+- **Chênh lệch $\Delta$MCC ghép cặp**: **0.0053** (95% CI: [-0.0382, 0.0502])
+- **Chênh lệch $\Delta$F1 ghép cặp**: **-0.1657** (95% CI: [-0.1957, -0.1349])
 - **Chênh lệch $\Delta$AUROC**: **0.0015** (95% CI: [-0.0015, 0.0046])
 
 ---
@@ -61,17 +61,17 @@
 ## 5. Mô hình Đối chứng Ghép cặp (Matched Meta-Model: $P_{pre}$ vs $P_{post}$)
 
 > **Thiết kế kiểm định**: Cùng số fold (3), cùng scaler, chỉ khác duy nhất 4 đặc trưng bổ sung từ LLM ($s, \text{valid}, s \times p, s - p$).
-> **Quy chuẩn 2-Split**: Ngưỡng tối ưu $\tau_{pre}^* = 0.46$, $\tau_{post}^* = 0.50$ được xác định hoàn toàn từ tập Validation và khóa chặt khi đánh giá tập Test.
+> **Quy chuẩn 2-Split**: Ngưỡng tối ưu $\tau_{pre}^* = 0.34$, $\tau_{post}^* = 0.56$ được xác định hoàn toàn từ tập Validation và khóa chặt khi đánh giá tập Test.
 > **Quy chuẩn Bootstrap**: 95% Paired Bootstrap CI được tính toán qua **Cluster Bootstrap** (2068 clusters (commit IDs) | 5000 reps | seed=20261117).
 
 | Chỉ số Đánh giá | $P_{pre}$ (Gate + Đặc trưng nền) | $P_{post}$ (Thêm đặc trưng LLM) | Chênh lệch $\Delta$ | 95% Bootstrap CI |
 | :--- | :---: | :---: | :---: | :---: |
-| **MCC** | 0.3046 | 0.2966 | **-0.0080** | [-0.0286, 0.0124] |
-| **F1-Score** | 0.6046 | 0.5647 | **-0.0398** | [-0.0536, -0.0263] |
-| **Accuracy** | 0.6567 | 0.6530 | **-0.0037** | [-0.0143, 0.0070] |
-| **Balanced Accuracy** | 0.6502 | 0.6408 | -0.0095 | — |
+| **MCC** | 0.2908 | 0.2960 | **0.0053** | [-0.0382, 0.0502] |
+| **F1-Score** | 0.6677 | 0.5021 | **-0.1657** | [-0.1957, -0.1349] |
+| **Accuracy** | 0.6193 | 0.6479 | **0.0286** | [-0.0015, 0.0588] |
+| **Balanced Accuracy** | 0.6354 | 0.6282 | -0.0071 | — |
 | **AUROC** | 0.7180 | 0.7195 | **0.0015** | [-0.0015, 0.0046] |
-| *Ngưỡng tối ưu $\tau^*$* | *0.46* | *0.50* | — | — |
+| *Ngưỡng tối ưu $\tau^*$* | *0.34* | *0.56* | — | — |
 
 ---
 
@@ -79,10 +79,10 @@
 
 | Cặp Mô hình So sánh | Số ca $A$ đúng / $B$ sai ($b$) | Số ca $A$ sai / $B$ đúng ($c$) | $p$-value (Raw) | $p$-value (Holm) | Ý nghĩa ($\alpha=0.05$) |
 | :--- | :---: | :---: | :---: | :---: | :---: |
-| `P_pre_vs_P_post` | 105 | 95 | 0.5245 | 0.5245 | ❌ Chưa có ý nghĩa |
-| `Gate_vs_P_post` | 467 | 580 | < 0.001 | 0.0011 | ✅ Có ý nghĩa |
+| `P_pre_vs_P_post` | 560 | 638 | 0.0261 | 0.0522 | ❌ Chưa có ý nghĩa |
+| `Gate_vs_P_post` | 596 | 695 | 0.0064 | 0.0191 | ✅ Có ý nghĩa |
 | `Gate_vs_LLM_fallback` | 858 | 694 | < 0.001 | < 0.001 | ✅ Có ý nghĩa |
-| `Gate_vs_P_pre` | 367 | 490 | < 0.001 | < 0.001 | ✅ Có ý nghĩa |
+| `Gate_vs_P_pre` | 107 | 128 | 0.1920 | 0.1920 | ❌ Chưa có ý nghĩa |
 
 ---
 
@@ -110,6 +110,15 @@
 | `benefit` | 50% | 1366 | 0.2747 | 0.5923 | 0.6360 | 472 | 390 |
 | `oracle` | 50% | 1366 | 0.7307 | 0.8564 | 0.8661 | 694 | 0 |
 | `random` | 50% | 1366 | 0.1587 | 0.5409 | 0.5792 | — | — |
+
+### So sánh Đối chứng Ghép cặp tại Ngân sách $q=10%$ (`benefit` vs `confidence`)
+
+> **Mục đích**: Kiểm định ghép cặp xem Ridge Benefit Router có vượt trội có ý nghĩa thống kê so với Confidence Router tại ngưỡng ngân sách thực tế 10% hay không (**Cluster Bootstrap** (2068 clusters (commit IDs) | 5000 reps | seed=20261117)).
+
+| Chỉ số So sánh | Chênh lệch $\Delta$ (Benefit − Confidence) | 95% Bootstrap CI | Đơn vị Bootstrap | Kết luận Thống kê |
+| :--- | :---: | :---: | :---: | :---: |
+| **Balanced Accuracy ($\Delta$BA - Chỉ số chính)** | **-0.0035** | [-0.0162, 0.0091] | cluster | Chưa có ý nghĩa thống kê (CI chứa 0) |
+| **MCC ($\Delta$MCC - Chỉ số phụ)** | **-0.0127** | [-0.0384, 0.0133] | cluster | Chưa có ý nghĩa thống kê (CI chứa 0) |
 
 ---
 

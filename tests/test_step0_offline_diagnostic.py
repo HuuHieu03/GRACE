@@ -278,3 +278,221 @@ def test_offline_diagnostic_cluster_unit_argument(mock_dataset_dir, tmp_path):
     assert "Sample Bootstrap" in md_text
 
 
+def test_stratified_group_kfold_fit_pre_post():
+    """Kiểm tra fit_pre_post sử dụng StratifiedGroupKFold khi có groups và fallback khi groups None."""
+    from grace_diag import complementarity as C
+    rng = np.random.default_rng(42)
+    n = 60
+    y = np.array([0, 1] * 30)
+    X = rng.normal(size=(n, 5))
+    p = np.clip(1 / (1 + np.exp(-X[:, 0])), 0.01, 0.99)
+    s = np.clip(1 / (1 + np.exp(-X[:, 1])), 0.01, 0.99)
+    v = np.ones(n, dtype=bool)
+
+    # 1. Có groups với 6 nhóm duy nhất
+    groups = np.repeat(np.arange(6), 10)
+    res_group = C.fit_pre_post(X, s, v, p, y, n_folds=3, seed=42, n_boot=50, groups=groups)
+    assert res_group.oof_pre.shape == (n,)
+    assert res_group.oof_post.shape == (n,)
+    assert res_group.delta_mcc.unit == "cluster"
+
+    # 2. Không có groups (None) -> fallback StratifiedKFold
+    res_nogroup = C.fit_pre_post(X, s, v, p, y, n_folds=3, seed=42, n_boot=50, groups=None)
+    assert res_nogroup.oof_pre.shape == (n,)
+    assert res_nogroup.delta_mcc.unit == "sample"
+
+    # 3. Số nhóm không đủ (< n_folds) -> fallback StratifiedKFold
+    small_groups = np.repeat(np.array([0, 1]), 30)
+    res_small = C.fit_pre_post(X, s, v, p, y, n_folds=3, seed=42, n_boot=50, groups=small_groups)
+    assert res_small.oof_pre.shape == (n,)
+
+
+def test_reveal_file_hash_group_extraction(tmp_path):
+    """Kiểm tra việc trích xuất file_hash từ ID dạng reveal:{split}:{file_hash}#{func_index}."""
+    from scripts.run_step0_offline_diagnostic import build_canonical_table, load_gate_data
+    csv_file = tmp_path / "reveal_sample.csv"
+    csv_file.write_text(
+        "id,y,p_gate\n"
+        "reveal:test:hash_abc_123#0,0,0.12\n"
+        "reveal:test:hash_abc_123#1,1,0.45\n"
+        "reveal:test:hash_def_456#2,0,0.08\n",
+        encoding="utf-8",
+    )
+    gate_data = load_gate_data(csv_file)
+    assert gate_data["reveal:test:hash_abc_123#0"]["group"] == "hash_abc_123"
+    assert gate_data["reveal:test:hash_abc_123#1"]["group"] == "hash_abc_123"
+    assert gate_data["reveal:test:hash_def_456#2"]["group"] == "hash_def_456"
+
+    llm_data = {
+        "reveal:test:hash_abc_123#0": {"s_llm": 0.0, "valid": True},
+        "reveal:test:hash_abc_123#1": {"s_llm": 1.0, "valid": True},
+        "reveal:test:hash_def_456#2": {"s_llm": 0.0, "valid": True},
+    }
+    ids, y, p, s, v, groups, X = build_canonical_table(gate_data, llm_data, dataset="reveal")
+    assert groups == ["hash_abc_123", "hash_abc_123", "hash_def_456"]
+
+
+def test_routing_q10_contrast_present(mock_dataset_dir, tmp_path):
+    """Kiểm tra kết quả routing tại q=10% được bổ sung vào report dictionary và markdown."""
+    _, files = mock_dataset_dir
+    out_dir = tmp_path / "runs_routing_test"
+
+    report_dict, json_path, md_path = run_offline_diagnostic(
+        gate_val_path=files["gate_val"],
+        gate_test_path=files["gate_test"],
+        llm_val_path=files["llm_val"],
+        llm_test_path=files["llm_test"],
+        xpre_val_path=files["xpre_val"],
+        xpre_test_path=files["xpre_test"],
+        dataset="devign",
+        tau=0.5,
+        output_dir=out_dir,
+        seed=42,
+        n_boot=100,
+        n_folds=2,
+    )
+
+    assert "routing_q10_contrast" in report_dict
+    q10 = report_dict["routing_q10_contrast"]
+    assert q10["budget"] == 0.10
+    assert q10["contrast"] == "benefit_minus_confidence"
+    assert "delta_balanced_accuracy" in q10
+    assert "delta_mcc" in q10
+    assert "delta" in q10["delta_balanced_accuracy"]
+    assert "lo" in q10["delta_balanced_accuracy"]
+    assert "hi" in q10["delta_balanced_accuracy"]
+    assert "delta" in q10["delta_mcc"]
+
+    md_text = md_path.read_text(encoding="utf-8")
+    assert "So sánh Đối chứng Ghép cặp tại Ngân sách" in md_text
+    assert "Balanced Accuracy" in md_text
+
+
+def test_stratified_group_kfold_imbalanced_class_fallback():
+    """Kiểm tra fit_pre_post tự động fallback StratifiedKFold khi một fold train của StratifiedGroupKFold chỉ có 1 class."""
+    from grace_diag import complementarity as C
+    X = np.ones((5, 2))
+    y = np.array([0, 0, 0, 1, 1])
+    groups = np.array(["g1", "g2", "g3", "g_pos", "g_pos"])
+    s = np.zeros(5)
+    v = np.ones(5, dtype=bool)
+    p = np.full(5, 0.5)
+
+    res = C.fit_pre_post(X, s, v, p, y, n_folds=3, groups=groups, seed=42, n_boot=20)
+    assert res.oof_pre.shape == (5,)
+    assert res.oof_post.shape == (5,)
+
+
+def test_cluster_unit_sample_preserves_group_in_canonical_csv(tmp_path):
+    """Kiểm tra canonical CSV vẫn lưu cột group ngay cả khi chỉ định --cluster-unit sample."""
+    gate_val = tmp_path / "gate_val.csv"
+    gate_test = tmp_path / "gate_test.csv"
+    llm_val = tmp_path / "llm_val.jsonl"
+    llm_test = tmp_path / "llm_test.jsonl"
+    out_dir = tmp_path / "runs_sample_preserves_group"
+
+    gate_val.write_text(
+        "id,y,p_gate,group\n"
+        "mock_1,0,0.1,commit_a\n"
+        "mock_2,1,0.9,commit_b\n"
+        "mock_3,0,0.2,commit_a\n"
+        "mock_4,1,0.8,commit_b\n",
+        encoding="utf-8",
+    )
+    gate_test.write_text(
+        "id,y,p_gate,group\n"
+        "mock_5,0,0.2,commit_c\n"
+        "mock_6,1,0.8,commit_d\n"
+        "mock_7,0,0.3,commit_c\n"
+        "mock_8,1,0.7,commit_d\n",
+        encoding="utf-8",
+    )
+    llm_val.write_text(
+        '{"id":"mock_1","s":0.0,"valid":true}\n'
+        '{"id":"mock_2","s":1.0,"valid":true}\n'
+        '{"id":"mock_3","s":0.0,"valid":true}\n'
+        '{"id":"mock_4","s":1.0,"valid":true}\n',
+        encoding="utf-8",
+    )
+    llm_test.write_text(
+        '{"id":"mock_5","s":0.0,"valid":true}\n'
+        '{"id":"mock_6","s":1.0,"valid":true}\n'
+        '{"id":"mock_7","s":0.0,"valid":true}\n'
+        '{"id":"mock_8","s":1.0,"valid":true}\n',
+        encoding="utf-8",
+    )
+
+    report_dict, json_path, md_path = run_offline_diagnostic(
+        gate_val_path=gate_val,
+        gate_test_path=gate_test,
+        llm_val_path=llm_val,
+        llm_test_path=llm_test,
+        xpre_val_path=None,
+        xpre_test_path=None,
+        dataset="devign",
+        tau=0.5,
+        output_dir=out_dir,
+        seed=42,
+        n_boot=20,
+        n_folds=2,
+        cluster_unit="sample",
+    )
+
+    canonical_val = out_dir / "canonical_devign_val.csv"
+    assert canonical_val.exists()
+    lines = canonical_val.read_text(encoding="utf-8").strip().splitlines()
+    header = lines[0].split(",")
+    assert "group" in header
+    assert lines[1].split(",")[-1] == "commit_a"
+    assert report_dict["metadata"]["bootstrap_unit"] == "sample"
+
+
+def test_reveal_file_hash_group_label_formatting(tmp_path):
+    """Kiểm tra báo cáo ReVeal hiển thị nhãn nhóm là file hashes chứ không phải commit IDs."""
+    gate_val = tmp_path / "reveal_val.csv"
+    gate_test = tmp_path / "reveal_test.csv"
+    llm_val = tmp_path / "reveal_llm_val.jsonl"
+    llm_test = tmp_path / "reveal_llm_test.jsonl"
+    out_dir = tmp_path / "runs_reveal_label"
+
+    # Tạo 12 nhóm file-level hash duy nhất để kích hoạt Cluster Bootstrap (>=10)
+    lines_val = ["id,y,p_gate"]
+    lines_test = ["id,y,p_gate"]
+    llm_val_lines = []
+    llm_test_lines = []
+    for i in range(12):
+        sid_v = f"reveal:validation:hash_{i:02d}#0"
+        sid_t = f"reveal:test:hash_{i:02d}#0"
+        y_val = i % 2
+        lines_val.append(f"{sid_v},{y_val},0.3")
+        lines_test.append(f"{sid_t},{y_val},0.4")
+        llm_val_lines.append(f'{{"id":"{sid_v}","s":{float(y_val)},"valid":true}}')
+        llm_test_lines.append(f'{{"id":"{sid_t}","s":{float(y_val)},"valid":true}}')
+
+    gate_val.write_text("\n".join(lines_val) + "\n", encoding="utf-8")
+    gate_test.write_text("\n".join(lines_test) + "\n", encoding="utf-8")
+    llm_val.write_text("\n".join(llm_val_lines) + "\n", encoding="utf-8")
+    llm_test.write_text("\n".join(llm_test_lines) + "\n", encoding="utf-8")
+
+    report_dict, json_path, md_path = run_offline_diagnostic(
+        gate_val_path=gate_val,
+        gate_test_path=gate_test,
+        llm_val_path=llm_val,
+        llm_test_path=llm_test,
+        dataset="reveal",
+        tau=0.2,
+        output_dir=out_dir,
+        seed=42,
+        n_boot=20,
+        n_folds=2,
+        cluster_unit="auto",
+    )
+
+    assert "file hashes" in report_dict["metadata"]["bootstrap_unit_test"]
+    md_text = md_path.read_text(encoding="utf-8")
+    assert "file hashes" in md_text
+
+
+
+
+

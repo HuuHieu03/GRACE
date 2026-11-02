@@ -45,6 +45,33 @@ except ImportError:
     from grace_diag import complementarity as C
     from grace_diag import stats as S
 
+REPO_ROOT = Path(__file__).resolve().parents[1]
+DATA_DIR = REPO_ROOT / "data" / "b0_offline_dungs_data"
+
+# Cấu hình mặc định cho các bộ dữ liệu Bước 0 theo THRESHOLD_POLICIES_20261030.md
+DEFAULT_DATASET_CONFIGS = {
+    "devign": {
+        "gate_val": DATA_DIR / "devign_validation_join_with_fpt.csv",
+        "gate_test": DATA_DIR / "devign_test_join_exact.csv",
+        "llm_val": DATA_DIR / "devign_validation_join_with_fpt.csv",
+        "llm_test": DATA_DIR / "devign_test_join_exact.csv",
+        "xpre_val": DATA_DIR / "xpre_validation_devign_locked_a93.npz",
+        "xpre_test": DATA_DIR / "xpre_test_devign_locked_a93.npz",
+        "tau": 0.36,
+        "output_dir": REPO_ROOT / "runs" / "step0_real_devign",
+    },
+    "reveal": {
+        "gate_val": DATA_DIR / "reveal_validation_join_with_fpt.csv",
+        "gate_test": DATA_DIR / "reveal_test_join_exact.csv",
+        "llm_val": DATA_DIR / "reveal_validation_join_with_fpt.csv",
+        "llm_test": DATA_DIR / "reveal_test_join_exact.csv",
+        "xpre_val": DATA_DIR / "xpre_validation_reveal_locked_b456.npz",
+        "xpre_test": DATA_DIR / "xpre_test_reveal_locked_b456.npz",
+        "tau": 0.17,
+        "output_dir": REPO_ROOT / "runs" / "step0_real_reveal",
+    },
+}
+
 # Tối ưu hóa bộ sinh chỉ số bootstrap theo cụm (caching group membership)
 # Giữ nguyên 100% tính tất định và thứ tự rút ngẫu nhiên của grace_diag.stats
 _resample_cache: Dict[int, Tuple[Any, List[np.ndarray]]] = {}
@@ -71,13 +98,14 @@ def resolve_cluster_unit(
     groups: Optional[List[str] | np.ndarray],
     cluster_unit: str = "auto",
     split_name: str = "Test",
+    group_type: str = "commit IDs",
 ) -> Tuple[Optional[List[str] | np.ndarray], str]:
     """Xác định đơn vị bootstrap (cluster vs sample) theo protocol.yaml line 55.
 
     protocol.yaml: cluster_unit: "commit_id nếu dataset có (Devign); nếu không, từng mẫu và ghi rõ"
-    - "auto": nếu groups có < 10 giá trị duy nhất (như ReVeal chỉ có 2 nhóm: 'debian' và 'chrome'),
+    - "auto": nếu groups có < 10 giá trị duy nhất (như ReVeal trước đây chỉ có 2 nhóm: 'debian' và 'chrome'),
               đặt groups = None để chuyển sang Sample Bootstrap chuẩn, tránh sụp đổ 2-cluster bootstrap.
-              Nếu groups có >= 10 giá trị duy nhất (như Devign có 2.068 commit IDs), giữ nguyên groups.
+              Nếu groups có >= 10 giá trị duy nhất (như Devign có 2.068 commit IDs, ReVeal có >600 file hashes), giữ nguyên groups.
     - "commit": bắt buộc dùng cluster bootstrap theo groups (hoặc fallback về sample nếu không có groups).
     - "sample": cưỡng chế dùng sample bootstrap (groups = None).
     """
@@ -94,15 +122,15 @@ def resolve_cluster_unit(
         return None, "sample"
 
     if groups is None or len(groups) == 0:
-        print(f"[*] [{split_name}] Đơn vị Bootstrap: Sample Bootstrap (không có thông tin group/commit).")
+        print(f"[*] [{split_name}] Đơn vị Bootstrap: Sample Bootstrap (không có thông tin group/commit/file hash).")
         return None, "sample"
 
     uniq_groups = set(groups)
     n_unique = len(uniq_groups)
 
     if unit_mode == "commit":
-        print(f"[*] [{split_name}] Đơn vị Bootstrap: Cluster Bootstrap với {n_unique} cụm (commit IDs) (chỉ định bởi --cluster-unit commit).")
-        return groups, f"{n_unique} clusters (commit IDs)"
+        print(f"[*] [{split_name}] Đơn vị Bootstrap: Cluster Bootstrap với {n_unique} cụm ({group_type}) (chỉ định bởi --cluster-unit commit).")
+        return groups, f"{n_unique} clusters ({group_type})"
 
     # unit_mode == "auto"
     if n_unique < 10:
@@ -115,10 +143,10 @@ def resolve_cluster_unit(
         return None, "sample"
     else:
         print(
-            f"[*] [{split_name}] Đơn vị Bootstrap: Cluster Bootstrap với {n_unique} cụm (commit IDs) "
+            f"[*] [{split_name}] Đơn vị Bootstrap: Cluster Bootstrap với {n_unique} cụm ({group_type}) "
             f"(auto: phát hiện {n_unique} >= 10 cụm - tuân thủ protocol.yaml dòng 55)."
         )
-        return groups, f"{n_unique} clusters (commit IDs)"
+        return groups, f"{n_unique} clusters ({group_type})"
 
 
 def parse_float_safe(val: Any, default: Optional[float] = None) -> Optional[float]:
@@ -189,6 +217,11 @@ def load_gate_data(gate_csv_path: Path | str) -> Dict[str, Dict[str, Any]]:
             y_val = int(round(float(r[y_col])))
             p_val = float(r[p_col])
             grp_val = str(r[grp_col]).strip() if grp_col and r.get(grp_col) else None
+            # Đối với tập dữ liệu ReVeal: Trích xuất trường group ở mức file-level hash từ trường ID dạng reveal:{split}:{file_hash}#{func_index}
+            if sid.startswith("reveal:") and len(sid.split(":")) >= 3:
+                part = sid.split(":")[2]
+                file_hash = part.split("#")[0] if "#" in part else part
+                grp_val = file_hash
             rows[sid] = {
                 "id": sid,
                 "y": y_val,
@@ -288,6 +321,7 @@ def build_canonical_table(
     llm_data: Dict[str, Dict[str, Any]],
     xpre_path: Optional[Path] = None,
     split_name: str = "split",
+    dataset: str = "devign",
 ) -> Tuple[List[str], np.ndarray, np.ndarray, np.ndarray, np.ndarray, Optional[List[str]], np.ndarray]:
     """Khớp nối dữ liệu theo ID thành các mảng canonical."""
     matched_ids = [sid for sid in gate_data if sid in llm_data]
@@ -309,8 +343,22 @@ def build_canonical_table(
     valid = np.array([llm_data[i]["valid"] for i in ids], dtype=bool)
 
     groups = None
-    if any(gate_data[i].get("group") is not None for i in ids):
-        groups = [gate_data[i].get("group") or "default" for i in ids]
+    is_reveal = (dataset and dataset.lower() == "reveal") or any(i.startswith("reveal:") for i in ids)
+    if is_reveal:
+        groups = []
+        for i in ids:
+            parts = i.split(":")
+            if len(parts) >= 3:
+                file_hash = parts[2].split("#")[0]
+                groups.append(file_hash)
+            elif gate_data[i].get("group") is not None:
+                groups.append(str(gate_data[i]["group"]))
+            else:
+                groups.append("default")
+        n_unique_grps = len(set(groups))
+        print(f"[*] [{split_name}] [ReVeal] Đã trích xuất {n_unique_grps} nhóm file-level hash duy nhất từ trường ID.")
+    elif any(gate_data[i].get("group") is not None for i in ids):
+        groups = [str(gate_data[i].get("group") or "default") for i in ids]
 
     # Xử lý X_pre
     if xpre_path and xpre_path.exists():
@@ -353,12 +401,25 @@ def build_canonical_table(
     return ids, y, p_gate, s_llm, valid, groups, X_pre
 
 
-def _export_canonical_csv(out_path: Path, ids: List[str], y: np.ndarray, p_gate: np.ndarray, s_llm: np.ndarray, valid: np.ndarray):
+def _export_canonical_csv(
+    out_path: Path,
+    ids: List[str],
+    y: np.ndarray,
+    p_gate: np.ndarray,
+    s_llm: np.ndarray,
+    valid: np.ndarray,
+    groups: Optional[Sequence[str]] = None,
+):
     with open(out_path, "w", encoding="utf-8", newline="") as f:
         writer = csv.writer(f)
-        writer.writerow(["id", "y", "p_gate", "s_llm", "valid"])
-        for sid, yi, pi, si, vi in zip(ids, y, p_gate, s_llm, valid):
-            writer.writerow([sid, yi, f"{pi:.6f}", f"{si:.6f}", int(vi)])
+        if groups is not None:
+            writer.writerow(["id", "y", "p_gate", "s_llm", "valid", "group"])
+            for sid, yi, pi, si, vi, gi in zip(ids, y, p_gate, s_llm, valid, groups):
+                writer.writerow([sid, yi, f"{pi:.6f}", f"{si:.6f}", int(vi), str(gi)])
+        else:
+            writer.writerow(["id", "y", "p_gate", "s_llm", "valid"])
+            for sid, yi, pi, si, vi in zip(ids, y, p_gate, s_llm, valid):
+                writer.writerow([sid, yi, f"{pi:.6f}", f"{si:.6f}", int(vi)])
     print(f"[*] Đã lưu bảng canonical: {out_path}")
 
 
@@ -408,27 +469,28 @@ def run_offline_diagnostic_2split(
     val_gate = load_gate_data(gate_val_path)
     val_llm = load_llm_predictions(llm_val_path)
     ids_v, y_v, p_gate_v, s_llm_v, valid_v, groups_v, X_pre_v = build_canonical_table(
-        val_gate, val_llm, xpre_val_path, split_name="validation"
+        val_gate, val_llm, xpre_val_path, split_name="validation", dataset=dataset
     )
 
     test_gate = load_gate_data(gate_test_path)
     test_llm = load_llm_predictions(llm_test_path)
     ids_t, y_t, p_gate_t, s_llm_t, valid_t, groups_t, X_pre_t = build_canonical_table(
-        test_gate, test_llm, xpre_test_path, split_name="test"
+        test_gate, test_llm, xpre_test_path, split_name="test", dataset=dataset
     )
 
     # Phân giải đơn vị bootstrap theo protocol.yaml line 55
-    groups_v, boot_unit_v = resolve_cluster_unit(groups_v, cluster_unit=cluster_unit, split_name="Validation")
-    groups_t, boot_unit_t = resolve_cluster_unit(groups_t, cluster_unit=cluster_unit, split_name="Test")
+    grp_label = "file hashes" if dataset.lower() == "reveal" else "commit IDs"
+    boot_groups_v, boot_unit_v = resolve_cluster_unit(groups_v, cluster_unit=cluster_unit, split_name="Validation", group_type=grp_label)
+    boot_groups_t, boot_unit_t = resolve_cluster_unit(groups_t, cluster_unit=cluster_unit, split_name="Test", group_type=grp_label)
 
-    # Xuất file canonical CSV cho cả 2 split
+    # Xuất file canonical CSV cho cả 2 split (luôn bảo lưu đầy đủ trường group nếu có)
     canonical_val_path = output_dir / f"canonical_{dataset}_val.csv"
     canonical_test_path = output_dir / f"canonical_{dataset}_test.csv"
-    _export_canonical_csv(canonical_val_path, ids_v, y_v, p_gate_v, s_llm_v, valid_v)
-    _export_canonical_csv(canonical_test_path, ids_t, y_t, p_gate_t, s_llm_t, valid_t)
+    _export_canonical_csv(canonical_val_path, ids_v, y_v, p_gate_v, s_llm_v, valid_v, groups=groups_v)
+    _export_canonical_csv(canonical_test_path, ids_t, y_t, p_gate_t, s_llm_t, valid_t, groups=groups_t)
     # File alias canonical tổng cho tương thích
     canonical_alias_path = output_dir / f"canonical_{dataset}.csv"
-    _export_canonical_csv(canonical_alias_path, ids_t, y_t, p_gate_t, s_llm_t, valid_t)
+    _export_canonical_csv(canonical_alias_path, ids_t, y_t, p_gate_t, s_llm_t, valid_t, groups=groups_t)
 
     # 2. Pha 1 (Validation): Fit meta-model OOF CV & chọn ngưỡng tối ưu tau_pre*, tau_post*
     print("[*] [Validation] Đang fit meta-model P_pre vs P_post (OOF CV) trên tập Validation...")
@@ -451,7 +513,7 @@ def run_offline_diagnostic_2split(
     # Huấn luyện Benefit Router trên Validation
     h_gate_v = (p_gate_v >= tau).astype(int)
     g_llm_v = (s_llm_v >= 0.5).astype(int)
-    benefit_router = C.fit_benefit_router(X_pre_v, y_v, h_gate_v, g_llm_v, valid_v)
+    benefit_router = C.fit_benefit_router(X_pre_v, y_v, h_gate_v, g_llm_v, valid_v, groups=groups_v)
     print("[*] [Validation] Đã huấn luyện bộ định tuyến lợi ích (Benefit Router - Ridge) trên Validation.")
 
     # 3. Pha 2 (Test): Áp meta-model và ngưỡng đã khóa sang Test độc lập
@@ -522,12 +584,12 @@ def run_offline_diagnostic_2split(
 
     # Đánh giá Matched Meta-Model trên Test kèm Paired Bootstrap CI 95%
     print(f"[*] [Test] Đang tính Paired Bootstrap CI ({n_boot} reps) trên tập Test độc lập...")
-    ci_delta_mcc_t = S.paired_bootstrap(y_t, pred_pre_t, pred_post_t, S.mcc, n_boot=n_boot, seed=seed, groups=groups_t)
-    ci_delta_f1_t = S.paired_bootstrap(y_t, pred_pre_t, pred_post_t, S.f1, n_boot=n_boot, seed=seed, groups=groups_t)
+    ci_delta_mcc_t = S.paired_bootstrap(y_t, pred_pre_t, pred_post_t, S.mcc, n_boot=n_boot, seed=seed, groups=boot_groups_t)
+    ci_delta_f1_t = S.paired_bootstrap(y_t, pred_pre_t, pred_post_t, S.f1, n_boot=n_boot, seed=seed, groups=boot_groups_t)
     ci_delta_acc_t = S.paired_bootstrap(
-        y_t, pred_pre_t, pred_post_t, lambda yt, pt: float((pt == yt).mean()), n_boot=n_boot, seed=seed, groups=groups_t
+        y_t, pred_pre_t, pred_post_t, lambda yt, pt: float((pt == yt).mean()), n_boot=n_boot, seed=seed, groups=boot_groups_t
     )
-    ci_delta_auroc_t = S.paired_bootstrap(y_t, score_pre_t, score_post_t, S.auroc, n_boot=n_boot, seed=seed, groups=groups_t)
+    ci_delta_auroc_t = S.paired_bootstrap(y_t, score_pre_t, score_post_t, S.auroc, n_boot=n_boot, seed=seed, groups=boot_groups_t)
     verdict_test = S.verdict(ci_delta_mcc_t, margin_mcc)
 
     metrics_pre_t = {**S.thresholded_metrics(y_t, pred_pre_t), "auroc": S.auroc(y_t, score_pre_t)}
@@ -569,6 +631,25 @@ def run_offline_diagnostic_2split(
         seed=seed,
     )
 
+    # Tính toán Paired Bootstrap CI (95% CI) cho so sánh chính của bài toán Routing tại ngân sách q=10%:
+    # Delta BA và Delta MCC giữa chính sách benefit (Ridge Benefit Router) và chính sách confidence (Confidence-based Router)
+    conf_scores_t = -np.abs(C.logit(p_gate_t) - C.logit(np.full(len(y_t), tau)))
+    pred_conf_q10_t, mask_conf_q10_t = C.route(h_gate_t, g_llm_t, valid_t, conf_scores_t, 0.10, ids_t)
+    pred_benefit_q10_t, mask_benefit_q10_t = C.route(h_gate_t, g_llm_t, valid_t, benefit_scores_t, 0.10, ids_t)
+
+    routing_ci_delta_ba_t = S.paired_bootstrap(
+        y_t, pred_conf_q10_t, pred_benefit_q10_t, S.balanced_accuracy, n_boot=n_boot, seed=seed, groups=boot_groups_t
+    )
+    routing_ci_delta_mcc_t = S.paired_bootstrap(
+        y_t, pred_conf_q10_t, pred_benefit_q10_t, S.mcc, n_boot=n_boot, seed=seed, groups=boot_groups_t
+    )
+    print(
+        f"[*] [Routing q=10%] Delta BA (benefit - conf) = {routing_ci_delta_ba_t.delta:.4f} "
+        f"[{routing_ci_delta_ba_t.lo:.4f}, {routing_ci_delta_ba_t.hi:.4f}], "
+        f"Delta MCC = {routing_ci_delta_mcc_t.delta:.4f} "
+        f"[{routing_ci_delta_mcc_t.lo:.4f}, {routing_ci_delta_mcc_t.hi:.4f}]"
+    )
+
     # Tổng hợp toàn bộ kết quả vào Dictionary
     report_dict: Dict[str, Any] = {
         "metadata": {
@@ -590,7 +671,7 @@ def run_offline_diagnostic_2split(
             "cluster_unit_arg": cluster_unit,
             "bootstrap_unit_val": boot_unit_v,
             "bootstrap_unit_test": boot_unit_t,
-            "bootstrap_unit": "sample" if groups_t is None else "cluster",
+            "bootstrap_unit": "sample" if boot_groups_t is None else "cluster",
         },
         "verdict": {
             "delta_verdict": verdict_test,
@@ -632,6 +713,14 @@ def run_offline_diagnostic_2split(
         },
         "mcnemar_tests": mcnemar_summary_t,
         "selective_routing_curves": routing_results_t,
+        "routing_q10_contrast": {
+            "budget": 0.10,
+            "contrast": "benefit_minus_confidence",
+            "delta_balanced_accuracy": routing_ci_delta_ba_t.to_dict(),
+            "delta_mcc": routing_ci_delta_mcc_t.to_dict(),
+            "n_queries_confidence": int(mask_conf_q10_t.sum()),
+            "n_queries_benefit": int(mask_benefit_q10_t.sum()),
+        },
     }
 
     # Xuất JSON
@@ -695,11 +784,12 @@ def run_offline_diagnostic_single_split(
     gate_data = load_gate_data(gate_csv_path)
     llm_data = load_llm_predictions(llm_path)
     ids, y, p_gate, s_llm, valid, groups, X_pre = build_canonical_table(
-        gate_data, llm_data, xpre_path, split_name="single"
+        gate_data, llm_data, xpre_path, split_name="single", dataset=dataset
     )
 
     # Phân giải đơn vị bootstrap theo protocol.yaml line 55
-    groups, boot_unit = resolve_cluster_unit(groups, cluster_unit=cluster_unit, split_name="Single-Split")
+    grp_label = "file hashes" if dataset.lower() == "reveal" else "commit IDs"
+    boot_groups, boot_unit = resolve_cluster_unit(groups, cluster_unit=cluster_unit, split_name="Single-Split", group_type=grp_label)
 
     n_samples = len(y)
     n_valid = int(valid.sum())
@@ -708,7 +798,7 @@ def run_offline_diagnostic_single_split(
     n_safe = int((y == 0).sum())
 
     canonical_csv_path = output_dir / f"canonical_{dataset}.csv"
-    _export_canonical_csv(canonical_csv_path, ids, y, p_gate, s_llm, valid)
+    _export_canonical_csv(canonical_csv_path, ids, y, p_gate, s_llm, valid, groups=groups)
 
     h_gate = (p_gate >= tau).astype(int)
     g_llm = (s_llm >= 0.5).astype(int)
@@ -759,9 +849,9 @@ def run_offline_diagnostic_single_split(
     pred_pre = (pp_result.oof_pre >= pp_result.tau_pre).astype(int)
     pred_post = (pp_result.oof_post >= pp_result.tau_post).astype(int)
 
-    ci_delta_f1 = S.paired_bootstrap(y, pred_pre, pred_post, S.f1, n_boot=n_boot, seed=seed, groups=groups)
+    ci_delta_f1 = S.paired_bootstrap(y, pred_pre, pred_post, S.f1, n_boot=n_boot, seed=seed, groups=boot_groups)
     ci_delta_acc = S.paired_bootstrap(
-        y, pred_pre, pred_post, lambda yt, pt: float((pt == yt).mean()), n_boot=n_boot, seed=seed, groups=groups
+        y, pred_pre, pred_post, lambda yt, pt: float((pt == yt).mean()), n_boot=n_boot, seed=seed, groups=boot_groups
     )
 
     mcnemar_raw = {
@@ -785,10 +875,22 @@ def run_offline_diagnostic_single_split(
         }
 
     # Benefit router fitting trên single-split
-    benefit_router = C.fit_benefit_router(X_pre, y, h_gate, g_llm, valid)
+    benefit_router = C.fit_benefit_router(X_pre, y, h_gate, g_llm, valid, groups=groups)
     benefit_scores = benefit_router.predict(X_pre)
     routing_results = C.routing_curves(
         y, h_gate, g_llm, valid, p_gate, tau, ids, budgets=(0.05, 0.10, 0.25, 0.50), benefit_scores=benefit_scores, seed=seed
+    )
+
+    # Tính toán Paired Bootstrap CI (95% CI) cho so sánh chính của bài toán Routing tại ngân sách q=10%:
+    conf_scores = -np.abs(C.logit(p_gate) - C.logit(np.full(len(y), tau)))
+    pred_conf_q10, mask_conf_q10 = C.route(h_gate, g_llm, valid, conf_scores, 0.10, ids)
+    pred_benefit_q10, mask_benefit_q10 = C.route(h_gate, g_llm, valid, benefit_scores, 0.10, ids)
+
+    routing_ci_delta_ba = S.paired_bootstrap(
+        y, pred_conf_q10, pred_benefit_q10, S.balanced_accuracy, n_boot=n_boot, seed=seed, groups=boot_groups
+    )
+    routing_ci_delta_mcc = S.paired_bootstrap(
+        y, pred_conf_q10, pred_benefit_q10, S.mcc, n_boot=n_boot, seed=seed, groups=boot_groups
     )
 
     report_dict: Dict[str, Any] = {
@@ -807,7 +909,7 @@ def run_offline_diagnostic_single_split(
             "n_folds": n_folds,
             "margin_mcc_delta": margin_mcc,
             "cluster_unit_arg": cluster_unit,
-            "bootstrap_unit": "sample" if groups is None else "cluster",
+            "bootstrap_unit": "sample" if boot_groups is None else "cluster",
             "bootstrap_unit_details": boot_unit,
         },
         "verdict": {
@@ -843,6 +945,14 @@ def run_offline_diagnostic_single_split(
         },
         "mcnemar_tests": mcnemar_summary,
         "selective_routing_curves": routing_results,
+        "routing_q10_contrast": {
+            "budget": 0.10,
+            "contrast": "benefit_minus_confidence",
+            "delta_balanced_accuracy": routing_ci_delta_ba.to_dict(),
+            "delta_mcc": routing_ci_delta_mcc.to_dict(),
+            "n_queries_confidence": int(mask_conf_q10.sum()),
+            "n_queries_benefit": int(mask_benefit_q10.sum()),
+        },
     }
 
     report_json_path = output_dir / f"diagnostic_report_{dataset}.json"
@@ -906,6 +1016,30 @@ def run_offline_diagnostic(
             dataset=dataset,
             tau=tau,
             output_dir=output_dir,
+            seed=seed,
+            n_boot=n_boot,
+            n_folds=n_folds,
+            margin_mcc=margin_mcc,
+            cluster_unit=cluster_unit,
+        )
+    elif (
+        dataset in DEFAULT_DATASET_CONFIGS
+        and DEFAULT_DATASET_CONFIGS[dataset]["gate_val"].exists()
+        and DEFAULT_DATASET_CONFIGS[dataset]["gate_test"].exists()
+    ):
+        cfg = DEFAULT_DATASET_CONFIGS[dataset]
+        tau_val = tau if tau != 0.5 else cfg["tau"]
+        out_dir = output_dir if output_dir != Path("runs/step0") else cfg["output_dir"]
+        return run_offline_diagnostic_2split(
+            gate_val_path=cfg["gate_val"],
+            gate_test_path=cfg["gate_test"],
+            llm_val_path=cfg["llm_val"],
+            llm_test_path=cfg["llm_test"],
+            xpre_val_path=cfg["xpre_val"],
+            xpre_test_path=cfg["xpre_test"],
+            dataset=dataset,
+            tau=tau_val,
+            output_dir=out_dir,
             seed=seed,
             n_boot=n_boot,
             n_folds=n_folds,
@@ -1111,6 +1245,36 @@ def render_markdown_summary(d: Dict[str, Any]) -> str:
             hrm = r.get("harm", "—")
             lines.append(f"| `{pol}` | {q_val} | {queries} | {mcc_v} | {f1_v} | {ba_v} | {rep} | {hrm} |")
 
+        r_q10 = d.get("routing_q10_contrast")
+        if r_q10:
+            d_ba = r_q10.get("delta_balanced_accuracy", {})
+            d_mcc = r_q10.get("delta_mcc", {})
+            ba_delta = d_ba.get("delta")
+            ba_lo = d_ba.get("lo")
+            ba_hi = d_ba.get("hi")
+            mcc_delta = d_mcc.get("delta")
+            mcc_lo = d_mcc.get("lo")
+            mcc_hi = d_mcc.get("hi")
+            if ba_lo is not None and ba_hi is not None:
+                ba_sig = "Có lợi thế (CI > 0)" if ba_lo > 0 else ("Bất lợi (CI < 0)" if ba_hi < 0 else "Chưa có ý nghĩa thống kê (CI chứa 0)")
+            else:
+                ba_sig = "Không xác định"
+            if mcc_lo is not None and mcc_hi is not None:
+                mcc_sig = "Có lợi thế (CI > 0)" if mcc_lo > 0 else ("Bất lợi (CI < 0)" if mcc_hi < 0 else "Chưa có ý nghĩa thống kê (CI chứa 0)")
+            else:
+                mcc_sig = "Không xác định"
+            lines.extend([
+                "",
+                "### So sánh Đối chứng Ghép cặp tại Ngân sách $q=10%$ (`benefit` vs `confidence`)",
+                "",
+                f"> **Mục đích**: Kiểm định ghép cặp xem Ridge Benefit Router có vượt trội có ý nghĩa thống kê so với Confidence Router tại ngưỡng ngân sách thực tế 10% hay không ({unit_badge}).",
+                "",
+                "| Chỉ số So sánh | Chênh lệch $\\Delta$ (Benefit − Confidence) | 95% Bootstrap CI | Đơn vị Bootstrap | Kết luận Thống kê |",
+                "| :--- | :---: | :---: | :---: | :---: |",
+                f"| **Balanced Accuracy ($\\Delta$BA - Chỉ số chính)** | **{f_fmt(ba_delta)}** | [{f_fmt(ba_lo)}, {f_fmt(ba_hi)}] | {d_ba.get('unit', 'sample')} | {ba_sig} |",
+                f"| **MCC ($\\Delta$MCC - Chỉ số phụ)** | **{f_fmt(mcc_delta)}** | [{f_fmt(mcc_lo)}, {f_fmt(mcc_hi)}] | {d_mcc.get('unit', 'sample')} | {mcc_sig} |",
+            ])
+
     lines.extend([
         "",
         "---",
@@ -1146,8 +1310,8 @@ def main():
 
     # Tham số chung
     parser.add_argument("--dataset", type=str, default="devign", choices=["devign", "reveal"], help="Tên dataset")
-    parser.add_argument("--tau", type=float, default=0.5, help="Ngưỡng phân loại của Gate (mặc định 0.5)")
-    parser.add_argument("--output-dir", type=Path, default=Path("runs/step0"), help="Thư mục xuất báo cáo")
+    parser.add_argument("--tau", type=float, default=None, help="Ngưỡng phân loại của Gate (mặc định theo THRESHOLD_POLICIES_20261030.md hoặc 0.5)")
+    parser.add_argument("--output-dir", type=Path, default=None, help="Thư mục xuất báo cáo (mặc định theo dataset)")
     parser.add_argument("--seed", type=int, default=20261117, help="Random seed tái lập kết quả")
     parser.add_argument("--n-boot", type=int, default=5000, help="Số lượt Paired Bootstrap CI")
     parser.add_argument("--n-folds", type=int, default=3, help="Số fold cross-validation")
@@ -1166,6 +1330,8 @@ def main():
     if args.gate_val and args.gate_test:
         if not args.llm_val or not args.llm_test:
             parser.error("Khi chạy chuẩn 2-Split (--gate-val, --gate-test), bắt buộc phải truyền cả --llm-val và --llm-test!")
+        tau_val = args.tau if args.tau is not None else 0.5
+        out_dir = args.output_dir if args.output_dir is not None else Path("runs/step0")
         run_offline_diagnostic_2split(
             gate_val_path=args.gate_val,
             gate_test_path=args.gate_test,
@@ -1174,8 +1340,8 @@ def main():
             xpre_val_path=args.xpre_val,
             xpre_test_path=args.xpre_test,
             dataset=args.dataset,
-            tau=args.tau,
-            output_dir=args.output_dir,
+            tau=tau_val,
+            output_dir=out_dir,
             seed=args.seed,
             n_boot=args.n_boot,
             n_folds=args.n_folds,
@@ -1185,13 +1351,42 @@ def main():
     elif args.gate_csv:
         if not args.llm_predictions:
             parser.error("Khi chạy chế độ Single-Split (--gate-csv), bắt buộc phải truyền --llm-predictions!")
+        tau_val = args.tau if args.tau is not None else 0.5
+        out_dir = args.output_dir if args.output_dir is not None else Path("runs/step0")
         run_offline_diagnostic_single_split(
             gate_csv_path=args.gate_csv,
             llm_path=args.llm_predictions,
             xpre_path=args.xpre_npz,
             dataset=args.dataset,
-            tau=args.tau,
-            output_dir=args.output_dir,
+            tau=tau_val,
+            output_dir=out_dir,
+            seed=args.seed,
+            n_boot=args.n_boot,
+            n_folds=args.n_folds,
+            margin_mcc=args.margin_mcc,
+            cluster_unit=args.cluster_unit,
+        )
+    elif (
+        args.dataset in DEFAULT_DATASET_CONFIGS
+        and DEFAULT_DATASET_CONFIGS[args.dataset]["gate_val"].exists()
+        and DEFAULT_DATASET_CONFIGS[args.dataset]["gate_test"].exists()
+    ):
+        cfg = DEFAULT_DATASET_CONFIGS[args.dataset]
+        tau_val = args.tau if args.tau is not None else cfg["tau"]
+        out_dir = args.output_dir if args.output_dir is not None else cfg["output_dir"]
+        print(f"[*] Tự động nạp cấu hình thực nghiệm 2-Split chuẩn hóa cho '{args.dataset}':")
+        print(f"    - Ngưỡng Gate tau: {tau_val} (theo THRESHOLD_POLICIES_20261030.md)")
+        print(f"    - Thư mục xuất:    {out_dir}")
+        run_offline_diagnostic_2split(
+            gate_val_path=cfg["gate_val"],
+            gate_test_path=cfg["gate_test"],
+            llm_val_path=cfg["llm_val"],
+            llm_test_path=cfg["llm_test"],
+            xpre_val_path=cfg["xpre_val"],
+            xpre_test_path=cfg["xpre_test"],
+            dataset=args.dataset,
+            tau=tau_val,
+            output_dir=out_dir,
             seed=args.seed,
             n_boot=args.n_boot,
             n_folds=args.n_folds,
