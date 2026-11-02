@@ -56,12 +56,25 @@
 
 ---
 
-## 2. Việc đang kẹt / Chờ đợi (Blocked / Awaiting)
+- [x] **Hoàn thành Bước 0 — Chẩn đoán Offline khử trùng nhóm (StratifiedGroupKFold)**:
+  - Nâng cấp `fit_pre_post` sang `StratifiedGroupKFold` chống rò rỉ nhóm trên OOF validation.
+  - Phân cụm nhóm theo Commit IDs cho Devign (2,068 clusters trên Test) và File-level Hash cho ReVeal (646 clusters trên Test).
+  - Bổ sung Paired Cluster Bootstrap CI (5,000 reps) cho bài toán Routing $q=10\%$ trên cả Devign ($\Delta\text{BA} = -0.0035$, CI: `[-0.0162, 0.0091]`) và ReVeal ($\Delta\text{BA} = -0.0615$, CI: `[-0.0943, -0.0287]`).
+  - Xuất báo cáo chẩn đoán chính thức tại `runs/step0_real_devign/` và `runs/step0_real_reveal/`.
 
-- [ ] **Chốt kết quả Bước 0 từ gói dữ liệu Dũng gửi**:
-  - Gói dữ liệu `requested_data_bundle_20261029_FINAL.zip` đã được đối soát và có đầy đủ 100% dữ liệu của cả Devign và ReVeal.
-  - Đã chạy thử nghiệm thành công trên Devign (ra $\Delta$MCC = 0.0023, 95% CI chứa 0 $\to$ No meaningful benefit).
-  - Sẵn sàng xuất báo cáo chính thức Bước 0 cho cả 2 bộ dữ liệu nộp Thầy.
+- [x] **Hoàn thành Bước 4 — Biên bản Đăng ký trước Preregistration Protocol v1 (Tag `prereg-v1`)**:
+  - Chuẩn hóa Provenance mô hình là `Qwen3-Coder-30B-A3B-Instruct` (UD-Q4_K_XL, 16.45 GB) trên toàn bộ hệ thống (`preregistration.md`, `configs/protocol.yaml`, `configs/kaggle_model_registry.yaml`).
+  - Khóa chặt chẽ 14 ngưỡng tối ưu $\tau^*$ từ Validation OOF trong `configs/thresholds.json`.
+  - Khóa biên tác dụng $\delta = 0.02$ và giả thuyết H1.1, H1.2, H5.3.
+  - Đạt 669/669 pytest tests passed, gắn annotated Git Tag `prereg-v1` và đẩy lên GitHub.
+
+---
+
+## 2. Việc đang chờ đợi / Kế hoạch tiếp theo (Next Steps)
+
+- [ ] **Báo cáo tiến độ và kết quả thăm dò Bước 0 - 5 với Thầy hướng dẫn**:
+  - Bàn giao tệp nén kiểm toán `audit_package_grace.zip` kèm chỉ dẫn `AUDIT_README.md`.
+  - Xin ý kiến chỉ đạo của Thầy để triển khai lượt chạy suy luận Tầng 1 còn lại trên ReVeal Test.
 
 ---
 

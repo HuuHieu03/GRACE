@@ -44,14 +44,16 @@ project_docs/
 │   ├── v1.0.0_2026-10-22_supervisor_readiness_review.md # Rà soát mức độ sẵn sàng báo cáo Thầy (Lần 1)
 │   ├── v1.1.0_2026-10-22_supervisor_readiness_second_review.md # Rà soát mức độ sẵn sàng báo cáo Thầy (Lần 2)
 │   ├── v1.0.0_2026-10-29_chuan_hoa_figure6_va_tich_hop_step0_step1_report.md # Báo cáo chuẩn hóa Hình 6, grace_diag_kit, Bước 0 & Bước 1
-│   └── v1.0.0_2026-11-02_nghiem_thu_toan_dien_version10_va_goi_audit_report.md # Báo cáo nghiệm thu toàn diện Version 10 & Hồ sơ kiểm toán
+│   ├── v1.0.0_2026-11-02_nghiem_thu_toan_dien_version10_va_goi_audit_report.md # Báo cáo nghiệm thu toàn diện Version 10 & Hồ sơ kiểm toán
+│   └── v1.1.0_2026-11-02_hoan_thien_step0_va_step4_preregistration_report.md # Báo cáo hoàn thiện Bước 0 (Khử trùng nhóm) & Bước 4 (Preregistration v1)
 │
 ├── progress/                 # Theo dõi tiến độ công việc tuần tự
 │   ├── TEMPLATE_progress.md                         # Khung mẫu theo dõi tiến độ
 │   ├── v1.0.0_2026-10-22_supervisor_remediation_progress.md # Tiến độ thực hiện các yêu cầu của Thầy
 │   ├── v1.0.0_2026-10-22_h2_and_e13_progress.md     # Tiến độ triển khai nhánh H2 và E1.3
 │   ├── v1.0.0_2026-10-29_chuan_hoa_figure6_va_tich_hop_step0_step1_progress.md # Tiến độ chuẩn hóa Hình 6, adapter 2-split và Kaggle hosting
-│   └── v1.0.0_2026-11-02_hoan_thanh_step5_va_dong_goi_audit_progress.md # Tiến độ hoàn tất 5 bước & đóng gói kiểm toán
+│   ├── v1.0.0_2026-11-02_hoan_thanh_step5_va_dong_goi_audit_progress.md # Tiến độ hoàn tất 5 bước & đóng gói kiểm toán
+│   └── v1.1.0_2026-11-02_hoan_thien_step0_va_step4_preregistration_progress.md # Tiến độ hoàn thiện trọn vẹn Bước 0 & Bước 4 (prereg-v1)
 │
 ├── logs/                     # Nhật ký công việc, ghi chép lỗi kỹ thuật & runtime logs
 │   ├── TEMPLATE_log.md                              # Khung mẫu nhật ký
