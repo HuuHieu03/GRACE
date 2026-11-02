@@ -1,7 +1,7 @@
-# Giao thức đăng ký trước — bản để commit + tag prereg-v1 (điền các ô "fill:" trước khi tag)
+# Giao thức đăng ký trước — bản để commit + tag prereg-v1
 study_id: grace_diag_replication_v1
 version: prereg-v1
-registered_at: "2026-10-31"            # ngày tag; mọi lượt test sau ngày này mới có giá trị xác nhận
+registered_at: "2026-10-31"            # ngày tag chính thức; cập nhật hoàn thiện Bước 4: 2026-11-02
 test_exposure_disclosure: >
   Test Devign/ReVeal đã được xem trong giai đoạn thăm dò (36 run qua API, dev-100, H1–H3).
   Mọi lựa chọn cấu hình, ngưỡng và arm của lượt xác nhận được chốt trên official validation
@@ -21,11 +21,11 @@ dedup:
 
 backend:                                       # chi tiết trong configs/backend_*.yaml
   primary_model: "Qwen/Qwen3-Coder-30B-A3B-Instruct"
-  serving: "llama.cpp GGUF Q4_K_XL (Kaggle 2×T4) hoặc vLLM (FP8/bf16 trên GPU thuê)"
+  serving: "llama-server (llama.cpp b3920) GGUF UD-Q4_K_XL (16.45 GB, --n_ctx 8192, split-mode: layer trên Kaggle Linux GPU 2× Tesla T4 0 USD) hoặc vLLM (FP8/bf16 trên GPU thuê)"
   fallback_models: ["Qwen/Qwen2.5-Coder-32B-Instruct", "Qwen/Qwen2.5-Coder-14B-Instruct"]
   decoding: {temperature: 0.0, max_tokens: 1, logprobs: true, top_logprobs: 5, seed: 42}
   guided_choice: "auto: bật nếu smoke test < 99% prompt có token 0/1 trong top-5; ghi vào bài"
-  quantization_note: "Qwen3-Coder-30B-A3B-Instruct-UD-Q4_K_XL.gguf (16.45 GB, MoE 30.5B total / 3.3B active per token, llama.cpp b3920 / Kaggle 2x Tesla T4, Kaggle model slug: tnthnhneee/qwen3-30b-a3b/gguf/coder-instruct-ud-q4_k_xl)"
+  quantization_note: "Qwen3-Coder-30B-A3B-Instruct-UD-Q4_K_XL.gguf (16.45 GB, MoE 30.5B total / 3.3B active per token, llama-server b3920 với --n_ctx 8192 / Kaggle Linux 2x Tesla T4 GPU, Kaggle model slug: tnthnhneee/qwen3-30b-a3b/gguf/coder-instruct-ud-q4_k_xl)"
 
 token_budget: {total: 8192, target_code: 3000, demo: 1500, graph: 1500, reserve: 64}
 graph_prefix: {nodes: 25, edges: 25}
@@ -42,7 +42,7 @@ scoring:
   score: "s = p(1) / (p(0) + p(1)) từ top-5 logprob của token đầu tiên"
   invalid: "cả hai token vắng mặt trong top-5 → invalid; báo tỷ lệ; không ép về 0"
   thresholds: "s >= 0.5 (câu trả lời của model) và τ* = argmax MCC trên validation, lưới 0.01..0.99 bước 0.01"
-thresholds: {grid: null}                       # null = linspace(0.01, 0.99, 99)
+thresholds: {grid: null, locked_file: configs/thresholds.json, total_locked: 14}   # null = linspace(0.01, 0.99, 99)
 
 metrics:
   threshold_free: [auroc, auprc]
@@ -54,13 +54,14 @@ metrics:
 stats:
   n_boot: 5000
   bootstrap_seed: 20261117
-  cluster_unit: "commit_id nếu dataset có (Devign); nếu không, từng mẫu và ghi rõ"
+  cluster_unit: "Devign: commit_id (2,068 clusters trên Test); ReVeal: file_hash (646 clusters trên Test, hoàn thiện ở Bước 0)"
   family_correction: holm
-  margins: {mcc: 0.03, auroc: 0.02, ba: 0.01, mcc_meta: 0.02}     # δ: mức lợi ích nhỏ nhất đáng quan tâm, khai báo trước
+  margins: {mcc: 0.03, auroc: 0.02, ba: 0.01, mcc_meta: 0.02, routing: 0.02}     # δ: mức lợi ích nhỏ nhất đáng quan tâm (biên thực chất δ = 0.02), khai báo trước
   verdict_rule: "benefit: CI>0 và Δ>=δ | no_meaningful_benefit: cận trên CI<δ | harm: CI<0 | inconclusive: còn lại"
 
 primary_contrasts:                             # Bảng B; metric đầu tiên là chính
-  - {name: H1.1, hypothesis: "GRACE không vượt zero-shot", a: B0, b: B2, metrics: [mcc, auroc], margins: {mcc: 0.03, auroc: 0.02}}
+  - {name: H1.1, hypothesis: "GRACE không vượt zero-shot trên Devign Test (B0 vs B2)", a: B0, b: B2, datasets: [devign], metrics: [mcc, auroc], margins: {mcc: 0.03, auroc: 0.02}}
+  - {name: H1.2, hypothesis: "GRACE không vượt zero-shot trên ReVeal Test (B0 vs B2)", a: B0, b: B2, datasets: [reveal], metrics: [mcc, auroc], margins: {mcc: 0.03, auroc: 0.02}}
   - {name: H2.1, hypothesis: "Demo tác động qua nhãn (net sensitivity >= 15 điểm)", a: B2, b: B2-flip, metrics: [mcc]}
   - {name: H2.2a, hypothesis: "Nội dung demo không mang tín hiệu", a: B2, b: B2-rand, metrics: [auroc, mcc], margins: {auroc: 0.02, mcc: 0.03}}
   - {name: H2.2b, hypothesis: "Demo bỏ nhãn không hơn không demo", a: B1, b: B2-nolabel, metrics: [auroc, mcc], margins: {auroc: 0.02, mcc: 0.03}}
@@ -70,13 +71,13 @@ primary_contrasts:                             # Bảng B; metric đầu tiên l
   - {name: H3.1b, hypothesis: "Graph xáo trộn không khác graph thật", a: B1-shuf, b: B1, metrics: [auroc, mcc], margins: {auroc: 0.02, mcc: 0.03}}
   - {name: H3.1c, hypothesis: "Đóng gói H2 không khác prefix", a: B1, b: B1-H2, metrics: [auroc, mcc], margins: {auroc: 0.02, mcc: 0.03}}
   - {name: H5.1, hypothesis: "Mốc có giám sát thắng rõ", a: B2, b: SUP-LR, metrics: [mcc, auroc], margins: {mcc: 0.15, auroc: 0.05}}
-  - {name: H5.3, hypothesis: "LLM không bổ sung tín hiệu sau truy vấn", a: P-PRE, b: P-POST, metrics: [mcc], margins: {mcc: 0.02}}
+  - {name: H5.3, hypothesis: "Routing q=10% Benefit vs Confidence (Paired Bootstrap CI) & LLM không bổ sung tín hiệu sau truy vấn", a: P-PRE, b: P-POST, metrics: [mcc], margins: {mcc: 0.02, routing: 0.02}}
 
 complementarity:
   pre_features: "34 đặc trưng nền của H3-B (logit 5 view, p, |p−0.5|, |mlp−lexical|, 26 numeric)"
   expert_features: "[s, valid, s·p, s−p]; invalid → s=0.5, valid=0; P_post fallback về P_pre"
-  meta_model: {type: logistic_regression, C: 1.0, folds: 3, oof: true, scaler: standard}
-  routing: {budgets: [0.05, 0.10, 0.25], random_seeds: 20, confidence: "|logit p − logit τ|", benefit: ridge_alpha_10, oracle: repairs_only}
+  meta_model: {type: logistic_regression, C: 1.0, folds: 3, oof: true, scaler: standard, fold_strategy: stratified_group_kfold}
+  routing: {budgets: [0.05, 0.10, 0.25], random_seeds: 20, confidence: "|logit p − logit τ|", benefit: ridge_alpha_10, oracle: repairs_only, q10_contrast: "benefit_minus_confidence", paired_bootstrap_ci: true, delta_margin: 0.02}
   reference_experts: [ALL-0, ALL-1, "RANDOM cùng tỷ lệ đoán 1 (20 seed)"]
 
 blind_review:

@@ -40,3 +40,14 @@ Mọi thay đổi cần được ghi rõ:
   - `tests/test_step5_matrix_execution.py`: Bổ sung unit test `test_backend_fail_fast_on_bad_request_or_context_exceeded`.
 - **Tác động tới các giả thuyết H1.1–H6.1:** Không thay đổi bất kỳ giả thuyết hay phân bổ ngân sách nào; đưa tỷ lệ invalid_rate trên Devign B2 từ 4.39% về 0.0%, bảo toàn 100% 2,732 cặp mẫu cho các phép kiểm định thống kê H1.1 (McNemar, Paired Bootstrap).
 
+### [step4-prereg-v1-ratification] — 2026-11-02
+- **Mục tiêu:** Hoàn thiện trọn vẹn Bước 4 (Đăng ký trước / Preregistration) theo Đề cương hợp nhất và các điểm hiệu chỉnh từ bản Audit của Giảng viên hướng dẫn.
+- **Tệp bị ảnh hưởng:**
+  - `preregistration.md`: Chuẩn hóa provenance mô hình chính thức là `Qwen3-Coder-30B-A3B-Instruct` (UD-Q4_K_XL, 16.45 GB, `llama-server` `--n_ctx 8192`, Kaggle Linux GPU 2x T4 0 USD); định nghĩa đơn vị gom nhóm (Devign: 2,068 commit groups; ReVeal: 646 file hash groups, hoàn thiện ở Bước 0); khóa chặt chẽ giả thuyết khoa học H1.1, H1.2, H5.3 (routing q=10% benefit vs confidence paired bootstrap CI) với quy tắc quyết định biên thực chất $\delta = 0.02$; đồng bộ 14 ngưỡng tối ưu $\tau^*$ đã khóa từ Validation trong `configs/thresholds.json`; cập nhật 669/669 tests xanh (100%).
+  - `configs/protocol.yaml` & `grace_diag_kit/configs/protocol.yaml`: Đồng bộ định danh backend `Qwen3-Coder-30B-A3B-Instruct`, cluster units, primary contrasts H1.1 (Devign), H1.2 (ReVeal), H5.3 (Routing q=10% Benefit vs Confidence), references tới `configs/thresholds.json`.
+  - `configs/thresholds.json`: Đồng bộ `protocol_sha256` khớp với chữ ký SHA-256 mới của `configs/protocol.yaml`.
+  - `AUDIT_README.md`: Chuẩn hóa mô hình suy luận `Qwen3-Coder-30B-A3B-Instruct` và cập nhật quy mô bộ kiểm thử tự động 664 tests.
+  - `tests/test_preregistration_integrity.py` (tạo mới): Bài kiểm thử tự động xác nhận tính toàn vẹn và nhất quán của toàn bộ cấu hình preregistration.
+- **Tác động tới các giả thuyết H1.1–H6.1:** Khóa bất biến 100% toàn bộ tiêu chí phán quyết khoa học và thông số thực nghiệm trước khi mở tập Test, ngăn chặn tuyệt đối thiên vị p-hacking và rò rỉ dữ liệu.
+
+

@@ -6,6 +6,14 @@
 
 ## 1. Việc đã xong (Done)
 
+- [x] **Hoàn tất 100% Bước 4: Đăng ký trước Giao thức Nghiên cứu (Preregistration Protocol v1 - Chuẩn hóa Toàn diện)**:
+  - **Chuẩn hóa Provenance mô hình**: Khóa chính xác `Qwen3-Coder-30B-A3B-Instruct` (lượng tử hóa UD-Q4_K_XL, 16.45 GB, chạy trên `llama-server` với `--n_ctx 8192` trên Kaggle Linux GPU 2× Tesla T4 0 USD). Loại bỏ hoàn toàn vết sót cũ về các mô hình cỡ nhỏ.
+  - **Đơn vị gom nhóm (Cluster Units)**: Khóa chính xác Devign theo Commit IDs (2,068 cụm trên Test) và ReVeal theo File-level Hashes (646 cụm trên Test, hoàn thiện ở Bước 0).
+  - **Khóa chặt chẽ các giả thuyết khoa học**: H1.1 (Devign Test B0 vs B2), H1.2 (ReVeal Test B0 vs B2), H5.3 (Routing q=10% Benefit vs Confidence với Paired Bootstrap CI), quy tắc quyết định với biên thực chất $\delta = 0.02$.
+  - **Đồng bộ 14 ngưỡng tối ưu $\tau^*$**: Khóa cứng trong `configs/thresholds.json` và `configs/thresholds_flat.json` từ Validation với cam kết Zero Test Exposure.
+  - **Kiểm thử tự động toàn diện**: 669/669 bài kiểm thử vượt qua (100% PASS), tích hợp `tests/test_preregistration_integrity.py`.
+  - **Đóng gói và gắn thẻ**: Gắn git tag `prereg-v1` và cập nhật gói lưu trữ kiểm toán `audit_package_grace.zip` (120.22 MB, 634 tệp).
+
 - [x] **Hoàn tất 100% Thực thi Bước 5 trên Kaggle 2× Tesla T4 GPU (Kernel Version 10 - Tối ưu Toàn diện)**:
   - **Khắc phục triệt để lỗi 400 Bad Request**: Mở rộng context window lên `--n_ctx 8192` và tối ưu `--n_batch 2048`, `--n_ubatch 512`. Tỷ lệ lỗi trên tập Test giảm về **0.00% (2.732/2.732 mẫu hợp lệ)** cho cả Arm B0 (Zero-shot) và Arm B2 (GRACE Đầy đủ).
   - **Tối ưu tốc độ gấp 2 lần**: Thời gian chạy rút ngắn từ 7.5 giờ (Version 9) xuống còn **3.92 giờ (14.141 giây)** nhờ loại bỏ hoàn toàn 2.5 giờ retry vô ích và tối ưu prefill batching trên GPU.

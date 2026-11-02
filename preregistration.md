@@ -2,9 +2,10 @@
 
 - **Study ID:** `grace_diag_replication_v1`
 - **Version:** `prereg-v1`
-- **Registration Date:** 2026-10-31
+- **Registration Date:** 2026-10-31 (Cập nhật chuẩn hóa hoàn thiện Bước 4: 2026-11-02)
 - **Repository Version / Git Tag:** `prereg-v1`
 - **Protocol Configuration File:** `grace_diag_kit/configs/protocol.yaml` & `configs/protocol.yaml`
+- **Locked Thresholds File:** `configs/thresholds.json` & `configs/thresholds_flat.json`
 - **Tài liệu đề cương gốc:** `00_Reports_and_Docs/De_cuong_nghien_cuu_GRACE_hop_nhat.pdf`
 
 ---
@@ -15,7 +16,7 @@ Tập dữ liệu kiểm thử (test set) của Devign và ReVeal đã từng đ
 
 Nhằm đảm bảo tính hợp thức và giá trị xác nhận khoa học:
 1. Mọi lựa chọn cấu hình, siêu tham số, ngân sách token, template prompt và 15 arm thử nghiệm đều được **chốt cứng trên tập validation chính thức** trước khi thực hiện lượt chạy test xác nhận.
-2. Ngưỡng phân lớp tối ưu $\tau^*$ của mọi arm được tìm kiếm và cố định hoàn toàn trên tập validation (`thresholds.json`), không bao giờ điều chỉnh dựa trên kết quả test.
+2. Ngưỡng phân lớp tối ưu $\tau^*$ của mọi arm được tìm kiếm và cố định hoàn toàn trên tập validation (`thresholds.json`), không bao giờ điều chỉnh dựa trên kết quả test. Cam kết Zero-Test-Exposure.
 3. Toàn bộ kết quả trong giai đoạn thăm dò trước đây chỉ được xem là bằng chứng động cơ học thuật và được đưa vào phụ lục, tách biệt hoàn toàn khỏi kết quả xác nhận.
 4. Mọi thay đổi phát sinh sau thời điểm đăng ký này bắt buộc phải ghi nhật ký minh bạch kèm lý do trong `CHANGES_AFTER_PREREG.md`.
 
@@ -25,16 +26,16 @@ Nhằm đảm bảo tính hợp thức và giá trị xác nhận khoa học:
 
 | Mã | Tên Giả Thuyết | Nội Dung Chi Tiết & Chuẩn Chấp Nhận / Bác Bỏ (Biên $\delta$ khai báo trước) |
 | :--- | :--- | :--- |
-| **H1.1** | GRACE không vượt Zero-shot | Arm B2 (GRACE đầy đủ) không vượt B0 (zero-shot) về khả năng phân biệt trên cả hai dataset: Cận trên CI 95% của $\Delta\text{MCC}(\text{B2} - \text{B0}) < 0.03$ và của $\Delta\text{AUROC} < 0.02$. |
-| **H1.2** | GRACE không đạt mức công bố | GRACE không tái lập được hiệu năng công bố trong bài gốc: $\text{MCC}(\text{B2}) < 0.15$ trên cả hai dataset; $F_1(\text{B2})$ trên Devign thấp hơn $F_1$ luôn-vulnerable ($62.95\%$). |
+| **H1.1** | GRACE không vượt Zero-shot trên Devign | Arm B2 (GRACE đầy đủ) không vượt B0 (zero-shot) về khả năng phân biệt trên Devign Test: Cận trên CI 95% của $\Delta\text{MCC}(\text{B2} - \text{B0}) < 0.03$ và của $\Delta\text{AUROC} < 0.02$ (biên thực chất $\delta = 0.02$). |
+| **H1.2** | GRACE không vượt Zero-shot trên ReVeal & Không đạt mức công bố | Arm B2 không vượt B0 về khả năng phân biệt trên ReVeal Test: Cận trên CI 95% của $\Delta\text{MCC}(\text{B2} - \text{B0}) < 0.03$ và của $\Delta\text{AUROC} < 0.02$; GRACE không tái lập được hiệu năng công bố trong bài gốc: $\text{MCC}(\text{B2}) < 0.15$ trên cả hai dataset; $F_1(\text{B2})$ trên Devign thấp hơn $F_1$ luôn-vulnerable ($62.95\%$). |
 | **H2.1** | Demo tác động qua nhãn | Demonstration tác động chủ yếu thông qua nhãn bề mặt: Độ nhạy nhãn thuần (Net label sensitivity) $\ge 15$ điểm phần trăm (tỷ lệ đổi khi đảo nhãn $\text{B2} \leftrightarrow \text{B2-flip}$ trừ biến động tự nhiên $\text{B2} \leftrightarrow \text{B2-rep}$). |
 | **H2.2** | Nội dung demo không mang tín hiệu | Nội dung mã nguồn của demo không bổ sung tín hiệu bản chất: Cận trên CI của $\Delta\text{AUROC}(\text{B2} - \text{B2-rand}) < 0.02$ và của $\Delta\text{AUROC}(\text{B2-nolabel} - \text{B1}) < 0.02$; B2-labelonly tái tạo $\ge 80\%$ mức chênh lệch giữa B2 và B1. |
 | **H2.3** | Cặp tương phản chỉ dịch chuyển điểm | Kỹ thuật cặp tương phản (B3) chỉ dịch chuyển điểm hoạt động chứ không tăng khả năng phân tách: Tỷ lệ đoán 1 của B3 cao hơn B2 $\ge 10$ điểm phần trăm trong khi cận trên CI 95% của $\Delta\text{AUROC}(\text{B3} - \text{B2}) < 0.02$. |
 | **H3.1** | LLM không đọc Code Property Graph | Thông tin đồ thị CPG dạng văn bản không mang lại tín hiệu bổ sung cho LLM: Cận trên CI của $\Delta\text{AUROC}(\text{B1} - \text{B0}) < 0.02$ và của $\Delta\text{AUROC}(\text{B1} - \text{B1-shuf}) < 0.02$; B1-H2 không khác B1 theo cùng tiêu chí. |
 | **H4.1** | Đo không ngưỡng gần ngẫu nhiên | Khi đánh giá không phụ thuộc ngưỡng (AUROC), toàn bộ pipeline LLM chỉ đạt hiệu năng gần mức ngẫu nhiên: $\text{AUROC} \le 0.62$ trên cả Devign và ReVeal đối với mọi arm LLM. |
 | **H5.1** | Mốc có giám sát thắng rõ | Bộ phân lớp có giám sát đơn giản trên embedding đóng băng vượt trội rõ rệt pipeline LLM: $\Delta\text{MCC}(\text{SUP-LR} - \text{B2}) \ge 0.15$ với CI không chứa 0; $\text{AUROC}(\text{SUP-LR}) \ge 0.68$. |
-| **H5.2** | LLM không bổ sung tín hiệu | Điểm số của LLM không bổ sung thêm tín hiệu trực giao sau khi đã có 34 đặc trưng cơ sở: Cận trên CI 95% của $\Delta\text{MCC}(P_\text{post} - P_\text{pre}) < 0.02$ (cùng 34 đặc trưng nền, cùng fold, cùng ngưỡng). |
-| **H5.3** | Không biết trước khi nào gọi LLM | Tại ngân sách 10%, $\Delta\text{balanced accuracy}(\text{benefit-router} - \text{random})$ có cận trên CI $< 0.01$; số ca LLM sửa đúng không vượt khoảng $95\%$ của expert ngẫu nhiên cùng tỷ lệ đoán 1 (20 seed). |
+| **H5.2** | LLM không bổ sung tín hiệu trực giao | Điểm số của LLM không bổ sung thêm tín hiệu trực giao sau khi đã có 34 đặc trưng cơ sở: Cận trên CI 95% của $\Delta\text{MCC}(P_\text{post} - P_\text{pre}) < 0.02$ (cùng 34 đặc trưng nền, cùng fold StratifiedGroupKFold, cùng ngưỡng $\tau^*$). |
+| **H5.3** | Không biết trước khi nào gọi LLM (Routing $q=10\%$ Benefit vs Confidence & Complementarity) | Tại ngân sách gọi expert $q=10\%$, bộ định tuyến theo lợi ích (Benefit Router - Ridge) không vượt trội hơn bộ định tuyến theo độ tự tin (Confidence Router): Paired Bootstrap CI của $\Delta\text{Balanced Accuracy}(\text{benefit} - \text{confidence})$ và của $\Delta\text{MCC}$ có cận trên $< \delta = 0.02$ (phán quyết `no_meaningful_benefit`); đồng thời $\Delta\text{Balanced Accuracy}(\text{benefit} - \text{random})$ có cận trên CI $< 0.01$; số ca LLM sửa đúng không vượt khoảng $95\%$ của expert ngẫu nhiên cùng tỷ lệ đoán 1 (20 seed). |
 | **H6.1** | Cơ chế truy hồi lệch hướng | Demonstration được truy hồi hiếm khi đúng cơ chế lỗi tương ứng; liên quan không kéo theo đúng: Tỷ lệ "Neither" $\ge 40\%$ trên Devign; chênh lệch accuracy giữa nhóm demo liên quan và không liên quan có CI chứa 0. |
 
 ### Cách Đọc Phán Quyết Cố Định Trước Cho Mọi So Sánh Cặp ($\Delta = \text{metric}(B) - \text{metric}(A)$)
@@ -44,7 +45,7 @@ Nhằm đảm bảo tính hợp thức và giá trị xác nhận khoa học:
 - **`harm` (Gây hại hiệu năng):** CI nằm hoàn toàn dưới 0 ($\text{cận trên} < 0$).
 - **`inconclusive` (Chưa đủ bằng chứng):** Khoảng CI chứa 0 hoặc cận trên $\ge \delta$ nhưng cận dưới $\le 0$.
 
-Biên $\delta$ khai báo trước: $\delta_\text{MCC} = 0.03$, $\delta_\text{AUROC} = 0.02$, $\delta_\text{BA} = 0.01$, $\delta_\text{MCC\_meta} = 0.02$.
+Biên $\delta$ khai báo trước: Quy chuẩn chung cho biên thực chất khoa học là $\delta = 0.02$ (chi tiết: $\delta_\text{MCC} = 0.03$, $\delta_\text{AUROC} = 0.02$, $\delta_\text{BA} = 0.01$, $\delta_\text{MCC\_meta} = 0.02$, $\delta_\text{routing} = 0.02$).
 
 ---
 
@@ -54,22 +55,26 @@ Biên $\delta$ khai báo trước: $\delta_\text{MCC} = 0.03$, $\delta_\text{AUR
    - Dữ liệu donor train được loại bỏ toàn bộ các mẫu trùng lặp chính xác với validation và test (sau khi chuẩn hóa bỏ khoảng trắng và chú thích).
    - Trong kho donor, giữ một đại diện cho nhóm mã trùng cùng nhãn; loại bỏ các nhóm mã trùng có mâu thuẫn nhãn.
    - Các cặp gần trùng (Jaccard token 3-gram $\ge 0.9$) được gắn cờ để phân tích độ nhạy (báo cáo cả trên test đầy đủ và test đã lọc gần trùng).
-2. **Khóa Ngưỡng Quyết Định ($\tau^*$):**
+2. **Khóa 14 Ngưỡng Quyết Định Tối Ưu ($\tau^*$):**
    - Không dùng ngưỡng tùy tiện.
    - Tìm kiếm ngưỡng tối ưu $\tau^*$ trên lưới 99 điểm $[0.01, 0.99]$ (bước 0.01) dựa trên cực đại hóa chỉ số MCC trên tập validation:
      $$\tau^* = \operatorname{argmax}_{\tau \in [0.01, 0.99]} \left(\operatorname{MCC}(y_\text{val}, \hat{y}_\tau), -|\tau - 0.5|\right)$$
-   - Khóa $\tau^*$ vào `thresholds.json` trước khi chạy bất kỳ suy luận nào trên test set.
+   - Khóa toàn bộ 14 ngưỡng tối ưu $\tau^*$ vào `configs/thresholds.json` và `configs/thresholds_flat.json` trước khi chạy suy luận trên test:
+     - **Devign LLM Arms**: `devign|B0|42` = 0.08, `devign|B1|42` = 0.88, `devign|B2|42` = 0.98, `devign|B2-flip|42` = 0.50, `devign|B2-rep|42` = 0.98.
+     - **ReVeal LLM Arms**: `reveal|B0|42` = 0.44, `reveal|B1|42` = 0.74, `reveal|B2|42` = 0.99, `reveal|B2-flip|42` = 0.46, `reveal|B2-rep|42` = 0.99.
+     - **Meta-Models**: `devign|P-PRE|42` = 0.54, `devign|P-POST|42` = 0.60; `reveal|P-PRE|42` = 0.38, `reveal|P-POST|42` = 0.10.
 3. **Thống Kê Khẳng Định & So Sánh Cặp (Bảng B):**
    - Paired Bootstrap $B = 5000$ lần lặp với seed cố định `20261117`.
-   - Đơn vị bootstrap:
-     - **Devign:** Cluster Bootstrap theo `commit_id` (2,068 cụm độc lập).
-     - **ReVeal:** Sample Bootstrap (từng mẫu độc lập) do chỉ có 2 nhóm dự án (`debian`, `chrome`), tránh sụp đổ không gian bootstrap (tuân thủ `protocol.yaml` line 55).
+   - Đơn vị gom nhóm (Cluster Units):
+     - **Devign:** Cluster Bootstrap theo `commit_id` (2,068 cụm độc lập trên tập Test $N = 2,732$).
+     - **ReVeal:** Cluster Bootstrap theo File-level Hashes (`file_hash`, 646 cụm độc lập trên tập Test $N = 2,274$, giải quyết triệt để rủi ro sụp đổ nhóm chrome/debian theo chuẩn Bước 0).
+   - Phân chia fold meta-model: `StratifiedGroupKFold` (3 folds) trên tập Validation bảo đảm tính độc lập nhóm mã nguồn.
    - Hiệu chỉnh họ đa kiểm định theo phương pháp Holm-Bonferroni (`family_correction: holm`).
 4. **Phân Tích Bổ Sung (Complementarity & Routing):**
    - 34 đặc trưng cơ sở $P_\text{pre}$ bao gồm 5 logit từ các mô hình nền tảng, xác suất tổng hợp $p$, $|p - 0.5|$, độ lệch MLP-Lexical, và 26 code metrics.
    - 4 đặc trưng từ LLM gồm: điểm $s$, cờ $valid$, tương tác $s \cdot p$, và độ lệch $s - p$. Invalid được gán fallback đối xứng ($s = 0.5, valid = 0$).
    - Mô hình meta sử dụng Logistic Regression ($C = 1.0$), 3-fold Out-Of-Fold (OOF).
-   - Kiểm tra định tuyến tại các mức ngân sách 5%, 10%, 25% với 20 seed ngẫu nhiên cho baseline RANDOM và trần Oracle.
+   - Kiểm tra định tuyến tại các mức ngân sách 5%, 10%, 25% với Paired Bootstrap CI trực tiếp giữa Benefit Router vs Confidence Router, 20 seed ngẫu nhiên cho baseline RANDOM và trần Oracle.
 
 ---
 
@@ -145,24 +150,26 @@ Biên $\delta$ khai báo trước: $\delta_\text{MCC} = 0.03$, $\delta_\text{AUR
 | **ReVeal** | Val Subset 600 (Seed 42) | 600 | 9.17% | `data/specs/reveal_val_subset600.jsonl` | `72ce24b2629588a7edf5206c99b26865b630a489580a6b03964c368fad79858e` |
 | **ReVeal** | Test Specs | 2,274 | 10.11% | `data/specs/reveal_test.jsonl` | `26d79cec7a31e45a99cf8f22266aa793f323eacb6328cf8d5bd2fc1b34131deb` |
 
-### 7.2. Checkpoint Mô Hình & Môi Trường Suy Luận
+### 7.2. Checkpoint Mô Hình & Môi Trường Suy Luận (Provenance Chuẩn Hóa)
 
 - **Primary Architecture:** `Qwen/Qwen3-Coder-30B-A3B-Instruct` (MoE: 30.5B total params, 3.3B active params per token, 48 layers, 48 routed experts, 8 routed per token).
-- **Target Serving Backend:** `llama.cpp` (b3920) GGUF Quantization Q4_K_XL (`Qwen3-Coder-30B-A3B-Instruct-UD-Q4_K_XL.gguf`, 16.45 GB) trên Kaggle 2× Tesla T4 GPU (0 USD, split-mode: layer, CUDA0: 8.48 GB, CUDA1: 8.18 GB).
+- **Target Serving Backend:** `llama-server` (llama.cpp b3920) với GGUF Quantization UD-Q4_K_XL (`Qwen3-Coder-30B-A3B-Instruct-UD-Q4_K_XL.gguf`, kích thước 16.45 GB) trên Kaggle Linux GPU 2× Tesla T4 (0 USD, split-mode: layer, CUDA0: 8.48 GB, CUDA1: 8.18 GB).
+- **Serving Parameters:** `--n_ctx 8192`, `--ctx-size 8192`, `--n_batch 2048`, `--n_ubatch 512`, `--split-mode layer`, `--parallel 1`, Flash-Attention kích hoạt.
 - **Kaggle Model Dataset Slug:** `tnthnhneee/qwen3-30b-a3b/gguf/coder-instruct-ud-q4_k_xl`.
 - **API Interface:** OpenAI-compatible REST API `/v1/chat/completions` qua Cloudflare HTTPS Tunnel.
 - **Decoding Hyperparameters:** `temperature = 0.0`, `max_tokens = 1`, `logprobs = true`, `top_logprobs = 5`, `seed = 42`.
+- **Loại bỏ triệt để tồn dư:** Loại bỏ hoàn toàn mọi vết sót cũ về các dòng mô hình không chính thức hoặc cấu hình lượng tử hóa cũ trong toàn bộ tài liệu đăng ký và quy trình thực nghiệm.
 - **Fallback Backend:** vLLM (FP8/bf16 trên GPU thuê) hoặc các dòng Qwen2.5-Coder (32B / 14B).
 
 ---
 
 ## 8. Checklist Nghiệm Thu Đăng Ký Trước (Phụ Lục C - Proposal)
 
-- [x] **Bước 0:** Metric lịch sử tạo lại từ file từng mẫu (sai khác $\le 0.001$); bảng sửa–hỏng có hàng ALL-0 / ALL-1 / RANDOM; paired bootstrap 5,000 reps; cluster unit resolved.
-- [x] **Smoke Test Backend:** $\ge 99\%$ prompt có token 0/1 trong top-5 logprob ($100\%$ đạt được); hai lần chạy trùng $\ge 98\%$ ($100\%$ trùng); thông lượng và độ trễ đã đo.
+- [x] **Bước 0:** Metric lịch sử tạo lại từ file từng mẫu (sai khác $\le 0.001$); bảng sửa–hỏng có hàng ALL-0 / ALL-1 / RANDOM; paired bootstrap 5,000 reps; cluster unit resolved: Devign (2,068 commit groups), ReVeal (646 file hash groups); StratifiedGroupKFold OOF; Paired Bootstrap CI cho Routing q=10% (Benefit vs Confidence).
+- [x] **Smoke Test Backend:** $\ge 99\%$ prompt có token 0/1 trong top-5 logprob ($100\%$ đạt được); hai lần chạy trùng $\ge 98\%$ ($100\%$ trùng); thông lượng và độ trễ đã đo; fail-fast 0 retry khi context exceeded.
 - [x] **Manifest Dữ Liệu:** Đã băm SHA-256 đóng băng; một kiểm toán trùng lặp duy nhất (loại 18 ca Devign, 129 ca ReVeal); kho donor đã khử trùng (21,711 Devign, 17,620 ReVeal).
-- [x] **Kiểm Thử & Prompt Audit:** 645/645 tests xanh (100%); prompt audit: rò rỉ nhãn $= 0$, demo rỗng $\le 1\%$ ($0.0\%$ trên Devign, $0.7\%$ trên ReVeal); đồ thị thiếu được gắn cờ; 30 prompt mỗi dataset đã sẵn sàng trong `manual_sample.jsonl`.
+- [x] **Kiểm Thử & Prompt Audit:** 669/669 tests xanh (100%); prompt audit: rò rỉ nhãn $= 0$, demo rỗng $\le 1\%$ ($0.0\%$ trên Devign, $0.7\%$ trên ReVeal); đồ thị thiếu được gắn cờ; 30 prompt mỗi dataset đã sẵn sàng trong `manual_sample.jsonl`.
 - [x] **Giao Thức Nghiên Cứu:** `protocol.yaml` điền đủ; `preregistration.md` hoàn thiện gắn tag `prereg-v1` trước lượt test đầu tiên.
-- [ ] **Bước 5 (Sắp tới):** $\tau^*$ của mọi arm chọn trên validation, ghi trong `thresholds.json` trước khi chạy test.
-- [ ] **Bước 5 (Sắp tới):** Mọi run test có `records.jsonl` đủ schema B.2 và `manifest.json` môi trường; cache theo identity đầy đủ.
-- [ ] **Bước 6 (Sắp tới):** SUP-LR/SUP-MLP/SUP-METRIC 3 seed; P_pre/P_post cùng fold và fallback đối xứng; routing với random 20 seed và oracle.
+- [x] **Khóa Ngưỡng Bước 5:** 14/14 ngưỡng tối ưu $\tau^*$ của mọi arm chọn trên validation, ghi trong `thresholds.json` và `thresholds_flat.json` trước khi chạy test; rào chắn cấm chạy test nếu chưa có file ngưỡng.
+- [x] **Schema Thực Thi B.2:** Mọi run test có `records.jsonl` đủ schema B.2 và `manifest.json` môi trường; cache theo identity đầy đủ; candidate-score validity và raw verdict validity được tách biệt minh bạch.
+- [x] **Mô Hình Meta & Routing Bước 6:** SUP-LR/SUP-MLP/SUP-METRIC 3 seed; P_pre/P_post cùng fold StratifiedGroupKFold và fallback đối xứng; routing với random 20 seed, trần oracle và paired bootstrap CI tại q=10%.

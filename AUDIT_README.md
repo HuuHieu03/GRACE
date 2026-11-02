@@ -52,8 +52,8 @@ Toàn bộ các tài liệu do Thầy gửi cho nhóm nghiên cứu đều đư�
 | `grace_diag_kit/` | **Bộ công cụ chẩn đoán chuẩn hóa**: Đã tích hợp các module `probes.py`, `stats.py`, `token_budget.py`, `prompt_audit.py`, script `run_matrix.py` và từ điển BPE tokenizer. |
 | `scripts/` | **Tập lệnh vận hành**: Chạy Bước 0 offline (`run_step0_offline_diagnostic.py`), tạo dữ liệu specs (`build_specs.py`), kiểm tra tuân thủ hợp đồng (`verify_stage4_contracts.py`), đánh giá kết quả (`evaluate_runs.py`), tải artifacts Kaggle (`download_v10_artifacts.py`). |
 | `configs/` | **Tệp cấu hình khóa (Locked configs)**: `protocol.yaml` (giao thức), `arms.yaml` (định nghĩa 14 nghiệm thức), `thresholds.json` (bảng khóa ngưỡng từ validation), `backend_kaggle.yaml` (cấu hình LLM backend). |
-| `tests/` | **111 bài kiểm thử tự động (Pytest)**: Kiểm toán tuân thủ hợp đồng dữ liệu, ngăn ngừa rò rỉ mã nguồn (code leakage), kiểm định tính chính xác của công thức thống kê (Bootstrap, McNemar). |
-| `kaggle_notebooks/` | **Môi trường tái lập trên Cloud**: Notebook `host_llm_kaggle_server.ipynb` triển khai `llama-server` (Qwen2.5-Coder-7B-Instruct-GGUF) và chạy ma trận suy luận tự động. |
+| `tests/` | **669 bài kiểm thử tự động (Pytest)**: Kiểm toán tuân thủ hợp đồng dữ liệu, ngăn ngừa rò rỉ mã nguồn (code leakage), kiểm định tính chính xác của công thức thống kê (Bootstrap, McNemar). |
+| `kaggle_notebooks/` | **Môi trường tái lập trên Cloud**: Notebook `host_llm_kaggle_server.ipynb` triển khai `llama-server` (`Qwen3-Coder-30B-A3B-Instruct`, UD-Q4_K_XL, 16.45 GB, `--n_ctx 8192`) và chạy ma trận suy luận tự động. |
 | `01_Reproduce_Notebooks/` | **Notebooks tái lập Baseline**: Devign, ReVeal và mô phỏng Stage 5 Contrastive. |
 | `02_Baseline_Code_Author/` | **Mã nguồn tác giả gốc**: Toàn bộ script Python gốc của tác giả trong `author_original_scripts/` và `baseline_code_text/`. |
 | `data/b0_offline_dungs_data/`| **Dữ liệu Bước 0 offline**: Lưu trữ dự đoán của mô hình và nhãn gốc của Devign & ReVeal, cho phép kiểm toán Bước 0 tức thì. |
@@ -68,7 +68,7 @@ Toàn bộ các tài liệu do Thầy gửi cho nhóm nghiên cứu đều đư�
 
 ## 4. Tóm Tắt Kết Quả Thực Nghiệm Chính Thức (Version 10 Run)
 
-Thực nghiệm Version 10 được thực hiện trên tập kiểm thử **Devign Test ($N = 2,732$ mẫu)** với mô hình suy luận `Qwen2.5-Coder-7B-Instruct-GGUF` (Q4_K_M) trên GPU T4 kép của Kaggle, giải quyết triệt để lỗi tràn ngữ cảnh (`--n_ctx 8192`) và lỗi định dạng.
+Thực nghiệm Version 10 được thực hiện trên tập kiểm thử **Devign Test ($N = 2,732$ mẫu)** với mô hình suy luận `Qwen3-Coder-30B-A3B-Instruct` (lượng tử hóa UD-Q4_K_XL, kích thước 16.45 GB, chạy trên `llama-server` với `--n_ctx 8192`) trên GPU T4 kép của Kaggle, giải quyết triệt để lỗi tràn ngữ cảnh và lỗi định dạng.
 
 ### Bảng A: Hiệu Năng Tại Ngưỡng Tối Ưu Khóa Từ Tập Validation ($\tau^*$)
 
@@ -99,7 +99,7 @@ Thực nghiệm Version 10 được thực hiện trên tập kiểm thử **Dev
 ```bash
 pytest tests/ -v
 ```
-Toàn bộ 111 bài test sẽ vượt qua (PASS), xác nhận tính toàn vẹn của mã nguồn và thuật toán thống kê.
+Toàn bộ 669 bài test sẽ vượt qua (PASS), xác nhận tính toàn vẹn của mã nguồn và thuật toán thống kê.
 
 ### Bước 2: Tái lập kiểm định Bước 0 Offline (Step 0)
 ```bash
